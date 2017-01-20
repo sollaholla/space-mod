@@ -52,7 +52,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
-            _planetSystem?.Process(Constants.GetCurrentValidGalaxyPosition(PlayerPed));
+            _planetSystem?.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
             TryLeaveWithVehicle();
         }
 

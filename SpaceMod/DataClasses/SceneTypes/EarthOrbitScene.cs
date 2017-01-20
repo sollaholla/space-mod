@@ -11,10 +11,14 @@ namespace SpaceMod.DataClasses.SceneTypes
             new Vector3(-6870.744f, -12107.31f, 8620.764f), /*Earth*/
             new Vector3(-15370.74f, -12107.31f, 8620.764f) /*Moon*/
         };
-
+        
         private PlanetSystem _planetSystem;
         private Prop _earth;
         private Prop _moon;
+
+        public EarthOrbitScene()
+        {
+        }
 
         public override void Init()
         {
@@ -22,7 +26,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _moon = World.CreateProp(Constants.MoonMedModel, Vector3.Zero, false, false);
             var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-            
+
             ResetPlayerOrigin();
             
             var planets = new List<Planet>
@@ -46,7 +50,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
-            _planetSystem.Process(Constants.GetCurrentValidGalaxyPosition(PlayerPed));
+            _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
             GoToMoon();
             GoToEarth();
         }
@@ -55,6 +59,8 @@ namespace SpaceMod.DataClasses.SceneTypes
         {
             var dist = PlayerPosition.DistanceTo(_moon.Position);
             if (dist > 2500) return;
+
+            // Check the moon orbit scene for reasons why i'm rotating towards the earth here.
             End(new MoonOrbitScene());
         }
 

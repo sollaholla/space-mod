@@ -34,8 +34,9 @@ namespace SpaceMod
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
-            _currentScene = new MoonSurfaceScene();
-            _currentScene.Init();
+            //_currentScene = new MoonSurfaceScene();
+            //_currentScene.Init();
+            UI.Notify($"{PlayerPed.HeightAboveGround}");
         }
 
         private void OnTick(object sender, EventArgs eventArgs)

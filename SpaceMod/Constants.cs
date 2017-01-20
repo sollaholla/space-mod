@@ -24,7 +24,13 @@ namespace SpaceMod
         public static Vector3 EarthAtmosphereEnterPosition => new Vector3(-2618.882f, -2490.627f, 628.4431f);
         public static Vector3 SunOffsetNearEarth => new Vector3(0, 6500, 0);
 
-        public static Vector3 GetCurrentValidGalaxyPosition(Ped playerPed)
+        /// <summary>
+        /// Return the Gameplay cameras current position if rendering, if the camera is not rendering (e.g. he's in a vehicle
+        /// with first person cam) then it will return the player position.
+        /// </summary>
+        /// <param name="playerPed"></param>
+        /// <returns></returns>
+        public static Vector3 GetValidGalaxyDomePosition(Ped playerPed)
         {
             return GameplayCamera.IsRendering ? GameplayCamera.Position : playerPed.Position;
         }

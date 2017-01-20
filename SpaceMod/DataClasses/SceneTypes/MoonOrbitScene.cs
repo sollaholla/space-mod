@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 
@@ -44,8 +40,6 @@ namespace SpaceMod.DataClasses.SceneTypes
             _earth.Position = Positions[0];
             _moon.Position = Positions[1];
 
-            RotatePlayer(new Vector3(0, 0, (_moon.Position - PlayerPosition).ToHeading()));
-
             sun.Position = Constants.GalaxyCenter;
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, stars, -1.5f);
         }
@@ -59,7 +53,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
-            _planetSystem.Process(Constants.GetCurrentValidGalaxyPosition(PlayerPed));
+            _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
             GoToMoon();
             LeaveOrbit();
         }

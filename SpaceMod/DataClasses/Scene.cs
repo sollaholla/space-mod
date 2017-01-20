@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA;
 using GTA.Math;
+using GTA.Native;
 
 namespace SpaceMod.DataClasses
 {
