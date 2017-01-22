@@ -31,8 +31,8 @@ namespace SpaceMod.DataClasses.SceneTypes
             
             var planets = new List<Planet>
             {
-                new Planet(_earth.Handle, PlayerPed, Vector3.Zero, false, -3.5f) /*Earth*/,
-                new Planet(_moon.Handle, galaxy, Vector3.Zero, true, 3.0f) /*Moon*/
+                new Planet(_earth.Handle, PlayerPed, Vector3.Zero, -3.5f) /*Earth*/,
+                new Planet(_moon.Handle, galaxy, Vector3.Zero, 3.0f) /*Moon*/
             };
             var stars = new List<Star>
             {

@@ -27,7 +27,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             var planets = new List<Planet>
             {
-                new Planet(earth.Handle, _surface, new Vector3(0.005f, 0, 0), true, 1)
+                new Planet(earth.Handle, _surface, new Vector3(0.005f, 0, 0), 1)
             };
 
             TeleportPlayerToGalaxy();
