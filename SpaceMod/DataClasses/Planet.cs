@@ -14,7 +14,7 @@ namespace SpaceMod.DataClasses
         private readonly Prop _prop;
         private readonly Vector3 _orbitalVelocity;
 
-        public Planet(int handle, Entity orbitalEntity, Vector3 orbitalVelocity, bool rotate, float rotationSpeed) : base(handle)
+        public Planet(int handle, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed) : base(handle)
         {
             _prop = new Prop(handle);
             OrbitalEntity = orbitalEntity;
