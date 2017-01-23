@@ -56,23 +56,6 @@ namespace SpaceMod.DataClasses.SceneTypes
             TryLeaveWithVehicle();
         }
 
-        private void TryLeaveWithVehicle()
-        {
-            if (_playerVehicle == null) return;
-            if (!_playerVehicle.Exists()) return;
-
-            _playerVehicle.LockStatus = VehicleLockStatus.CannotBeTriedToEnter;
-            var dist = _playerVehicle.Position.DistanceTo(PlayerPosition);
-            if (dist > 20) return;
-            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to leave.");
-            Game.DisableControlThisFrame(2, Control.Context);
-            if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
-            _playerVehicle.LockStatus = VehicleLockStatus.Unlocked;
-            PlayerPed.Task.ClearAllImmediately();
-            PlayerPed.Task.WarpIntoVehicle(_playerVehicle, VehicleSeat.Driver);
-            End(new MoonOrbitScene());
-        }
-
         public override void Abort()
         {
             _planetSystem?.Abort();
@@ -90,5 +73,23 @@ namespace SpaceMod.DataClasses.SceneTypes
             _playerVehicle.FreezePosition = false;
             _playerVehicle.IsInvincible = false;
         }
+
+        private void TryLeaveWithVehicle()
+        {
+            if (_playerVehicle == null) return;
+            if (!_playerVehicle.Exists()) return;
+
+            _playerVehicle.LockStatus = VehicleLockStatus.CannotBeTriedToEnter;
+            var dist = _playerVehicle.Position.DistanceTo(PlayerPosition);
+            if (dist > 20) return;
+            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to leave.");
+            Game.DisableControlThisFrame(2, Control.Context);
+            if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
+            _playerVehicle.LockStatus = VehicleLockStatus.Unlocked;
+            PlayerPed.Task.ClearAllImmediately();
+            PlayerPed.Task.WarpIntoVehicle(_playerVehicle, VehicleSeat.Driver);
+            End(new MoonOrbitScene());
+        }
+
     }
 }

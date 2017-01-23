@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using GTA;
 using GTA.Math;
+using NativeUI;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {
@@ -15,15 +17,41 @@ namespace SpaceMod.DataClasses.SceneTypes
         private PlanetSystem _planetSystem;
         private Prop _earth;
         private Prop _moon;
+        private Prop _issl;
+        private readonly UIMenu _selectionMenu = new UIMenu(string.Empty, "SELECT A DESTINATION", new Point(0, -105));
 
         public EarthOrbitScene()
         {
+            _selectionMenu.SetBannerType(new UIResRectangle());
+            _selectionMenu.OnMenuClose += sender =>
+            {
+                End(null);
+            };
+            var earthItem = new UIMenuItem("Earth", "Travel to earth.");
+            _selectionMenu.AddItem(earthItem);
+            earthItem.Activated += (sender, item) =>
+            {
+                End(null);
+            };
+            var isslItem = new UIMenuItem("ISSL", "Travel to the space station.");
+            _selectionMenu.AddItem(isslItem);
+            isslItem.Activated += (sender, item) =>
+            {
+                 End(new IsslScene());
+            };
+            var back = new UIMenuItem("Back", "Leave orbit again.");
+            _selectionMenu.AddItem(back);
+            back.Activated += (sender, item) =>
+            {
+                End(new EarthOrbitScene());
+            };
         }
 
         public override void Init()
         {
             _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
             _moon = World.CreateProp(Constants.MoonMedModel, Vector3.Zero, false, false);
+            _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
             var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
 
@@ -43,6 +71,10 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             _earth.Position = Positions[0];
             _moon.Position = Positions[1];
+            _issl.Position = _earth.Position - _earth.RightVector * 1200 + _earth.UpVector * 150;
+            var rotation = _issl.Rotation;
+            rotation.Y = -30;
+            _issl.Rotation = rotation;
 
             sun.Position = Constants.GalaxyCenter;
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, stars, -1.5f);
@@ -53,6 +85,11 @@ namespace SpaceMod.DataClasses.SceneTypes
             _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
             GoToMoon();
             GoToEarth();
+
+            if (!_selectionMenu.Visible) return;
+            _selectionMenu.ProcessControl();
+            _selectionMenu.ProcessMouse();
+            _selectionMenu.Draw();
         }
 
         private void GoToMoon()
@@ -68,17 +105,26 @@ namespace SpaceMod.DataClasses.SceneTypes
         {
             var dist = PlayerPosition.DistanceTo(_earth.Position);
             if (dist > 1500) return;
-            End(null);
+            if (_selectionMenu.Visible) return;
+            _selectionMenu.Visible = !_selectionMenu.Visible;
+            Game.TimeScale = 0;
         }
 
         public override void Abort()
         {
-            _planetSystem.Abort();
+            Done();
         }
 
         public override void CleanUp()
         {
+            Done();
+        }
+
+        private void Done()
+        {
             _planetSystem.Abort();
+            _issl?.Delete();
+            Game.TimeScale = 1;
         }
     }
 }

@@ -55,6 +55,7 @@
     <Compile Include="DataClasses\PlayerPrefs.cs" />
     <Compile Include="DataClasses\Scene.cs" />
     <Compile Include="DataClasses\SceneTypes\EarthOrbitScene.cs" />
+    <Compile Include="DataClasses\SceneTypes\IsslScene.cs" />
     <Compile Include="DataClasses\SceneTypes\MoonOrbitScene.cs" />
     <Compile Include="DataClasses\SceneTypes\MoonSurfaceScene.cs" />
     <Compile Include="DataClasses\Star.cs" />
