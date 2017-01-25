@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using NativeUI;
 using SpaceMod.DataClasses;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
@@ -13,7 +14,11 @@ namespace SpaceMod
     {
         private Scene _currentScene;
         private Mission _currentMission;
-        private Prop _spaceCraft;
+        private bool _askedToLeave;
+
+        // Responsible for asking the player whether he/she wants to leave orbit
+        // stay on earth, or go to the issl.
+        private readonly UIMenu _leavePrompt = new UIMenu("Travel", "SELECT AN OPTION"); 
 
         public ModController()
         {
@@ -21,6 +26,8 @@ namespace SpaceMod
             KeyUp += OnKeyUp;
             Tick += OnTick;
             Aborted += OnAborted;
+
+            SetupLeavePrompt();
         }
 
         public Ped PlayerPed => Game.Player.Character;
@@ -28,41 +35,46 @@ namespace SpaceMod
         public bool IsInMission => _currentMission != null;
         public static ModController Instance { get; private set; }
 
+        private void SetupLeavePrompt()
+        {
+            var leaveItem = new UIMenuItem("LeaveEarth Orbit", "LeaveEarth the Earth's orbit.");
+            leaveItem.Activated += (sender, item) => LeaveEarth(new EarthOrbitScene());
+            _leavePrompt.AddItem(leaveItem);
+
+            var isslItem = new UIMenuItem("Go To ISSL", "Go to the International Space Station of Los Santos.");
+            isslItem.Activated += (sender, item) => LeaveEarth(new IsslScene());
+            _leavePrompt.AddItem(isslItem);
+
+            var stayItem = new UIMenuItem("Stay", "Stay on Earth.");
+            stayItem.Activated += (sender, item) =>
+            {
+                _askedToLeave = true;
+                _leavePrompt.Visible = false;
+                Game.TimeScale = 1.0f;
+            };
+            _leavePrompt.AddItem(stayItem);
+        }
+
         private void OnAborted(object sender, EventArgs eventArgs)
         {
             _currentScene?.Abort();
             _currentMission?.Abort();
             if (_currentScene != null) PlayerPed.Position = Constants.TrevorAirport;
-            Function.Call(Hash.SET_GRAVITY_LEVEL, 0);
             PlayerPed.HasGravity = true;
             PlayerPed.LastVehicle?.Delete();
+            Function.Call(Hash.SET_GRAVITY_LEVEL, 0); // TODO: Move to utilities.
+            Game.TimeScale = 1.0f;
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
-            _spaceCraft = World.CreateProp("ufo_zancudo", PlayerPosition + PlayerPed.ForwardVector * 100, true, false);
-            _spaceCraft.FreezePosition = true;
-            _spaceCraft.Health = _spaceCraft.MaxHealth = 5000;
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
             EnterOrbit();
             UpdateScene();
-
-            if (_spaceCraft == null) return;
-            UI.ShowSubtitle($"Health:{_spaceCraft.Health}\nDead: {_spaceCraft.IsDead}");
-            if (_spaceCraft.IsDead)
-            {
-                var pos = _spaceCraft.Position;
-                Function.Call(Hash.REQUEST_NAMED_PTFX_ASSET, "core");
-                Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, "core");
-                Function.Call(Hash.START_PARTICLE_FX_NON_LOOPED_AT_COORD, "exp_grd_vehicle_lod", pos.X, pos.Y, pos.Z, 0, 0, 0, 20.0f, 0, 0, 0, 0);
-                World.AddExplosion(pos, ExplosionType.Car, 25, 0.5f, true, true);
-                _spaceCraft.FreezePosition = false;
-                _spaceCraft = null;
-            }
         }
 
         public void SetCurrentMission(Mission mission)
@@ -81,7 +93,7 @@ namespace SpaceMod
             Game.FadeScreenOut(2000);
             Wait(2000);
             sender?.CleanUp();
-            if (newScene == null) EnterAtmosphere();
+            if (newScene == null) BackToEarth();
             _currentScene = newScene;
             if (_currentScene != null)
             {
@@ -97,24 +109,41 @@ namespace SpaceMod
             if (_currentScene != null) return;
             if (!PlayerPed.IsInVehicle()) return;
             if (PlayerPed.CurrentVehicle.ClassType != VehicleClass.Planes) return;
-            if (PlayerPed.HeightAboveGround < 2000) return;
+            if (PlayerPed.HeightAboveGround > 2000)
+            {
+                if (_askedToLeave) return;
+                Game.TimeScale = 0f;
+                if (!_leavePrompt.Visible)
+                    _leavePrompt.Visible = true;
+                _leavePrompt.ProcessControl();
+                _leavePrompt.ProcessMouse();
+                _leavePrompt.Draw();
+            }
+            else _askedToLeave = false;
+        }
+
+        private void LeaveEarth(Scene scene)
+        {
+            _leavePrompt.Visible = false;
+            Game.TimeScale = 1.0f;
+
             Game.FadeScreenOut(2000);
             Wait(2000);
 
-            _currentScene = new EarthOrbitScene();
+            _currentScene = scene;
             _currentScene.Init();
             _currentScene.SceneEnded += OnSceneEnded;
 
             var currentVehicle = PlayerPed.CurrentVehicle;
             currentVehicle.HasGravity = false;
-            Function.Call(Hash.SET_VEHICLE_GRAVITY, currentVehicle.Handle, false);
+            Function.Call(Hash.SET_VEHICLE_GRAVITY, currentVehicle.Handle, false);  // TODO: Move to utils.
             RemoveGravity();
 
             Wait(2000);
             Game.FadeScreenIn(2000);
         }
 
-        private void EnterAtmosphere()
+        private void BackToEarth()
         {
             if (!PlayerPed.IsInVehicle())
             {

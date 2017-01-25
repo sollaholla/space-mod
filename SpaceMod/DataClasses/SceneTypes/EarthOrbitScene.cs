@@ -71,6 +71,9 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             _earth.Position = Positions[0];
             _moon.Position = Positions[1];
+
+            // Move and rotate the issl.
+            // TODO: Get constant values for this.
             _issl.Position = _earth.Position - _earth.RightVector * 1200 + _earth.UpVector * 150;
             var rotation = _issl.Rotation;
             rotation.Y = -30;
