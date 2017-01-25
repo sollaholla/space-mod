@@ -108,6 +108,9 @@ namespace SpaceMod.DataClasses.MissionTypes
             {
                 var position = playerPed.Position.Around(_random.Next(75, 80));
                 position = position.MoveToGroundArtificial();
+
+                position = position + new Vector3(0, 0, 15);
+
                 var spaceCraft = World.CreateProp("ufo_zancudo", Vector3.Zero, false, false);
                 spaceCraft.IsPersistent = true;
                 spaceCraft.FreezePosition = true;
