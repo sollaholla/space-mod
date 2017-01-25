@@ -5,6 +5,7 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses;
+using SpaceMod.DataClasses.MissionTypes;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
 
@@ -37,7 +38,7 @@ namespace SpaceMod
 
         private void SetupLeavePrompt()
         {
-            var leaveItem = new UIMenuItem("LeaveEarth Orbit", "LeaveEarth the Earth's orbit.");
+            var leaveItem = new UIMenuItem("Leave Earth", "Leave the Earth's orbit.");
             leaveItem.Activated += (sender, item) => LeaveEarth(new EarthOrbitScene());
             _leavePrompt.AddItem(leaveItem);
 
@@ -69,6 +70,8 @@ namespace SpaceMod
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
+            LeaveEarth(new MoonSurfaceScene());
+            SetCurrentMission(new TakeBackWhatsOurs());
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
@@ -135,8 +138,11 @@ namespace SpaceMod
             _currentScene.SceneEnded += OnSceneEnded;
 
             var currentVehicle = PlayerPed.CurrentVehicle;
-            currentVehicle.HasGravity = false;
-            Function.Call(Hash.SET_VEHICLE_GRAVITY, currentVehicle.Handle, false);  // TODO: Move to utils.
+            if (currentVehicle != null)
+            {
+                currentVehicle.HasGravity = false;
+                Function.Call(Hash.SET_VEHICLE_GRAVITY, currentVehicle.Handle, false); // TODO: Move to utils.
+            }
             RemoveGravity();
 
             Wait(2000);
