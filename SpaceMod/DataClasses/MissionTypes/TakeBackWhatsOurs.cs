@@ -62,7 +62,7 @@ namespace SpaceMod.DataClasses.MissionTypes
                 var spaceCraft = World.CreateProp("ufo_zancudo", Vector3.Zero, false, false);
                 spaceCraft.IsPersistent = true;
                 spaceCraft.FreezePosition = true;
-                spaceCraft.Position = position;
+                spaceCraft.Position = position + new Vector3(0, 0, 15);
                 spaceCraft.Health = spaceCraft.MaxHealth = 5000;
                 _spaceShips.Add(spaceCraft);
             }
