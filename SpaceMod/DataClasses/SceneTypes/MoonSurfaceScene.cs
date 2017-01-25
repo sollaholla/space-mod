@@ -30,9 +30,9 @@ namespace SpaceMod.DataClasses.SceneTypes
                 new Planet(earth.Handle, _surface, new Vector3(0.005f, 0, 0), 1)
             };
 
-            TeleportPlayerToGalaxy();
+            TeleportPlayerToGalaxy(true);
             
-            _surface.Position = Constants.GalaxyCenter;
+            _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
 
             earth.Position = _surface.Position + new Vector3(4000, 0, 4000);
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, new List<Star>(), -0.3f, RotationAxis.Y);

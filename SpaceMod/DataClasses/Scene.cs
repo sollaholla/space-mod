@@ -39,10 +39,11 @@ namespace SpaceMod.DataClasses
             else PlayerPed.CurrentVehicle.Position = Vector3.Zero;
         }
 
-        protected void TeleportPlayerToGalaxy()
+        protected void TeleportPlayerToGalaxy(bool surface = false)
         {
-            if (!PlayerPed.IsInVehicle()) PlayerPosition = Constants.GalaxyCenter;
-            else PlayerPed.CurrentVehicle.Position = Constants.GalaxyCenter;
+            var position = surface ? Constants.PlanetSurfaceGalaxyCenter : Constants.GalaxyCenter;
+            if (!PlayerPed.IsInVehicle()) PlayerPosition = position;
+            else PlayerPed.CurrentVehicle.Position = position;
         }
 
         protected void RotatePlayer(Vector3 rotation)

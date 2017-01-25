@@ -50,6 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="DataClasses\Mission.cs" />
+    <Compile Include="DataClasses\MissionTypes\TakeBackWhatsOurs.cs" />
     <Compile Include="DataClasses\PlanetSystem.cs" />
     <Compile Include="DataClasses\Planet.cs" />
     <Compile Include="DataClasses\PlayerPrefs.cs" />

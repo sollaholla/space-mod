@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using SpaceMod.DataClasses;
 
 namespace SpaceMod
 {
@@ -38,6 +32,14 @@ namespace SpaceMod
             }
 
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, Function.Call<bool>(Hash.IS_HELP_MESSAGE_BEING_DISPLAYED) ? 0 : 1, -1);
+        }
+
+        public static Vector3 MoveToGroundArtificial(this Vector3 v3)
+        {
+            var origin = new Vector3(v3.X, v3.Y, v3.Z + 1000);
+            var direction = Vector3.WorldDown;
+            var ray = World.Raycast(origin, direction, int.MaxValue, IntersectOptions.Everything);
+            return ray.HitCoords;
         }
     }
 }

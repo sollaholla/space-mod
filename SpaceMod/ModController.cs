@@ -12,9 +12,12 @@ namespace SpaceMod
     public class ModController : Script
     {
         private Scene _currentScene;
+        private Mission _currentMission;
+        private Prop _spaceCraft;
 
         public ModController()
         {
+            Instance = this;
             KeyUp += OnKeyUp;
             Tick += OnTick;
             Aborted += OnAborted;
@@ -22,28 +25,55 @@ namespace SpaceMod
 
         public Ped PlayerPed => Game.Player.Character;
         public Vector3 PlayerPosition => PlayerPed.Position;
+        public bool IsInMission => _currentMission != null;
+        public static ModController Instance { get; private set; }
 
         private void OnAborted(object sender, EventArgs eventArgs)
         {
             _currentScene?.Abort();
+            _currentMission?.Abort();
             if (_currentScene != null) PlayerPed.Position = Constants.TrevorAirport;
             Function.Call(Hash.SET_GRAVITY_LEVEL, 0);
             PlayerPed.HasGravity = true;
+            PlayerPed.LastVehicle?.Delete();
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
-            _currentScene = new IsslScene();
-            _currentScene.Init();
-            _currentScene.SceneEnded += OnSceneEnded;
-            RemoveGravity();
+            _spaceCraft = World.CreateProp("ufo_zancudo", PlayerPosition + PlayerPed.ForwardVector * 100, true, false);
+            _spaceCraft.FreezePosition = true;
+            _spaceCraft.Health = _spaceCraft.MaxHealth = 5000;
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
             EnterOrbit();
             UpdateScene();
+
+            if (_spaceCraft == null) return;
+            UI.ShowSubtitle($"Health:{_spaceCraft.Health}\nDead: {_spaceCraft.IsDead}");
+            if (_spaceCraft.IsDead)
+            {
+                var pos = _spaceCraft.Position;
+                Function.Call(Hash.REQUEST_NAMED_PTFX_ASSET, "core");
+                Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, "core");
+                Function.Call(Hash.START_PARTICLE_FX_NON_LOOPED_AT_COORD, "exp_grd_vehicle_lod", pos.X, pos.Y, pos.Z, 0, 0, 0, 20.0f, 0, 0, 0, 0);
+                World.AddExplosion(pos, ExplosionType.Car, 25, 0.5f, true, true);
+                _spaceCraft.FreezePosition = false;
+                _spaceCraft = null;
+            }
+        }
+
+        public void SetCurrentMission(Mission mission)
+        {
+            _currentMission = mission;
+            _currentMission.MissionEnded += OnMissionEnded;
+        }
+
+        private void OnMissionEnded()
+        {
+            _currentMission?.CleanUp();
         }
 
         private void OnSceneEnded(Scene sender, Scene newScene)
@@ -111,6 +141,7 @@ namespace SpaceMod
                 return;
 
             _currentScene.Update();
+            _currentMission?.Tick(PlayerPed, _currentScene);
 
             FlyVehicleInSpace();
             ClearClouds();

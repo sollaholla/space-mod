@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using GTA;
 using GTA.Math;
+using NativeUI;
+using SpaceMod.DataClasses.MissionTypes;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {
@@ -11,8 +14,26 @@ namespace SpaceMod.DataClasses.SceneTypes
         private Prop _issl;
         private Prop _earth;
 
+        private readonly UIMenu _missionMenu = new UIMenu(string.Empty, "SELECT A MISSION", new Point(0, -105));
+
+        public IsslScene()
+        {
+            var mission1 = new UIMenuItem("Take Back What's Ours",
+                "The ISSL has reported that alien life-forms have been " +
+                "spotted on the surface of the moon, planning their next " +
+                "attack our home planet. Find and elimite them before they can reach earth.");
+            _missionMenu.AddItem(mission1);
+            mission1.Activated += (sender, item) =>
+            {
+                ModController.Instance.SetCurrentMission(new TakeBackWhatsOurs());
+                End(new EarthOrbitScene());
+            };
+        }
+
         public override void Init()
         {
+            _missionMenu.Visible = true;
+
             _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
             _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
@@ -35,7 +56,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _issl.Rotation = rotation;
 
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, new List<Star>(), -1.5f);
-            
+
             _camera = World.CreateCamera(Vector3.Zero, Vector3.Zero, GameplayCamera.FieldOfView);
             _camera.Shake(CameraShake.SkyDiving, 0.05f);
             World.RenderingCamera = _camera;
@@ -43,6 +64,14 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
+
+            if (_missionMenu.Visible)
+            {
+                _missionMenu.ProcessControl();
+                _missionMenu.ProcessMouse();
+                _missionMenu.Draw();
+            }
+
             _planetSystem.Process(_camera.Position);
 
             var dirOut = _issl.Position - _earth.Position;

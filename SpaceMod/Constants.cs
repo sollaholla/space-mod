@@ -22,6 +22,7 @@ namespace SpaceMod
 
         public static Vector3 TrevorAirport => new Vector3(1267.619f, 3137.67f, 40.41403f);
         public static Vector3 GalaxyCenter => new Vector3(-9994.448f, -12171.48f, 8828.197f);
+        public static Vector3 PlanetSurfaceGalaxyCenter => new Vector3(-9994.448f, -12171.48f, 2500.197f);
         public static Vector3 EarthAtmosphereEnterPosition => new Vector3(-2618.882f, -2490.627f, 628.4431f);
         public static Vector3 SunOffsetNearEarth => new Vector3(0, 6500, 0);
 
