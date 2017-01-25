@@ -16,7 +16,7 @@ namespace SpaceMod
         private Scene _currentScene;
         private Mission _currentMission;
         private bool _askedToLeave;
-
+        
         // Responsible for asking the player whether he/she wants to leave orbit
         // stay on earth, or go to the issl.
         private readonly UIMenu _leavePrompt = new UIMenu("Travel", "SELECT AN OPTION"); 
@@ -65,6 +65,8 @@ namespace SpaceMod
             PlayerPed.LastVehicle?.Delete();
             Function.Call(Hash.SET_GRAVITY_LEVEL, 0); // TODO: Move to utilities.
             Game.TimeScale = 1.0f;
+            if (PlayerPed.IsDead) return;
+            Game.FadeScreenIn(0);
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
@@ -130,8 +132,8 @@ namespace SpaceMod
             _leavePrompt.Visible = false;
             Game.TimeScale = 1.0f;
 
-            Game.FadeScreenOut(2000);
-            Wait(2000);
+            Game.FadeScreenOut(1000);
+            Wait(1000);
 
             _currentScene = scene;
             _currentScene.Init();
@@ -145,8 +147,8 @@ namespace SpaceMod
             }
             RemoveGravity();
 
-            Wait(2000);
-            Game.FadeScreenIn(2000);
+            Wait(1000);
+            Game.FadeScreenIn(1000);
         }
 
         private void BackToEarth()

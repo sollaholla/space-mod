@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using GTA;
 using GTA.Math;
+using GTA.Native;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {

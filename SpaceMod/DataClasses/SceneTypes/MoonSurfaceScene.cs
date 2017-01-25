@@ -21,6 +21,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _surface = World.CreateProp(Constants.MoonSurfaceModel, Vector3.Zero, false, false);
             var earth = World.CreateProp(Constants.EarthSmallModel, Vector3.Zero, false, false);
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
+
             _surface.FreezePosition = true;
 
             ResetPlayerOrigin();
@@ -37,9 +38,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             earth.Position = _surface.Position + new Vector3(4000, 0, 4000);
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, new List<Star>(), -0.3f, RotationAxis.Y);
 
-            Function.Call(Hash.SET_GRAVITY_LEVEL, 0);
-
-            PlayerPed.Position = _surface.Position + PlayerPed.UpVector;
+            PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPed.HasGravity = true;
             
             if (_playerVehicle == null) return;
@@ -52,6 +51,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
+            Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
             _planetSystem?.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
             TryLeaveWithVehicle();
         }
