@@ -93,6 +93,7 @@ namespace SpaceMod
         {
             _currentMission?.CleanUp();
             _currentMission = null;
+
         }
 
         private void OnSceneEnded(Scene sender, Scene newScene)

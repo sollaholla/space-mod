@@ -18,12 +18,10 @@ namespace SpaceMod.DataClasses.MissionTypes
         private readonly List<Prop> _spaceShips = new List<Prop>();
         private readonly int _alienRelationship;
         private readonly int _originalMaxHealth;
-        private bool completedMission = false;
 
 
         public TakeBackWhatsOurs()
         {
-            completedMission = false;
             _alienRelationship = World.AddRelationshipGroup("Aliens");
             World.SetRelationshipBetweenGroups(Relationship.Hate, _alienRelationship, Game.GenerateHash("PLAYER"));
             World.SetRelationshipBetweenGroups(Relationship.Companion, _alienRelationship, _alienRelationship);
