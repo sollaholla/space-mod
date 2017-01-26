@@ -14,7 +14,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             new Vector3(-15370.74f, -12107.31f, 8620.764f) /*Moon*/
         };
 
-        private PlanetSystem _planetSystem;
+        private OrbitalSystem _planetSystem;
         private Prop _earth;
         private Prop _moon;
         private Prop _issl;
@@ -57,14 +57,14 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             ResetPlayerOrigin();
 
-            var planets = new List<Planet>
+            var planets = new List<Orbital>
             {
-                new Planet(_earth.Handle, PlayerPed, Vector3.Zero, -3.5f) /*Earth*/,
-                new Planet(_moon.Handle, galaxy, Vector3.Zero, 3.0f) /*Moon*/
+                new Orbital(_earth.Handle, PlayerPed, Vector3.Zero, -3.5f) /*Earth*/,
+                new Orbital(_moon.Handle, galaxy, Vector3.Zero, 3.0f) /*Moon*/
             };
-            var stars = new List<Star>
+            var stars = new List<LockedOrbital>
             {
-                new Star(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
+                new LockedOrbital(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
             };
 
             TeleportPlayerToGalaxy();
@@ -80,7 +80,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _issl.Rotation = rotation;
 
             sun.Position = Constants.GalaxyCenter;
-            _planetSystem = new PlanetSystem(galaxy.Handle, planets, stars, -1.5f);
+            _planetSystem = new OrbitalSystem(galaxy.Handle, planets, stars, -1.5f);
 
             // Since this is the "earth" orbit scene the target is the earth,
             // and if we have a start direction of "ToTarget" then we're going to face the earth

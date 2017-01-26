@@ -7,7 +7,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 {
     public class MoonSurfaceScene : Scene
     {
-        private PlanetSystem _planetSystem;
+        private OrbitalSystem _planetSystem;
         private Vehicle _playerVehicle;
         private Prop _surface;
 
@@ -26,9 +26,9 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             ResetPlayerOrigin();
 
-            var planets = new List<Planet>
+            var planets = new List<Orbital>
             {
-                new Planet(earth.Handle, _surface, Vector3.Zero, 1) /*Earth*/
+                new Orbital(earth.Handle, _surface, Vector3.Zero, 1) /*Earth*/
             };
 
             TeleportPlayerToGalaxy(true);
@@ -36,7 +36,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
 
             earth.Position = _surface.Position + new Vector3(4000, 0, 4000);
-            _planetSystem = new PlanetSystem(galaxy.Handle, planets, new List<Star>(), -0.3f);
+            _planetSystem = new OrbitalSystem(galaxy.Handle, planets, new List<LockedOrbital>(), -0.3f);
 
             PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPed.HasGravity = true;

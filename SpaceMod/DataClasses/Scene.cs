@@ -3,6 +3,13 @@ using GTA.Math;
 
 namespace SpaceMod.DataClasses
 {
+    public enum SceneStartDirection
+    {
+        ToTarget,
+        FromTarget,
+        None
+    }
+
     public abstract class Scene
     {
         public delegate void OnSceneEndedEvent(Scene sender, Scene newScene);

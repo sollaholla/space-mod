@@ -9,12 +9,12 @@ using GTA.Native;
 
 namespace SpaceMod.DataClasses
 {
-    public class Planet : Entity
+    public class Orbital : Entity
     {
         private readonly Prop _prop;
         private readonly Vector3 _orbitalVelocity;
 
-        public Planet(int handle, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed) : base(handle)
+        public Orbital(int handle, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed) : base(handle)
         {
             _prop = new Prop(handle);
             OrbitalEntity = orbitalEntity;

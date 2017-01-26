@@ -9,7 +9,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 {
     public class IsslScene : Scene
     {
-        private PlanetSystem _planetSystem;
+        private OrbitalSystem _planetSystem;
         private Camera _camera;
         private Prop _issl;
         private Prop _earth;
@@ -40,10 +40,10 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             ResetPlayerOrigin();
 
-            var planets = new List<Planet>
+            var planets = new List<Orbital>
             {
-                new Planet(_earth.Handle, galaxy, Vector3.Zero, -0.5f),
-                new Planet(_issl.Handle, galaxy, Vector3.Zero, 0)
+                new Orbital(_earth.Handle, galaxy, Vector3.Zero, -0.5f),
+                new Orbital(_issl.Handle, galaxy, Vector3.Zero, 0)
             };
 
             TeleportPlayerToGalaxy();
@@ -55,7 +55,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             rotation.Z = -70f;
             _issl.Rotation = rotation;
 
-            _planetSystem = new PlanetSystem(galaxy.Handle, planets, new List<Star>(), -1.5f);
+            _planetSystem = new OrbitalSystem(galaxy.Handle, planets, new List<LockedOrbital>(), -1.5f);
 
             _camera = World.CreateCamera(Vector3.Zero, Vector3.Zero, GameplayCamera.FieldOfView);
             _camera.Shake(CameraShake.SkyDiving, 0.05f);
