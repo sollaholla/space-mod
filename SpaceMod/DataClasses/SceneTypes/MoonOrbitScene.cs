@@ -24,7 +24,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _moon = World.CreateProp(Constants.MoonLargeModel, Vector3.Zero, false, false);
             var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-            
+
             // Move the player to v3.zero so that we can spawn these props.
             ResetPlayerOrigin();
 
@@ -51,6 +51,8 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             // Create the planet system.
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, stars, -1.5f);
+
+            SetStartDirection(_moon.Position, PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle as Entity : PlayerPed, StartDirection);
         }
 
         private void GoToMoon()
@@ -78,7 +80,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             // Try to leave the moons orbit.
             var dist = PlayerPosition.DistanceTo(_earth.Position);
             if (dist > 2500) return;
-            End(new EarthOrbitScene());
+            End(new EarthOrbitScene(), SceneStartDirection.ToTarget);
         }
 
         public override void Abort()

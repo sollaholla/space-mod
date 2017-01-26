@@ -13,7 +13,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             new Vector3(-6870.744f, -12107.31f, 8620.764f), /*Earth*/
             new Vector3(-15370.74f, -12107.31f, 8620.764f) /*Moon*/
         };
-        
+
         private PlanetSystem _planetSystem;
         private Prop _earth;
         private Prop _moon;
@@ -37,13 +37,13 @@ namespace SpaceMod.DataClasses.SceneTypes
             _selectionMenu.AddItem(isslItem);
             isslItem.Activated += (sender, item) =>
             {
-                 End(new IsslScene());
+                End(new IsslScene());
             };
             var back = new UIMenuItem("Back", "Leave orbit again.");
             _selectionMenu.AddItem(back);
             back.Activated += (sender, item) =>
             {
-                End(new EarthOrbitScene());
+                End(new EarthOrbitScene(), SceneStartDirection.FromTarget);
             };
         }
 
@@ -56,7 +56,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
 
             ResetPlayerOrigin();
-            
+
             var planets = new List<Planet>
             {
                 new Planet(_earth.Handle, PlayerPed, Vector3.Zero, -3.5f) /*Earth*/,
@@ -81,6 +81,12 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             sun.Position = Constants.GalaxyCenter;
             _planetSystem = new PlanetSystem(galaxy.Handle, planets, stars, -1.5f);
+
+            // Since this is the "earth" orbit scene the target is the earth,
+            // and if we have a start direction of "ToTarget" then we're going to face the earth
+            // and visa versa. (i.e. if we where 'coming' from the moon, and 'going' to earth)
+            SetStartDirection(_earth.Position, PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle as Entity : PlayerPed,
+                StartDirection);
         }
 
         public override void Update()
@@ -101,7 +107,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             if (dist > 2500) return;
 
             // Check the moon orbit scene for reasons why i'm rotating towards the earth here.
-            End(new MoonOrbitScene());
+            End(new MoonOrbitScene(), SceneStartDirection.ToTarget);
         }
 
         private void GoToEarth()

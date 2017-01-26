@@ -39,7 +39,7 @@ namespace SpaceMod
         private void SetupLeavePrompt()
         {
             var leaveItem = new UIMenuItem("Leave Earth", "Leave the Earth's orbit.");
-            leaveItem.Activated += (sender, item) => LeaveEarth(new EarthOrbitScene());
+            leaveItem.Activated += (sender, item) => LeaveEarth(new EarthOrbitScene(), SceneStartDirection.FromTarget);
             _leavePrompt.AddItem(leaveItem);
 
             var isslItem = new UIMenuItem("Go To ISSL", "Go to the International Space Station of Los Santos.");
@@ -78,6 +78,9 @@ namespace SpaceMod
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
+            if (PlayerPed.IsDead && Game.IsScreenFadedOut)
+                OnAborted(null, null);
+
             EnterOrbit();
             UpdateScene();
         }
@@ -91,6 +94,7 @@ namespace SpaceMod
         private void OnMissionEnded()
         {
             _currentMission?.CleanUp();
+            _currentMission = null;
         }
 
         private void OnSceneEnded(Scene sender, Scene newScene)
@@ -127,7 +131,7 @@ namespace SpaceMod
             else _askedToLeave = false;
         }
 
-        private void LeaveEarth(Scene scene)
+        private void LeaveEarth(Scene scene, SceneStartDirection dir = SceneStartDirection.None)
         {
             _leavePrompt.Visible = false;
             Game.TimeScale = 1.0f;
@@ -136,6 +140,7 @@ namespace SpaceMod
             Wait(1000);
 
             _currentScene = scene;
+            _currentScene.StartDirection = dir;
             _currentScene.Init();
             _currentScene.SceneEnded += OnSceneEnded;
 
@@ -195,7 +200,7 @@ namespace SpaceMod
 
             // FWD
             if (Game.IsControlPressed(2, Control.VehicleAccelerate))
-                currentVehicle.ApplyForceRelative(Vector3.RelativeFront * 0.05f);
+                currentVehicle.ApplyForceRelative(Vector3.RelativeFront * 0.1f);
 
             // BWD
             if (Game.IsControlPressed(2, Control.VehicleBrake))

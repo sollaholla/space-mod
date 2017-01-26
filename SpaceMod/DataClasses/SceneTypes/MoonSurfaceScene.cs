@@ -88,8 +88,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _playerVehicle.LockStatus = VehicleLockStatus.Unlocked;
             PlayerPed.Task.ClearAllImmediately();
             PlayerPed.Task.WarpIntoVehicle(_playerVehicle, VehicleSeat.Driver);
-            End(new MoonOrbitScene());
+            End(new MoonOrbitScene(), SceneStartDirection.FromTarget);
         }
-
     }
 }

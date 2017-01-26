@@ -1,4 +1,5 @@
 ﻿using GTA;
+using NativeUI;
 
 namespace SpaceMod.DataClasses
 {
@@ -12,6 +13,7 @@ namespace SpaceMod.DataClasses
 
         public void End(bool failed)
         {
+            BigMessageThread.MessageInstance.ShowMissionPassedMessage(failed ? "~r~mission failed" : "mission complete");
             MissionEnded?.Invoke();
         }
 

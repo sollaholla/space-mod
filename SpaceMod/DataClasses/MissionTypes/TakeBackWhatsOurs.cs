@@ -29,8 +29,9 @@ namespace SpaceMod.DataClasses.MissionTypes
             var character = Game.Player.Character;
             _originalMaxHealth = character.MaxHealth;
 
-            character.Health = character.MaxHealth = 10000;
+            character.Health = character.MaxHealth = 3000;
             character.CanRagdoll = false;
+            character.IsExplosionProof = false;
         }
 
         public override void Tick(Ped playerPed, Scene currentScene)
@@ -69,34 +70,38 @@ namespace SpaceMod.DataClasses.MissionTypes
 
             _aliens.ForEach(ped =>
             {
+                var dist = Function.Call<float>(Hash.VDIST, ped.Position.X, ped.Position.Y, ped.Position.Z,
+                    playerPed.Position.X, playerPed.Position.Y, playerPed.Position.Z);
+                ped.AlwaysKeepTask = false;
+                if (!ped.IsInCombatAgainst(playerPed) && dist > 35)
+                    ped.Task.RunTo(playerPed.Position, true);
                 if (!ped.IsDead) return;
                 ped.CurrentBlip.Remove();
                 _aliens.Remove(ped);
                 ped.MarkAsNoLongerNeeded();
             });
 
-            if (_aliens.Count <= 0 && _spaceShips.Count <= 0)
-            {
-                BigMessageThread.MessageInstance.ShowMissionPassedMessage("mission complete");
-                End(false);
-            }
+            if (_aliens.Count > 0 || _spaceShips.Count > 0) return;
+            End(false);
         }
 
-        private void Spawn(Ped playerPed)
+        private void Spawn(ISpatial spatial)
         {
+            var origin = spatial.Position.Around(100);
+
             // spawn 20 enemies.
             for (var i = 0; i < 20; i++)
             {
-                var position = playerPed.Position.Around(_random.Next(50, 75));
+                var position = origin.Around(_random.Next(50, 75));
                 position = position.MoveToGroundArtificial();
                 var ped = World.CreatePed(PedHash.MovAlien01, position);
                 ped.Weapons.Give(WeaponHash.Railgun, 15, true, true);
                 ped.IsPersistent = true;
                 ped.RelationshipGroup = _alienRelationship;
-                ped.Task.FightAgainst(playerPed);
-                ped.AlwaysKeepTask = true;
                 ped.Voice = "ALIENS";
-                ped.Accuracy = 20;
+                ped.Accuracy = 15;
+                Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
+                Function.Call(Hash.SET_PED_COMBAT_RANGE, ped.Handle, 2);
                 var blip = ped.AddBlip();
                 blip.Name = "Alien Hostile";
                 blip.Scale = 0.7f;
@@ -106,7 +111,7 @@ namespace SpaceMod.DataClasses.MissionTypes
 
             for (var i = 0; i < 5; i++)
             {
-                var position = playerPed.Position.Around(_random.Next(75, 80));
+                var position = origin.Around(_random.Next(50, 80));
                 position = position.MoveToGroundArtificial();
 
                 position = position + new Vector3(0, 0, 15);

@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
+﻿using GTA;
 using GTA.Math;
-using GTA.Native;
 
 namespace SpaceMod.DataClasses
 {
@@ -14,6 +8,8 @@ namespace SpaceMod.DataClasses
         public delegate void OnSceneEndedEvent(Scene sender, Scene newScene);
 
         public event OnSceneEndedEvent SceneEnded;
+
+        public SceneStartDirection StartDirection { get; set; }
 
         public Ped PlayerPed => Game.Player.Character;
 
@@ -28,8 +24,9 @@ namespace SpaceMod.DataClasses
         public abstract void Abort();
         public abstract void CleanUp();
 
-        protected void End(Scene newScene)
+        protected void End(Scene newScene, SceneStartDirection startDirection = SceneStartDirection.None)
         {
+            if (newScene != null) newScene.StartDirection = startDirection;
             SceneEnded?.Invoke(this, newScene);
         }
 
@@ -50,6 +47,27 @@ namespace SpaceMod.DataClasses
         {
             if (!PlayerPed.IsInVehicle()) PlayerPed.Rotation = rotation;
             else PlayerPed.CurrentVehicle.Rotation = rotation;
+        }
+
+        /// <summary>
+        /// Set's the start direction based on <see cref="SceneStartDirection"/>.
+        /// </summary>
+        /// <param name="target">The target planet or object's position we are going to use to determine our direction.</param>
+        /// <param name="ourSpatial">Our spatial whos rotation will be set. (i.e. the player, the ship, etc.)</param>
+        /// <param name="direction">The direction in which we want to face.</param>
+        public void SetStartDirection(Vector3 target, ISpatial ourSpatial, SceneStartDirection direction)
+        {
+            var directionToTarget = target - ourSpatial.Position;
+
+            switch (direction)
+            {
+                    case SceneStartDirection.FromTarget:
+                    ourSpatial.Rotation = new Vector3(0, 0, -directionToTarget.ToHeading());
+                    break;
+                    case SceneStartDirection.ToTarget:
+                    ourSpatial.Rotation = new Vector3(0, 0, directionToTarget.ToHeading());
+                    break;
+            }
         }
     }
 }
