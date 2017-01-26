@@ -16,7 +16,7 @@ namespace SpaceMod
         private Scene _currentScene;
         private Mission _currentMission;
         private bool _askedToLeave;
-        
+
         // Responsible for asking the player whether he/she wants to leave orbit
         // stay on earth, or go to the issl.
         private readonly UIMenu _leavePrompt = new UIMenu("Travel", "SELECT AN OPTION"); 
@@ -65,8 +65,6 @@ namespace SpaceMod
             PlayerPed.LastVehicle?.Delete();
             Function.Call(Hash.SET_GRAVITY_LEVEL, 0); // TODO: Move to utilities.
             Game.TimeScale = 1.0f;
-            if (PlayerPed.IsDead) return;
-            Game.FadeScreenIn(0);
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
@@ -136,8 +134,8 @@ namespace SpaceMod
             _leavePrompt.Visible = false;
             Game.TimeScale = 1.0f;
 
-            Game.FadeScreenOut(1000);
-            Wait(1000);
+            Game.FadeScreenOut(2000);
+            Wait(2000);
 
             _currentScene = scene;
             _currentScene.StartDirection = dir;
@@ -152,8 +150,8 @@ namespace SpaceMod
             }
             RemoveGravity();
 
-            Wait(1000);
-            Game.FadeScreenIn(1000);
+            Wait(2000);
+            Game.FadeScreenIn(2000);
         }
 
         private void BackToEarth()
@@ -181,6 +179,11 @@ namespace SpaceMod
         {
             if (_currentScene == null)
                 return;
+            /*
+                In the moon mission when you shoot you kinda get wantedstars
+                so this thing prevents that :)
+            */
+            Game.Player.WantedLevel = 0; //My code, yay
 
             _currentScene.Update();
             _currentMission?.Tick(PlayerPed, _currentScene);

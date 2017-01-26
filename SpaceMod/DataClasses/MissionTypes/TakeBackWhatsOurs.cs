@@ -18,12 +18,15 @@ namespace SpaceMod.DataClasses.MissionTypes
         private readonly List<Prop> _spaceShips = new List<Prop>();
         private readonly int _alienRelationship;
         private readonly int _originalMaxHealth;
+        private bool completedMission = false;
 
 
         public TakeBackWhatsOurs()
         {
+            completedMission = false;
             _alienRelationship = World.AddRelationshipGroup("Aliens");
             World.SetRelationshipBetweenGroups(Relationship.Hate, _alienRelationship, Game.GenerateHash("PLAYER"));
+            World.SetRelationshipBetweenGroups(Relationship.Companion, _alienRelationship, _alienRelationship);
 
             // TODO: Move the game.player.character stuff to a static class
             var character = Game.Player.Character;
@@ -39,7 +42,11 @@ namespace SpaceMod.DataClasses.MissionTypes
             if (currentScene == null) return;
 
             // We're not on the surface of the moon.
-            if (currentScene.GetType() != typeof(MoonSurfaceScene)) return;
+            if (currentScene.GetType() != typeof(MoonSurfaceScene))
+            {
+                UI.ShowSubtitle("Go to the ~g~moon!");
+                return;
+            }
 
             if (!_spawned)
             {
@@ -95,6 +102,7 @@ namespace SpaceMod.DataClasses.MissionTypes
                 var position = origin.Around(_random.Next(50, 75));
                 position = position.MoveToGroundArtificial();
                 var ped = World.CreatePed(PedHash.MovAlien01, position);
+                ped.Accuracy = 50;
                 ped.Weapons.Give(WeaponHash.Railgun, 15, true, true);
                 ped.IsPersistent = true;
                 ped.RelationshipGroup = _alienRelationship;
@@ -123,6 +131,7 @@ namespace SpaceMod.DataClasses.MissionTypes
                 spaceCraft.Health = spaceCraft.MaxHealth = 10000;
                 var blip = spaceCraft.AddBlip();
                 blip.Sprite = BlipSprite.SonicWave;
+                blip.Color = BlipColor.Green;
                 blip.Name = "Alien Aircraft";
                 _spaceShips.Add(spaceCraft);
             }
