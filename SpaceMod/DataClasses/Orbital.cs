@@ -25,7 +25,7 @@ namespace SpaceMod.DataClasses
             _orbitalVelocity = orbitalVelocity;
             RotationSpeed = rotationSpeed;
 
-            recticle = new UIText(name, Point.Empty, 1f);
+            recticle = new UIText(name, Point.Empty, 0.5f);
         }
 
         public Entity OrbitalEntity { get; set; }
