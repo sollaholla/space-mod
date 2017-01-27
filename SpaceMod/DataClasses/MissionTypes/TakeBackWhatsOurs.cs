@@ -77,8 +77,7 @@ namespace SpaceMod.DataClasses.MissionTypes
 
             _aliens.ForEach(ped =>
             {
-                var dist = Function.Call<float>(Hash.VDIST, ped.Position.X, ped.Position.Y, ped.Position.Z,
-                    playerPed.Position.X, playerPed.Position.Y, playerPed.Position.Z);
+                var dist = playerPed.Position.VDist(ped.Position);
                 ped.AlwaysKeepTask = false;
                 if (!ped.IsInCombatAgainst(playerPed) && dist > 35)
                     ped.Task.RunTo(playerPed.Position, true);
