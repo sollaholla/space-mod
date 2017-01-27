@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using GTA;
 using GTA.Math;
-using GTA.Native;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {
     public class MoonOrbitScene : Scene
     {
-        private PlanetSystem _planetSystem;
+        private OrbitalSystem _planetSystem;
         private Prop _earth;
         private Prop _moon;
 
@@ -24,23 +23,20 @@ namespace SpaceMod.DataClasses.SceneTypes
             _moon = World.CreateProp(Constants.MoonLargeModel, Vector3.Zero, false, false);
             var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-
-            // Move the player to v3.zero so that we can spawn these props.
-            ResetPlayerOrigin();
-
+            
             // Create planets and stars.
-            var planets = new List<Planet>
+            var orbitals = new List<Orbital>
             {
-                new Planet(_earth.Handle, galaxy, Vector3.Zero, -3.0f) /*Earth*/,
-                new Planet(_moon.Handle, galaxy, Vector3.Zero, 3.5f) /*Moon*/
+                new Orbital(_earth.Handle, "Earth", galaxy, Vector3.Zero, -3.0f) /*Earth*/,
+                new Orbital(_moon.Handle, "Moon", galaxy, Vector3.Zero, 3.5f) /*Moon*/
             };
-            var stars = new List<Star>
+            var lockedOrbitals = new List<LockedOrbital>
             {
-                new Star(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
+                new LockedOrbital(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
             };
 
             // Move player back to the galaxy center.
-            TeleportPlayerToGalaxy();
+            MovePlayerToGalaxy();
 
             // Set the position of the earth and moon.
             _earth.Position = Positions[0];
@@ -50,9 +46,11 @@ namespace SpaceMod.DataClasses.SceneTypes
             sun.Position = Constants.GalaxyCenter;
 
             // Create the planet system.
-            _planetSystem = new PlanetSystem(galaxy.Handle, planets, stars, -1.5f);
+            _planetSystem = new OrbitalSystem(galaxy.Handle, orbitals, lockedOrbitals, -1.5f);
 
-            SetStartDirection(_moon.Position, PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle as Entity : PlayerPed, StartDirection);
+            // Check earth orbit scene for explanation.
+            SetStartDirection(_moon.Position, PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle as Entity : PlayerPed,
+                StartDirection);
         }
 
         private void GoToMoon()

@@ -9,7 +9,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 {
     public class IsslScene : Scene
     {
-        private PlanetSystem _planetSystem;
+        private OrbitalSystem _planetSystem;
         private Camera _camera;
         private Prop _issl;
         private Prop _earth;
@@ -28,43 +28,44 @@ namespace SpaceMod.DataClasses.SceneTypes
                 ModController.Instance.SetCurrentMission(new TakeBackWhatsOurs());
                 End(new EarthOrbitScene());
             };
+
+            _missionMenu.OnMenuClose += sender => _missionMenu.Visible = true;
         }
 
         public override void Init()
         {
-            _missionMenu.Visible = true;
-
+            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
             _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
             _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-
-            ResetPlayerOrigin();
-
-            var planets = new List<Planet>
+            
+            var orbitals = new List<Orbital>
             {
-                new Planet(_earth.Handle, galaxy, Vector3.Zero, -0.5f),
-                new Planet(_issl.Handle, galaxy, Vector3.Zero, 0)
+                new Orbital(_earth.Handle, "Earth", galaxy, Vector3.Zero, -0.5f),
+                new Orbital(_issl.Handle, "Issl", galaxy, Vector3.Zero, 0)
             };
 
-            TeleportPlayerToGalaxy();
-
+            MovePlayerToGalaxy();
+            
+            // Move the earth to the galaxy origin.
             _earth.Position = galaxy.Position;
-            _issl.Position = _earth.Position - _earth.RightVector * 1200 + _earth.UpVector * 150;
-            var rotation = _issl.Rotation;
-            rotation.Y = -30f;
-            rotation.Z = -70f;
-            _issl.Rotation = rotation;
 
-            _planetSystem = new PlanetSystem(galaxy.Handle, planets, new List<Star>(), -1.5f);
+            // Place the issl.
+            _issl.Position = new Vector3(-1200, 0, 8400);
+            _issl.Rotation = new Vector3(0, -30f, -70f);
 
+            _planetSystem = new OrbitalSystem(galaxy.Handle, orbitals, new List<LockedOrbital>(), -1.5f);
+
+            // Create cinematic camera.
             _camera = World.CreateCamera(Vector3.Zero, Vector3.Zero, GameplayCamera.FieldOfView);
             _camera.Shake(CameraShake.SkyDiving, 0.05f);
             World.RenderingCamera = _camera;
+
+            // open menu.
+            _missionMenu.Visible = true;
         }
 
         public override void Update()
         {
-
             if (_missionMenu.Visible)
             {
                 _missionMenu.ProcessControl();

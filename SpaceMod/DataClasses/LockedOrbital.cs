@@ -10,11 +10,11 @@ using GTA.Native;
 
 namespace SpaceMod.DataClasses
 {
-    public class Star : Entity
+    public class LockedOrbital : Entity
     {
         private readonly Prop _prop;
 
-        public Star(int handle, Vector3 offset) : base(handle)
+        public LockedOrbital(int handle, Vector3 offset) : base(handle)
         {
             _prop = new Prop(handle);
             Offset = offset;

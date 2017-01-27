@@ -8,13 +8,6 @@ using GTA.Math;
 
 namespace SpaceMod
 {
-    public enum SceneStartDirection
-    {
-        ToTarget,
-        FromTarget,
-        None
-    }
-
     public static class Constants
     {
         public const string SunSmallModel = "sun_small";

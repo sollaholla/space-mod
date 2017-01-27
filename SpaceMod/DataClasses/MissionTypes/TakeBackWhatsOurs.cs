@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -13,17 +14,17 @@ namespace SpaceMod.DataClasses.MissionTypes
         private readonly Random _random = new Random();
 
         private bool _spawned;
-        private bool _showedHelpText;
         private readonly List<Ped> _aliens = new List<Ped>();
         private readonly List<Prop> _spaceShips = new List<Prop>();
         private readonly int _alienRelationship;
         private readonly int _originalMaxHealth;
-        private bool completedMission = false;
 
+        // Mission flags.
+        private bool _mFlag1;   // Show subtitle to go to the moon.
+        private bool _mFlag2;   // Show help text when on moon.
 
         public TakeBackWhatsOurs()
         {
-            completedMission = false;
             _alienRelationship = World.AddRelationshipGroup("Aliens");
             World.SetRelationshipBetweenGroups(Relationship.Hate, _alienRelationship, Game.GenerateHash("PLAYER"));
             World.SetRelationshipBetweenGroups(Relationship.Companion, _alienRelationship, _alienRelationship);
@@ -34,31 +35,37 @@ namespace SpaceMod.DataClasses.MissionTypes
 
             character.Health = character.MaxHealth = 3000;
             character.CanRagdoll = false;
-            character.IsExplosionProof = false;
+            character.IsExplosionProof = true;
         }
 
         public override void Tick(Ped playerPed, Scene currentScene)
         {
             if (currentScene == null) return;
+            if (playerPed.IsDead) return;       // Death is handled from ModController.
 
             // We're not on the surface of the moon.
             if (currentScene.GetType() != typeof(MoonSurfaceScene))
             {
-                UI.ShowSubtitle("Go to the ~g~moon!");
+                Abort();
+
+                if (!_mFlag1) return;
+                UI.ShowSubtitle("Go to the ~g~moon~s~!");
+                _mFlag1 = true;
                 return;
             }
 
             if (!_spawned)
             {
                 Spawn(playerPed);
+                playerPed.Position = playerPed.Position.MoveToGroundArtificial() - playerPed.UpVector;
                 _spawned = true;
             }
 
-            if (!Utilities.IsHelpMessageBeingDisplayed() && !_showedHelpText)
+            if (!Utilities.IsHelpMessageBeingDisplayed() && !_mFlag2)
             {
                 Utilities.DisplayHelpTextThisFrame(
                     "Your space suit has been heavily equipped, to handle the alien weapon damage.");
-                _showedHelpText = true;
+                _mFlag2 = true;
             }
 
             _spaceShips.ForEach(prop =>
@@ -77,18 +84,35 @@ namespace SpaceMod.DataClasses.MissionTypes
 
             _aliens.ForEach(ped =>
             {
-                var dist = playerPed.Position.VDist(ped.Position);
+                // Handle alien AI.
+                var dist = Function.Call<float>(Hash.VDIST, ped.Position.X, ped.Position.Y, ped.Position.Z,
+                    playerPed.Position.X, playerPed.Position.Y, playerPed.Position.Z);
                 ped.AlwaysKeepTask = false;
                 if (!ped.IsInCombatAgainst(playerPed) && dist > 35)
                     ped.Task.RunTo(playerPed.Position, true);
+
+                ArtificalDamage(ped, playerPed, 2.5f, 50);
+
+                // Handle death.
                 if (!ped.IsDead) return;
                 ped.CurrentBlip.Remove();
                 _aliens.Remove(ped);
                 ped.MarkAsNoLongerNeeded();
             });
 
+            // End the mission.
             if (_aliens.Count > 0 || _spaceShips.Count > 0) return;
             End(false);
+        }
+
+        // TODO: Move to static class.
+        private static void ArtificalDamage(Ped ped, Ped target, float damageDistance, float damageMultiplier)
+        {
+            var impCoords = ped.GetLastWeaponImpactCoords();
+            if (impCoords == Vector3.Zero) return;
+            var distanceTo = impCoords.DistanceTo(target.Position);
+            if (distanceTo < damageDistance)
+                target.ApplyDamage((int)(1 / distanceTo * damageMultiplier));
         }
 
         private void Spawn(ISpatial spatial)
@@ -98,8 +122,11 @@ namespace SpaceMod.DataClasses.MissionTypes
             // spawn 20 enemies.
             for (var i = 0; i < 20; i++)
             {
+                // Get position.
                 var position = origin.Around(_random.Next(50, 75));
                 position = position.MoveToGroundArtificial();
+
+                // Create ped.
                 var ped = World.CreatePed(PedHash.MovAlien01, position);
                 ped.Accuracy = 50;
                 ped.Weapons.Give(WeaponHash.Railgun, 15, true, true);
@@ -109,6 +136,9 @@ namespace SpaceMod.DataClasses.MissionTypes
                 ped.Accuracy = 15;
                 Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
                 Function.Call(Hash.SET_PED_COMBAT_RANGE, ped.Handle, 2);
+                ped.IsFireProof = true;
+
+                // Create blip.
                 var blip = ped.AddBlip();
                 blip.Name = "Alien Hostile";
                 blip.Scale = 0.7f;
@@ -116,24 +146,42 @@ namespace SpaceMod.DataClasses.MissionTypes
                 _aliens.Add(ped);
             }
 
+            // Spawn spaceships.
             for (var i = 0; i < 5; i++)
             {
+                // Move the spaceship to a spawn position.
                 var position = origin.Around(_random.Next(50, 80));
-                position = position.MoveToGroundArtificial();
+                position = position.MoveToGroundArtificial() + new Vector3(0, 0, 15);
 
-                position = position + new Vector3(0, 0, 15);
+                // Skip this loop if the position is too close to another one.
+                if (IsCloseToAnyEntity(position, _spaceShips, 25))
+                continue;
 
+                // Create he spacecraft.
                 var spaceCraft = World.CreateProp("ufo_zancudo", Vector3.Zero, false, false);
                 spaceCraft.IsPersistent = true;
                 spaceCraft.FreezePosition = true;
-                spaceCraft.Position = position + new Vector3(0, 0, 15);
-                spaceCraft.Health = spaceCraft.MaxHealth = 10000;
+                spaceCraft.Position = position;
+                spaceCraft.Health = spaceCraft.MaxHealth = 4500;
+                spaceCraft.IsFireProof = true;      // NOTE: There's no fire in a space vaccum.
+
+                // Configure the blip.
                 var blip = spaceCraft.AddBlip();
                 blip.Sprite = BlipSprite.SonicWave;
                 blip.Color = BlipColor.Green;
                 blip.Name = "Alien Aircraft";
                 _spaceShips.Add(spaceCraft);
             }
+        }
+
+        private static bool IsCloseToAnyEntity(Vector3 position, IReadOnlyCollection<Entity> collection, float distance)
+        {
+            if (collection == null) return false;
+            if (collection.Count <= 0) return false;
+
+            return
+                collection.Where(entity1 => entity1 != null)
+                    .Any(entity1 => entity1.Position.DistanceTo(position) < distance);
         }
 
         public override void Abort()
@@ -151,13 +199,21 @@ namespace SpaceMod.DataClasses.MissionTypes
                 ship?.Delete();
                 _spaceShips.RemoveAt(0);
             }
+
+            ResetPlayer();
         }
 
         public override void CleanUp()
         {
+            ResetPlayer();
+        }
+
+        private void ResetPlayer()
+        {
             var character = Game.Player.Character;
             character.Health = character.MaxHealth = _originalMaxHealth;
             character.CanRagdoll = true;
+            character.IsExplosionProof = false;
         }
     }
 }

@@ -3,6 +3,13 @@ using GTA.Math;
 
 namespace SpaceMod.DataClasses
 {
+    public enum SceneStartDirection
+    {
+        ToTarget,
+        FromTarget,
+        None
+    }
+
     public abstract class Scene
     {
         public delegate void OnSceneEndedEvent(Scene sender, Scene newScene);
@@ -36,7 +43,7 @@ namespace SpaceMod.DataClasses
             else PlayerPed.CurrentVehicle.Position = Vector3.Zero;
         }
 
-        protected void TeleportPlayerToGalaxy(bool surface = false)
+        protected void MovePlayerToGalaxy(bool surface = false)
         {
             var position = surface ? Constants.PlanetSurfaceGalaxyCenter : Constants.GalaxyCenter;
             if (!PlayerPed.IsInVehicle()) PlayerPosition = position;
