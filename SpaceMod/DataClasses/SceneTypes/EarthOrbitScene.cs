@@ -49,26 +49,28 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Init()
         {
+            // Create props.
+            var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
             _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
             _moon = World.CreateProp(Constants.MoonMedModel, Vector3.Zero, false, false);
             _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
-            var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-
-            ResetPlayerOrigin();
-
-            var planets = new List<Orbital>
+            
+            // Setup our lists.
+            var orbitals = new List<Orbital>
             {
                 new Orbital(_earth.Handle, PlayerPed, Vector3.Zero, -3.5f) /*Earth*/,
                 new Orbital(_moon.Handle, galaxy, Vector3.Zero, 3.0f) /*Moon*/
             };
-            var stars = new List<LockedOrbital>
+            var lockedOrbitals = new List<LockedOrbital>
             {
                 new LockedOrbital(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
             };
 
-            TeleportPlayerToGalaxy();
+            // Move the player to the center of the galaxy.
+            MovePlayerToGalaxy();
 
+            // Set the positions of the orbitals.
             _earth.Position = Positions[0];
             _moon.Position = Positions[1];
 
@@ -80,7 +82,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _issl.Rotation = rotation;
 
             sun.Position = Constants.GalaxyCenter;
-            _planetSystem = new OrbitalSystem(galaxy.Handle, planets, stars, -1.5f);
+            _planetSystem = new OrbitalSystem(galaxy.Handle, orbitals, lockedOrbitals, -1.5f);
 
             // Since this is the "earth" orbit scene the target is the earth,
             // and if we have a start direction of "ToTarget" then we're going to face the earth

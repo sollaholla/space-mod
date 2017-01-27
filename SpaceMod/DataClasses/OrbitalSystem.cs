@@ -13,7 +13,6 @@ namespace SpaceMod.DataClasses
 
     public class OrbitalSystem : Entity
     {
-        private readonly Prop _prop;
         private readonly List<Orbital> _orbitals;
         private readonly List<LockedOrbital> _lockedOrbitals;
         private readonly RotationAxis _rotationAxis;
@@ -30,7 +29,6 @@ namespace SpaceMod.DataClasses
         public OrbitalSystem(int handle, List<Orbital> orbitals, List<LockedOrbital> lockedOrbitals,
             float skyboxRotationSpeed = 0, RotationAxis rotationAxis = RotationAxis.Z) : base(handle)
         {
-            _prop = new Prop(handle);
             _orbitals = orbitals;
             this._lockedOrbitals = lockedOrbitals;
             _rotationAxis = rotationAxis;
@@ -41,10 +39,15 @@ namespace SpaceMod.DataClasses
 
         public void Process(Vector3 galaxyCenter)
         {
-            if (_prop == null) return;
-            _prop.Position = galaxyCenter;
-            var rotation = _prop.Rotation;
+            SetRotation();
+            Position = galaxyCenter;
+            _orbitals?.ForEach(p => p?.Orbit());
+            _lockedOrbitals?.ForEach(UpdateStar);
+        }
 
+        private void SetRotation()
+        {
+            var rotation = Rotation;
             switch (_rotationAxis)
             {
                 case RotationAxis.Z:
@@ -57,20 +60,18 @@ namespace SpaceMod.DataClasses
                     rotation.Y += Game.LastFrameTime * SkyboxRotationSpeed;
                     break;
             }
-            _prop.Rotation = rotation;
-            _orbitals?.ForEach(p => p?.Orbit());
-            _lockedOrbitals?.ForEach(UpdateStar);
+            Rotation = rotation;
         }
 
         private void UpdateStar(LockedOrbital star)
         {
-            if (!star.IsAttached()) star.AttachTo(_prop, star.Offset);
-            star.Update(_prop.Position);
+            if (!star.IsAttached()) star.AttachTo(this, star.Offset);
+            star.Update(Position);
         }
 
         public void Abort()
         {
-            _prop?.Delete();
+            Delete();
             while (_lockedOrbitals.Count > 0)
             {
                 _lockedOrbitals[0]?.Delete();

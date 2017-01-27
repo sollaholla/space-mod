@@ -31,7 +31,7 @@ namespace SpaceMod.DataClasses.SceneTypes
                 new Orbital(earth.Handle, _surface, Vector3.Zero, 1) /*Earth*/
             };
 
-            TeleportPlayerToGalaxy(true);
+            MovePlayerToGalaxy(true);
             
             _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
 
