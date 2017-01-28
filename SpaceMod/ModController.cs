@@ -69,9 +69,15 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            if (keyEventArgs.KeyCode != Keys.K) return;
-            LeaveEarth(new MoonSurfaceScene());
-            SetCurrentMission(new TakeBackWhatsOurs());
+            if (keyEventArgs.KeyCode == Keys.K)
+            {
+                LeaveEarth(new MoonSurfaceScene());
+                SetCurrentMission(new TakeBackWhatsOurs());
+            }
+            if(keyEventArgs.KeyCode == Keys.O)
+            {
+                World.CreateProp(new Model("mars_small"), Game.Player.Character.Position + Game.Player.Character.ForwardVector * 3, false, false);
+            }
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
