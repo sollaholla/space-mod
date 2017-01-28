@@ -30,7 +30,7 @@ namespace SpaceMod.DataClasses
             float skyboxRotationSpeed = 0, RotationAxis rotationAxis = RotationAxis.Z) : base(handle)
         {
             _orbitals = orbitals;
-            this._lockedOrbitals = lockedOrbitals;
+            _lockedOrbitals = lockedOrbitals;
             _rotationAxis = rotationAxis;
             SkyboxRotationSpeed = skyboxRotationSpeed;
         }

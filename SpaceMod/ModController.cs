@@ -70,8 +70,8 @@ namespace SpaceMod
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
-            LeaveEarth(new MoonSurfaceScene());
-            SetCurrentMission(new TakeBackWhatsOurs());
+            LeaveEarth(new EarthOrbitScene());
+            //SetCurrentMission(new TakeBackWhatsOurs());
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
