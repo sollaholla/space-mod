@@ -19,6 +19,9 @@ namespace SpaceMod
         public const string EarthSmallModel = "earth_small";
         public const string SpaceDomeModel = "spacedome";
         public const string IsslModel = "issl";
+        public const string MarsLargeModel = "mars_large";
+        public const string MarsMedModel = "mars_med";
+        public const string MarsSmallModel = "mars_small";
 
         public static Vector3 TrevorAirport => new Vector3(1267.619f, 3137.67f, 40.41403f);
         public static Vector3 GalaxyCenter => new Vector3(-9994.448f, -12171.48f, 8828.197f);

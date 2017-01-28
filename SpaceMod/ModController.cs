@@ -70,7 +70,7 @@ namespace SpaceMod
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
-            LeaveEarth(new EarthOrbitScene());
+            LeaveEarth(new MarsOrbitScene());
             //SetCurrentMission(new TakeBackWhatsOurs());
         }
 
