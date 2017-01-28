@@ -7,6 +7,8 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 using System.Drawing;
+using NativeUI;
+using System.IO;
 
 namespace SpaceMod.DataClasses
 {
@@ -15,7 +17,7 @@ namespace SpaceMod.DataClasses
         private readonly Prop _prop;
         private readonly string _name;
         private readonly Vector3 _orbitalVelocity;
-        UIText recticle;
+        private const string PATH = @".\scripts\SpaceMod";
 
         public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed) : base(handle)
         {
@@ -24,8 +26,6 @@ namespace SpaceMod.DataClasses
             OrbitalEntity = orbitalEntity;
             _orbitalVelocity = orbitalVelocity;
             RotationSpeed = rotationSpeed;
-
-            recticle = new UIText(name, Point.Empty, 0.5f);
         }
 
         public Entity OrbitalEntity { get; set; }
@@ -41,13 +41,14 @@ namespace SpaceMod.DataClasses
             rotation.Z += Game.LastFrameTime * RotationSpeed;
             _prop.Rotation = rotation;
 
-            if(Function.Call<bool>(Hash.IS_ENTITY_ON_SCREEN, _prop))
+            if(!Function.Call<bool>(Hash.IS_ENTITY_OCCLUDED, _prop))
             {
                 Point posToDraw = UI.WorldToScreen(_prop.Position);
-                recticle.Caption = _name;
-                recticle.Color = Color.White;
-                recticle.Position = posToDraw;
-                recticle.Draw();
+
+                string pathFile = Path.Combine(PATH, _name+"Reticle.png");
+
+                if (File.Exists(pathFile))
+                    UI.DrawTexture(pathFile, 0, 1, 60, posToDraw, new Size(50, 10));
             }
         }
     }
