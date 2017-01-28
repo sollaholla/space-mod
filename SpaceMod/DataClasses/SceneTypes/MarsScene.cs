@@ -1,4 +1,7 @@
-﻿namespace SpaceMod.DataClasses.SceneTypes
+﻿using GTA;
+using GTA.Native;
+
+namespace SpaceMod.DataClasses.SceneTypes
 {
     public class MarsScene : Scene
     {
