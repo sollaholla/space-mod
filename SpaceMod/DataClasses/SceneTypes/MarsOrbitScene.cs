@@ -13,8 +13,7 @@ namespace SpaceMod.DataClasses.SceneTypes
     {
         public static Vector3[] Positions => new[]
         {
-            new Vector3(-6870.744f, -12107.31f, 8620.764f), /*Earth*/
-            new Vector3(-15370.74f, -12107.31f, 8620.764f) /*Moon*/
+            new Vector3(-6870.744f, -12107.31f, 8620.764f), /*Mars*/
         };
 
         private OrbitalSystem _planetSystem;
@@ -47,9 +46,18 @@ namespace SpaceMod.DataClasses.SceneTypes
                 StartDirection);
         }
 
+        private void GoToMars()
+        {
+            var dist = PlayerPosition.DistanceTo(_mars.Position);
+
+            if (dist > 2000) return;
+            End(new MarsSurfaceScene());
+        }
+
         public override void Update()
         {
             _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+            GoToMars();
         }
 
         public override void Abort()

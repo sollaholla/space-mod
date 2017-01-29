@@ -61,6 +61,7 @@
     <Compile Include="DataClasses\SceneTypes\IsslScene.cs" />
     <Compile Include="DataClasses\SceneTypes\MarsOrbitScene.cs" />
     <Compile Include="DataClasses\SceneTypes\MarsScene.cs" />
+    <Compile Include="DataClasses\SceneTypes\MarsSurfaceScene.cs" />
     <Compile Include="DataClasses\SceneTypes\MoonOrbitScene.cs" />
     <Compile Include="DataClasses\SceneTypes\MoonSurfaceScene.cs" />
     <Compile Include="DataClasses\LockedOrbital.cs" />
