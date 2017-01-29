@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using GTA;
 using GTA.Math;
@@ -16,7 +17,12 @@ namespace SpaceMod
         private Scene _currentScene;
         private Mission _currentMission;
         private bool _askedToLeave;
+        private readonly Weather _defaultWeather = Weather.Clear;
+        private readonly TimeSpan _defaultTime = new TimeSpan(0, 0, 0, 0);
 
+        private Weather _currentWeather = Weather.Clear;
+        private TimeSpan _currentTime = new TimeSpan(0, 0, 0, 0);
+        
         // Responsible for asking the player whether he/she wants to leave orbit
         // stay on earth, or go to the issl.
         private readonly UIMenu _leavePrompt = new UIMenu("Travel", "SELECT AN OPTION"); 
@@ -58,6 +64,7 @@ namespace SpaceMod
 
         private void OnAborted(object sender, EventArgs eventArgs)
         {
+            if (!PlayerPed.IsDead) Game.FadeScreenIn(0);
             _currentScene?.Abort();
             _currentMission?.Abort();
             if (_currentScene != null) PlayerPed.Position = Constants.TrevorAirport;
@@ -70,8 +77,17 @@ namespace SpaceMod
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.KeyCode != Keys.K) return;
-            LeaveEarth(new MarsOrbitScene());
-            //SetCurrentMission(new TakeBackWhatsOurs());
+            var named = "core";
+            var fxName = "env_wind_sand_dune";
+            var scale = 20.0f;
+            Function.Call(Hash.REQUEST_NAMED_PTFX_ASSET, named);
+            Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, named);
+            var p = PlayerPosition;
+            var handle = Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_ON_ENTITY, fxName, p.X, p.Y, p.Z, 0.0, 0.0, 0.0, scale, false, false, false, 0);
+            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_ALPHA, handle, 230f);
+            var color = Color.BlanchedAlmond;
+            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_COLOUR, handle, color.R, color.G, color.B, false);
+
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
@@ -242,10 +258,22 @@ namespace SpaceMod
             Function.Call(Hash.SET_GRAVITY_LEVEL, 3);
         }
 
-        private static void SetTimeAndWeather()
+        public void SetWeatherAndTime(Weather weather, TimeSpan time)
         {
-            World.CurrentDayTime = new TimeSpan(0, 0, 0, 0);
-            World.Weather = Weather.ExtraSunny;
+            _currentWeather = weather;
+            _currentTime = time;
+        }
+
+        public void ResetWeatherAndTime()
+        {
+            _currentWeather = _defaultWeather;
+            _currentTime = _defaultTime;
+        }
+
+        private void SetTimeAndWeather()
+        {
+            World.CurrentDayTime = _currentTime;
+            World.Weather = _currentWeather;
         }
     }
 }

@@ -133,7 +133,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         private void Done()
         {
-            _planetSystem.Abort();
+            _planetSystem?.Abort();
             _issl?.Delete();
             Game.TimeScale = 1;
         }
