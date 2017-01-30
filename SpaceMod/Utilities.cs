@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.IO;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -7,6 +9,8 @@ namespace SpaceMod
 {
     public static class Utilities
     {
+        public static readonly Random Random = new Random();
+
         public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angle)
         {
             var dir = point - pivot;
@@ -50,6 +54,54 @@ namespace SpaceMod
             var direction = Vector3.WorldDown;
             var ray = World.Raycast(origin, direction, int.MaxValue, IntersectOptions.Everything);
             return ray.HitCoords;
+        }
+
+        public static void ShowUIPosition(Entity entity, int index, Vector3 position, string pathToFile, string objectName,
+            UIText nameResText, UIText distanceResText)
+        {
+            if (entity != null)
+            {
+                if (entity.IsOccluded) return;
+                if (!entity.IsOnScreen) return;
+            }
+
+            var point = UI.WorldToScreen(position);
+            var filename = Path.Combine(pathToFile, "Reticle.png");
+            var size = new Size(125 / 2, 125 / 2);
+            var halfWidth = size.Width / 2;
+            var halfHeight = size.Height / 2;
+            var imageUpperBound = point.Y - halfHeight;
+            var imageLowerBount = point.Y + halfHeight;
+            var textColor = Color.DarkMagenta;
+            const int upperTextOffset = 25;
+
+            point = new Point(point.X - halfWidth, imageUpperBound);
+            nameResText.Caption = objectName;
+            nameResText.Position = new Point(point.X + halfWidth, imageUpperBound - upperTextOffset
+                /*we offset the y position so that it sits above the image*/);
+            nameResText.Draw();
+            nameResText.Color = textColor;
+
+            var characterPosition = Game.Player.Character.Position;
+            distanceResText.Caption = $"{Math.Round(position.DistanceTo(characterPosition), MidpointRounding.AwayFromZero)} M";
+            distanceResText.Position = new Point(point.X + halfWidth, imageLowerBount);
+            distanceResText.Draw();
+            //distanceResText.Color = textColor;
+
+            if (File.Exists(filename))
+                UI.DrawTexture(filename, index, 1, 60, point, size);
+        }
+
+        public static bool IsOnScreen(this Vector3 vector3)
+        {
+            var camPos = GameplayCamera.Position;
+            var camDir = GameplayCamera.Direction;
+            var fov = GameplayCamera.FieldOfView;
+            var dir = vector3 - camPos;
+            var angle = Vector3.Angle(dir, camDir);
+            var inField = angle < fov;
+
+            return inField;
         }
     }
 }

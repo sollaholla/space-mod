@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using GTA;
-using GTA.Native;
 using GTA.Math;
 
 namespace SpaceMod.DataClasses.SceneTypes
@@ -25,7 +20,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
             var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
 
-            var orbitals = new List<Orbital>()
+            var orbitals = new List<Orbital>
             {
                 new Orbital(_mars.Handle, "Mars", galaxy, Vector3.Zero, -3.5f)
             };

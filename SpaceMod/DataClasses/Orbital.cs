@@ -1,49 +1,59 @@
-﻿using GTA;
+﻿using System;
+using GTA;
 using GTA.Math;
-using GTA.Native;
 using System.Drawing;
 using System.IO;
+using Font = GTA.Font;
 
 namespace SpaceMod.DataClasses
 {
     public class Orbital : Entity
     {
-        private readonly Prop _prop;
-        private readonly string _name;
         private readonly Vector3 _orbitalVelocity;
-        private const string PATH = @".\scripts\SpaceMod";
 
-        public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed) : base(handle)
+        private readonly UIText _nameText = new UIText(string.Empty, new Point(), 0.5f)
         {
-            _prop = new Prop(handle);
-            _name = name;
-            OrbitalEntity = orbitalEntity;
+            Centered = true,
+            Font = Font.Monospace,
+            Shadow = true
+        };
+
+        private readonly UIText _distanceText = new UIText(string.Empty, new Point(), 0.5f)
+        {
+            Centered = true,
+            Font = Font.Monospace,
+            Shadow = true
+        };
+
+        public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed,
+            bool showUIByDefault = true) : base(handle)
+        {
             _orbitalVelocity = orbitalVelocity;
+
+            Name = name;
+            OrbitalEntity = orbitalEntity;
             RotationSpeed = rotationSpeed;
+            ShowUIByDefault = showUIByDefault;
         }
 
+        public string Name { get; set; }
         public Entity OrbitalEntity { get; set; }
         public float RotationSpeed { get; set; }
-
+        public bool ShowUIByDefault { get; set; }
 
         public void Orbit()
         {
-            if (_prop == null) return;
             if (OrbitalEntity == null) return;
-            _prop.Position = Utilities.RotatePointAroundPivot(_prop.Position, OrbitalEntity.Position, _orbitalVelocity);
-            var rotation = _prop.Rotation;
+            Position = Utilities.RotatePointAroundPivot(Position, OrbitalEntity.Position, _orbitalVelocity);
+            var rotation = Rotation;
             rotation.Z += Game.LastFrameTime * RotationSpeed;
-            _prop.Rotation = rotation;
+            Rotation = rotation;
+        }
 
-            if(!Function.Call<bool>(Hash.IS_ENTITY_OCCLUDED, _prop))
-            {
-                Point posToDraw = UI.WorldToScreen(_prop.Position);
-
-                string pathFile = Path.Combine(PATH, _name+"Reticle.png");
-
-                if (File.Exists(pathFile))
-                    UI.DrawTexture(pathFile, 0, 1, 60, posToDraw, new Size(50, 10));
-            }
+        public void ShowUIPosition(int index)
+        {
+            if (!ShowUIByDefault) return;
+            Utilities.ShowUIPosition(this, index, Position, Constants.PathToDatabase, Name, _nameText, _distanceText);
         }
     }
 }

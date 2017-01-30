@@ -13,6 +13,8 @@ namespace SpaceMod.DataClasses
 
     public class OrbitalSystem : Entity
     {
+        public static bool ShowUIPositions = true;
+
         private readonly List<Orbital> _orbitals;
         private readonly List<LockedOrbital> _lockedOrbitals;
         private readonly RotationAxis _rotationAxis;
@@ -39,10 +41,19 @@ namespace SpaceMod.DataClasses
 
         public void Process(Vector3 galaxyCenter)
         {
+            // Set our rotation.
             SetRotation();
+
+            // Stay at the galaxy center. Cause' you ain't leavin boi.
             Position = galaxyCenter;
-            _orbitals?.ForEach(p => p?.Orbit());
-            _lockedOrbitals?.ForEach(UpdateStar);
+
+            // Update locked orbitals.
+            _lockedOrbitals?.ForEach(UpdateLockedOrbital);
+
+            // Update orbitals.
+            _orbitals?.ForEach(orbital => orbital?.Orbit());
+            if (ShowUIPositions)
+                _orbitals?.ForEach(orbital => orbital.ShowUIPosition(_orbitals.IndexOf(orbital)));
         }
 
         private void SetRotation()
@@ -63,10 +74,10 @@ namespace SpaceMod.DataClasses
             Rotation = rotation;
         }
 
-        private void UpdateStar(LockedOrbital star)
+        private void UpdateLockedOrbital(LockedOrbital lockedOrbital)
         {
-            if (!star.IsAttached()) star.AttachTo(this, star.Offset);
-            star.Update(Position);
+            if (!lockedOrbital.IsAttached()) lockedOrbital.AttachTo(this, lockedOrbital.Offset);
+            lockedOrbital.Update(Position);
         }
 
         public void Abort()
@@ -84,11 +95,14 @@ namespace SpaceMod.DataClasses
             }
         }
 
-        public string Log()
+        /// <summary>
+        /// Returns all planets positions and rotations in the array order 0 to length.
+        /// </summary>
+        /// <returns></returns>
+        public string GetInfo()
         {
             var str = string.Empty;
-            var pIndex = 0;
-            _orbitals.ForEach(p => str += $"Planet{pIndex}: {p.Position}");
+            _orbitals.ForEach(p => str += $"{p.Name}: position = {p.Position} | rotation = {p.Rotation}\n");
             return str;
         }
     }

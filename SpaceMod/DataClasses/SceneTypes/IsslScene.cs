@@ -40,8 +40,8 @@ namespace SpaceMod.DataClasses.SceneTypes
             
             var orbitals = new List<Orbital>
             {
-                new Orbital(_earth.Handle, "Earth", galaxy, Vector3.Zero, -0.5f),
-                new Orbital(_issl.Handle, "Issl", galaxy, Vector3.Zero, 0)
+                new Orbital(_earth.Handle, "Earth", galaxy, Vector3.Zero, -0.5f, false),
+                new Orbital(_issl.Handle, "Issl", galaxy, Vector3.Zero, 0, false)
             };
 
             MovePlayerToGalaxy();
@@ -71,6 +71,7 @@ namespace SpaceMod.DataClasses.SceneTypes
                 _missionMenu.ProcessControl();
                 _missionMenu.ProcessMouse();
                 _missionMenu.Draw();
+                ModController.Instance.CloseAllMenus();
             }
 
             _planetSystem.Process(_camera.Position);

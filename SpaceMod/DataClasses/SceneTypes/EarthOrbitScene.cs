@@ -3,6 +3,7 @@ using System.Drawing;
 using GTA;
 using GTA.Math;
 using NativeUI;
+using Font = GTA.Font;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {
@@ -20,6 +21,21 @@ namespace SpaceMod.DataClasses.SceneTypes
         private Prop _issl;
         private readonly UIMenu _selectionMenu = new UIMenu(string.Empty, "SELECT A DESTINATION", new Point(0, -105));
         private readonly UIMenu _marsMenu = new UIMenu(string.Empty, "SELECT AN OPTION", new Point(0, -105));
+        private readonly Vector3 _marsTarget = Constants.GalaxyCenter + new Vector3(0, -5000, 0);
+
+        private readonly UIText _marsNameText = new UIText(string.Empty, new Point(), 0.5f)
+        {
+            Centered = true,
+            Font = Font.Monospace,
+            Shadow = true
+        };
+
+        private readonly UIText _marsDistanceText = new UIText(string.Empty, new Point(), 0.5f)
+        {
+            Centered = true,
+            Font = Font.Monospace,
+            Shadow = true
+        };
 
         public EarthOrbitScene()
         {
@@ -29,6 +45,11 @@ namespace SpaceMod.DataClasses.SceneTypes
             {
                 End(null);
             };
+            _marsMenu.OnMenuClose += sender =>
+            {
+                _marsMenu.Visible = true; // You cannot close me!!!!!!!
+            };
+
             var earthItem = new UIMenuItem("Earth", "Travel to earth.");
             _selectionMenu.AddItem(earthItem);
             earthItem.Activated += (sender, item) =>
@@ -55,7 +76,7 @@ namespace SpaceMod.DataClasses.SceneTypes
                 End(new MarsOrbitScene());
             };
 
-            var marsBack = new UIMenuItem("Back", "Go back to earth");
+            var marsBack = new UIMenuItem("Back", "Go back to earth.");
             _marsMenu.AddItem(marsBack);
             marsBack.Activated += (sender, item) =>
             {
@@ -71,7 +92,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
             _moon = World.CreateProp(Constants.MoonMedModel, Vector3.Zero, false, false);
             _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
-            
+
             // Setup our lists.
             var orbitals = new List<Orbital>
             {
@@ -110,22 +131,31 @@ namespace SpaceMod.DataClasses.SceneTypes
         public override void Update()
         {
             _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+
             GoToMoon();
             GoToEarth();
+            GoToMars();
 
-            if (_selectionMenu.Visible)
-            {
-                _selectionMenu.ProcessControl();
-                _selectionMenu.ProcessMouse();
-                _selectionMenu.Draw();
-            }
+            ProcessSelectionMenu();
+            ProcessMarsMenu();
+        }
 
-            if(_marsMenu.Visible)
-            {
-                _marsMenu.ProcessControl();
-                _marsMenu.ProcessMouse();
-                _marsMenu.Draw();
-            }
+        private void ProcessSelectionMenu()
+        {
+            if (!_selectionMenu.Visible) return;
+            ModController.Instance.CloseAllMenus();
+            _selectionMenu.ProcessControl();
+            _selectionMenu.ProcessMouse();
+            _selectionMenu.Draw();
+        }
+
+        private void ProcessMarsMenu()
+        {
+            if (!_marsMenu.Visible) return;
+            ModController.Instance.CloseAllMenus();
+            _marsMenu.ProcessControl();
+            _marsMenu.ProcessMouse();
+            _marsMenu.Draw();
         }
 
         private void GoToMoon()
@@ -148,12 +178,16 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         private void GoToMars()
         {
-            var _marsTarget = Constants.GalaxyCenter + new Vector3(2500, 0, 0);
-            var dist = Vector3.Distance(_marsTarget, PlayerPosition);
-            if (_marsMenu.Visible) return;
-            if (dist <= 10)
-                _marsMenu.Visible = true;
+            // Draw the position of the target.
+            if (_marsTarget.IsOnScreen() && OrbitalSystem.ShowUIPositions)
+                Utilities.ShowUIPosition(null, 10, _marsTarget, Constants.PathToDatabase, "Mars", _marsNameText,
+                    _marsDistanceText);
 
+            // Show the menu if possible.
+            if (_marsMenu.Visible) return;
+            var dist = PlayerPosition.DistanceTo(_marsTarget);
+            if (dist > 2499) return;
+            _marsMenu.Visible = true;
             Game.TimeScale = 0;
         }
 

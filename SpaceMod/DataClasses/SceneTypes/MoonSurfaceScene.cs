@@ -28,7 +28,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             var planets = new List<Orbital>
             {
-                new Orbital(earth.Handle, "Earth", _surface, Vector3.Zero, 1) /*Earth*/
+                new Orbital(earth.Handle, "Earth", _surface, Vector3.Zero, 1, false) /*Earth*/
             };
 
             MovePlayerToGalaxy(true);

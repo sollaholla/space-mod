@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses;
-using SpaceMod.DataClasses.MissionTypes;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
 
@@ -27,12 +25,23 @@ namespace SpaceMod
         // stay on earth, or go to the issl.
         private readonly UIMenu _leavePrompt = new UIMenu("Travel", "SELECT AN OPTION"); 
 
+        private readonly MenuPool _menuPool = new MenuPool();
+        private readonly UIMenu _optionsMenu = new UIMenu("Grand Theft Space", "OPTIONS");
+
         public ModController()
         {
             Instance = this;
             KeyUp += OnKeyUp;
             Tick += OnTick;
             Aborted += OnAborted;
+
+            _menuPool.Add(_optionsMenu);
+            var showUIItem = new UIMenuCheckboxItem("Show Distance UI", true, "Show the distance to planets when in space.");
+            showUIItem.CheckboxEvent += (sender, @checked) =>
+            {
+                OrbitalSystem.ShowUIPositions = @checked;
+            };
+            _optionsMenu.AddItem(showUIItem);
 
             SetupLeavePrompt();
         }
@@ -76,22 +85,19 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            if (keyEventArgs.KeyCode != Keys.K) return;
-            var named = "core";
-            var fxName = "env_wind_sand_dune";
-            var scale = 20.0f;
-            Function.Call(Hash.REQUEST_NAMED_PTFX_ASSET, named);
-            Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, named);
-            var p = PlayerPosition;
-            var handle = Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_ON_ENTITY, fxName, p.X, p.Y, p.Z, 0.0, 0.0, 0.0, scale, false, false, false, 0);
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_ALPHA, handle, 230f);
-            var color = Color.BlanchedAlmond;
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_COLOUR, handle, color.R, color.G, color.B, false);
+            if (keyEventArgs.KeyCode == Keys.H)
+                _optionsMenu.Visible = true;
+
+            //if (_currentScene != null) return;
+            //if (keyEventArgs.KeyCode != Keys.K) return;
+            //LeaveEarth(new EarthOrbitScene());
 
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
+            _menuPool.ProcessMenus();
+
             if (PlayerPed.IsDead && Game.IsScreenFadedOut)
                 OnAborted(null, null);
 
@@ -133,12 +139,13 @@ namespace SpaceMod
             if (_currentScene != null) return;
             if (!PlayerPed.IsInVehicle()) return;
             if (PlayerPed.CurrentVehicle.ClassType != VehicleClass.Planes) return;
-            if (PlayerPed.HeightAboveGround > 2000)
+            if (PlayerPed.HeightAboveGround >= 5000)
             {
                 if (_askedToLeave) return;
                 Game.TimeScale = 0f;
                 if (!_leavePrompt.Visible)
                     _leavePrompt.Visible = true;
+                _menuPool.CloseAllMenus();
                 _leavePrompt.ProcessControl();
                 _leavePrompt.ProcessMouse();
                 _leavePrompt.Draw();
@@ -274,6 +281,11 @@ namespace SpaceMod
         {
             World.CurrentDayTime = _currentTime;
             World.Weather = _currentWeather;
+        }
+
+        public void CloseAllMenus()
+        {
+            _menuPool?.CloseAllMenus();
         }
     }
 }
