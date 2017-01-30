@@ -72,7 +72,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         private void Done()
         {
-            _planetSystem.Abort();
+            _planetSystem?.Abort();
             Game.TimeScale = 1;
         }
     }
