@@ -33,7 +33,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             _planetSystem = new OrbitalSystem(galaxy.Handle, new List<Orbital>(), new List<LockedOrbital>(), -0.3f);
 
-            PlayerPosition = _surface.Position + PlayerPed.UpVector;
+            PlayerPosition = _surface.Position + PlayerPed.UpVector * 4;
             PlayerPed.HasGravity = true;
 
             if (_playerVehicle == null) return;
