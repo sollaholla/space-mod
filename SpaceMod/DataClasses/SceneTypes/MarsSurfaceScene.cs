@@ -31,20 +31,14 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             // Freeze the surface since it has collisions.
             _surface.FreezePosition = true;
-            
+
             // Move the surface position.
             _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
 
             // Create the planet sytem.
             _planetSystem = new OrbitalSystem(galaxy.Handle, new List<Orbital>(), new List<LockedOrbital>(), -0.3f);
 
-            // Move the player to the galaxy.
-            MovePlayerToGalaxy(true);
-
-            // Set the player on the ground.
-            PlayerPosition = _surface.Position + PlayerPed.UpVector * 5;
-
-            // Set the player to have gravity.
+            PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPed.HasGravity = true;
 
             // Set the weather to make an atmosphere.

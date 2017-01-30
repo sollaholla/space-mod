@@ -19,10 +19,12 @@ namespace SpaceMod.DataClasses.SceneTypes
         private Prop _moon;
         private Prop _issl;
         private readonly UIMenu _selectionMenu = new UIMenu(string.Empty, "SELECT A DESTINATION", new Point(0, -105));
+        private readonly UIMenu _marsMenu = new UIMenu(string.Empty, "SELECT AN OPTION", new Point(0, -105));
 
         public EarthOrbitScene()
         {
             _selectionMenu.SetBannerType(new UIResRectangle());
+            _marsMenu.SetBannerType(new UIResRectangle());
             _selectionMenu.OnMenuClose += sender =>
             {
                 End(null);
@@ -44,6 +46,20 @@ namespace SpaceMod.DataClasses.SceneTypes
             back.Activated += (sender, item) =>
             {
                 End(new EarthOrbitScene(), SceneStartDirection.FromTarget);
+            };
+
+            var goToMars = new UIMenuItem("Mars", "Go to Mars!");
+            _marsMenu.AddItem(goToMars);
+            goToMars.Activated += (sender, item) =>
+            {
+                End(new MarsOrbitScene());
+            };
+
+            var marsBack = new UIMenuItem("Back", "Go back to earth");
+            _marsMenu.AddItem(marsBack);
+            marsBack.Activated += (sender, item) =>
+            {
+                End(new EarthOrbitScene());
             };
         }
 
@@ -97,10 +113,19 @@ namespace SpaceMod.DataClasses.SceneTypes
             GoToMoon();
             GoToEarth();
 
-            if (!_selectionMenu.Visible) return;
-            _selectionMenu.ProcessControl();
-            _selectionMenu.ProcessMouse();
-            _selectionMenu.Draw();
+            if (_selectionMenu.Visible)
+            {
+                _selectionMenu.ProcessControl();
+                _selectionMenu.ProcessMouse();
+                _selectionMenu.Draw();
+            }
+
+            if(_marsMenu.Visible)
+            {
+                _marsMenu.ProcessControl();
+                _marsMenu.ProcessMouse();
+                _marsMenu.Draw();
+            }
         }
 
         private void GoToMoon()
@@ -118,6 +143,17 @@ namespace SpaceMod.DataClasses.SceneTypes
             if (dist > 1500) return;
             if (_selectionMenu.Visible) return;
             _selectionMenu.Visible = !_selectionMenu.Visible;
+            Game.TimeScale = 0;
+        }
+
+        private void GoToMars()
+        {
+            var _marsTarget = Constants.GalaxyCenter + new Vector3(2500, 0, 0);
+            var dist = Vector3.Distance(_marsTarget, PlayerPosition);
+            if (_marsMenu.Visible) return;
+            if (dist <= 10)
+                _marsMenu.Visible = true;
+
             Game.TimeScale = 0;
         }
 
