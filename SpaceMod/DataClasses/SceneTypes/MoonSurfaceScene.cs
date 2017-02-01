@@ -53,12 +53,11 @@ namespace SpaceMod.DataClasses.SceneTypes
                 ped.HasGravity = true;
             }
 
-            _playerVehicle.Position = PlayerPosition.Around(25);
-            File.WriteAllText(@".\scripts\LOGS.txt", string.Format("Vehicle Position = {0}", _playerVehicle.Position));
-
             if (_playerVehicle == null) return;
             if (!_playerVehicle.Exists()) return;
-            _playerVehicle.Position = PlayerPosition + PlayerPed.UpVector * 5;
+            _playerVehicle.Position = PlayerPosition.Around(9999999999999);
+            File.WriteAllText(@".\scripts\LOGS.txt", string.Format("Vehicle Position = {0}", _playerVehicle.Position));
+            //_playerVehicle.Position = PlayerPosition + PlayerPed.UpVector * 5;
             _playerVehicle.FreezePosition = true;
             _playerVehicle.Speed = 0;
             _playerVehicle.IsInvincible = true;
