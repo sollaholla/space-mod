@@ -18,6 +18,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Init()
         {
+            
             // Set the player vehicle to be persistent.
             _playerVehicle = PlayerPed.CurrentVehicle;
             if (_playerVehicle != null) _playerVehicle.IsPersistent = true;
@@ -40,6 +41,8 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPed.HasGravity = true;
+
+            
 
             // Set the weather to make an atmosphere.
             //ModController.Instance.SetWeatherAndTime(Weather.Foggy, new TimeSpan(0, 0, 0, 0));

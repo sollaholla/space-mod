@@ -2,6 +2,7 @@
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using System.IO;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {
@@ -10,9 +11,13 @@ namespace SpaceMod.DataClasses.SceneTypes
         private OrbitalSystem _planetSystem;
         private Vehicle _playerVehicle;
         private Prop _surface;
+        private PedGroup _playerPeds;
 
         public override void Init()
         {
+            //Set the player ped group
+            _playerPeds = Game.Player.Character.CurrentPedGroup;
+
             _playerVehicle = PlayerPed.CurrentVehicle;
             if (_playerVehicle != null) _playerVehicle.IsPersistent = true;
 
@@ -32,7 +37,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             };
 
             MovePlayerToGalaxy(true);
-            
+
             _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
 
             earth.Position = _surface.Position + new Vector3(4000, 0, 4000);
@@ -40,7 +45,17 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPed.HasGravity = true;
-            
+
+            //Do above for all the peds in the vehicle.
+            foreach (Ped ped in _playerPeds)
+            {
+                ped.Position = PlayerPosition.Around(5f);
+                ped.HasGravity = true;
+            }
+
+            _playerVehicle.Position = PlayerPosition.Around(25);
+            File.WriteAllText(@".\scripts\LOGS.txt", string.Format("Vehicle Position = {0}", _playerVehicle.Position));
+
             if (_playerVehicle == null) return;
             if (!_playerVehicle.Exists()) return;
             _playerVehicle.Position = PlayerPosition + PlayerPed.UpVector * 5;

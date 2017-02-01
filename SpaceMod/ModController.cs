@@ -92,6 +92,10 @@ namespace SpaceMod
             //if (keyEventArgs.KeyCode != Keys.K) return;
             //LeaveEarth(new EarthOrbitScene());
 
+            if(keyEventArgs.KeyCode == Keys.O)
+            {
+                LeaveEarth(new MoonSurfaceScene());
+            }
         }
 
         private void OnTick(object sender, EventArgs eventArgs)

@@ -17,12 +17,13 @@ namespace SpaceMod.DataClasses.MissionTypes
         private readonly List<Ped> _aliens = new List<Ped>();
         private readonly List<Prop> _spaceShips = new List<Prop>();
         private readonly int _alienRelationship;
+        private readonly int _playerRel;
         private readonly int _originalMaxHealth;
 
         // Mission flags.
         private bool _mFlag1;   // Show subtitle to go to the moon.
         private bool _mFlag2;   // Show help text when on moon.
-
+ 
         public TakeBackWhatsOurs()
         {
             _alienRelationship = World.AddRelationshipGroup("Aliens");
@@ -38,6 +39,7 @@ namespace SpaceMod.DataClasses.MissionTypes
             character.IsExplosionProof = true;
         }
 
+        private bool firstTimeEnteringMoon;
         public override void Tick(Ped playerPed, Scene currentScene)
         {
             if (currentScene == null) return;
