@@ -97,16 +97,19 @@ namespace SpaceMod
                 UI.DrawTexture(filename, index, 1, 60, point, size);
         }
 
-        public static void SetSuperJumpThisFrame(this Ped ped, float jumpForce, float rollHeight)
+        public static void SetSuperJumpThisFrame(this Ped ped, float jumpForce, float rollHeight, bool useRoll = true)
         {
             ped.CanRagdoll = false;
             
             if (ped.IsJumping && !ped.IsInAir)
                 ped.ApplyForce((ped.UpVector + ped.ForwardVector) * jumpForce);
 
-            if (!ped.IsFalling || !(ped.GetHeightArtificial() < rollHeight)) return;
-            ped.Task.ClearAll();
-            ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, AnimationFlags.None, 0.0f);
+            if (useRoll)
+            {
+                if (!ped.IsFalling || !(ped.GetHeightArtificial() < rollHeight)) return;
+                ped.Task.ClearAll();
+                ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, AnimationFlags.None, 0.0f);
+            }
 
             ped.CanRagdoll = true;
         }
