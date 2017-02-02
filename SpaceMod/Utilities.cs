@@ -48,12 +48,17 @@ namespace SpaceMod
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
         }
 
-        public static Vector3 MoveToGroundArtificial(this Vector3 v3)
+        public static Vector3 MoveToGroundArtificial(this Vector3 v3, Entity ignorEntity = null)
         {
             var origin = new Vector3(v3.X, v3.Y, v3.Z + 1000);
             var direction = Vector3.WorldDown;
-            var ray = World.Raycast(origin, direction, int.MaxValue, IntersectOptions.Everything);
+            var ray = World.Raycast(origin, direction, int.MaxValue, IntersectOptions.Everything, ignorEntity);
             return ray.HitCoords;
+        }
+
+        public static float GetHeightArtificial(this Entity entity)
+        {
+            return Vector3.Distance(entity.Position - entity.UpVector, entity.Position.MoveToGroundArtificial(entity));
         }
 
         public static void ShowUIPosition(Entity entity, int index, Vector3 position, string pathToFile, string objectName,
@@ -90,6 +95,20 @@ namespace SpaceMod
 
             if (File.Exists(filename))
                 UI.DrawTexture(filename, index, 1, 60, point, size);
+        }
+
+        public static void SetSuperJumpThisFrame(this Ped ped, float jumpForce, float rollHeight)
+        {
+            ped.CanRagdoll = false;
+            
+            if (ped.IsJumping && !ped.IsInAir)
+                ped.ApplyForce((ped.UpVector + ped.ForwardVector) * jumpForce);
+
+            if (!ped.IsFalling || !(ped.GetHeightArtificial() < rollHeight)) return;
+            ped.Task.ClearAll();
+            ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, AnimationFlags.None, 0.0f);
+
+            ped.CanRagdoll = true;
         }
 
         public static bool IsOnScreen(this Vector3 vector3)

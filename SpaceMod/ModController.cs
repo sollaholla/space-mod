@@ -98,12 +98,14 @@ namespace SpaceMod
             if (keyEventArgs.KeyCode == Keys.O)
             {
                 LeaveEarth(new MoonSurfaceScene());
-                SetCurrentMission(new TakeBackWhatsOurs());
+                //SetCurrentMission(new TakeBackWhatsOurs());
             }
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
+            PlayerPed.SetSuperJumpThisFrame(5, 3);
+
             _menuPool.ProcessMenus();
 
             if (PlayerPed.IsDead && Game.IsScreenFadedOut)
