@@ -4,7 +4,6 @@ using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using NativeUI;
 using SpaceMod.DataClasses.SceneTypes;
 
 namespace SpaceMod.DataClasses.MissionTypes
@@ -17,7 +16,6 @@ namespace SpaceMod.DataClasses.MissionTypes
         private readonly List<Ped> _aliens = new List<Ped>();
         private readonly List<Prop> _spaceShips = new List<Prop>();
         private readonly int _alienRelationship;
-        private readonly int _playerRel;
         private readonly int _originalMaxHealth;
 
         // Mission flags.
@@ -38,8 +36,7 @@ namespace SpaceMod.DataClasses.MissionTypes
             character.CanRagdoll = false;
             character.IsExplosionProof = true;
         }
-
-        private bool firstTimeEnteringMoon;
+        
         public override void Tick(Ped playerPed, Scene currentScene)
         {
             if (currentScene == null) return;
@@ -176,6 +173,7 @@ namespace SpaceMod.DataClasses.MissionTypes
             }
         }
 
+        // TODO: Move to utils. This could be useful.
         private static bool IsCloseToAnyEntity(Vector3 position, IReadOnlyCollection<Entity> collection, float distance)
         {
             if (collection == null) return false;

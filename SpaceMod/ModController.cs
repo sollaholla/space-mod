@@ -5,6 +5,7 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses;
+using SpaceMod.DataClasses.MissionTypes;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
 
@@ -76,10 +77,16 @@ namespace SpaceMod
             if (!PlayerPed.IsDead) Game.FadeScreenIn(0);
             _currentScene?.Abort();
             _currentMission?.Abort();
-            if (_currentScene != null) PlayerPed.Position = Constants.TrevorAirport;
+
+            if (_currentScene != null)
+            {
+                PlayerPed.Position = Constants.TrevorAirport;
+                PlayerPed.LastVehicle?.Delete();
+            }
+
+            // TODO: Move to utilities.
+            Function.Call(Hash.SET_GRAVITY_LEVEL, 0);
             PlayerPed.HasGravity = true;
-            PlayerPed.LastVehicle?.Delete();
-            Function.Call(Hash.SET_GRAVITY_LEVEL, 0); // TODO: Move to utilities.
             Game.TimeScale = 1.0f;
         }
 
@@ -88,13 +95,10 @@ namespace SpaceMod
             if (keyEventArgs.KeyCode == Keys.H)
                 _optionsMenu.Visible = true;
 
-            //if (_currentScene != null) return;
-            //if (keyEventArgs.KeyCode != Keys.K) return;
-            //LeaveEarth(new EarthOrbitScene());
-
-            if(keyEventArgs.KeyCode == Keys.O)
+            if (keyEventArgs.KeyCode == Keys.O)
             {
                 LeaveEarth(new MoonSurfaceScene());
+                SetCurrentMission(new TakeBackWhatsOurs());
             }
         }
 

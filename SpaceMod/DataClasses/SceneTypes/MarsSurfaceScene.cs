@@ -42,8 +42,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPed.HasGravity = true;
 
-            
-
+            // TODO: Figure out how to make an atmospheric look. Maybe set it to daytime and foggy?
             // Set the weather to make an atmosphere.
             //ModController.Instance.SetWeatherAndTime(Weather.Foggy, new TimeSpan(0, 0, 0, 0));
 

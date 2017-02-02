@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using GTA;
 using GTA.Math;
+using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses.MissionTypes;
 
