@@ -104,6 +104,8 @@ namespace SpaceMod
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
+            PlayerPed.SetSuperJumpThisFrame(3, 3);
+
             _menuPool.ProcessMenus();
 
             if (PlayerPed.IsDead && Game.IsScreenFadedOut)
