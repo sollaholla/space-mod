@@ -21,15 +21,14 @@ namespace SpaceMod.DataClasses.SceneTypes
         private Prop _issl;
         private readonly UIMenu _selectionMenu = new UIMenu(string.Empty, "SELECT A DESTINATION", new Point(0, -105));
         private readonly UIMenu _marsMenu = new UIMenu(string.Empty, "SELECT AN OPTION", new Point(0, -105));
-        private readonly Vector3 _marsTarget = Constants.GalaxyCenter + new Vector3(0, -5000, 0);
 
+        private readonly Vector3 _marsTarget = Constants.GalaxyCenter + new Vector3(0, -5000, 0);
         private readonly UIText _marsNameText = new UIText(string.Empty, new Point(), 0.5f)
         {
             Centered = true,
             Font = Font.Monospace,
             Shadow = true
         };
-
         private readonly UIText _marsDistanceText = new UIText(string.Empty, new Point(), 0.5f)
         {
             Centered = true,
@@ -73,14 +72,14 @@ namespace SpaceMod.DataClasses.SceneTypes
             _marsMenu.AddItem(goToMars);
             goToMars.Activated += (sender, item) =>
             {
-                End(new MarsOrbitScene());
+                End(new MarsOrbitScene(), SceneStartDirection.ToTarget);
             };
 
             var marsBack = new UIMenuItem("Back", "Go back to earth.");
             _marsMenu.AddItem(marsBack);
             marsBack.Activated += (sender, item) =>
             {
-                End(new EarthOrbitScene());
+                End(new EarthOrbitScene(), SceneStartDirection.ToTarget);
             };
         }
 

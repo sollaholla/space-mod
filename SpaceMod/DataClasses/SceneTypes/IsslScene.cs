@@ -28,7 +28,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             mission1.Activated += (sender, item) =>
             {
                 ModController.Instance.SetCurrentMission(new TakeBackWhatsOurs());
-                End(new EarthOrbitScene());
+                End(new EarthOrbitScene(), SceneStartDirection.FromTarget);
             };
 
             _missionMenu.OnMenuClose += sender => _missionMenu.Visible = true;

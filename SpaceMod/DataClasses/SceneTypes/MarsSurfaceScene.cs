@@ -39,7 +39,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             // Create the planet sytem.
             _planetSystem = new OrbitalSystem(galaxy.Handle, new List<Orbital>(), new List<LockedOrbital>(), -0.3f);
 
-            PlayerPosition = _surface.Position + PlayerPed.UpVector * 5;
+            PlayerPosition = _surface.Position + PlayerPed.UpVector;
             PlayerPosition.MoveToGroundArtificial();
             PlayerPed.HasGravity = true;
 
