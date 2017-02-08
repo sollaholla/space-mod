@@ -104,7 +104,7 @@ namespace SpaceMod
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            PlayerPed.SetSuperJumpThisFrame(3, 3);
+            PlayerPed.SetSuperJumpThisFrame(3, 3, false);
 
             _menuPool.ProcessMenus();
 

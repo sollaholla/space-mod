@@ -99,9 +99,11 @@ namespace SpaceMod
 
         public static void SetSuperJumpThisFrame(this Ped ped, float jumpForce, float rollHeight, bool useRoll = true)
         {
-            ped.CanRagdoll = false;
+            if (useRoll)
+                ped.CanRagdoll = false;
             
-            if (ped.IsJumping && !ped.IsInAir)
+            if (ped.IsJumping && !ped.IsInAir && (ped.IsRunning || ped.IsSprinting) && !ped.IsRagdoll && !ped.IsGettingUp && !ped.IsGettingIntoAVehicle
+                && !ped.IsInCover() && !ped.IsShooting && !ped.IsFalling && !ped.IsBeingJacked && !ped.IsBeingStealthKilled && !ped.IsBeingStunned)
                 ped.ApplyForce((ped.UpVector + ped.ForwardVector) * jumpForce);
 
             if (useRoll)
@@ -111,7 +113,8 @@ namespace SpaceMod
                 ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, AnimationFlags.None, 0.0f);
             }
 
-            ped.CanRagdoll = true;
+            if (useRoll)
+                ped.CanRagdoll = true;
         }
 
         public static bool IsOnScreen(this Vector3 vector3)
