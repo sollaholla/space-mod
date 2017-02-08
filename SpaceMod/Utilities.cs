@@ -107,9 +107,9 @@ namespace SpaceMod
                 0.0f);
             ped.CanRagdoll = true;
         }
-
+            
         private static void ApplyJumpForce(Ped ped, float jumpForce)
-        {
+            {
             if (JumpFlag(ped))
             {
                 ped.CanRagdoll = false;
@@ -117,7 +117,7 @@ namespace SpaceMod
                 var force = direction * jumpForce;
                 ped.ApplyForce(force);
             }
-        }
+            }
 
         private static bool JumpFlag(Ped ped)
         {

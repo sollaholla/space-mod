@@ -98,6 +98,8 @@ namespace SpaceMod
             {
                 //LeaveEarth(new MoonSurfaceScene());
                 //SetCurrentMission(new TakeBackWhatsOurs());
+
+                LeaveEarth(new MarsOrbitScene());
             }
         }
 

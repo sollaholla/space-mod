@@ -9,6 +9,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         public static Vector3[] Positions => new[]
         {
             new Vector3(-6870.744f, -12107.31f, 8620.764f), /*Mars*/
+            new Vector3(-15370.74f, -12107.31f, 8620.764f) /*The thing we need to get to*/
         };
 
         private OrbitalSystem _planetSystem;
@@ -49,10 +50,25 @@ namespace SpaceMod.DataClasses.SceneTypes
             End(new MarsSurfaceScene());
         }
 
+        private void LeaveOrbit()
+        {
+            // Try to leave the moons orbit.
+            var dist = PlayerPosition.DistanceTo(Positions[1]);
+            if (dist > 2500) return;
+            End(new EarthOrbitScene(), SceneStartDirection.ToTarget);
+        }
+
+        private void DrawMarker()
+        {
+            World.DrawMarker(MarkerType.UpsideDownCone, Positions[1], Vector3.WorldDown, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Yellow);
+        }
+
         public override void Update()
         {
             _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
             GoToMars();
+            DrawMarker();
+            LeaveOrbit();
         }
 
         public override void Abort()
