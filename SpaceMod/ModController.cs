@@ -5,7 +5,6 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses;
-using SpaceMod.DataClasses.MissionTypes;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
 
@@ -104,8 +103,6 @@ namespace SpaceMod
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            PlayerPed.SetSuperJumpThisFrame(3, 3);
-
             _menuPool.ProcessMenus();
 
             if (PlayerPed.IsDead && Game.IsScreenFadedOut)

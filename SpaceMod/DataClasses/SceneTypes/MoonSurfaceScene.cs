@@ -23,6 +23,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             //Set the player ped group
             _playerPeds = Game.Player.Character.CurrentPedGroup;
             _playerVehicle = PlayerPed.CurrentVehicle;
+
             if (_playerVehicle != null) _playerVehicle.IsPersistent = true;
 
             // Give some info.
