@@ -97,7 +97,7 @@ namespace SpaceMod
 
             if (keyEventArgs.KeyCode == Keys.O)
             {
-                LeaveEarth(new MoonSurfaceScene());
+                LeaveEarth(new MarsSurfaceScene());
                 //SetCurrentMission(new TakeBackWhatsOurs());
             }
         }

@@ -39,7 +39,8 @@ namespace SpaceMod.DataClasses.SceneTypes
             // Create the planet sytem.
             _planetSystem = new OrbitalSystem(galaxy.Handle, new List<Orbital>(), new List<LockedOrbital>(), -0.3f);
 
-            PlayerPosition = _surface.Position + PlayerPed.UpVector;
+            PlayerPosition = _surface.Position + PlayerPed.UpVector * 10;
+            PlayerPosition.MoveToGroundArtificial();
             PlayerPed.HasGravity = true;
 
             // TODO: Figure out how to make an atmospheric look. Maybe set it to daytime and foggy?
@@ -69,8 +70,16 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
+            // Set mars gravity
             Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
+
+            // Set mars time
+            World.CurrentDayTime = new TimeSpan(0, 12, 0, 0, 0);
+
+            // Process planets
             _planetSystem?.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+
+            // Try to leave with vehicle
             TryLeaveWithVehicle();
         }
 
