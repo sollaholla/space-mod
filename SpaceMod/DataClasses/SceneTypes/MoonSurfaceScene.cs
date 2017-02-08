@@ -78,6 +78,9 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
+            // Set the player to super jump mode.
+            PlayerPed.SetSuperJumpThisFrame(2.35f, 3, false);
+
             // Set moon gravity.
             Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
 

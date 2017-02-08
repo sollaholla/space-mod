@@ -102,8 +102,9 @@ namespace SpaceMod
             if (useRoll)
                 ped.CanRagdoll = false;
             
-            if (ped.IsJumping && !ped.IsInAir && (ped.IsRunning || ped.IsSprinting) && !ped.IsRagdoll && !ped.IsGettingUp && !ped.IsGettingIntoAVehicle
-                && !ped.IsInCover() && !ped.IsShooting && !ped.IsFalling && !ped.IsBeingJacked && !ped.IsBeingStealthKilled && !ped.IsBeingStunned)
+            if (ped.IsJumping && !ped.IsInAir && (ped.IsRunning || ped.IsSprinting || ped.IsWalking) && !ped.IsRagdoll && !ped.IsGettingUp && !ped.IsGettingIntoAVehicle
+                && !ped.IsInCover() && !ped.IsShooting && !ped.IsFalling && !ped.IsBeingJacked && !ped.IsBeingStealthKilled && !ped.IsBeingStunned && 
+                !ped.IsInVehicle() && !ped.IsSwimming)
                 ped.ApplyForce((ped.UpVector + ped.ForwardVector) * jumpForce);
 
             if (useRoll)
