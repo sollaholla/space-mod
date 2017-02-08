@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using GTA;
 using GTA.Math;
+using System.Drawing;
 
 namespace SpaceMod.DataClasses.SceneTypes
 {
@@ -14,6 +15,20 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         private OrbitalSystem _planetSystem;
         private Prop _mars;
+
+        private readonly UIText _leaveMarsNameText = new UIText(string.Empty, new Point(), 0.5f)
+        {
+            Centered = true,
+            Font = GTA.Font.Monospace,
+            Shadow = true
+        };
+
+        private readonly UIText _leaveMarsDistanceText = new UIText(string.Empty, new Point(), 0.5f)
+        {
+            Centered = true,
+            Font = GTA.Font.Monospace,
+            Shadow = true
+        };
 
         public override void Init()
         {
@@ -60,7 +75,11 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         private void DrawMarker()
         {
-            World.DrawMarker(MarkerType.UpsideDownCone, Positions[1], Vector3.WorldDown, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Yellow);
+            //World.DrawMarker(MarkerType.UpsideDownCone, Positions[1], Vector3.WorldDown, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Yellow);
+
+            if (Positions[1].IsOnScreen() && OrbitalSystem.ShowUIPositions)
+                Utilities.ShowUIPosition(null, 10, Positions[1], Constants.PathToDatabase, "Earth", _leaveMarsNameText,
+                    _leaveMarsDistanceText);
         }
 
         public override void Update()
