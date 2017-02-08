@@ -17,7 +17,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         private Vehicle _playerVehicle;
         private PedGroup _playerPeds;
         private Prop _surface;
-
+        
         public override void Init()
         {
             //Set the player ped group
