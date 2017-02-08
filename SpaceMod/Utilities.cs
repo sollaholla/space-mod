@@ -99,22 +99,33 @@ namespace SpaceMod
 
         public static void SetSuperJumpThisFrame(this Ped ped, float jumpForce, float rollHeight, bool useRoll = true)
         {
-            if (useRoll)
-                ped.CanRagdoll = false;
-            
-            if (ped.IsJumping && !ped.IsInAir && (ped.IsRunning || ped.IsSprinting) && !ped.IsRagdoll && !ped.IsGettingUp && !ped.IsGettingIntoAVehicle
-                && !ped.IsInCover() && !ped.IsShooting && !ped.IsFalling && !ped.IsBeingJacked && !ped.IsBeingStealthKilled && !ped.IsBeingStunned)
-                ped.ApplyForce((ped.UpVector + ped.ForwardVector) * jumpForce);
+            ApplyJumpForce(ped, jumpForce);
+            if (!useRoll) return;
+            if (!(ped.HeightAboveGround <= rollHeight) || !ped.IsInAir) return;
+            ped.Task.ClearAll();
+            ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, (AnimationFlags)37,
+                0.0f);
+            ped.CanRagdoll = true;
+        }
 
-            if (useRoll)
+        private static void ApplyJumpForce(Ped ped, float jumpForce)
+        {
+            if (JumpFlag(ped))
             {
-                if (!ped.IsFalling || !(ped.GetHeightArtificial() < rollHeight)) return;
-                ped.Task.ClearAll();
-                ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, AnimationFlags.None, 0.0f);
+                ped.CanRagdoll = false;
+                var direction = ped.UpVector + ped.ForwardVector;
+                var force = direction * jumpForce;
+                ped.ApplyForce(force);
             }
+        }
 
-            if (useRoll)
-                ped.CanRagdoll = true;
+        private static bool JumpFlag(Ped ped)
+        {
+            return ped.IsJumping && !ped.IsInAir && ped.IsOnFoot && (ped.IsRunning || ped.IsSprinting || ped.IsWalking) && !ped.IsRagdoll &&
+                            !ped.IsGettingUp && !ped.IsGettingIntoAVehicle
+                            && !ped.IsInCover() && !ped.IsShooting && !ped.IsFalling && !ped.IsBeingJacked &&
+                            !ped.IsBeingStealthKilled && !ped.IsBeingStunned &&
+                            !ped.IsInVehicle() && !ped.IsSwimming;
         }
 
         public static bool IsOnScreen(this Vector3 vector3)

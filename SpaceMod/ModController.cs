@@ -5,7 +5,6 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses;
-using SpaceMod.DataClasses.MissionTypes;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
 
@@ -97,15 +96,13 @@ namespace SpaceMod
 
             if (keyEventArgs.KeyCode == Keys.O)
             {
-                LeaveEarth(new MarsSurfaceScene());
+                //LeaveEarth(new MoonSurfaceScene());
                 //SetCurrentMission(new TakeBackWhatsOurs());
             }
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            PlayerPed.SetSuperJumpThisFrame(3, 3, false);
-
             _menuPool.ProcessMenus();
 
             if (PlayerPed.IsDead && Game.IsScreenFadedOut)
@@ -130,8 +127,8 @@ namespace SpaceMod
 
         private void OnSceneEnded(Scene sender, Scene newScene)
         {
-            Game.FadeScreenOut(2000);
-            Wait(2000);
+            Game.FadeScreenOut(1500);
+            Wait(1500);
             sender?.CleanUp();
             if (newScene == null) BackToEarth();
             _currentScene = newScene;
@@ -140,8 +137,8 @@ namespace SpaceMod
                 _currentScene.SceneEnded += OnSceneEnded;
                 _currentScene.Init();
             }
-            Wait(2000);
-            Game.FadeScreenIn(2000);
+            Wait(1500);
+            Game.FadeScreenIn(1500);
         }
 
         private void EnterOrbit()
@@ -211,13 +208,17 @@ namespace SpaceMod
 
         private void UpdateScene()
         {
-            if (_currentScene == null)
-                return;
             /*
                 In the moon mission when you shoot you kinda get wantedstars
                 so this thing prevents that :)
             */
+
             Game.Player.WantedLevel = 0; //My code, yay
+
+            // Im moving the current scene == null stuff 
+            // down so that we never have wanted stars
+            if (_currentScene == null)
+                return;
 
             _currentScene.Update();
             _currentMission?.Tick(PlayerPed, _currentScene);

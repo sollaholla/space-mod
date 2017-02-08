@@ -17,12 +17,13 @@ namespace SpaceMod.DataClasses.SceneTypes
         private Vehicle _playerVehicle;
         private PedGroup _playerPeds;
         private Prop _surface;
-
+        
         public override void Init()
         {
             //Set the player ped group
             _playerPeds = Game.Player.Character.CurrentPedGroup;
             _playerVehicle = PlayerPed.CurrentVehicle;
+
             if (_playerVehicle != null) _playerVehicle.IsPersistent = true;
 
             // Give some info.
@@ -78,6 +79,9 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
+            // Set the player to super jump mode.
+            PlayerPed.SetSuperJumpThisFrame(2.35f, 3, false);
+
             // Set moon gravity.
             Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
 
