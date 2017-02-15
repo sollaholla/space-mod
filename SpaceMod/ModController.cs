@@ -5,6 +5,7 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.DataClasses;
+using SpaceMod.DataClasses.MissionTypes;
 using SpaceMod.DataClasses.SceneTypes;
 using Control = GTA.Control;
 
@@ -15,7 +16,7 @@ namespace SpaceMod
         private Scene _currentScene;
         private Mission _currentMission;
         private bool _askedToLeave;
-        private readonly Weather _defaultWeather = Weather.Clear;
+        private const Weather _defaultWeather = Weather.Clear;
         private readonly TimeSpan _defaultTime = new TimeSpan(0, 0, 0, 0);
 
         private Weather _currentWeather = Weather.Clear;
@@ -30,6 +31,8 @@ namespace SpaceMod
 
         public ModController()
         {
+            PlayerPrefs = new PlayerPrefs();
+
             Instance = this;
             KeyUp += OnKeyUp;
             Tick += OnTick;
@@ -42,6 +45,12 @@ namespace SpaceMod
                 OrbitalSystem.ShowUIPositions = @checked;
             };
             _optionsMenu.AddItem(showUIItem);
+            var debugItem = new UIMenuItem("Debug Log", "Log the player ped data to file.");
+            debugItem.Activated += (sender, item) =>
+            {
+                DebugLogger.LogEntityData(PlayerPed);
+            };
+            _optionsMenu.AddItem(debugItem);
 
             SetupLeavePrompt();
         }
@@ -49,6 +58,8 @@ namespace SpaceMod
         public Ped PlayerPed => Game.Player.Character;
         public Vector3 PlayerPosition => PlayerPed.Position;
         public bool IsInMission => _currentMission != null;
+        public PlayerPrefs PlayerPrefs { get; }
+
         public static ModController Instance { get; private set; }
 
         private void SetupLeavePrompt()
@@ -91,14 +102,12 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            if (keyEventArgs.KeyCode == Keys.H)
+            if (keyEventArgs.KeyCode == Keys.NumPad9)
                 _optionsMenu.Visible = true;
 
-            if (keyEventArgs.KeyCode == Keys.O)
-                LeaveEarth(new MarsSurfaceScene());
-
-            if (keyEventArgs.KeyCode == Keys.N)
-                DebugLogger.LogPedData(PlayerPed);
+            if (keyEventArgs.KeyCode != Keys.NumPad3) return;
+            SetCurrentMission(new ColonizeMars());
+            LeaveEarth(new MarsSurfaceScene());
         }
 
         private void OnTick(object sender, EventArgs eventArgs)

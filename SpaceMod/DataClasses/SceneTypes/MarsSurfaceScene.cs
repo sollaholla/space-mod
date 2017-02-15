@@ -31,17 +31,14 @@ namespace SpaceMod.DataClasses.SceneTypes
         /// <summary>
         /// This is the position of the enterance to the mars base.
         /// </summary>
-        private readonly Vector3 _baseEnterancePos = new Vector3(-9997.815f, -12161.57f, 2505.308f);
+        private readonly Vector3 _baseEnterancePos = new Vector3(-9994.323f, -12164.83f, 2505.336f);
 
         /// <summary>
         /// This the enterance of the interior.
         /// </summary>
-        private readonly Vector3 _baseInteriorPos = new Vector3(-1967.382f, 3197.171f, 33.30999f);
+        private readonly Vector3 _baseInteriorPos = new Vector3(-1965.833f, 3197.101f, 33.3099f);
 
-        /// <summary>
-        /// This is the heading of the player when we enter the interior.
-        /// </summary>
-        private readonly float _baseInteriorHeading = 90.9945f;
+        public bool IsIplLoaded => _marsBaseInterior != null && _marsBaseInterior.IsActive;
 
         public override void Init()
         {
@@ -73,7 +70,10 @@ namespace SpaceMod.DataClasses.SceneTypes
             // Create the mars base enterence.
             _marsBaseDoor = World.CreateProp(Constants.MarsBaseDoor001Model, _surface.Position, false, false);
             _marsBaseDoor.Position += new Vector3(0, 10, 2.7f);
+            _marsBaseDoor.Position = new Vector3(-9994.448f, -12161.48f, 2505.8f);
+            _marsBaseDoor.Rotation = new Vector3(0, 0, 90);
             _marsBaseDoor.FreezePosition = true;
+            DebugLogger.LogEntityData(_marsBaseDoor);
 
             // Create the interior.
             _marsBaseInterior = new Ipl("mbi2", IplType.MapEditor);
@@ -85,6 +85,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _playerVehicle.IsInvincible = true;
             _playerVehicle.Heading = -90;
             _playerVehicle.Position = _vehiclePos - _playerVehicle.UpVector * 5;
+            DebugLogger.LogEntityData(_playerVehicle);
             _playerVehicle.LandingGear = VehicleLandingGear.Deployed;
 
             // HACK: Apperantly in gta when you move an object while the screen is black it 
@@ -106,64 +107,16 @@ namespace SpaceMod.DataClasses.SceneTypes
             // Try to leave with vehicle
             TryLeaveWithVehicle();
 
+            if (!Ipl.AllowTraversal) return;
+            // Enter exit the base.
             DrawMarkers();
             TryEnterBase();
             TryLeaveBase();
         }
 
-        private void DrawMarkers()
-        {
-            World.DrawMarker(MarkerType.UpsideDownCone, _baseEnterancePos, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Purple);
-            World.DrawMarker(MarkerType.UpsideDownCone, _baseInteriorPos, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Purple);
-        }
-
-        private void TryEnterBase()
-        {
-            if (_marsBaseInterior.IsActive) return;
-            if (PlayerPosition.DistanceTo(_baseEnterancePos) > EnteranceDistance) return;
-            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to enter the base.");
-            Game.DisableControlThisFrame(2, Control.Talk);
-            Game.DisableControlThisFrame(2, Control.Context);
-            if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
-            Game.FadeScreenOut(500);
-            Script.Wait(500);
-            _marsBaseInterior.Request();
-            PlayerPosition = _baseInteriorPos;
-            PlayerPed.Heading = _baseInteriorHeading;
-            Script.Wait(500);
-            Game.FadeScreenIn(500);
-        }
-
-        private void TryLeaveBase()
-        {
-            if (!_marsBaseInterior.IsActive) return;
-            if (PlayerPosition.DistanceTo(_baseInteriorPos) > EnteranceDistance) return;
-            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to leave the base.");
-            Game.DisableControlThisFrame(2, Control.Talk);
-            Game.DisableControlThisFrame(2, Control.Context);
-            if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
-            Game.FadeScreenOut(500);
-            Script.Wait(500);
-            _marsBaseInterior.Remove();
-            PlayerPosition = _baseEnterancePos;
-            PlayerPed.Heading = -272.1789f; //TODO: Convert to variable. 
-            Script.Wait(500);
-            Game.FadeScreenIn(500);
-        }
-
         public override void Abort()
         {
             Reset();
-        }
-
-        private void Reset()
-        {
-            _planetSystem?.Abort();
-            _surface?.Delete();
-            _marsBaseDoor?.Delete();
-            _marsBaseInterior?.Remove();
-            Function.Call(Hash.SET_GRAVITY_LEVEL, 3);
-            ModController.Instance.ResetWeatherAndTime();
         }
 
         public override void CleanUp()
@@ -176,6 +129,65 @@ namespace SpaceMod.DataClasses.SceneTypes
             if (!_playerVehicle.Exists()) return;
             _playerVehicle.FreezePosition = false;
             _playerVehicle.IsInvincible = false;
+        }
+
+        private void DrawMarkers()
+        {
+            World.DrawMarker(MarkerType.UpsideDownCone, _baseEnterancePos, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Purple);
+            World.DrawMarker(MarkerType.UpsideDownCone, _baseInteriorPos, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Purple);
+        }
+
+        private void TryEnterBase()
+        {
+            if (_marsBaseInterior.IsActive) return;
+            if (PlayerPosition.DistanceTo(_baseEnterancePos) > EnteranceDistance) return;
+            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to go underground.");
+            Game.DisableControlThisFrame(2, Control.Talk);
+            Game.DisableControlThisFrame(2, Control.Context);
+            if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
+            Game.FadeScreenOut(500);
+            Script.Wait(500);
+            _marsBaseInterior.Request();
+            PlayerPosition = _baseInteriorPos;
+            PlayerPed.Heading = 90;
+            GameplayCamera.RelativeHeading = 180;
+            GameplayCamera.RelativePitch = 0;
+            Script.Wait(500);
+            Game.FadeScreenIn(500);
+        }
+
+        private void TryLeaveBase()
+        {
+            if (!_marsBaseInterior.IsActive) return;
+            if (PlayerPosition.DistanceTo(_baseInteriorPos) > EnteranceDistance) return;
+            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to leave the base.");
+            Game.DisableControlThisFrame(2, Control.Talk);
+            Game.DisableControlThisFrame(2, Control.Context);
+            if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
+            LeaveBase();
+        }
+
+        public void LeaveBase()
+        {
+            Game.FadeScreenOut(500);
+            Script.Wait(500);
+            _marsBaseInterior.Remove();
+            PlayerPosition = _baseEnterancePos;
+            PlayerPed.Heading = 180f; //TODO: Convert to variable. 
+            GameplayCamera.RelativeHeading = 180;
+            GameplayCamera.RelativePitch = 0;
+            Script.Wait(500);
+            Game.FadeScreenIn(500);
+        }
+
+        private void Reset()
+        {
+            _planetSystem?.Abort();
+            _surface?.Delete();
+            _marsBaseDoor?.Delete();
+            _marsBaseInterior?.Remove();
+            Function.Call(Hash.SET_GRAVITY_LEVEL, 3);
+            ModController.Instance.ResetWeatherAndTime();
         }
 
         private void TryLeaveWithVehicle()
@@ -193,6 +205,18 @@ namespace SpaceMod.DataClasses.SceneTypes
             PlayerPed.Task.ClearAllImmediately();
             PlayerPed.Task.WarpIntoVehicle(_playerVehicle, VehicleSeat.Driver);
             End(new MarsOrbitScene(), SceneStartDirection.FromTarget);
+        }
+
+        public void SetIpl(string ipl)
+        {
+            if (_marsBaseInterior.IsActive) return;
+            if (_marsBaseInterior.Name == ipl) return;
+            _marsBaseInterior = new Ipl(ipl, IplType.MapEditor);
+        }
+
+        public Ipl GetIpl()
+        {
+            return _marsBaseInterior;
         }
     }
 }

@@ -18,6 +18,8 @@ namespace SpaceMod.DataClasses
 
     public class Ipl
     {
+        public static bool AllowTraversal { get; set; }
+
         internal Dictionary<string, string> ScrenarioDatabase = new Dictionary<string, string> {
             {"Drink Coffee",  "WORLD_HUMAN_AA_COFFEE"},
             {"Smoke", "WORLD_HUMAN_AA_SMOKE" },
@@ -90,16 +92,26 @@ namespace SpaceMod.DataClasses
                     _map = DeserializeMap();
                     _map?.Objects?.ForEach(o =>
                     {
+                        var model = new Model(o.Hash);
+                        model.Request();
+                        var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
+                        while (!model.IsLoaded)
+                        {
+                            Script.Yield();
+                            if (DateTime.UtcNow > timeout2)
+                                break;
+                        }
+
                         switch (o.Type)
                         {
                             case ObjectTypes.Ped:
-                                CreatePed(o);
+                                CreatePed(o, model);
                                 break;
                             case ObjectTypes.Prop:
-                                CreateProp(o);
+                                CreateProp(o, model);
                                 break;
                             case ObjectTypes.Vehicle:
-                                CreateVehicle(o);
+                                CreateVehicle(o, model);
                                 break;
                         }
                     });
@@ -107,9 +119,9 @@ namespace SpaceMod.DataClasses
             }
         }
 
-        private void CreateProp(MapObject mapObject)
+        private void CreateProp(MapObject mapObject, Model model)
         {
-            var prop = Utilities.CreatePropNoOffset(mapObject.Hash, mapObject.Position, mapObject.Dynamic && mapObject.Door);
+            var prop = Utilities.CreatePropNoOffset(model, mapObject.Position, mapObject.Dynamic && mapObject.Door);
             if (prop == null) return;
             prop.FreezePosition = !mapObject.Dynamic;
             prop.Rotation = mapObject.Rotation;
@@ -117,9 +129,9 @@ namespace SpaceMod.DataClasses
             Props.Add(prop);
         }
 
-        private void CreateVehicle(MapObject mapObject)
+        private void CreateVehicle(MapObject mapObject, Model model)
         {
-            var vehicle = World.CreateVehicle(mapObject.Hash, mapObject.Position);
+            var vehicle = World.CreateVehicle(model, mapObject.Position);
             if (vehicle == null) return;
             vehicle.Rotation = mapObject.Rotation;
             vehicle.Quaternion = mapObject.Quaternion;
@@ -130,37 +142,45 @@ namespace SpaceMod.DataClasses
             Vehicles.Add(vehicle);
         }
 
-        private void CreatePed(MapObject mapObject)
+        private void CreatePed(MapObject mapObject, Model model)
         {
-            var ped = World.CreatePed(mapObject.Hash, mapObject.Position - new Vector3(0, 0, 1));
+            var ped = World.CreatePed(model, mapObject.Position - new Vector3(0, 0, 1), mapObject.Rotation.Z);
             if (ped == null) return;
-            ped.Rotation = mapObject.Rotation;
+            if (!mapObject.Dynamic)
+                ped.FreezePosition = true;
             ped.Quaternion = mapObject.Quaternion;
-            SetScenario(mapObject, ped);
             if (mapObject.Weapon != null)
                 ped.Weapons.Give(mapObject.Weapon.Value, 15, true, true);
-
+            ped.SetDefaultClothes();
+            SetScenario(mapObject, ped);
             Relationship relationship;
             if (Enum.TryParse(mapObject.Relationship, out relationship))
+            {
+                if (relationship == Relationship.Hate)
+                    ped.RelationshipGroup = Game.GenerateHash("HATES_PLAYER");
                 World.SetRelationshipBetweenGroups(relationship, ped.RelationshipGroup,
                     Game.Player.Character.RelationshipGroup);
-
-            ped.FreezePosition = !mapObject.Dynamic;
+                World.SetRelationshipBetweenGroups(relationship, Game.Player.Character.RelationshipGroup,
+                    ped.RelationshipGroup);
+            }
+            ped.BlockPermanentEvents = false;
+            model.MarkAsNoLongerNeeded();
             Peds?.Add(ped);
         }
 
         private void SetScenario(MapObject mapObject, Ped ped)
         {
-            if (mapObject.Action == null || mapObject.Action == "None") return;
-
             switch (mapObject.Action)
             {
+                case null:
+                case "None":
+                    return;
+                case "Any":
+                case "Any - Walk":
+                    ped.TaskUseNearestScenarioToCoord(100f, -1);
+                    break;
                 case "Any - Warp":
                     ped.TaskUseNearestScenarioToCoordWarp(100f, -1);
-                    break;
-                case "Any - Walk":
-                case "Any":
-                    ped.TaskUseNearestScenarioToCoord(100f, -1);
                     break;
                 case "Wander":
                     ped.Task.WanderAround();

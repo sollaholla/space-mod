@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
+﻿using GTA;
 using GTA.Math;
 
 namespace SpaceMod
@@ -43,6 +38,15 @@ namespace SpaceMod
         public static Vector3 GetValidGalaxyDomePosition(Ped playerPed)
         {
             return GameplayCamera.IsRendering ? GameplayCamera.Position : playerPed.Position;
+        }
+
+        public static int AlienRelationship { get; }
+
+        static Constants()
+        {
+            AlienRelationship = World.AddRelationshipGroup("Aliens");
+            World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, AlienRelationship);
+            World.SetRelationshipBetweenGroups(Relationship.Hate, AlienRelationship, Game.Player.Character.RelationshipGroup);
         }
     }
 }

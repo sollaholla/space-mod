@@ -1,8 +1,6 @@
-﻿using System;
-using GTA;
+﻿using GTA;
 using GTA.Math;
 using System.Drawing;
-using System.IO;
 using Font = GTA.Font;
 
 namespace SpaceMod.DataClasses

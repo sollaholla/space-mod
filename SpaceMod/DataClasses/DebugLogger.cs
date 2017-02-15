@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using GTA;
-using GTA.Native;
 
 namespace SpaceMod.DataClasses
 {
@@ -18,19 +17,20 @@ namespace SpaceMod.DataClasses
             const string path = "./scripts/SpaceModLog.log";
             var originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
             File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + "\n" : string.Empty)}" +
-                                    $"[{DateTime.Now}] [{(type == MessageType.Debug ? "DEBUG" : "ERROR")}] {message}");
+                                    $"[{(type == MessageType.Debug ? "DEBUG" : "ERROR")}] [{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}] {message}");
         }
 
-        public static void LogPedData(Ped ped)
+        public static void LogEntityData(Entity entity)
         {
-            Log($"\nPosition = {ped.Position}" +
-                $"\nHeading = {ped.Heading}" +
-                $"\nRotation = {ped.Rotation}" +
-                $"\nHash = {ped.Model.Hash}" +
-                $"\nModel = {(PedHash)ped.Model.Hash}", 
+            Log("Logging entity data: " +
+                $"\nPosition = {entity.Position.X}f, {entity.Position.Y}f, {entity.Position.Z}f" +
+                $"\nHeading = {entity.Heading}" +
+                $"\nRotation = {entity.Rotation.X}f, {entity.Rotation.Y}f, {entity.Rotation.Z}f" +
+                $"\nQuaternion = {entity.Quaternion.X}f, {entity.Quaternion.Y}f, {entity.Quaternion.Z}f {entity.Quaternion.Z}f" +
+                $"\nHash = {entity.Model.Hash}", 
                 MessageType.Debug);
 
-            UI.Notify("Logged ped data.");
+            UI.Notify("Logged entity data.");
         }
     }
 }
