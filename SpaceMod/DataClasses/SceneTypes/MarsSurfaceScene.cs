@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GTA;
 using GTA.Native;
 using GTA.Math;
@@ -15,6 +11,17 @@ namespace SpaceMod.DataClasses.SceneTypes
         private OrbitalSystem _planetSystem;
         private Vehicle _playerVehicle;
         private Prop _surface;
+        private Prop _marsBaseDoor;
+
+        /// <summary>
+        /// This is the vehicle position on the mars surface.
+        /// </summary>
+        private readonly Vector3 _vehiclePos = new Vector3(-10028.53f, -12189.84f, 2506.0208f);
+
+        /// <summary>
+        /// This is the player position on the mars surface.
+        /// </summary>
+        private readonly Vector3 _playerPos = new Vector3(-9994.448f, -12171.48f, 2504.697f);
 
         public override void Init()
         {
@@ -39,33 +46,27 @@ namespace SpaceMod.DataClasses.SceneTypes
             // Create the planet sytem.
             _planetSystem = new OrbitalSystem(galaxy.Handle, new List<Orbital>(), new List<LockedOrbital>(), -0.3f);
 
-            PlayerPosition = _surface.Position + PlayerPed.UpVector;
-            PlayerPosition.MoveToGroundArtificial();
+            // Set the player position.
+            PlayerPosition = _playerPos;
             PlayerPed.HasGravity = true;
 
-            // TODO: Figure out how to make an atmospheric look. Maybe set it to daytime and foggy?
-            // Set the weather to make an atmosphere.
-            //ModController.Instance.SetWeatherAndTime(Weather.Foggy, new TimeSpan(0, 0, 0, 0));
+            // Create the mars base enterence.
+            _marsBaseDoor = World.CreateProp(Constants.MarsBaseDoor001Model, _surface.Position, false, false);
+            _marsBaseDoor.Position += new Vector3(0, 10, 2.7f);
+            _marsBaseDoor.FreezePosition = true;
 
-            // Start dust particles.
-            var named = "core";
-            var fxName = "env_wind_sand_dune";
-            var scale = 20.0f;
-            Function.Call(Hash.REQUEST_NAMED_PTFX_ASSET, named);
-            Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, named);
-            var p = PlayerPosition;
-            var handle = Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_ON_ENTITY, fxName, p.X, p.Y, p.Z, 0.0, 0.0, 0.0, scale, false, false, false, 0);
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_ALPHA, handle, 230f);
-            var color = Color.BlanchedAlmond;
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_COLOUR, handle, color.R, color.G, color.B, false);
-
-            // Configure the vehicle.
+            // Move and configure the player's vehicle.
             if (_playerVehicle == null) return;
             if (!_playerVehicle.Exists()) return;
-            _playerVehicle.Position = PlayerPosition + PlayerPed.UpVector * 5;
-            _playerVehicle.FreezePosition = true;
             _playerVehicle.Speed = 0;
             _playerVehicle.IsInvincible = true;
+            _playerVehicle.Heading = -90;
+            _playerVehicle.Position = _vehiclePos - _playerVehicle.UpVector * 5;
+            _playerVehicle.LandingGear = VehicleLandingGear.Deployed;
+
+            // HACK: Apperantly in gta when you move an object while the screen is black it 
+            // stays stuck in place so we are pushing it downward.
+            _playerVehicle.ApplyForce(Vector3.WorldDown);
         }
 
         public override void Update()
@@ -74,7 +75,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
 
             // Set mars time
-            World.CurrentDayTime = new TimeSpan(0, 12, 0, 0, 0);
+            ModController.Instance.SetWeatherAndTime(Weather.Clear, new TimeSpan(0, 12, 0, 0, 0));
 
             // Process planets
             _planetSystem?.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
@@ -85,20 +86,24 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Abort()
         {
+            Reset();
+        }
+
+        private void Reset()
+        {
             _planetSystem?.Abort();
             _surface?.Delete();
+            _marsBaseDoor?.Delete();
+            Function.Call(Hash.SET_GRAVITY_LEVEL, 3);
             ModController.Instance.ResetWeatherAndTime();
-            Function.Call(Hash.REMOVE_PARTICLE_FX_FROM_ENTITY, PlayerPed.Handle);
         }
 
         public override void CleanUp()
         {
-            _planetSystem?.Abort();
-            _surface?.Delete();
             PlayerPed.HasGravity = false;
-            Function.Call(Hash.SET_GRAVITY_LEVEL, 3);
-            ModController.Instance.ResetWeatherAndTime();
-            Function.Call(Hash.REMOVE_PARTICLE_FX_FROM_ENTITY, PlayerPed.Handle);
+
+            Reset();
+
             if (_playerVehicle == null) return;
             if (!_playerVehicle.Exists()) return;
             _playerVehicle.FreezePosition = false;

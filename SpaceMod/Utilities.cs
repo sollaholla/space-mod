@@ -52,8 +52,26 @@ namespace SpaceMod
         {
             var origin = new Vector3(v3.X, v3.Y, v3.Z + 1000);
             var direction = Vector3.WorldDown;
-            var ray = World.Raycast(origin, direction, int.MaxValue, IntersectOptions.Everything, ignorEntity);
+            var ray = World.Raycast(origin, direction, 1000, IntersectOptions.Everything, ignorEntity);
             return ray.HitCoords;
+        }
+
+        public static void TaskUseNearestScenarioToCoordWarp(this Ped ped, float radius, int duration)
+        {
+            Function.Call(Hash.TASK_USE_NEAREST_SCENARIO_TO_COORD_WARP, ped, ped.Position.X, ped.Position.Y,
+                ped.Position.Z, radius, duration);
+        }
+
+        public static void TaskUseNearestScenarioToCoord(this Ped ped, float radius, int duration)
+        {
+            Function.Call(Hash.TASK_USE_NEAREST_SCENARIO_TO_COORD, ped.Handle, ped.Position.X, ped.Position.Y,
+                ped.Position.Z, radius, duration);
+        }
+
+        public static Prop CreatePropNoOffset(Model model, Vector3 position, bool dynamic)
+        {
+            var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, position.X, position.Y, position.Z, true, true, dynamic));
+            return prop;
         }
 
         public static float GetHeightArtificial(this Entity entity)
@@ -107,9 +125,9 @@ namespace SpaceMod
                 0.0f);
             ped.CanRagdoll = true;
         }
-            
+
         private static void ApplyJumpForce(Ped ped, float jumpForce)
-            {
+        {
             if (JumpFlag(ped))
             {
                 ped.CanRagdoll = false;
@@ -117,7 +135,7 @@ namespace SpaceMod
                 var force = direction * jumpForce;
                 ped.ApplyForce(force);
             }
-            }
+        }
 
         private static bool JumpFlag(Ped ped)
         {

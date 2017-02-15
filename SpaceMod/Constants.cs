@@ -23,6 +23,7 @@ namespace SpaceMod
         public const string MarsMedModel = "mars_med";
         public const string MarsSmallModel = "mars_small";
         public const string MarsSurfaceModel = "mars_surface";
+        public const string MarsBaseDoor001Model = "mars_base_door001";
         public const string PathToDatabase = @".\scripts\SpaceMod";
 
         public static Vector3 TrevorAirport => new Vector3(1267.619f, 3137.67f, 40.41403f);

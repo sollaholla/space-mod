@@ -51,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="DataClasses\Ipl.cs" />
+    <Compile Include="DataClasses\Map.cs" />
+    <Compile Include="DataClasses\MapObject.cs" />
     <Compile Include="DataClasses\Mission.cs" />
     <Compile Include="DataClasses\MissionTypes\ColonizeMars.cs" />
     <Compile Include="DataClasses\MissionTypes\TakeBackWhatsOurs.cs" />
