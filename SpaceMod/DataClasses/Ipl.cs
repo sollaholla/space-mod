@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using GTA;
 using GTA.Math;
@@ -50,8 +51,6 @@ namespace SpaceMod.DataClasses
             {"Yoga", "WORLD_HUMAN_YOGA" },
         };
 
-        private const string Path = "./scripts/SpaceMod/IPL/";
-
         private readonly IplType _type;
         private Map _map;
 
@@ -65,7 +64,7 @@ namespace SpaceMod.DataClasses
             Peds = new List<Ped>();
         }
 
-        public bool IsActive => !string.IsNullOrEmpty(Name) && Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name);
+        public bool IsActive => !string.IsNullOrEmpty(Name) && Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) || _map != null && _map.Objects.Any();
         public List<Vehicle> Vehicles { get; }
         public List<Prop> Props { get; }
         public List<Ped> Peds { get; }
@@ -73,10 +72,10 @@ namespace SpaceMod.DataClasses
 
         public void Request()
         {
+            if (IsActive) return;
             switch (_type)
             {
                 case IplType.GTA:
-                    if (IsActive) return;
                     Function.Call(Hash.REQUEST_IPL, Name);
                     const int timeout = 5;
                     var time = DateTime.UtcNow + new TimeSpan(0, 0, 0, timeout);
@@ -88,7 +87,6 @@ namespace SpaceMod.DataClasses
                     }
                     break;
                 case IplType.MapEditor:
-                    // TODO: Spawn map-objects from map editor file.
                     _map = DeserializeMap();
                     _map?.Objects?.ForEach(o =>
                     {
@@ -190,6 +188,11 @@ namespace SpaceMod.DataClasses
 
         private void RemoveMap_INTERNAL()
         {
+            while (_map.Objects.Count > 0)
+            {
+                _map.Objects.RemoveAt(0);
+            }
+
             while (Props.Count > 0)
             {
                 var prop = Props[0];
@@ -217,7 +220,7 @@ namespace SpaceMod.DataClasses
             try
             {
                 var reader = new XmlSerializer(typeof(Map));
-                var file = new StreamReader(Path + Name + ".xml");
+                var file = new StreamReader(Constants.PathToInteriors + "/" + Name + ".xml");
                 var map = (Map)reader.Deserialize(file);
                 file.Close();
                 return map;

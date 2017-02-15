@@ -179,7 +179,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         {
             // Draw the position of the target.
             if (_marsTarget.IsOnScreen() && OrbitalSystem.ShowUIPositions)
-                Utilities.ShowUIPosition(null, 10, _marsTarget, Constants.PathToDatabase, "Mars", _marsNameText,
+                Utilities.ShowUIPosition(null, 10, _marsTarget, Constants.PathToSprites, "Mars", _marsNameText,
                     _marsDistanceText);
 
             // Show the menu if possible.

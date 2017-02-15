@@ -24,7 +24,9 @@ namespace SpaceMod
         public const string MarsSmallModel = "mars_small";
         public const string MarsSurfaceModel = "mars_surface";
         public const string MarsBaseDoor001Model = "mars_base_door001";
-        public const string PathToDatabase = @".\scripts\SpaceMod";
+        public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
+        public const string PathToInteriors = "./scripts/SpaceMod/IPL";
+
 
         public static Vector3 TrevorAirport => new Vector3(1267.619f, 3137.67f, 40.41403f);
         public static Vector3 GalaxyCenter => new Vector3(-9994.448f, -12171.48f, 8828.197f);

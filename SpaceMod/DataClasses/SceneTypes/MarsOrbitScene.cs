@@ -78,7 +78,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             //World.DrawMarker(MarkerType.UpsideDownCone, Positions[1], Vector3.WorldDown, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Yellow);
 
             if (Positions[1].IsOnScreen() && OrbitalSystem.ShowUIPositions)
-                Utilities.ShowUIPosition(null, 10, Positions[1], Constants.PathToDatabase, "Earth", _leaveMarsNameText,
+                Utilities.ShowUIPosition(null, 10, Positions[1], Constants.PathToSprites, "Earth", _leaveMarsNameText,
                     _leaveMarsDistanceText);
         }
 
