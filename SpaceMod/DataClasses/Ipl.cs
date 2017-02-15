@@ -224,9 +224,7 @@ namespace SpaceMod.DataClasses
             }
             catch (Exception e)
             {
-                const string path = "./scripts/SpaceMod.log";
-                var text = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
-                File.WriteAllText(path, $"{text}\n[{DateTime.Now}] {e.Message}\n{e.StackTrace}");
+                DebugLogger.Log($"{e.Message}\n{e.StackTrace}", MessageType.Error);
                 throw;
             }
         }

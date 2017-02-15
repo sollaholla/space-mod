@@ -95,12 +95,10 @@ namespace SpaceMod
                 _optionsMenu.Visible = true;
 
             if (keyEventArgs.KeyCode == Keys.O)
-            {
-                //LeaveEarth(new MoonSurfaceScene());
-                //SetCurrentMission(new TakeBackWhatsOurs());
-
                 LeaveEarth(new MarsSurfaceScene());
-            }
+
+            if (keyEventArgs.KeyCode == Keys.N)
+                DebugLogger.LogPedData(PlayerPed);
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
