@@ -159,7 +159,6 @@ namespace SpaceMod
             ped.Task.ClearAll();
             ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, (AnimationFlags)37,
                 0.0f);
-            ped.CanRagdoll = true;
         }
 
         private static void ApplyJumpForce(Ped ped, float jumpForce)
@@ -169,6 +168,7 @@ namespace SpaceMod
             var direction = ped.UpVector + ped.ForwardVector;
             var force = direction * jumpForce;
             ped.ApplyForce(force);
+            ped.CanRagdoll = false;
         }
 
         private static bool JumpFlag(Ped ped)
