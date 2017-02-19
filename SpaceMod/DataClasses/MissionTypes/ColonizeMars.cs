@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using GTA;
+using GTA.Math;
 using SpaceMod.DataClasses.SceneTypes;
 
 namespace SpaceMod.DataClasses.MissionTypes
@@ -40,13 +41,14 @@ namespace SpaceMod.DataClasses.MissionTypes
                     UI.Notify($"Added {collection.Length} peds.");
                     _aliens.AddRange(collection);
                     _addedInteriorPeds = true;
+                    UI.ShowSubtitle("Eliminate the remaining ~r~hostiles~s~ in the base.", 10000);
                 }
             }
 
             if (!_spawned)
             {
                 DefaultEnemySpawn(playerPed, ref _aliens, ref _spaceCrafts);
-                UI.ShowSubtitle("Eliminate the remaining ~r~hostiles~s~ outside and inside of the ~p~base~s~.", 10000);
+                UI.ShowSubtitle("Eliminate the remaining ~r~hostiles~s~ outside.", 10000);
                 _spawned = true;
             }
             
@@ -108,8 +110,8 @@ namespace SpaceMod.DataClasses.MissionTypes
         public override void CleanUp()
         {
             Ipl.AllowTraversal = true;
-            _marsSurfaceScene?.LeaveBase();
             _marsSurfaceScene?.SetIpl("mbi2");
+            _marsSurfaceScene?.LoadCurrentIpl(Vector3.Zero, 0, false);
         }
     }
 }

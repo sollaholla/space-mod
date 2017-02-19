@@ -145,15 +145,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             Game.DisableControlThisFrame(2, Control.Talk);
             Game.DisableControlThisFrame(2, Control.Context);
             if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
-            Game.FadeScreenOut(500);
-            Script.Wait(500);
-            _marsBaseInterior.Request();
-            PlayerPosition = _baseInteriorPos;
-            PlayerPed.Heading = 90;
-            GameplayCamera.RelativeHeading = 180;
-            GameplayCamera.RelativePitch = 0;
-            Script.Wait(500);
-            Game.FadeScreenIn(500);
+            LoadCurrentIpl(_baseInteriorPos, 90, false);
         }
 
         private void TryLeaveBase()
@@ -164,20 +156,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             Game.DisableControlThisFrame(2, Control.Talk);
             Game.DisableControlThisFrame(2, Control.Context);
             if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
-            LeaveBase();
-        }
-
-        public void LeaveBase()
-        {
-            Game.FadeScreenOut(500);
-            Script.Wait(500);
-            _marsBaseInterior.Remove();
-            PlayerPosition = _baseEnterancePos;
-            PlayerPed.Heading = 180f; //TODO: Convert to variable. 
-            GameplayCamera.RelativeHeading = 180;
-            GameplayCamera.RelativePitch = 0;
-            Script.Wait(500);
-            Game.FadeScreenIn(500);
+            LoadCurrentIpl(_baseEnterancePos, 180f, true);
         }
 
         private void Reset()
@@ -207,9 +186,26 @@ namespace SpaceMod.DataClasses.SceneTypes
             End(new MarsOrbitScene(), SceneStartDirection.FromTarget);
         }
 
+        public void LoadCurrentIpl(Vector3 setPosition, float setHeading, bool remove)
+        {
+            Game.FadeScreenOut(500);
+            Script.Wait(500);
+
+            if (!remove) _marsBaseInterior.Request();
+            else _marsBaseInterior.Remove();
+
+            if (setPosition != Vector3.Zero)
+                PlayerPosition = setPosition;
+            if (Math.Abs(setHeading) > 0.001f)
+                PlayerPed.Heading = setHeading;
+            GameplayCamera.RelativeHeading = 180;
+            GameplayCamera.RelativePitch = 0;
+            Script.Wait(500);
+            Game.FadeScreenIn(500);
+        }
+
         public void SetIpl(string ipl)
         {
-            if (_marsBaseInterior.IsActive) return;
             if (_marsBaseInterior.Name == ipl) return;
             _marsBaseInterior = new Ipl(ipl, IplType.MapEditor);
         }
