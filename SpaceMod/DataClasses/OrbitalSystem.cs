@@ -20,7 +20,7 @@ namespace SpaceMod.DataClasses
         private readonly RotationAxis _rotationAxis;
 
         /// <summary>
-        /// This is an orbital system derived from entity, who's handle is a skybox / prop. Check the <see cref="Constants.SpaceDomeModel"/> 
+        /// This is an orbital system derived from entity, who's handle is a skybox / prop. Check the <see cref="Database.SpaceDomeModel"/> 
         /// for an example of a dome / skybox.
         /// </summary>
         /// <param name="handle">The handle of the dome / prop that's the skybox.</param>

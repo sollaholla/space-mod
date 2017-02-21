@@ -36,9 +36,9 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Init()
         {
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-            _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
-            _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeModel, Vector3.Zero, false, false);
+            _issl = World.CreateProp(Database.IsslModel, Vector3.Zero, false, false);
+            _earth = World.CreateProp(Database.EarthLargeModel, Vector3.Zero, false, false);
             
             var orbitals = new List<Orbital>
             {

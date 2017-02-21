@@ -51,7 +51,7 @@ namespace SpaceMod.DataClasses
         public void ShowUIPosition(int index)
         {
             if (!ShowUIByDefault) return;
-            Utilities.ShowUIPosition(this, index, Position, Constants.PathToSprites, Name, _nameText, _distanceText);
+            Utilities.ShowUIPosition(this, index, Position, Database.PathToSprites, Name, _nameText, _distanceText);
         }
     }
 }

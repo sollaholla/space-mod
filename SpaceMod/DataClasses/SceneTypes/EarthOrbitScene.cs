@@ -22,7 +22,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         private readonly UIMenu _selectionMenu = new UIMenu(string.Empty, "SELECT A DESTINATION", new Point(0, -105));
         private readonly UIMenu _marsMenu = new UIMenu(string.Empty, "SELECT AN OPTION", new Point(0, -105));
 
-        private readonly Vector3 _marsTarget = Constants.GalaxyCenter + new Vector3(0, -5000, 0);
+        private readonly Vector3 _marsTarget = Database.GalaxyCenter + new Vector3(0, -5000, 0);
         private readonly UIText _marsNameText = new UIText(string.Empty, new Point(), 0.5f)
         {
             Centered = true,
@@ -86,11 +86,11 @@ namespace SpaceMod.DataClasses.SceneTypes
         public override void Init()
         {
             // Create props.
-            var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
-            _earth = World.CreateProp(Constants.EarthLargeModel, Vector3.Zero, false, false);
-            _moon = World.CreateProp(Constants.MoonMedModel, Vector3.Zero, false, false);
-            _issl = World.CreateProp(Constants.IsslModel, Vector3.Zero, false, false);
+            var sun = World.CreateProp(Database.SunSmallModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeModel, Vector3.Zero, false, false);
+            _earth = World.CreateProp(Database.EarthLargeModel, Vector3.Zero, false, false);
+            _moon = World.CreateProp(Database.MoonMedModel, Vector3.Zero, false, false);
+            _issl = World.CreateProp(Database.IsslModel, Vector3.Zero, false, false);
 
             // Setup our lists.
             var orbitals = new List<Orbital>
@@ -100,7 +100,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             };
             var lockedOrbitals = new List<LockedOrbital>
             {
-                new LockedOrbital(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
+                new LockedOrbital(sun.Handle, Database.SunOffsetNearEarth) /*Sun*/
             };
 
             // Move the player to the center of the galaxy.
@@ -117,7 +117,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             rotation.Y = -30;
             _issl.Rotation = rotation;
 
-            sun.Position = Constants.GalaxyCenter;
+            sun.Position = Database.GalaxyCenter;
             _planetSystem = new OrbitalSystem(galaxy.Handle, orbitals, lockedOrbitals, -1.5f);
 
             // Since this is the "earth" orbit scene the target is the earth,
@@ -129,7 +129,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
-            _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+            _planetSystem.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
             GoToMoon();
             GoToEarth();
@@ -179,7 +179,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         {
             // Draw the position of the target.
             if (_marsTarget.IsOnScreen() && OrbitalSystem.ShowUIPositions)
-                Utilities.ShowUIPosition(null, 10, _marsTarget, Constants.PathToSprites, "Mars", _marsNameText,
+                Utilities.ShowUIPosition(null, 10, _marsTarget, Database.PathToSprites, "Mars", _marsNameText,
                     _marsDistanceText);
 
             // Show the menu if possible.

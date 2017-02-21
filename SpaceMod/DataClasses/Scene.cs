@@ -45,7 +45,7 @@ namespace SpaceMod.DataClasses
 
         protected void MovePlayerToGalaxy(bool surface = false)
         {
-            var position = surface ? Constants.PlanetSurfaceGalaxyCenter : Constants.GalaxyCenter;
+            var position = surface ? Database.PlanetSurfaceGalaxyCenter : Database.GalaxyCenter;
             if (!PlayerPed.IsInVehicle()) PlayerPosition = position;
             else PlayerPed.CurrentVehicle.Position = position;
         }

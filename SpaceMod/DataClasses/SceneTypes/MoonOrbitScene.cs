@@ -19,10 +19,10 @@ namespace SpaceMod.DataClasses.SceneTypes
         public override void Init()
         {
             // Create props.
-            _earth = World.CreateProp(Constants.EarthMedModel, Vector3.Zero, false, false);
-            _moon = World.CreateProp(Constants.MoonLargeModel, Vector3.Zero, false, false);
-            var sun = World.CreateProp(Constants.SunSmallModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
+            _earth = World.CreateProp(Database.EarthMedModel, Vector3.Zero, false, false);
+            _moon = World.CreateProp(Database.MoonLargeModel, Vector3.Zero, false, false);
+            var sun = World.CreateProp(Database.SunSmallModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeModel, Vector3.Zero, false, false);
             
             // Create planets and stars.
             var orbitals = new List<Orbital>
@@ -32,7 +32,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             };
             var lockedOrbitals = new List<LockedOrbital>
             {
-                new LockedOrbital(sun.Handle, Constants.SunOffsetNearEarth) /*Sun*/
+                new LockedOrbital(sun.Handle, Database.SunOffsetNearEarth) /*Sun*/
             };
 
             // Move player back to the galaxy center.
@@ -43,7 +43,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _moon.Position = Positions[1];
 
             // Reset the suns position.
-            sun.Position = Constants.GalaxyCenter;
+            sun.Position = Database.GalaxyCenter;
 
             // Create the planet system.
             _planetSystem = new OrbitalSystem(galaxy.Handle, orbitals, lockedOrbitals, -1.5f);
@@ -64,7 +64,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         public override void Update()
         {
             // Process the planets and stars.
-            _planetSystem.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+            _planetSystem.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
             // Try to go to the moon.
             GoToMoon();

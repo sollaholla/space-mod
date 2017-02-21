@@ -9,6 +9,34 @@ using GTA.Native;
 
 namespace SpaceMod
 {
+    public static class Mathf
+    {
+        /// <summary>
+        /// Clamp the value "value" between min, and max.
+        /// </summary>
+        /// <param name="value">The value we wish to clamp.</param>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns></returns>
+        public static float Clamp(float value, float min, float max)
+        {
+            if (value < min)
+            {
+                value = min;
+            }
+            else if (value > max)
+            {
+                value = max;
+            }
+            return value;
+        }
+
+        public static float Lerp(float a, float b, float t)
+        {
+            return a + (b - a) * t;
+        }
+    }
+
     public static class Utilities
     {
         public static readonly Random Random = new Random();
@@ -38,7 +66,7 @@ namespace SpaceMod
             ped.Accuracy = 50;
             ped.Weapons.Give(WeaponHash.Railgun, 15, true, true);
             ped.IsPersistent = true;
-            ped.RelationshipGroup = Constants.AlienRelationship;
+            ped.RelationshipGroup = Database.AlienRelationship;
             ped.Voice = "ALIENS";
             ped.Accuracy = 15;
             Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
