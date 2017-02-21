@@ -75,30 +75,31 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         private void GoToAndromeda()
         {
-            if (PlayerPosition.DistanceTo(_wormHole.Position) < 50)
+            var distanceToWormHole = PlayerPosition.DistanceTo(_wormHole.Position);
+
+            if (distanceToWormHole < 50)
             {
                 End(null);
                 return;
             }
 
-            if (PlayerPosition.DistanceTo(_wormHole.Position) > 1500)
+            if (distanceToWormHole > 1500)
             {
                 _testCam.FieldOfView = Mathf.Lerp(_testCam.FieldOfView, GameplayCamera.FieldOfView,
                     Game.LastFrameTime * 15);
                 return;
             }
-            var distanceScale = 1000 / PlayerPosition.DistanceTo(_wormHole.Position);
+            var distanceScale = 1000 / distanceToWormHole;
             if (!_testCam.IsShaking)
                 _testCam.Shake(CameraShake.SkyDiving, distanceScale);
 
             _testCam.ShakeAmplitude = distanceScale;
-            _testCam.FieldOfView = Mathf.Lerp(_testCam.FieldOfView, _testCam.FieldOfView + distanceScale,
-                Game.LastFrameTime * 2.5f);
+            _testCam.FieldOfView = distanceToWormHole / 180 + 60;
 
             if (PlayerPed.IsInVehicle() && !PlayerPed.CurrentVehicle.AlarmActive)
                 PlayerPed.CurrentVehicle.StartAlarm();
 
-            if (PlayerPosition.DistanceTo(_wormHole.Position) > 950) return;
+            if (distanceToWormHole > 950) return;
             var playerPedVelocity = (_wormHole.Position - PlayerPed.Position) * Game.LastFrameTime * 150;
             if (PlayerPed.IsInVehicle())
             {
