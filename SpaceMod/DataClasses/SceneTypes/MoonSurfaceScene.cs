@@ -30,10 +30,10 @@ namespace SpaceMod.DataClasses.SceneTypes
             Utilities.DisplayHelpTextThisFrame("Go to your vehicle and press ~INPUT_CONTEXT~ to leave the surface.");
 
             // Create props.
-            _surface = World.CreateProp(Constants.MoonSurfaceModel, Vector3.Zero, false, false);
+            _surface = World.CreateProp(Database.MoonSurfaceModel, Vector3.Zero, false, false);
             _surface.FreezePosition = true;
-            var earth = World.CreateProp(Constants.EarthSmallModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
+            var earth = World.CreateProp(Database.EarthSmallModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeModel, Vector3.Zero, false, false);
             
             // Create the planets list.
             var planets = new List<Orbital>
@@ -45,7 +45,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             MovePlayerToGalaxy(true);
 
             // Set our positions after setup.
-            _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
+            _surface.Position = Database.PlanetSurfaceGalaxyCenter;
             earth.Position = _surface.Position + new Vector3(4000, 0, 4000);
             _planetSystem = new OrbitalSystem(galaxy.Handle, planets, new List<LockedOrbital>(), -0.3f);
 
@@ -86,7 +86,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
 
             // Process planets.
-            _planetSystem?.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+            _planetSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
             // Attempt to leave the moon.
             TryLeaveWithVehicle();

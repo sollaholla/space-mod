@@ -51,14 +51,14 @@ namespace SpaceMod.DataClasses.SceneTypes
             Utilities.DisplayHelpTextThisFrame("Go to your vehicle and press ~INPUT_CONTEXT~ to leave the surface.");
 
             // Create our props.
-            _surface = World.CreateProp(Constants.MarsSurfaceModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Constants.SpaceDomeModel, Vector3.Zero, false, false);
+            _surface = World.CreateProp(Database.MarsSurfaceModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeModel, Vector3.Zero, false, false);
 
             // Freeze the surface since it has collisions.
             _surface.FreezePosition = true;
 
             // Move the surface position.
-            _surface.Position = Constants.PlanetSurfaceGalaxyCenter;
+            _surface.Position = Database.PlanetSurfaceGalaxyCenter;
 
             // Create the planet sytem.
             _planetSystem = new OrbitalSystem(galaxy.Handle, new List<Orbital>(), new List<LockedOrbital>(), -0.3f);
@@ -68,7 +68,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             PlayerPed.HasGravity = true;
 
             // Create the mars base enterence.
-            _marsBaseDoor = World.CreateProp(Constants.MarsBaseDoor001Model, _surface.Position, false, false);
+            _marsBaseDoor = World.CreateProp(Database.MarsBaseDoor001Model, _surface.Position, false, false);
             _marsBaseDoor.Position += new Vector3(0, 10, 2.7f);
             _marsBaseDoor.Position = new Vector3(-9994.448f, -12161.48f, 2505.8f);
             _marsBaseDoor.Rotation = new Vector3(0, 0, 90);
@@ -102,7 +102,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             ModController.Instance.SetWeatherAndTime(Weather.Clear, _marsBaseInterior.IsActive ? new TimeSpan(0, 0, 0, 0, 0) : new TimeSpan(0, 12, 0, 0, 0));
 
             // Process planets
-            _planetSystem?.Process(Constants.GetValidGalaxyDomePosition(PlayerPed));
+            _planetSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
             // Try to leave with vehicle
             TryLeaveWithVehicle();

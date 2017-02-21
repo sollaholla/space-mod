@@ -240,7 +240,7 @@ namespace SpaceMod.DataClasses
             try
             {
                 var reader = new XmlSerializer(typeof(Map));
-                var file = new StreamReader(Constants.PathToInteriors + "/" + Name + ".xml");
+                var file = new StreamReader(Database.PathToInteriors + "/" + Name + ".xml");
                 var map = (Map)reader.Deserialize(file);
                 file.Close();
                 return map;

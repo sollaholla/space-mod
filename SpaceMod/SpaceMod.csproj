@@ -50,7 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Constants.cs" />
+    <Compile Include="Database.cs" />
     <Compile Include="DataClasses\DebugLogger.cs" />
     <Compile Include="DataClasses\Ipl.cs" />
     <Compile Include="DataClasses\Map.cs" />

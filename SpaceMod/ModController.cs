@@ -90,7 +90,7 @@ namespace SpaceMod
 
             if (_currentScene != null)
             {
-                PlayerPed.Position = Constants.TrevorAirport;
+                PlayerPed.Position = Database.TrevorAirport;
                 PlayerPed.LastVehicle?.Delete();
             }
 
@@ -106,8 +106,8 @@ namespace SpaceMod
                 _optionsMenu.Visible = true;
 
             if (keyEventArgs.KeyCode != Keys.NumPad3) return;
-            SetCurrentMission(new ColonizeMars());
-            LeaveEarth(new MarsSurfaceScene());
+            //SetCurrentMission(new ColonizeMars());
+            LeaveEarth(new MarsOrbitScene());
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
@@ -198,13 +198,13 @@ namespace SpaceMod
         {
             if (!PlayerPed.IsInVehicle())
             {
-                PlayerPed.Position = Constants.EarthAtmosphereEnterPosition;
+                PlayerPed.Position = Database.EarthAtmosphereEnterPosition;
                 PlayerPed.Heading = 244.7877f;
             }
             else
             {
                 var currentVehicle = PlayerPed.CurrentVehicle;
-                currentVehicle.Position = Constants.EarthAtmosphereEnterPosition;
+                currentVehicle.Position = Database.EarthAtmosphereEnterPosition;
                 currentVehicle.Heading = 244.7877f;
                 currentVehicle.Speed = 75;
                 currentVehicle.HasGravity = true;

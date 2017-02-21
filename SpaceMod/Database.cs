@@ -3,7 +3,7 @@ using GTA.Math;
 
 namespace SpaceMod
 {
-    public static class Constants
+    public static class Database
     {
         public const string SunSmallModel = "sun_small";
         public const string MoonLargeModel = "moon_large";
@@ -19,9 +19,12 @@ namespace SpaceMod
         public const string MarsSmallModel = "mars_small";
         public const string MarsSurfaceModel = "mars_surface";
         public const string MarsBaseDoor001Model = "mars_base_door001";
+        public const string SpaceDomeAndromedaMode = "spacedome_and";
+        public const string WormHoleSmallModel = "spacedome_and_wrm_small";
+        public const string WormHoleLargeModel = "spacedome_and_wrm_small";
+
         public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
         public const string PathToInteriors = "./scripts/SpaceMod/IPL";
-
 
         public static Vector3 TrevorAirport => new Vector3(1267.619f, 3137.67f, 40.41403f);
         public static Vector3 GalaxyCenter => new Vector3(-9994.448f, -12171.48f, 8828.197f);
@@ -42,7 +45,7 @@ namespace SpaceMod
 
         public static int AlienRelationship { get; }
 
-        static Constants()
+        static Database()
         {
             AlienRelationship = World.AddRelationshipGroup("Aliens");
             World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, AlienRelationship);
