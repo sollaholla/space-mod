@@ -98,6 +98,8 @@ namespace SpaceMod
             Function.Call(Hash.SET_GRAVITY_LEVEL, 0);
             PlayerPed.HasGravity = true;
             Game.TimeScale = 1.0f;
+
+            World.RenderingCamera = null;
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
@@ -107,7 +109,7 @@ namespace SpaceMod
 
             if (keyEventArgs.KeyCode != Keys.NumPad3) return;
             //SetCurrentMission(new ColonizeMars());
-            LeaveEarth(new MarsOrbitScene());
+            LeaveEarth(new KaroonOrbitScene());
         }
 
         private void OnTick(object sender, EventArgs eventArgs)

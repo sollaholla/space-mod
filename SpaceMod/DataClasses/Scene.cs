@@ -1,4 +1,5 @@
-﻿using GTA;
+﻿using System;
+using GTA;
 using GTA.Math;
 
 namespace SpaceMod.DataClasses
@@ -15,6 +16,9 @@ namespace SpaceMod.DataClasses
         public delegate void OnSceneEndedEvent(Scene sender, Scene newScene);
 
         public event OnSceneEndedEvent SceneEnded;
+
+        private bool _setTimer;
+        private DateTime _timer;
 
         public SceneStartDirection StartDirection { get; set; }
 
@@ -54,6 +58,83 @@ namespace SpaceMod.DataClasses
         {
             if (!PlayerPed.IsInVehicle()) PlayerPed.Rotation = rotation;
             else PlayerPed.CurrentVehicle.Rotation = rotation;
+        }
+
+        public void EnterWormHole(Scene scene, ISpatial wormHole, Camera camera, SceneStartDirection dir = SceneStartDirection.ToTarget)
+        {
+            var distanceToWormHole = PlayerPosition.DistanceTo(wormHole.Position);
+
+            if (distanceToWormHole < 50)
+            {
+                End(scene, dir);
+                World.RenderingCamera = null;
+                camera?.Destroy();
+                _setTimer = false;
+                return;
+            }
+
+            if (distanceToWormHole > 1500 && camera != null)
+            {
+                camera.FieldOfView = Mathf.Lerp(camera.FieldOfView, GameplayCamera.FieldOfView,
+                    Game.LastFrameTime * 15);
+                return;
+            }
+
+            var distanceScale = 1000 / distanceToWormHole;
+            if (camera != null && !camera.IsShaking)
+                camera.Shake(CameraShake.SkyDiving, distanceScale);
+
+            if (camera != null)
+            {
+                camera.ShakeAmplitude = distanceScale;
+                camera.FieldOfView = distanceToWormHole / 180 + 60;
+            }
+
+            if (PlayerPed.IsInVehicle() && !PlayerPed.CurrentVehicle.AlarmActive)
+                PlayerPed.CurrentVehicle.StartAlarm();
+
+            if (distanceToWormHole > 950) return;
+            if (distanceToWormHole <= 260)
+            {
+                if (!_setTimer)
+                {
+                    _timer = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 7500);
+                    _setTimer = true;
+
+                    if (PlayerPed.IsInVehicle())
+                        PlayerPed.CurrentVehicle.Velocity = Vector3.Zero;
+                    PlayerPed.Velocity = Vector3.Zero;
+                    return;
+                }
+
+                if (DateTime.UtcNow < _timer)
+                {
+                    var direction = PlayerPosition - wormHole.Position;
+                    direction.Normalize();
+                    var pos = Utilities.RotatePointAroundPivot(PlayerPosition, wormHole.Position, new Vector3(0, 0, 2000 * Game.LastFrameTime));
+                    var velocity = pos - (PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPosition);
+                    if (PlayerPed.IsInVehicle())
+                    {
+                        var currentVehicle = PlayerPed.CurrentVehicle;
+                        currentVehicle.Velocity = velocity;
+                        //currentVehicle.Quaternion =
+                        //    Quaternion.FromToRotation(currentVehicle.ForwardVector,
+                        //        _wormHole.Position - currentVehicle.Position) * currentVehicle.Quaternion;
+                        return;
+                    }
+                    PlayerPed.Velocity = velocity;
+
+                    return;
+                }
+            }
+
+            var playerPedVelocity = (wormHole.Position - PlayerPed.Position) * Game.LastFrameTime * 150;
+            if (PlayerPed.IsInVehicle())
+            {
+                PlayerPed.CurrentVehicle.Velocity = Vector3.Lerp(PlayerPed.CurrentVehicle.Velocity, playerPedVelocity, Game.LastFrameTime * 5);
+                return;
+            }
+            PlayerPed.Velocity = Vector3.Lerp(PlayerPed.Velocity, playerPedVelocity, Game.LastFrameTime * 5);
         }
 
         /// <summary>

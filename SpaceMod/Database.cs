@@ -6,12 +6,14 @@ namespace SpaceMod
     public static class Database
     {
         public const string SunSmallModel = "sun_small";
+        public const string AndromedaSunBlueModel = "sun_small_blue";
         public const string MoonLargeModel = "moon_large";
         public const string MoonMedModel = "moon_med";
         public const string MoonSurfaceModel = "moon_surface";
         public const string EarthLargeModel = "earth_large";
         public const string EarthMedModel = "earth_med";
         public const string EarthSmallModel = "earth_small";
+        public const string KaroonLargeModel = "alienplanet1_large";
         public const string SpaceDomeModel = "spacedome";
         public const string IsslModel = "issl";
         public const string MarsLargeModel = "mars_large";

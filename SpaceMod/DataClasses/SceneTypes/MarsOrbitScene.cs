@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 using System.Drawing;
@@ -18,17 +19,15 @@ namespace SpaceMod.DataClasses.SceneTypes
         private OrbitalSystem _planetSystem;
         private Prop _mars;
         private Prop _wormHole;
-        private Camera _testCam;
+        private Camera _camera;
 
-        private readonly UIText _leaveMarsNameText = new UIText(string.Empty, new Point(), 0.5f)
-        {
+        private readonly UIText _leaveMarsNameText = new UIText(string.Empty, new Point(), 0.5f) {
             Centered = true,
             Font = GTA.Font.Monospace,
             Shadow = true
         };
 
-        private readonly UIText _leaveMarsDistanceText = new UIText(string.Empty, new Point(), 0.5f)
-        {
+        private readonly UIText _leaveMarsDistanceText = new UIText(string.Empty, new Point(), 0.5f) {
             Centered = true,
             Font = GTA.Font.Monospace,
             Shadow = true
@@ -36,8 +35,8 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Init()
         {
-            _testCam = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation, GameplayCamera.FieldOfView);
-            World.RenderingCamera = _testCam;
+            _camera = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation, GameplayCamera.FieldOfView);
+            World.RenderingCamera = _camera;
 
             _mars = World.CreateProp(Database.MarsLargeModel, Vector3.Zero, false, false);
             _wormHole = World.CreateProp(Database.WormHoleSmallModel, Vector3.Zero, false, false);
@@ -46,7 +45,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             var orbitals = new List<Orbital> {
                 new Orbital(_mars.Handle, "Mars", galaxy, Vector3.Zero, -3.5f),
-                new Orbital(_wormHole.Handle, "Worm Hole", galaxy, Vector3.Zero, -5)
+                new Orbital(_wormHole.Handle, "Keplar 983b", galaxy, Vector3.Zero, -5)
             };
             var lockedOrbitals = new List<LockedOrbital> {
                 new LockedOrbital(sun.Handle, Database.SunOffsetNearEarth)
@@ -68,47 +67,10 @@ namespace SpaceMod.DataClasses.SceneTypes
         private void GoToMars()
         {
             var dist = PlayerPosition.DistanceTo(_mars.Position);
-
             if (dist > 2000) return;
             End(new MarsSurfaceScene());
         }
-
-        private void GoToAndromeda()
-        {
-            var distanceToWormHole = PlayerPosition.DistanceTo(_wormHole.Position);
-
-            if (distanceToWormHole < 50)
-            {
-                End(null);
-                return;
-            }
-
-            if (distanceToWormHole > 1500)
-            {
-                _testCam.FieldOfView = Mathf.Lerp(_testCam.FieldOfView, GameplayCamera.FieldOfView,
-                    Game.LastFrameTime * 15);
-                return;
-            }
-            var distanceScale = 1000 / distanceToWormHole;
-            if (!_testCam.IsShaking)
-                _testCam.Shake(CameraShake.SkyDiving, distanceScale);
-
-            _testCam.ShakeAmplitude = distanceScale;
-            _testCam.FieldOfView = distanceToWormHole / 180 + 60;
-
-            if (PlayerPed.IsInVehicle() && !PlayerPed.CurrentVehicle.AlarmActive)
-                PlayerPed.CurrentVehicle.StartAlarm();
-
-            if (distanceToWormHole > 950) return;
-            var playerPedVelocity = (_wormHole.Position - PlayerPed.Position) * Game.LastFrameTime * 150;
-            if (PlayerPed.IsInVehicle())
-            {
-                PlayerPed.CurrentVehicle.Velocity = Vector3.Lerp(PlayerPed.CurrentVehicle.Velocity, playerPedVelocity, Game.LastFrameTime * 5);
-                return;
-            }
-            PlayerPed.Velocity = Vector3.Lerp(PlayerPed.Velocity, playerPedVelocity, Game.LastFrameTime * 5);
-        }
-
+        
         private void LeaveOrbit()
         {
             // Try to leave the moons orbit.
@@ -128,13 +90,15 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         public override void Update()
         {
-            _testCam.Position = GameplayCamera.Position;
-            _testCam.Rotation = GameplayCamera.Rotation;
-            _testCam.Direction = GameplayCamera.Direction;
+            _camera.Position = GameplayCamera.Position;
+            _camera.Rotation = GameplayCamera.Rotation;
+            _camera.Direction = GameplayCamera.Direction;
+            _camera.IsActive = FollowCam.ViewMode != FollowCamViewMode.FirstPerson;
+            World.RenderingCamera = _camera.IsActive ? _camera : null;
 
             _planetSystem.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
             GoToMars();
-            GoToAndromeda();
+            EnterWormHole(new KaroonOrbitScene(), _wormHole, _camera);
             DrawMarker();
             LeaveOrbit();
         }
@@ -152,7 +116,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         private void Done()
         {
             GameplayCamera.StopShaking();
-            _testCam.Destroy();
+            _camera.Destroy();
             World.RenderingCamera = null;
             _planetSystem?.Abort();
             Game.TimeScale = 1;
