@@ -22,6 +22,8 @@ namespace SpaceMod
         public const string SpaceDomeAndromedaMode = "spacedome_and";
         public const string WormHoleSmallModel = "spacedome_and_wrm_small";
         public const string WormHoleLargeModel = "spacedome_and_wrm_small";
+        public const string BlueSunSmallModel = "bluesun_small";
+        public const string AlienPlanet1LargeModel = "alienplanet1_large";
 
         public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
         public const string PathToInteriors = "./scripts/SpaceMod/IPL";
