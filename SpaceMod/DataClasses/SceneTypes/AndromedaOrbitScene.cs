@@ -45,7 +45,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             blueSun.Position = Database.GalaxyCenter;
 
             // Set up the planetary system.
-            _planetSystem = new OrbitalSystem(galaxy, orbitals, lockedOrbitals, -1.5f);
+            _planetSystem = new OrbitalSystem(galaxy.Handle, orbitals, lockedOrbitals, -1.5f);
         }
 
         public override void Update()

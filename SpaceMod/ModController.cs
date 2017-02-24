@@ -107,7 +107,7 @@ namespace SpaceMod
 
             if (keyEventArgs.KeyCode != Keys.NumPad3) return;
             //SetCurrentMission(new ColonizeMars());
-            LeaveEarth(new MarsOrbitScene());
+            LeaveEarth(new AndromedaOrbitScene());
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
