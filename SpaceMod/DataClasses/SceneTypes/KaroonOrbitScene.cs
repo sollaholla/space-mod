@@ -22,10 +22,10 @@ namespace SpaceMod.DataClasses.SceneTypes
             _camera = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation, GameplayCamera.FieldOfView);
             World.RenderingCamera = _camera;
 
-            _karoon = World.CreateProp(Database.KaroonLargeModel, Vector3.Zero, false, false);
+            _karoon = World.CreateProp(Database.AlienPlanet1LargeModel, Vector3.Zero, false, false);
             _wormHole = World.CreateProp(Database.WormHoleSmallModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Database.SpaceDomeAndromedaMode, Vector3.Zero, false, false);
-            var sun = World.CreateProp(Database.AndromedaSunBlueModel, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeAndromedaModel, Vector3.Zero, false, false);
+            var sun = World.CreateProp(Database.BlueSunSmallModel, Vector3.Zero, false, false);
 
             var orbitals = new List<Orbital> {
                 new Orbital(_karoon.Handle, "Karoon", galaxy, Vector3.Zero, -3.5f),

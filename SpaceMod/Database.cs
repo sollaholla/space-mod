@@ -6,7 +6,6 @@ namespace SpaceMod
     public static class Database
     {
         public const string SunSmallModel = "sun_small";
-        public const string AndromedaSunBlueModel = "sun_small_blue";
         public const string MoonLargeModel = "moon_large";
         public const string MoonMedModel = "moon_med";
         public const string MoonSurfaceModel = "moon_surface";
@@ -21,7 +20,7 @@ namespace SpaceMod
         public const string MarsSmallModel = "mars_small";
         public const string MarsSurfaceModel = "mars_surface";
         public const string MarsBaseDoor001Model = "mars_base_door001";
-        public const string SpaceDomeAndromedaMode = "spacedome_and";
+        public const string SpaceDomeAndromedaModel = "spacedome_and";
         public const string WormHoleSmallModel = "spacedome_and_wrm_small";
         public const string WormHoleLargeModel = "spacedome_and_wrm_small";
         public const string BlueSunSmallModel = "bluesun_small";

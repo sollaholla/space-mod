@@ -24,7 +24,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         {
             // Creating the props.
             var blueSun = World.CreateProp(Database.BlueSunSmallModel, Vector3.Zero, false, false);
-            var galaxy = World.CreateProp(Database.SpaceDomeAndromedaMode, Vector3.Zero, false, false);
+            var galaxy = World.CreateProp(Database.SpaceDomeAndromedaModel, Vector3.Zero, false, false);
             _andromedaPlanet = World.CreateProp(Database.AlienPlanet1LargeModel, Vector3.Zero, false, false);
 
             // Setup our lists.
@@ -53,6 +53,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _planetSystem.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
             //You cant get out of here muahahahahaha.
+            // lol
         }
 
         public override void Abort()
