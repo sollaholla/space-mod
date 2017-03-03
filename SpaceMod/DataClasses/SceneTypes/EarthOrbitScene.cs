@@ -142,7 +142,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         private void ProcessSelectionMenu()
         {
             if (!_selectionMenu.Visible) return;
-            ModController.Instance.CloseAllMenus();
+            //ModController.Instance.CloseAllMenus();
             _selectionMenu.ProcessControl();
             _selectionMenu.ProcessMouse();
             _selectionMenu.Draw();
@@ -151,7 +151,7 @@ namespace SpaceMod.DataClasses.SceneTypes
         private void ProcessMarsMenu()
         {
             if (!_marsMenu.Visible) return;
-            ModController.Instance.CloseAllMenus();
+            //ModController.Instance.CloseAllMenus();
             _marsMenu.ProcessControl();
             _marsMenu.ProcessMouse();
             _marsMenu.Draw();

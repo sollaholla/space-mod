@@ -51,27 +51,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
+    <Compile Include="DataClasses\CustomScenario.cs" />
+    <Compile Include="DataClasses\CustomScene.cs" />
     <Compile Include="DataClasses\DebugLogger.cs" />
     <Compile Include="DataClasses\Ipl.cs" />
     <Compile Include="DataClasses\Map.cs" />
     <Compile Include="DataClasses\MapObject.cs" />
-    <Compile Include="DataClasses\Mission.cs" />
-    <Compile Include="DataClasses\MissionTypes\ColonizeMars.cs" />
-    <Compile Include="DataClasses\MissionTypes\TakeBackWhatsOurs.cs" />
     <Compile Include="DataClasses\OrbitalSystem.cs" />
     <Compile Include="DataClasses\Orbital.cs" />
     <Compile Include="DataClasses\PlayerPrefs.cs" />
     <Compile Include="DataClasses\Scene.cs" />
-    <Compile Include="DataClasses\SceneTypes\AndromedaOrbitScene %28OLD%29.cs" />
-    <Compile Include="DataClasses\SceneTypes\EarthOrbitScene.cs" />
-    <Compile Include="DataClasses\SceneTypes\IsslScene.cs" />
-    <Compile Include="DataClasses\SceneTypes\KaroonOrbitScene.cs" />
-    <Compile Include="DataClasses\SceneTypes\MarsOrbitScene.cs" />
-    <Compile Include="DataClasses\SceneTypes\MarsSurfaceScene.cs" />
-    <Compile Include="DataClasses\SceneTypes\MoonOrbitScene.cs" />
-    <Compile Include="DataClasses\SceneTypes\MoonSurfaceScene.cs" />
+    <Compile Include="DataClasses\CustomXmlScene.cs" />
     <Compile Include="DataClasses\LockedOrbital.cs" />
     <Compile Include="ModController.cs" />
+    <Compile Include="MyXmlSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>

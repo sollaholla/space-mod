@@ -7,6 +7,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 using MapEditor;
+using SpaceMod.Static;
 
 namespace SpaceMod.DataClasses
 {
@@ -67,9 +68,13 @@ namespace SpaceMod.DataClasses
         }
 
         public bool IsActive => !string.IsNullOrEmpty(Name) && Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) || _map != null && _map.Objects.Any();
+
         public List<Vehicle> Vehicles { get; }
+
         public List<Prop> Props { get; }
+
         public List<Ped> Peds { get; }
+
         public string Name { get; }
 
         public void Request()
@@ -89,32 +94,46 @@ namespace SpaceMod.DataClasses
                     }
                     break;
                 case IplType.MapEditor:
-                    _map = DeserializeMap();
-                    _map?.Objects?.ForEach(o =>
+                    _map = MyXmlSerializer.Deserialize<Map>(Database.PathToInteriors + "/" + Name + ".xml");
+                    if (_map != null)
                     {
-                        var model = new Model(o.Hash);
-                        model.Request();
-                        var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
-                        while (!model.IsLoaded)
+                        if (_map.Objects != null)
                         {
-                            Script.Yield();
-                            if (DateTime.UtcNow > timeout2)
-                                break;
+                            _map.Objects.ForEach(o =>
+                            {
+                                var model = new Model(o.Hash);
+                                model.Request();
+                                var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
+                                while (!model.IsLoaded)
+                                {
+                                    Script.Yield();
+                                    if (DateTime.UtcNow > timeout2)
+                                        break;
+                                }
+
+                                switch (o.Type)
+                                {
+                                    case ObjectTypes.Ped:
+                                        CreatePed(o, model);
+                                        break;
+                                    case ObjectTypes.Prop:
+                                        CreateProp(o, model);
+                                        break;
+                                    case ObjectTypes.Vehicle:
+                                        CreateVehicle(o, model);
+                                        break;
+                                }
+                            });
+                            DebugLogger.Log($"{_map.Objects.Count} Objects Tried To Be Created", MessageType.Debug);
                         }
 
-                        switch (o.Type)
-                        {
-                            case ObjectTypes.Ped:
-                                CreatePed(o, model);
-                                break;
-                            case ObjectTypes.Prop:
-                                CreateProp(o, model);
-                                break;
-                            case ObjectTypes.Vehicle:
-                                CreateVehicle(o, model);
-                                break;
-                        }
-                    });
+                        DebugLogger.Log($"{Name} Created Successfully", MessageType.Debug);
+                    }
+                    else
+                    {
+                        DebugLogger.Log($"Failed To Create {Database.PathToInteriors + "/" + Name + ".xml"}", MessageType.Error);
+                    }
+
                     break;
             }
         }
@@ -232,23 +251,6 @@ namespace SpaceMod.DataClasses
                 var ped = Peds[0];
                 ped?.Delete();
                 Peds.RemoveAt(0);
-            }
-        }
-
-        private Map DeserializeMap()
-        {
-            try
-            {
-                var reader = new XmlSerializer(typeof(Map));
-                var file = new StreamReader(Database.PathToInteriors + "/" + Name + ".xml");
-                var map = (Map)reader.Deserialize(file);
-                file.Close();
-                return map;
-            }
-            catch (Exception e)
-            {
-                DebugLogger.Log($"{e.Message}\n{e.StackTrace}", MessageType.Error);
-                throw;
             }
         }
     }

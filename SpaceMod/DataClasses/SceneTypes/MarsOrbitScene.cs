@@ -98,7 +98,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
             _planetSystem.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
             GoToMars();
-            EnterWormHole(new KaroonOrbitScene(), _wormHole, _camera);
+            //EnterWormHole(new KaroonOrbitScene(), _wormHole, _camera);
             DrawMarker();
             LeaveOrbit();
         }

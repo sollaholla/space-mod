@@ -15,8 +15,6 @@ namespace SpaceMod.DataClasses
     {
         public static bool ShowUIPositions = true;
 
-        private readonly List<Orbital> _orbitals;
-        private readonly List<LockedOrbital> _lockedOrbitals;
         private readonly RotationAxis _rotationAxis;
 
         /// <summary>
@@ -31,13 +29,17 @@ namespace SpaceMod.DataClasses
         public OrbitalSystem(int handle, List<Orbital> orbitals, List<LockedOrbital> lockedOrbitals,
             float skyboxRotationSpeed = 0, RotationAxis rotationAxis = RotationAxis.Z) : base(handle)
         {
-            _orbitals = orbitals;
-            _lockedOrbitals = lockedOrbitals;
+            Orbitals = orbitals;
+            LockedOrbitals = lockedOrbitals;
             _rotationAxis = rotationAxis;
             SkyboxRotationSpeed = skyboxRotationSpeed;
         }
 
         public float SkyboxRotationSpeed { get; set; }
+
+        public List<Orbital> Orbitals { get; }
+
+        public List<LockedOrbital> LockedOrbitals { get; }
 
         public void Process(Vector3 galaxyCenter)
         {
@@ -48,12 +50,12 @@ namespace SpaceMod.DataClasses
             Position = galaxyCenter;
 
             // Update locked orbitals.
-            _lockedOrbitals?.ForEach(UpdateLockedOrbital);
+            LockedOrbitals?.ForEach(UpdateLockedOrbital);
 
             // Update orbitals.
-            _orbitals?.ForEach(orbital => orbital?.Orbit());
+            Orbitals?.ForEach(orbital => orbital?.Orbit());
             if (ShowUIPositions)
-                _orbitals?.ForEach(orbital => orbital.ShowUIPosition(_orbitals.IndexOf(orbital)));
+                Orbitals?.ForEach(orbital => orbital.ShowUIPosition(Orbitals.IndexOf(orbital)));
         }
 
         private void SetRotation()
@@ -83,15 +85,15 @@ namespace SpaceMod.DataClasses
         public void Abort()
         {
             Delete();
-            while (_lockedOrbitals.Count > 0)
+            while (LockedOrbitals.Count > 0)
             {
-                _lockedOrbitals[0]?.Delete();
-                _lockedOrbitals.RemoveAt(0);
+                LockedOrbitals[0]?.Delete();
+                LockedOrbitals.RemoveAt(0);
             }
-            while (_orbitals.Count > 0)
+            while (Orbitals.Count > 0)
             {
-                _orbitals[0]?.Delete();
-                _orbitals.RemoveAt(0);
+                Orbitals[0]?.Delete();
+                Orbitals.RemoveAt(0);
             }
         }
 
@@ -102,7 +104,7 @@ namespace SpaceMod.DataClasses
         public string GetInfo()
         {
             var str = string.Empty;
-            _orbitals.ForEach(p => str += $"{p.Name}: position = {p.Position} | rotation = {p.Rotation}\n");
+            Orbitals.ForEach(p => str += $"{p.Name}: position = {p.Position} | rotation = {p.Rotation}\n");
             return str;
         }
     }

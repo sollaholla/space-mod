@@ -52,7 +52,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _camera.IsActive = FollowCam.ViewMode != FollowCamViewMode.FirstPerson;
             World.RenderingCamera = _camera.IsActive ? _camera : null;
 
-            EnterWormHole(new MarsOrbitScene(), _wormHole, _camera);
+            //EnterWormHole(new MarsOrbitScene(), _wormHole, _camera);
             _system?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
         }
 

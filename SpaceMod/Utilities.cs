@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -37,10 +38,18 @@ namespace SpaceMod
         }
     }
 
+    public enum RagdollType
+    {
+        Normal = 0,
+        Stiff = 1,
+        NarrowLegStumble = 2,
+        WideLegStumble = 3
+    }
+
     public static class Utilities
     {
         public static readonly Random Random = new Random();
-        
+
         public static void ArtificalDamage(Ped ped, Ped target, float damageDistance, float damageMultiplier)
         {
             var impCoords = ped.GetLastWeaponImpactCoords();
@@ -49,7 +58,7 @@ namespace SpaceMod
             if (distanceTo < damageDistance)
                 target.ApplyDamage((int)(1 / distanceTo * damageMultiplier));
         }
-        
+
         public static bool IsCloseToAnyEntity(Vector3 position, IReadOnlyCollection<Entity> collection, float distance)
         {
             if (collection == null) return false;
@@ -218,6 +227,16 @@ namespace SpaceMod
             var inField = angle < fov;
 
             return inField;
+        }
+
+        public static void SetGravityLevel(int level)
+        {
+            Function.Call(Hash.SET_GRAVITY_LEVEL, level);
+        }
+
+        public static void Ragdoll(this Ped ped, int duration, RagdollType type)
+        {
+            Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int)type, false, false, false);
         }
     }
 

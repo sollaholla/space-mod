@@ -27,10 +27,19 @@ namespace SpaceMod
         public const string AlienPlanet1LargeModel = "alienplanet1_large";
 
         public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
-        public const string PathToInteriors = "./scripts/SpaceMod/IPL";
+        public const string PathToInteriors = @"./scripts/SpaceMod/IPL";
+        public const string PathToSceneLinks = @"./scripts/SpaceMod/Scenes";
+        public const string PathToScenarios = @"./scripts/SpaceMod/Scenarios";
+        
+        static Database()
+        {
+            AlienRelationship = World.AddRelationshipGroup("Aliens");
+            World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, AlienRelationship);
+            World.SetRelationshipBetweenGroups(Relationship.Hate, AlienRelationship, Game.Player.Character.RelationshipGroup);
+        }
 
         public static Vector3 TrevorAirport => new Vector3(1267.619f, 3137.67f, 40.41403f);
-        public static Vector3 GalaxyCenter => new Vector3(-9994.448f, -12171.48f, 8828.197f);
+        public static Vector3 GalaxyCenter => new Vector3(-9994.448f, -12171.48f, 10000f);
         public static Vector3 PlanetSurfaceGalaxyCenter => new Vector3(-9994.448f, -12171.48f, 2500.197f);
         public static Vector3 EarthAtmosphereEnterPosition => new Vector3(-2618.882f, -2490.627f, 628.4431f);
         public static Vector3 SunOffsetNearEarth => new Vector3(0, 6500, 0);
@@ -47,12 +56,5 @@ namespace SpaceMod
         }
 
         public static int AlienRelationship { get; }
-
-        static Database()
-        {
-            AlienRelationship = World.AddRelationshipGroup("Aliens");
-            World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, AlienRelationship);
-            World.SetRelationshipBetweenGroups(Relationship.Hate, AlienRelationship, Game.Player.Character.RelationshipGroup);
-        }
     }
 }

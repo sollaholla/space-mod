@@ -35,7 +35,7 @@ namespace SpaceMod.DataClasses.SceneTypes
 
         /// <summary>
         /// This the enterance of the interior.
-        /// </summary>
+        /// </summary>DrawMarker
         private readonly Vector3 _baseInteriorPos = new Vector3(-1965.833f, 3197.101f, 33.3099f);
 
         public bool IsIplLoaded => _marsBaseInterior != null && _marsBaseInterior.IsActive;
@@ -99,7 +99,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             Function.Call(Hash.SET_GRAVITY_LEVEL, 1);
 
             // Set mars time
-            ModController.Instance.SetWeatherAndTime(Weather.Clear, _marsBaseInterior.IsActive ? new TimeSpan(0, 0, 0, 0, 0) : new TimeSpan(0, 12, 0, 0, 0));
+            //ModController.Instance.SetWeatherAndTime(Weather.Clear, _marsBaseInterior.IsActive ? new TimeSpan(0, 0, 0, 0, 0) : new TimeSpan(0, 12, 0, 0, 0));
 
             // Process planets
             _planetSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
@@ -166,7 +166,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _marsBaseDoor?.Delete();
             _marsBaseInterior?.Remove();
             Function.Call(Hash.SET_GRAVITY_LEVEL, 3);
-            ModController.Instance.ResetWeatherAndTime();
+            //ModController.Instance.ResetWeatherAndTime();
         }
 
         private void TryLeaveWithVehicle()

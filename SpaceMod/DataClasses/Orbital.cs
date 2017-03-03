@@ -35,14 +35,22 @@ namespace SpaceMod.DataClasses
         }
 
         public string Name { get; set; }
+
         public Entity OrbitalEntity { get; set; }
+
         public float RotationSpeed { get; set; }
+
         public bool ShowUIByDefault { get; set; }
 
+        public bool IsWormHole { get; set; }
+        
         public void Orbit()
         {
-            if (OrbitalEntity == null) return;
-            Position = Utilities.RotatePointAroundPivot(Position, OrbitalEntity.Position, _orbitalVelocity);
+            if (OrbitalEntity != null)
+            {
+                Position = Utilities.RotatePointAroundPivot(Position, OrbitalEntity.Position, _orbitalVelocity);
+            }
+
             var rotation = Rotation;
             rotation.Z += Game.LastFrameTime * RotationSpeed;
             Rotation = rotation;
@@ -50,6 +58,7 @@ namespace SpaceMod.DataClasses
 
         public void ShowUIPosition(int index)
         {
+            if (string.IsNullOrEmpty(Name)) return;
             if (!ShowUIByDefault) return;
             Utilities.ShowUIPosition(this, index, Position, Database.PathToSprites, Name, _nameText, _distanceText);
         }

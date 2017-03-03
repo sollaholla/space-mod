@@ -14,7 +14,7 @@ namespace SpaceMod.DataClasses
     {
         public static void Log(string message, MessageType type)
         {
-            const string path = "./scripts/SpaceModLog.log";
+            const string path = "./scripts/SpaceMod.log";
             var originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
             File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + "\n" : string.Empty)}" +
                                     $"[{(type == MessageType.Debug ? "DEBUG" : "ERROR")}] [{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}] {message}");

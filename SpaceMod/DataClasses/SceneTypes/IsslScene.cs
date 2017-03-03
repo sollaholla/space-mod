@@ -27,7 +27,7 @@ namespace SpaceMod.DataClasses.SceneTypes
             _missionMenu.AddItem(mission1);
             mission1.Activated += (sender, item) =>
             {
-                ModController.Instance.SetCurrentMission(new TakeBackWhatsOurs());
+                //ModController.Instance.SetCurrentMission(new TakeBackWhatsOurs());
                 End(new EarthOrbitScene(), SceneStartDirection.FromTarget);
             };
 
@@ -73,7 +73,7 @@ namespace SpaceMod.DataClasses.SceneTypes
                 _missionMenu.ProcessControl();
                 _missionMenu.ProcessMouse();
                 _missionMenu.Draw();
-                ModController.Instance.CloseAllMenus();
+                //ModController.Instance.CloseAllMenus();
             }
 
             _planetSystem.Process(_camera.Position);
