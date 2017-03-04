@@ -29,9 +29,9 @@ namespace SpaceMod.DataClasses
             SceneData = sceneData;
         }
 
-        public Ped PlayerPed => Game.Player.Character;
+        internal Ped PlayerPed => Game.Player.Character;
 
-        public Vector3 PlayerPosition {
+        internal Vector3 PlayerPosition {
             get { return PlayerPed.Position; }
             set { PlayerPed.Position = value; }
         }
@@ -42,15 +42,17 @@ namespace SpaceMod.DataClasses
 
         public OrbitalSystem OrbitalSystem { get; private set; }
 
-        public List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
+        internal List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
 
-        public IplData LastIpl { get; private set; }
+        internal IplData LastIpl { get; private set; }
 
-        public Camera SpaceCamera { get; private set; }
+        internal Camera SpaceCamera { get; private set; }
 
-        public Vehicle PlayerLastVehicle { get; private set; }
+        internal Vehicle PlayerLastVehicle { get; private set; }
 
-        public void Start()
+        internal int IplCount { get; private set; }
+
+        internal void Start()
         {
             lock (_startLock)
             {
@@ -63,9 +65,7 @@ namespace SpaceMod.DataClasses
                     SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
 
                 WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
-
-
-
+                
                 OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
 
                 DistanceText = new List<Tuple<UIText, UIText, Link>>();
@@ -99,19 +99,15 @@ namespace SpaceMod.DataClasses
 
                     if (vehicle != null && vehicle.Exists())
                     {
-                        float heading = vehicle.Heading;
-
-                        vehicle.Quaternion = Quaternion.Identity;
-
-                        vehicle.Rotation = Vector3.Zero;
-
-                        vehicle.Heading = heading;
-
                         PlayerLastVehicle = vehicle;
 
+                        float heading = vehicle.Heading;
+                        vehicle.Quaternion = Quaternion.Identity;
+                        vehicle.Rotation = Vector3.Zero;
+                        vehicle.Heading = heading;
                         vehicle.Position = PlayerPosition.Around(15);
-
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
+                        vehicle.IsInvincible = true;
                     }
                 }
                 else
@@ -130,6 +126,8 @@ namespace SpaceMod.DataClasses
                     ipl.Request();
                     iplData.CurrentIpl = ipl;
                 });
+
+                if (SceneData.Ipls != null) IplCount = SceneData.Ipls.Count;
             }
         }
 
@@ -209,7 +207,7 @@ namespace SpaceMod.DataClasses
             return model;
         }
 
-        public void Update()
+        internal void Update()
         {
             if (!Monitor.TryEnter(_updateLock)) return;
 
@@ -276,17 +274,17 @@ namespace SpaceMod.DataClasses
             if (!vehicle.Exists()) return;
             if (vehicle.Driver != PlayerPed) return;
 
+            float leftRight = Game.GetControlNormal(2, Control.MoveLeftRight);
+            float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
+            float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
+            float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
+
             if (!vehicle.IsOnAllWheels)
             {
-                float leftRight = Game.GetControlNormal(2, Control.MoveLeftRight);
-                float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
-                float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
-                float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
-
                 _leftRightFly = Mathf.Lerp(_leftRightFly, leftRight, Game.LastFrameTime * 2.5f);
                 _upDownFly = Mathf.Lerp(_upDownFly, upDown, Game.LastFrameTime * 5);
                 _rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
-                _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 5);
+                _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);
 
                 Quaternion leftRightRotation = Quaternion.FromToRotation(vehicle.ForwardVector, vehicle.RightVector * _leftRightFly);
                 Quaternion upDownRotation = Quaternion.FromToRotation(vehicle.ForwardVector, vehicle.UpVector * _upDownFly);
@@ -295,11 +293,14 @@ namespace SpaceMod.DataClasses
                 vehicle.Quaternion = Quaternion.Lerp(vehicle.Quaternion, rotation, Game.LastFrameTime * 1.3f);
             }
 
-            var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * _fly * Game.LastFrameTime;
-            vehicleVelocity.X = Mathf.Clamp(vehicleVelocity.X, -10, 10);
-            vehicleVelocity.Y = Mathf.Clamp(vehicleVelocity.Y, -10, 10);
-            vehicleVelocity.Z = Mathf.Clamp(vehicleVelocity.Z, -10, 10);
-            vehicle.Velocity += vehicleVelocity;
+            if (fly > 0)
+            {
+                var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * 50 * _fly;
+                vehicleVelocity.X = Mathf.Clamp(vehicleVelocity.X, -10, 10);
+                vehicleVelocity.Y = Mathf.Clamp(vehicleVelocity.Y, -10, 10);
+                vehicleVelocity.Z = Mathf.Clamp(vehicleVelocity.Z, -10, 10);
+                vehicle.Velocity = vehicleVelocity;
+            }
         }
 
         private void TryToStartNextScene()
@@ -389,7 +390,7 @@ namespace SpaceMod.DataClasses
             EnterWormHole(wormHole.Position, data);
         }
 
-        public void Delete()
+        internal void Delete()
         {
             lock (_updateLock)
             {
@@ -401,12 +402,31 @@ namespace SpaceMod.DataClasses
                     PlayerLastVehicle.Quaternion = Quaternion.Identity;
                     PlayerLastVehicle.Heading = heading;
                     PlayerLastVehicle.Velocity = Vector3.Zero;
+                    PlayerLastVehicle.IsInvincible = false;
                 }
 
                 World.RenderingCamera = null;
                 SpaceCamera?.Destroy();
                 OrbitalSystem?.Abort();
+
+                while (IplCount > 0)
+                {
+                    var ipl = SceneData.Ipls[0];
+                    RemoveIpl(ipl);
+                    IplCount--;
+                }
+
+                SceneData.CurrentIplData = null;
             }
+        }
+
+        private static void RemoveIpl(IplData iplData)
+        {
+            iplData.CurrentIpl?.Remove();
+            iplData.Teleports?.ForEach(teleport =>
+            {
+                RemoveIpl(teleport.EndIpl);
+            });
         }
 
         private void MovePlayerToGalaxy()

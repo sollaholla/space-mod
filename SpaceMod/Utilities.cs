@@ -81,6 +81,7 @@ namespace SpaceMod
             Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
             Function.Call(Hash.SET_PED_COMBAT_RANGE, ped.Handle, 2);
             ped.IsFireProof = true;
+            ped.Money = 0;
             return ped;
         }
 
