@@ -12,6 +12,8 @@ namespace SpaceMod.DataClasses
 
         private readonly object _updateLock = new object();
 
+        public CustomScene CurrentScene = ModController.GetCurrentScene();
+
         internal bool IsScenarioComplete()
         {
             ScriptSettings settings = ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini");

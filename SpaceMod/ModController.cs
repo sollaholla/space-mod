@@ -20,7 +20,7 @@ namespace SpaceMod
         private readonly float _enterOrbitHeight = 5000;
         private readonly Keys _optionsMenuKey = Keys.NumPad9;
 
-        private CustomScene _currentScene;
+        private static CustomScene _currentScene;
 
         private readonly MenuPool _menuPool;
         private readonly UIMenu _optionsMenu;
@@ -122,6 +122,11 @@ namespace SpaceMod
                     Scenarios.RemoveAt(0);
                 }
             }
+        }
+
+        public static CustomScene GetCurrentScene()
+        {
+            return _currentScene;
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
