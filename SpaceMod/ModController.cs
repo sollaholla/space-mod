@@ -51,7 +51,7 @@ namespace SpaceMod
             var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
             var debugItem = new UIMenuItem("Log Player Data", "Log the player ped data to file.");
             var subMenu = _menuPool.AddSubMenu(_optionsMenu, "Scenes");
-            var files = Directory.GetFiles(Database.PathToSceneLinks);
+            var files = Directory.GetFiles(Database.PathToScenes);
             for (var i = 0; i < files.Length; i++)
             {
                 var file = files[i];
@@ -111,6 +111,8 @@ namespace SpaceMod
 
             _currentScene?.Delete();
 
+            _currentScene = null;
+
             if (Scenarios != null)
             {
                 while (Scenarios.Count > 0)
@@ -140,7 +142,10 @@ namespace SpaceMod
                 if (PlayerPed.IsDead && Game.IsScreenFadedOut)
                 {
                     OnAborted(null, null);
+                    return;
                 }
+
+                DisableWantedStars();
 
                 if (_currentScene != null)
                 {
@@ -163,6 +168,8 @@ namespace SpaceMod
                             break;
                     }
 
+                    World.Weather = Weather.Clear;
+
                     if (PlayerPed.CurrentVehicle != null)
                     {
                         PlayerPed.CurrentVehicle.HasGravity = _currentScene.SceneData.UseGravity;
@@ -171,14 +178,36 @@ namespace SpaceMod
                     {
                         PlayerPed.HasGravity = _currentScene.SceneData.UseGravity;
                     }
-                    
+
                     _currentScene.Update();
+                }
+                else
+                {
+                    float height = PlayerPed.HeightAboveGround;
+
+                    if (height > _enterOrbitHeight)
+                    {
+                        CustomXmlScene scene =
+                            MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToScenes + "/" + "EarthOrbit.xml");
+
+                        SetCurrentScene(scene);
+                    }
                 }
             }
             finally
             {
                 Monitor.Exit(_tickLock);
             }
+        }
+
+        private static void DisableWantedStars()
+        {
+            Utilities.TerminateScriptByName("re_prison");
+            Utilities.TerminateScriptByName("re_prisonlift");
+            Utilities.TerminateScriptByName("am_prison");
+            Utilities.TerminateScriptByName("re_lossantosintl");
+            Utilities.TerminateScriptByName("re_armybase");
+            Game.MaxWantedLevel = 0;
         }
 
         private void SetCurrentScene(CustomXmlScene customXmlScene)
@@ -234,7 +263,7 @@ namespace SpaceMod
         {
             lock (_tickLock)
             {
-                UI.Notify("Scenario Complete");
+                Scenarios.Remove(scenario);
             }
         }
 
@@ -253,7 +282,7 @@ namespace SpaceMod
                 if (newSceneFile != "cmd_earth")
                 {
                     var newScene =
-                        MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToSceneLinks + "/" + newSceneFile);
+                        MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToScenes + "/" + newSceneFile);
 
                     if (newScene == default(CustomXmlScene))
                     {
@@ -304,7 +333,7 @@ namespace SpaceMod
                 while (Scenarios.Count > 0)
                 {
                     var scen = Scenarios[0];
-                    scen.OnEnded();
+                    scen.OnEnded(false);
                     Scenarios.RemoveAt(0);
                 }
             }

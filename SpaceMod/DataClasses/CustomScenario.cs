@@ -28,7 +28,7 @@ namespace SpaceMod.DataClasses
         internal void SetScenarioComplete()
         {
             ScriptSettings settings = ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini");
-            settings.SetValue("scenario_config", "complete", false);
+            settings.SetValue("scenario_config", "complete", true);
             settings.Save();
         }
 
@@ -59,7 +59,7 @@ namespace SpaceMod.DataClasses
         /// <summary>
         /// This is where you can clean up some excess entities, and / or objects.
         /// </summary>
-        public abstract void OnEnded();
+        public abstract void OnEnded(bool success);
 
         /// <summary>
         /// This is executed when the space mod scripts are aborted or reloaded.
@@ -77,7 +77,7 @@ namespace SpaceMod.DataClasses
             lock (_updateLock)
             {
                 Completed?.Invoke(this, success);
-                OnEnded();
+                OnEnded(success);
 
                 if (success) SetScenarioComplete();
             }

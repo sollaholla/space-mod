@@ -54,10 +54,6 @@ namespace SpaceMod.DataClasses
         {
             lock (_startLock)
             {
-                SpaceCamera = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation,
-                    GameplayCamera.FieldOfView);
-                World.RenderingCamera = SpaceCamera;
-
                 Prop spaceDome = CreateProp(Vector3.Zero, SceneData.SpaceDomeModel);
 
                 List<Orbital> orbitals =
@@ -67,6 +63,8 @@ namespace SpaceMod.DataClasses
                     SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
 
                 WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
+
+
 
                 OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
 
@@ -106,6 +104,15 @@ namespace SpaceMod.DataClasses
                         vehicle.Position = PlayerPosition.Around(15);
 
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
+                    }
+                }
+                else
+                {
+                    if (WormHoles.Any())
+                    {
+                        SpaceCamera = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation,
+                            GameplayCamera.FieldOfView);
+                        World.RenderingCamera = SpaceCamera;
                     }
                 }
 
@@ -241,14 +248,17 @@ namespace SpaceMod.DataClasses
 
         private void UpdateCamera()
         {
-            if (FollowCam.ViewMode != FollowCamViewMode.FirstPerson && WormHoles.Any())
+            if (SpaceCamera != null)
             {
-                World.RenderingCamera = SpaceCamera;
-                SpaceCamera.Position = GameplayCamera.Position;
-                SpaceCamera.Rotation = GameplayCamera.Rotation;
-                SpaceCamera.FieldOfView = GameplayCamera.FieldOfView;
+                if (FollowCam.ViewMode != FollowCamViewMode.FirstPerson && WormHoles.Any())
+                {
+                    World.RenderingCamera = SpaceCamera;
+                    SpaceCamera.Position = GameplayCamera.Position;
+                    SpaceCamera.Rotation = GameplayCamera.Rotation;
+                    SpaceCamera.FieldOfView = GameplayCamera.FieldOfView;
+                }
+                else World.RenderingCamera = null;
             }
-            else World.RenderingCamera = null;
         }
 
         private void VehicleFly()
