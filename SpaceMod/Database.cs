@@ -4,29 +4,8 @@ using SpaceMod.DataClasses;
 
 namespace SpaceMod
 {
-    public static class Database
+    internal static class Database
     {
-        //public const string SunSmallModel = "sun_small";
-        //public const string MoonLargeModel = "moon_large";
-        //public const string MoonMedModel = "moon_med";
-        //public const string MoonSurfaceModel = "moon_surface";
-        //public const string EarthLargeModel = "earth_large";
-        //public const string EarthMedModel = "earth_med";
-        //public const string EarthSmallModel = "earth_small";
-        //public const string KaroonLargeModel = "alienplanet1_large";
-        //public const string SpaceDomeModel = "spacedome";
-        //public const string IsslModel = "issl";
-        //public const string MarsLargeModel = "mars_large";
-        //public const string MarsMedModel = "mars_med";
-        //public const string MarsSmallModel = "mars_small";
-        //public const string MarsSurfaceModel = "mars_surface";
-        //public const string MarsBaseDoor001Model = "mars_base_door001";
-        //public const string SpaceDomeAndromedaModel = "spacedome_and";
-        //public const string WormHoleSmallModel = "spacedome_and_wrm_small";
-        //public const string WormHoleLargeModel = "spacedome_and_wrm_small";
-        //public const string BlueSunSmallModel = "bluesun_small";
-        //public const string AlienPlanet1LargeModel = "alienplanet1_large";
-
         public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
         public const string PathToInteriors = @"./scripts/SpaceMod/IPL";
         public const string PathToScenes = @"./scripts/SpaceMod/Scenes";

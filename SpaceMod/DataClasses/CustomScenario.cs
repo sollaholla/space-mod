@@ -12,7 +12,7 @@ namespace SpaceMod.DataClasses
 
         private readonly object _updateLock = new object();
 
-        public CustomScene CurrentScene = ModController.GetCurrentScene();
+        public CustomScene CurrentScene => ModController.Instance.GetCurrentScene();
 
         internal bool IsScenarioComplete()
         {

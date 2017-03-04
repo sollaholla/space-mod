@@ -16,16 +16,16 @@ namespace SpaceMod
 {
     public class ModController : Script
     {
-        // Settings
         private readonly float _enterOrbitHeight = 5000;
         private readonly Keys _optionsMenuKey = Keys.NumPad9;
 
-        private static CustomScene _currentScene;
 
         private readonly MenuPool _menuPool;
         private readonly UIMenu _optionsMenu;
 
         private readonly object _tickLock;
+
+        private CustomScene _currentScene;
 
         public ModController()
         {
@@ -124,7 +124,7 @@ namespace SpaceMod
             }
         }
 
-        public static CustomScene GetCurrentScene()
+        internal CustomScene GetCurrentScene()
         {
             return _currentScene;
         }

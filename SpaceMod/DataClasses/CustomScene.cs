@@ -99,6 +99,14 @@ namespace SpaceMod.DataClasses
 
                     if (vehicle != null && vehicle.Exists())
                     {
+                        float heading = vehicle.Heading;
+
+                        vehicle.Quaternion = Quaternion.Identity;
+
+                        vehicle.Rotation = Vector3.Zero;
+
+                        vehicle.Heading = heading;
+
                         PlayerLastVehicle = vehicle;
 
                         vehicle.Position = PlayerPosition.Around(15);
