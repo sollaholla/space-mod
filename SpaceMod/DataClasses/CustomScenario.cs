@@ -6,6 +6,8 @@ namespace SpaceMod.DataClasses
 {
     public abstract class CustomScenario
     {
+        public ScriptSettings Settings => ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini");
+
         internal delegate void OnCompletedEvent(CustomScenario scenario, bool success);
 
         internal event OnCompletedEvent Completed;
@@ -16,22 +18,19 @@ namespace SpaceMod.DataClasses
 
         internal bool IsScenarioComplete()
         {
-            ScriptSettings settings = ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini");
-
-            if (settings.GetValue("scenario_config", "complete", false))
+            if (Settings.GetValue("scenario_config", "complete", false))
                 return true;
 
-            settings.SetValue("scenario_config", "complete", false);
-            settings.Save();
+            Settings.SetValue("scenario_config", "complete", false);
+            Settings.Save();
 
             return false;
         }
 
         internal void SetScenarioComplete()
         {
-            ScriptSettings settings = ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini");
-            settings.SetValue("scenario_config", "complete", true);
-            settings.Save();
+            Settings.SetValue("scenario_config", "complete", true);
+            Settings.Save();
         }
 
         internal void Update()
