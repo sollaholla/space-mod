@@ -169,7 +169,7 @@ namespace SpaceMod
                             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
                             break;
                         case TimeType.Evening:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 14, 0, 0);
+                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 16, 0, 0);
                             break;
                     }
 
