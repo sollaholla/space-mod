@@ -133,15 +133,15 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            if (keyEventArgs.KeyCode == Keys.K)
-            {
-                Vehicle vehicle = World.CreateVehicle(VehicleHash.Lazer, PlayerPosition.Around(100));
-                Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.Abigail);
-                vehicle.MaxSpeed = 30;
-                //vehicle.AddBlip();
-                ped.Task.FightAgainst(PlayerPed);
-                //UFOS.Add(vehicle);
-            }
+            //if (keyEventArgs.KeyCode == Keys.K)
+            //{
+            //    Vehicle vehicle = World.CreateVehicle(VehicleHash.Lazer, PlayerPosition.Around(100));
+            //    Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.Abigail);
+            //    vehicle.MaxSpeed = 30;
+            //    //vehicle.AddBlip();
+            //    ped.Task.FightAgainst(PlayerPed);
+            //    //UFOS.Add(vehicle);
+            //}
 
             if (_menuPool.IsAnyMenuOpen()) return;
             if (keyEventArgs.KeyCode == _optionsMenuKey)
