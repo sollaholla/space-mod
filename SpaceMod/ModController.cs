@@ -24,7 +24,7 @@ namespace SpaceMod
         private readonly UIMenu _optionsMenu;
 
         private readonly object _tickLock;
-
+        
         private CustomScene _currentScene;
 
         public ModController()
@@ -128,9 +128,21 @@ namespace SpaceMod
         {
             return _currentScene;
         }
+        
+        //Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, PlayerPed, 0, 0, 0, 6, 50f, 0f, vehicle.Heading, int.MaxValue, int.MinValue);
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
+            if (keyEventArgs.KeyCode == Keys.K)
+            {
+                Vehicle vehicle = World.CreateVehicle(VehicleHash.Lazer, PlayerPosition.Around(100));
+                Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.Abigail);
+                vehicle.MaxSpeed = 30;
+                //vehicle.AddBlip();
+                ped.Task.FightAgainst(PlayerPed);
+                //UFOS.Add(vehicle);
+            }
+
             if (_menuPool.IsAnyMenuOpen()) return;
             if (keyEventArgs.KeyCode == _optionsMenuKey)
                 _optionsMenu.Visible = true;
@@ -149,7 +161,7 @@ namespace SpaceMod
                     OnAborted(null, null);
                     return;
                 }
-
+                
                 DisableWantedStars();
 
                 if (_currentScene != null)
@@ -163,17 +175,17 @@ namespace SpaceMod
                     switch (timeType)
                     {
                         case TimeType.Night:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 0, 0, 0);
+                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 22, 0, 0);
                             break;
                         case TimeType.Day:
                             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
                             break;
                         case TimeType.Evening:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 14, 0, 0);
+                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 16, 0, 0);
                             break;
                     }
 
-                    World.Weather = Weather.Clear;
+                    World.Weather = Weather.ExtraSunny;
 
                     if (PlayerPed.CurrentVehicle != null)
                     {

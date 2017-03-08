@@ -45,9 +45,7 @@ namespace SpaceMod.DataClasses
         internal List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
 
         internal IplData LastIpl { get; private set; }
-
-        internal Camera SpaceCamera { get; private set; }
-
+        
         internal Vehicle PlayerLastVehicle { get; private set; }
 
         internal int IplCount { get; private set; }
@@ -108,15 +106,6 @@ namespace SpaceMod.DataClasses
                         vehicle.Position = PlayerPosition.Around(15);
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
                         vehicle.IsInvincible = true;
-                    }
-                }
-                else
-                {
-                    if (WormHoles.Any())
-                    {
-                        SpaceCamera = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation,
-                            GameplayCamera.FieldOfView);
-                        World.RenderingCamera = SpaceCamera;
                     }
                 }
 
@@ -214,7 +203,6 @@ namespace SpaceMod.DataClasses
             try
             {
                 VehicleFly();
-                UpdateCamera();
 
                 OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
@@ -249,21 +237,6 @@ namespace SpaceMod.DataClasses
             finally
             {
                 Monitor.Exit(_updateLock);
-            }
-        }
-
-        private void UpdateCamera()
-        {
-            if (SpaceCamera != null)
-            {
-                if (FollowCam.ViewMode != FollowCamViewMode.FirstPerson && WormHoles.Any())
-                {
-                    World.RenderingCamera = SpaceCamera;
-                    SpaceCamera.Position = GameplayCamera.Position;
-                    SpaceCamera.Rotation = GameplayCamera.Rotation;
-                    SpaceCamera.FieldOfView = GameplayCamera.FieldOfView;
-                }
-                else World.RenderingCamera = null;
             }
         }
 
@@ -404,9 +377,7 @@ namespace SpaceMod.DataClasses
                     PlayerLastVehicle.Velocity = Vector3.Zero;
                     PlayerLastVehicle.IsInvincible = false;
                 }
-
-                World.RenderingCamera = null;
-                SpaceCamera?.Destroy();
+                
                 OrbitalSystem?.Abort();
 
                 while (IplCount > 0)
@@ -417,6 +388,8 @@ namespace SpaceMod.DataClasses
                 }
 
                 SceneData.CurrentIplData = null;
+
+                GameplayCamera.ShakeAmplitude = 0;
             }
         }
 
@@ -448,20 +421,15 @@ namespace SpaceMod.DataClasses
             }
             else
             {
-                if (distanceToWormHole > escapeDistance)
+                if (distanceToWormHole <= escapeDistance)
                 {
-                    SpaceCamera.FieldOfView = Mathf.Lerp(SpaceCamera.FieldOfView, GameplayCamera.FieldOfView,
-                        Game.LastFrameTime * 5);
-                }
-                else
-                {
-                    if (!SpaceCamera.IsShaking)
+                    if (!GameplayCamera.IsShaking)
                     {
-                        SpaceCamera.Shake(CameraShake.SkyDiving, 0);
+                        GameplayCamera.Shake(CameraShake.SkyDiving, 0);
                     }
                     else
                     {
-                        SpaceCamera.ShakeAmplitude = 1.5f;
+                        GameplayCamera.ShakeAmplitude = 1.5f;
                     }
 
                     if (distanceToWormHole > gravitationalPullDistance)
@@ -509,8 +477,6 @@ namespace SpaceMod.DataClasses
                             {
                                 PlayerPed.Velocity = targetVelocity;
                             }
-
-                            UpdateCamera();
                         }
 
                         Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation);

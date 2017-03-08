@@ -4,7 +4,7 @@ using SpaceMod.DataClasses;
 
 namespace SpaceMod
 {
-    internal static class Database
+    public static class Database
     {
         public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
         public const string PathToInteriors = @"./scripts/SpaceMod/IPL";
