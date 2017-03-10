@@ -23,6 +23,8 @@ namespace SpaceMod
         private readonly MenuPool _menuPool;
         private readonly UIMenu _optionsMenu;
 
+        private bool _useScenario = true;
+
         private readonly object _tickLock;
         
         private CustomScene _currentScene;
@@ -49,6 +51,7 @@ namespace SpaceMod
             Settings.Save();
 
             var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
+            var useScenarioItem = new UIMenuCheckboxItem("Use Scenarios", true);
             var debugItem = new UIMenuItem("Log Player Data", "Log the player ped data to file.");
             var subMenu = _menuPool.AddSubMenu(_optionsMenu, "Scenes");
             var files = Directory.GetFiles(Database.PathToScenes);
@@ -70,6 +73,10 @@ namespace SpaceMod
             {
                 OrbitalSystem.ShowUIPositions = @checked;
             };
+            useScenarioItem.CheckboxEvent += (sender, @checked) =>
+            {
+                _useScenario = @checked;
+            };
             debugItem.Activated += (sender, item) =>
             {
                 DebugLogger.LogEntityData(PlayerPed);
@@ -77,6 +84,7 @@ namespace SpaceMod
 
             _menuPool.Add(_optionsMenu);
             _optionsMenu.AddItem(showUIItem);
+            _optionsMenu.AddItem(useScenarioItem);
             _optionsMenu.AddItem(debugItem);
             _optionsMenu.RefreshIndex();
         }
@@ -84,8 +92,18 @@ namespace SpaceMod
         public Ped PlayerPed => Game.Player.Character;
 
         public Vector3 PlayerPosition {
-            get { return PlayerPed.Position; }
-            set { PlayerPed.Position = value; }
+            get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
+            set
+            {
+                if (PlayerPed.IsInVehicle())
+                {
+                    PlayerPed.CurrentVehicle.Position = value;
+                }
+                else
+                {
+                    PlayerPed.Position = value;
+                }
+            }
         }
 
         public PlayerPrefs PlayerPrefs { get; }
@@ -133,16 +151,6 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            //if (keyEventArgs.KeyCode == Keys.K)
-            //{
-            //    Vehicle vehicle = World.CreateVehicle(VehicleHash.Lazer, PlayerPosition.Around(100));
-            //    Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.Abigail);
-            //    vehicle.MaxSpeed = 30;
-            //    //vehicle.AddBlip();
-            //    ped.Task.FightAgainst(PlayerPed);
-            //    //UFOS.Add(vehicle);
-            //}
-
             if (_menuPool.IsAnyMenuOpen()) return;
             if (keyEventArgs.KeyCode == _optionsMenuKey)
                 _optionsMenu.Visible = true;
@@ -251,26 +259,38 @@ namespace SpaceMod
                 _currentScene.Start();
                 _currentScene.Exited += CurrentSceneOnExited;
 
-                Scenarios = customXmlScene.CustomScenarios?.Select(x =>
+                if (PlayerPed.IsInVehicle())
                 {
-                    var assembly = Assembly.LoadFrom(Database.PathToScenarios + "/" + x.Name);
-                    if (assembly == null)
+                    PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
+                }
+                else
+                {
+                    PlayerPed.Rotation = Vector3.Zero;
+                }
+
+                if (_useScenario)
+                {
+                    Scenarios = customXmlScene.CustomScenarios?.Select(x =>
                     {
-                        DebugLogger.Log("Failed to load assembly from: " + x.Name, MessageType.Error);
-                        return null;
-                    }
-                    var name = x.PathToClass;
-                    var type = assembly.GetType(name);
-                    var scenario = (CustomScenario) Activator.CreateInstance(type);
-                    return scenario.IsScenarioComplete() ? null : scenario;
+                        var assembly = Assembly.LoadFrom(Database.PathToScenarios + "/" + x.Name);
+                        if (assembly == null)
+                        {
+                            DebugLogger.Log("Failed to load assembly from: " + x.Name, MessageType.Error);
+                            return null;
+                        }
+                        var name = x.PathToClass;
+                        var type = assembly.GetType(name);
+                        var scenario = (CustomScenario) Activator.CreateInstance(type);
+                        return scenario.IsScenarioComplete() ? null : scenario;
 
-                }).Where(x => x != null).ToList();
+                    }).Where(x => x != null).ToList();
 
-                Scenarios?.ForEach(scenario =>
-                {
-                    scenario.Start();
-                    scenario.Completed += ScenarioOnCompleted;
-                });
+                    Scenarios?.ForEach(scenario =>
+                    {
+                        scenario.Start();
+                        scenario.Completed += ScenarioOnCompleted;
+                    });
+                }
 
                 Utilities.SetGravityLevel(_currentScene.SceneData.GravityLevel);
             }
@@ -327,6 +347,8 @@ namespace SpaceMod
                     {
                         var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
                         playerPedCurrentVehicle.Position = Database.EarthAtmosphereEnterPosition;
+                        playerPedCurrentVehicle.Rotation = Vector3.Zero;
+                        playerPedCurrentVehicle.Heading = 243;
                         playerPedCurrentVehicle.HasGravity = true;
                     }
                     else
