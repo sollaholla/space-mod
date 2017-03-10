@@ -6,7 +6,10 @@ namespace SpaceMod.DataClasses
 {
     public abstract class CustomScenario
     {
-        public ScriptSettings Settings => ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini");
+        private ScriptSettings _settings;
+
+        public ScriptSettings Settings
+            => _settings ?? (_settings = ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini"));
 
         internal delegate void OnCompletedEvent(CustomScenario scenario, bool success);
 
@@ -77,10 +80,9 @@ namespace SpaceMod.DataClasses
         {
             lock (_updateLock)
             {
+                if (success) SetScenarioComplete();
                 Completed?.Invoke(this, success);
                 OnEnded(success);
-
-                if (success) SetScenarioComplete();
             }
         }
     }
