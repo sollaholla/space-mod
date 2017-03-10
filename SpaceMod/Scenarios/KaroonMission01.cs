@@ -7,7 +7,7 @@ using NativeUI;
 using SpaceMod;
 using SpaceMod.DataClasses;
 
-namespace SollahollaMissions
+namespace DefaultMissions
 {
     public class KaroonMission01 : CustomScenario
     {

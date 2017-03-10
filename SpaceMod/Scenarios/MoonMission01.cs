@@ -8,7 +8,7 @@ using NativeUI;
 using SpaceMod;
 using SpaceMod.DataClasses;
 
-namespace SollahollaMissions
+namespace DefaultMissions
 {
     public class MoonMission01 : CustomScenario
     {

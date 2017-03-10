@@ -7,8 +7,8 @@
     <ProjectGuid>{5F9C71F3-CADB-4085-AC4E-97C770124771}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SollahollaMissions</RootNamespace>
-    <AssemblyName>SollahollaMissions</AssemblyName>
+    <RootNamespace>DefaultMissions</RootNamespace>
+    <AssemblyName>DefaultMissions</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -56,7 +56,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Sollaholla"
-COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Sollaholla"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"
+COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"</PostBuildEvent>
   </PropertyGroup>
 </Project>
