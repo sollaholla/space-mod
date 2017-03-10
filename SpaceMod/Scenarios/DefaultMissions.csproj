@@ -7,8 +7,8 @@
     <ProjectGuid>{5F9C71F3-CADB-4085-AC4E-97C770124771}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SollahollaMissions</RootNamespace>
-    <AssemblyName>SollahollaMissions</AssemblyName>
+    <RootNamespace>DefaultMissions</RootNamespace>
+    <AssemblyName>DefaultMissions</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,13 +32,13 @@
   <ItemGroup>
     <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
+      <HintPath>..\..\..\..\Rockstar Games\GTA V\My References\NativeUI.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>C:\Users\GAMEON\Desktop\SHVDN\ScriptHookVDotNet.dll</HintPath>
+      <HintPath>..\..\..\..\Rockstar Games\GTA V\My References\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SpaceMod">
-      <HintPath>..\..\..\..\Games\Grand Theft Auto V\scripts\SpaceMod.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -56,7 +56,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default\"
-COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default\"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"
+COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"</PostBuildEvent>
   </PropertyGroup>
 </Project>
