@@ -108,6 +108,7 @@ namespace DefaultMissions
                             BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~enemies eliminated");
                             EndScenario(true);
                         }
+                        return;
                     }
 
                     if (vehicle.Driver != null)
