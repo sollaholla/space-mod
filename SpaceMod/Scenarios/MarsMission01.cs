@@ -14,11 +14,27 @@ namespace DefaultMissions
 {
     public class MarsMission01 : CustomScenario
     {
-        public int currentMissionStep { get; protected set; }
+        private readonly string _ufoModelName = "zanufo";
+        private Model _ufoModel;
+
+        public MarsMission01()
+        {
+            Aliens = new List<Ped>();
+            Ufos = new List<Vehicle>();
+            OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
+            OriginalMaxHealth = PlayerPed.MaxHealth;
+            PlayerPed.MaxHealth = 1500;
+            PlayerPed.CanRagdoll = false;
+
+            _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
+            Settings.SetValue("settings", "ufo_model", _ufoModelName);
+            Settings.Save();
+
+        }
+
+        public int CurrentMissionStep { get; protected set; }
 
         public List<Ped> Aliens { get; }
-
-        public List<Ped> PilotAliens { get; }
 
         public List<Vehicle> Ufos { get; }
 
@@ -28,29 +44,29 @@ namespace DefaultMissions
 
         public int OriginalMaxHealth { get; }
 
-        public Vector3 PlayerPosition
-        {
+        public bool SpawnedUfos { get; private set; }
+
+        public Vector3 PlayerPosition {
             get { return PlayerPed.Position; }
             set { PlayerPed.Position = value; }
         }
 
-        public MarsMission01()
-        {
-            Aliens = new List<Ped>();
-            PilotAliens = new List<Ped>();
-            Ufos = new List<Vehicle>();
-            OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
-            OriginalMaxHealth = PlayerPed.MaxHealth;
-            PlayerPed.MaxHealth = 1500;
-            PlayerPed.CanRagdoll = false;
-        }
-
         public override void Start()
         {
-            SpawnEnemies();
+            _ufoModel = new Model(_ufoModelName);
+            _ufoModel.Request();
+            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+            while (!_ufoModel.IsLoaded)
+            {
+                Script.Yield();
+                if (DateTime.UtcNow > timout)
+                    break;
+            }
+
+            SpawnPeds();
         }
 
-        public void SpawnEnemies()
+        public void SpawnPeds()
         {
             var origin = PlayerPosition.Around(100f);
 
@@ -73,35 +89,33 @@ namespace DefaultMissions
 
                 Aliens.Add(ped);
             }
+        }
 
-            for(int i = 0; i < 2; i++)
+        private void CreateUfos()
+        {
+            if (!_ufoModel.IsLoaded)
             {
-                Vector3 position = origin.Around(new Random().Next(25, 50));
-                position.Z += 20;
+                UI.Notify($"{_ufoModelName} model failed to load! Make sure you have a valid model in the .ini file.");
+                EndScenario(false);
+                return;
+            }
 
-                Ped alien = Utilities.CreateAlien(Vector3.Zero, WeaponHash.Railgun);
-                alien.SetDefaultClothes();
-                alien.AlwaysDiesOnLowHealth = false;
-                alien.CanRagdoll = false;
-                alien.IsOnlyDamagedByPlayer = true;
+            Vector3 origin = PlayerPosition.Around(100f);
 
-                Vehicle ufo = World.CreateVehicle(new Model("zanufo"), position);
-                ufo.EngineRunning = true;
-                ufo.MaxHealth = 2000;
-                ufo.Health = ufo.MaxHealth;
-
-                Blip UFOblip = ufo.AddBlip();
-                Blip EnemyBlip = alien.AddBlip();
-
-                UFOblip.Name = "Enemy UFO";
-
-                EnemyBlip.Name = "Alien";
-                EnemyBlip.Scale = 0.7f;
-
-                Aliens.Add(alien);
-                PilotAliens.Add(alien);
-
-                Ufos.Add(ufo);
+            for (int i = 0; i < 1; i++)
+            {
+                Vehicle vehicle = World.CreateVehicle(_ufoModel, origin + new Vector3(0, 0, 25));
+                Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+                ped.SetDefaultClothes();
+                vehicle.EngineRunning = true;
+                vehicle.Heading = (PlayerPosition - vehicle.Position).ToHeading();
+                vehicle.MaxSpeed = 50;
+                vehicle.Speed = 50;
+                Blip blip = vehicle.AddBlip();
+                blip.Name = "UFO";
+                blip.Color = BlipColor.Green;
+                ped.Task.FightAgainst(Game.Player.Character);
+                Ufos.Add(vehicle);
             }
         }
 
@@ -125,15 +139,22 @@ namespace DefaultMissions
 
         public override void OnUpdate()
         {
-            switch(currentMissionStep)
+            switch(CurrentMissionStep)
             {
                 case 0:
-
-                    Aliens.ForEach(UpdateAlien);
-
-                    if (!Aliens.All(alien => alien.IsDead)) return;
-                    BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~ enemies eliminated");
-                    currentMissionStep++;
+                    if (Game.IsLoading) return;
+                    if (!SpawnedUfos)
+                    {
+                        CreateUfos();
+                        SpawnedUfos = true;
+                    }
+                    else
+                    {
+                        Aliens.ForEach(UpdateAlien);
+                        if (!Aliens.All(alien => alien.IsDead)) return;
+                        BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~ enemies eliminated");
+                        CurrentMissionStep++;
+                    }
                 break;
 
                 case 1:
@@ -159,13 +180,9 @@ namespace DefaultMissions
 
             float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
 
-            if (distance > 25 && !PilotAliens.Contains(alienPed))
+            if (distance > 25)
             {
                 alienPed.Task.RunTo(PlayerPed.Position, true);
-            }
-            else
-            {
-                alienPed.Task.FightAgainst(PlayerPed);
             }
         }
 
@@ -180,8 +197,9 @@ namespace DefaultMissions
 
             while (Ufos.Count > 0)
             {
-                Entity Craft = Ufos[0];
+                Vehicle Craft = Ufos[0];
                 Craft.MarkAsNoLongerNeeded();
+                Craft.Driver?.Delete();
                 Ufos.RemoveAt(0);
             }
         }
