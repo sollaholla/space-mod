@@ -47,7 +47,7 @@ namespace DefaultMissions
 
         public override void Start()
         {
-
+            SpawnEnemies();
         }
 
         public void SpawnEnemies()
@@ -77,7 +77,7 @@ namespace DefaultMissions
             for(int i = 0; i < 2; i++)
             {
                 Vector3 position = origin.Around(new Random().Next(25, 50));
-                position.Y += 20;
+                position.Z += 20;
 
                 Ped alien = Utilities.CreateAlien(Vector3.Zero, WeaponHash.Railgun);
                 alien.SetDefaultClothes();
@@ -88,7 +88,7 @@ namespace DefaultMissions
                 Vehicle ufo = World.CreateVehicle(new Model("zanufo"), position);
                 ufo.EngineRunning = true;
                 ufo.MaxHealth = 2000;
-                ufo.Heading = ufo.MaxHealth;
+                ufo.Health = ufo.MaxHealth;
 
                 Blip UFOblip = ufo.AddBlip();
                 Blip EnemyBlip = alien.AddBlip();
