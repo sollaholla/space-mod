@@ -32,13 +32,13 @@
   <ItemGroup>
     <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\My References\NativeUI.dll</HintPath>
+      <HintPath>..\..\..\..\Games\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\My References\ScriptHookVDotNet.dll</HintPath>
+      <HintPath>C:\Users\GAMEON\Desktop\SHVDN\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SpaceMod">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod.dll</HintPath>
+      <HintPath>..\..\..\..\Games\Grand Theft Auto V\scripts\SpaceMod.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
