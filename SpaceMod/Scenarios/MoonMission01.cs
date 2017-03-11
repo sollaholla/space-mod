@@ -12,6 +12,9 @@ namespace DefaultMissions
 {
     public class MoonMission01 : CustomScenario
     {
+        private readonly string _ufoModelName = "zanufo";
+        private Model _ufoModel;
+
         public MoonMission01()
         {
             Aliens = new List<Ped>();
@@ -23,6 +26,10 @@ namespace DefaultMissions
             OriginalCanRagdollState = PlayerPed.CanRagdoll;
             PlayerPed.CanRagdoll = false;
             PlayerPed.IsExplosionProof = true;
+
+            _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
+            Settings.SetValue("settings", "ufo_model", _ufoModelName);
+            Settings.Save();
         }
 
         public int MissionStep { get; private set; }
@@ -76,14 +83,30 @@ namespace DefaultMissions
                 Aliens.Add(ped);
             }
 
+            _ufoModel = new Model(_ufoModelName);
+            _ufoModel.Request();
+            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 10);
+            while (!_ufoModel.IsLoaded)
+            {
+                Script.Yield();
+                if (DateTime.UtcNow > timout)
+                    break;
+            }
+
+            if (!_ufoModel.IsLoaded)
+            {
+                UI.Notify($"{_ufoModelName} model failed to load! Make sure you have a valid model in the .ini file.");
+                EndScenario(false);
+                return;
+            }
+
             for (var i = 0; i < 5; i++)
             {
                 Vector3 position = origin.Around(75);
                 Vector3 artifical = TryToGetGroundHeight(position);
                 if (artifical != Vector3.Zero) position = artifical;
 
-                Prop spaceCraft = World.CreateProp("ufo_zancudo", position + new Vector3(0, 0, 7.5f), Vector3.Zero,
-                    false, false);
+                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 7.5f), (position - PlayerPosition).ToHeading());
 
                 spaceCraft.FreezePosition = true;
                 spaceCraft.MaxHealth = 1000;
