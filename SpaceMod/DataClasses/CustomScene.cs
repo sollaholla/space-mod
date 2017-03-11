@@ -101,7 +101,7 @@ namespace SpaceMod.DataClasses
                         
                         vehicle.Quaternion = Quaternion.Identity;
                         vehicle.Rotation = Vector3.Zero;
-                        vehicle.Position = StaticSettings.VehicleSurfaceSpawn;
+                        vehicle.Position = StaticSettings.VehicleSurfaceSpawn + new Vector3(0, 0, 0.5f);
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
                         vehicle.IsInvincible = true;
                         vehicle.Velocity = Vector3.Zero;
@@ -241,6 +241,11 @@ namespace SpaceMod.DataClasses
                     {
                         Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation);
                     }
+                }
+
+                if (!SceneData.SurfaceFlag && SceneData.CustomScenarios.Count <= 0)
+                {
+                    Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
                 }
 
                 SceneData.Ipls?.ForEach(UpdateTeleports);

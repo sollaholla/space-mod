@@ -118,10 +118,14 @@ namespace DefaultMissions
 
                         if (lastDamagePos != Vector3.Zero)
                         {
-                            if (lastDamagePos.DistanceTo(PlayerVehicle.Position) < 15)
+                            if (PlayerVehicle != null)
                             {
-                                PlayerVehicle.ApplyDamage(PlayerVehicle.GetOffsetFromWorldCoords(lastDamagePos), 1500, 2500);
-                                PlayerVehicle.Health -= 50;
+                                if (lastDamagePos.DistanceTo(PlayerVehicle.Position) < 15)
+                                {
+                                    PlayerVehicle.ApplyDamage(PlayerVehicle.GetOffsetFromWorldCoords(lastDamagePos),
+                                        1500, 2500);
+                                    PlayerVehicle.Health -= 50;
+                                }
                             }
                         }
                     }
