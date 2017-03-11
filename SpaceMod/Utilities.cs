@@ -166,7 +166,11 @@ namespace SpaceMod
             if (entity != null)
             {
                 if (entity.IsOccluded) return;
-                if (!entity.IsOnScreen) return;
+                if (!entity.IsOnScreen || !IsOnScreen(entity.Position)) return;
+            }
+            else
+            {
+                if (!IsOnScreen(position)) return;
             }
 
             var point = UI.WorldToScreen(position);
@@ -227,14 +231,11 @@ namespace SpaceMod
 
         public static bool IsOnScreen(this Vector3 vector3)
         {
-            var camPos = GameplayCamera.Position;
-            var camDir = GameplayCamera.Direction;
-            var fov = GameplayCamera.FieldOfView;
-            var dir = vector3 - camPos;
-            var angle = Vector3.Angle(dir, camDir);
-            var inField = angle < fov;
+            Point worldToScreen = UI.WorldToScreen(vector3);
+            if (worldToScreen.X == 0 && worldToScreen.Y == 0)
+                return false;
 
-            return inField;
+            return true;
         }
 
         public static void SetGravityLevel(int level)
