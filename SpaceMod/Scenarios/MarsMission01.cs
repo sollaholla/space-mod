@@ -166,9 +166,11 @@ namespace DefaultMissions
 
         private void UpdateUfo(Vehicle ufo)
         {
-            if (ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable && ufo.CurrentBlip.Exists())
+            if ((ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable) && ufo.CurrentBlip.Exists())
             {
                 ufo.CurrentBlip.Remove();
+                ufo.Driver?.Kill();
+                World.AddExplosion(ufo.Position, ExplosionType.Grenade, 75, 1.5f, true, true);
             }
         }
 
