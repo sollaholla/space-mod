@@ -26,19 +26,19 @@ namespace DefaultMissions
             PlayerPed.CanRagdoll = false;
             PlayerPed.IsExplosionProof = true;
 
+            _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
+            Settings.SetValue("settings", "ufo_model", _ufoModelName);
+            Settings.Save();
+
             _ufoModel = new Model(_ufoModelName);
             _ufoModel.Request();
-            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 10);
             while (!_ufoModel.IsLoaded)
             {
                 Script.Yield();
                 if (DateTime.UtcNow > timout)
                     break;
             }
-
-            _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
-            Settings.SetValue("settings", "ufo_model", _ufoModelName);
-            Settings.Save();
         }
 
         public int CurrentMissionStep { get; protected set; }
