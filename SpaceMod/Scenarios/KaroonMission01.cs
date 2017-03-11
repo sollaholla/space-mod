@@ -90,7 +90,8 @@ namespace DefaultMissions
                 UI.ShowSubtitle("An ~g~Alien~s~ convoy approaches!", 7500);
                 CreateSpaceShips();
                 Utilities.DisplayHelpTextThisFrame(
-                    "~g~Alien~s~: Turn back now human, or you will be shot down.\n\n~b~You~s~: Not on your life scum-bag.");
+                    "**COMS COME THROUGH FROM AN ALIEN AIRCRAFT**\n\n~g~Alien~s~: Turn back now human, or you will be shot down.\n\n" +
+                    "~b~You~s~: Not on your life scum-bag. Wait... you mother f**kers speak English?");
                 DidLoad = true;
             }
             else
@@ -153,6 +154,7 @@ namespace DefaultMissions
             while (UFOS.Count > 0)
             {
                 Vehicle vehicle = UFOS[0];
+                vehicle.CurrentBlip?.Remove();
                 vehicle.MarkAsNoLongerNeeded();
                 UFOS.RemoveAt(0);
             }

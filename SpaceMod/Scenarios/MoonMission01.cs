@@ -22,6 +22,7 @@ namespace DefaultMissions
             PlayerPed.Health = PlayerPed.MaxHealth;
             OriginalCanRagdollState = PlayerPed.CanRagdoll;
             PlayerPed.CanRagdoll = false;
+            PlayerPed.IsExplosionProof = true;
         }
 
         public int MissionStep { get; private set; }
@@ -168,6 +169,8 @@ namespace DefaultMissions
                 return;
             }
 
+            Utilities.ArtificalDamage(alienPed, PlayerPed, 1.5f, 30f);
+
             float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
 
             if (distance > 25)
@@ -210,10 +213,16 @@ namespace DefaultMissions
             PlayerPed.MaxHealth = OriginalPlayerHealth;
             PlayerPed.Health = PlayerPed.MaxHealth;
             PlayerPed.CanRagdoll = OriginalCanRagdollState;
+            PlayerPed.IsExplosionProof = false;
         }
 
         public override void OnAborted()
         {
+            PlayerPed.MaxHealth = OriginalPlayerHealth;
+            PlayerPed.Health = PlayerPed.MaxHealth;
+            PlayerPed.CanRagdoll = OriginalCanRagdollState;
+            PlayerPed.IsExplosionProof = false;
+
             CleanUp();
         }
 

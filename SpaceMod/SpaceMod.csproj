@@ -66,6 +66,7 @@
     <Compile Include="ModController.cs" />
     <Compile Include="MyXmlSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StaticSettings.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup />

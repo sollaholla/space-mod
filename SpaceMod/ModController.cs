@@ -46,8 +46,15 @@ namespace SpaceMod
 
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+            StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
+                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+            StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
+                StaticSettings.VehicleSurfaceSpawn);
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
+            Settings.SetValue("vehicle_settings",
+                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
             Settings.Save();
 
             var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
@@ -69,14 +76,19 @@ namespace SpaceMod
                 menuItem.Activated += (sender, item) => SetCurrentScene(customXmlScene);
                 subMenu.AddItem(menuItem);
             }
+
+            subMenu.RefreshIndex();
+
             showUIItem.CheckboxEvent += (sender, @checked) =>
             {
                 OrbitalSystem.ShowUIPositions = @checked;
             };
+
             useScenarioItem.CheckboxEvent += (sender, @checked) =>
             {
                 _useScenario = @checked;
             };
+
             debugItem.Activated += (sender, item) =>
             {
                 DebugLogger.LogEntityData(PlayerPed);
@@ -112,6 +124,13 @@ namespace SpaceMod
 
         internal static ModController Instance { get; private set; }
 
+        internal CustomScene GetCurrentScene()
+        {
+            return _currentScene;
+        }
+
+        //Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, PlayerPed, 0, 0, 0, 6, 50f, 0f, vehicle.Heading, int.MaxValue, int.MinValue);
+
         private void OnAborted(object sender, EventArgs eventArgs)
         {
             Utilities.SetGravityLevel(0);
@@ -123,13 +142,7 @@ namespace SpaceMod
 
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
-
-            if (_currentScene != null && _currentScene != default(CustomScene))
-                PlayerPosition = Database.TrevorAirport;
-
             _currentScene?.Delete();
-
-            _currentScene = null;
 
             if (Scenarios != null)
             {
@@ -140,14 +153,12 @@ namespace SpaceMod
                     Scenarios.RemoveAt(0);
                 }
             }
-        }
 
-        internal CustomScene GetCurrentScene()
-        {
-            return _currentScene;
+            if (_currentScene != null && _currentScene != default(CustomScene))
+                PlayerPosition = Database.TrevorAirport;
+
+            _currentScene = null;
         }
-        
-        //Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, PlayerPed, 0, 0, 0, 6, 50f, 0f, vehicle.Heading, int.MaxValue, int.MinValue);
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
@@ -164,9 +175,9 @@ namespace SpaceMod
             {
                 _menuPool.ProcessMenus();
 
-                if (PlayerPed.IsDead && Game.IsScreenFadedOut)
+                if (PlayerPed.IsDead && _currentScene != null)
                 {
-                    OnAborted(null, null);
+                    CurrentSceneOnExited(null, "cmd_earth", Vector3.Zero);
                     return;
                 }
                 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GTA;
 using GTA.Native;
 using GTA.Math;
@@ -24,7 +22,9 @@ namespace DefaultMissions
             OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
             OriginalMaxHealth = PlayerPed.MaxHealth;
             PlayerPed.MaxHealth = 1500;
+            PlayerPed.Health = PlayerPed.MaxHealth;
             PlayerPed.CanRagdoll = false;
+            PlayerPed.IsExplosionProof = true;
 
             _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
             Settings.SetValue("settings", "ufo_model", _ufoModelName);
@@ -100,21 +100,21 @@ namespace DefaultMissions
                 return;
             }
 
-            Vector3 origin = PlayerPosition.Around(100f);
+            Vector3 origin = PlayerPosition.Around(500);
 
             for (int i = 0; i < 1; i++)
             {
-                Vehicle vehicle = World.CreateVehicle(_ufoModel, origin + new Vector3(0, 0, 25));
+                Vehicle vehicle = World.CreateVehicle(_ufoModel, origin + new Vector3(0, 0, 450));
                 Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
                 ped.SetDefaultClothes();
+                Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, PlayerPed, 0, 0, 0, 6, 25, 0, vehicle.Heading, 3000, 2515);
                 vehicle.EngineRunning = true;
-                vehicle.Heading = (PlayerPosition - vehicle.Position).ToHeading();
+                vehicle.Heading = -(PlayerPosition - vehicle.Position).ToHeading();
                 vehicle.MaxSpeed = 50;
                 vehicle.Speed = 50;
                 Blip blip = vehicle.AddBlip();
                 blip.Name = "UFO";
                 blip.Color = BlipColor.Green;
-                ped.Task.FightAgainst(Game.Player.Character);
                 Ufos.Add(vehicle);
             }
         }
@@ -151,7 +151,8 @@ namespace DefaultMissions
                     else
                     {
                         Aliens.ForEach(UpdateAlien);
-                        if (!Aliens.All(alien => alien.IsDead)) return;
+                        Ufos.ForEach(UpdateUfo);
+                        if (!Aliens.All(alien => alien.IsDead) || !Ufos.All(ufo => ufo.Driver != null && ufo.Driver.IsDead)) return;
                         BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~ enemies eliminated");
                         CurrentMissionStep++;
                     }
@@ -161,6 +162,14 @@ namespace DefaultMissions
 
                     EndScenario(true);
                 break;
+            }
+        }
+
+        private void UpdateUfo(Vehicle ufo)
+        {
+            if (ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable && ufo.CurrentBlip.Exists())
+            {
+                ufo.CurrentBlip.Remove();
             }
         }
 
@@ -178,12 +187,36 @@ namespace DefaultMissions
                 return;
             }
 
+            Utilities.ArtificalDamage(alienPed, PlayerPed, 1.5f, 35);
+
             float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
 
             if (distance > 25)
             {
                 alienPed.Task.RunTo(PlayerPed.Position, true);
             }
+        }
+
+        public override void OnAborted()
+        {
+            CleanUp();
+        }
+
+        public override void OnEnded(bool success)
+        {
+            if (success)
+            {
+                MarkEntitesAsNotNeeded();
+            }
+            else
+            {
+                CleanUp();
+            }
+
+            PlayerPed.MaxHealth = OriginalMaxHealth;
+            PlayerPed.Health = PlayerPed.MaxHealth;
+            PlayerPed.CanRagdoll = OriginalCanPlayerRagdoll;
+            PlayerPed.IsExplosionProof = false;
         }
 
         private void MarkEntitesAsNotNeeded()
@@ -219,27 +252,6 @@ namespace DefaultMissions
                 Craft.Delete();
                 Ufos.RemoveAt(0);
             }
-        }
-
-        public override void OnAborted()
-        {
-            CleanUp();
-        }
-
-        public override void OnEnded(bool success)
-        {
-            if (success)
-            {
-                MarkEntitesAsNotNeeded();
-            }
-            else
-            {
-                CleanUp();
-            }
-
-            PlayerPed.MaxHealth = OriginalMaxHealth;
-            PlayerPed.Health = PlayerPed.MaxHealth;
-            PlayerPed.CanRagdoll = OriginalCanPlayerRagdoll;
         }
 
     }

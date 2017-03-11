@@ -98,14 +98,13 @@ namespace SpaceMod.DataClasses
                     if (vehicle != null && vehicle.Exists())
                     {
                         PlayerLastVehicle = vehicle;
-
-                        float heading = vehicle.Heading;
+                        
                         vehicle.Quaternion = Quaternion.Identity;
                         vehicle.Rotation = Vector3.Zero;
-                        vehicle.Heading = heading;
-                        vehicle.Position = PlayerPosition.Around(15);
+                        vehicle.Position = StaticSettings.VehicleSurfaceSpawn;
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
                         vehicle.IsInvincible = true;
+                        vehicle.Velocity = Vector3.Zero;
                     }
                 }
 
@@ -224,6 +223,20 @@ namespace SpaceMod.DataClasses
                 if (SceneData.SurfaceFlag && PlayerLastVehicle != null &&
                     !string.IsNullOrEmpty(SceneData.NextSceneOffSurface))
                 {
+                    float distance = Vector3.Distance(PlayerPosition, PlayerLastVehicle.Position);
+
+                    if (distance < 15)
+                    {
+                        Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to leave.");
+
+                        Game.DisableControlThisFrame(2, Control.Enter);
+
+                        if (Game.IsDisabledControlJustPressed(2, Control.Enter))
+                        {
+                            PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
+                        }
+                    }
+
                     if (PlayerPed.IsGettingIntoAVehicle || PlayerPed.IsInVehicle())
                     {
                         Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation);
@@ -251,6 +264,13 @@ namespace SpaceMod.DataClasses
             float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
             float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
+
+            if (Game.IsControlPressed(2, Control.VehicleFlyMouseControlOverride))
+            {
+                leftRight *= StaticSettings.MouseControlFlySensitivity;
+                upDown *= StaticSettings.MouseControlFlySensitivity;
+                roll *= StaticSettings.MouseControlFlySensitivity;
+            }
 
             if (!vehicle.IsOnAllWheels)
             {
