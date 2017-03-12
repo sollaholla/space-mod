@@ -52,10 +52,10 @@ namespace DefaultMissions
 
         public override void Start()
         {
-            SpawnPeds();
+            SpawnEntities();
         }
 
-        public void SpawnPeds()
+        public void SpawnEntities()
         {
             var origin = PlayerPosition.Around(100f);
 
@@ -78,10 +78,7 @@ namespace DefaultMissions
 
                 Aliens.Add(ped);
             }
-        }
 
-        private void CreateUfos()
-        {
             _ufoModel = new Model(_ufoModelName);
             _ufoModel.Request();
             DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 10);
@@ -99,22 +96,24 @@ namespace DefaultMissions
                 return;
             }
 
-            Vector3 origin = PlayerPosition.Around(500);
-
-            for (int i = 0; i < 1; i++)
+            for (var i = 0; i < 5; i++)
             {
-                Vehicle vehicle = World.CreateVehicle(_ufoModel, origin + new Vector3(0, 0, 450));
-                Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
-                ped.SetDefaultClothes();
-                Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, PlayerPed, 0, 0, 0, 6, 25, 0, vehicle.Heading, 3000, 2515);
-                vehicle.EngineRunning = true;
-                vehicle.Heading = -(PlayerPosition - vehicle.Position).ToHeading();
-                vehicle.MaxSpeed = 50;
-                vehicle.Speed = 50;
-                Blip blip = vehicle.AddBlip();
+                Vector3 position = origin.Around(75);
+                Vector3 artifical = TryToGetGroundHeight(position);
+                if (artifical != Vector3.Zero) position = artifical;
+
+                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 7.5f), (position - PlayerPosition).ToHeading());
+
+                spaceCraft.FreezePosition = true;
+                spaceCraft.MaxHealth = 1000;
+                spaceCraft.Health = spaceCraft.MaxHealth;
+
+                Blip blip = spaceCraft.AddBlip();
+                blip.Sprite = BlipSprite.SonicWave;
+                blip.Scale = 0.7f;
                 blip.Name = "UFO";
-                blip.Color = BlipColor.Green;
-                Ufos.Add(vehicle);
+
+                Ufos.Add(spaceCraft);
             }
         }
 
@@ -138,29 +137,20 @@ namespace DefaultMissions
 
         public override void OnUpdate()
         {
-            switch(CurrentMissionStep)
+            switch (CurrentMissionStep)
             {
                 case 0:
-                    if (Game.IsLoading) return;
-                    if (!SpawnedUfos)
-                    {
-                        CreateUfos();
-                        SpawnedUfos = true;
-                    }
-                    else
-                    {
-                        Aliens.ForEach(UpdateAlien);
-                        Ufos.ForEach(UpdateUfo);
-                        if (!Aliens.All(alien => alien.IsDead) || !Ufos.All(ufo => ufo.Driver != null && ufo.Driver.IsDead)) return;
-                        BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~ enemies eliminated");
-                        CurrentMissionStep++;
-                    }
-                break;
+                    Aliens.ForEach(UpdateAlien);
+                    Ufos.ForEach(UpdateUfo);
+                    if (!Aliens.All(alien => alien.IsDead) || !Ufos.All(ufo => ufo.Driver != null && ufo.Driver.IsDead)) return;
+                    BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~ enemies eliminated");
+                    CurrentMissionStep++;
+                    break;
 
                 case 1:
 
                     EndScenario(true);
-                break;
+                    break;
             }
         }
 

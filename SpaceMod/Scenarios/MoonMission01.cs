@@ -18,7 +18,7 @@ namespace DefaultMissions
         public MoonMission01()
         {
             Aliens = new List<Ped>();
-            SpaceCrafts = new List<Entity>();
+            Ufos = new List<Entity>();
             Random = new Random();
             OriginalPlayerHealth = PlayerPed.MaxHealth;
             PlayerPed.MaxHealth = 1500;
@@ -36,7 +36,7 @@ namespace DefaultMissions
 
         public List<Ped> Aliens { get; }
 
-        public List<Entity> SpaceCrafts { get; }
+        public List<Entity> Ufos { get; }
 
         public int OriginalPlayerHealth { get; }
 
@@ -117,7 +117,7 @@ namespace DefaultMissions
                 blip.Scale = 0.7f;
                 blip.Name = "UFO";
 
-                SpaceCrafts.Add(spaceCraft);
+                Ufos.Add(spaceCraft);
             }
         }
 
@@ -145,9 +145,9 @@ namespace DefaultMissions
             {
                 case 0:
                     Aliens.ForEach(UpdateAlien);
-                    SpaceCrafts.ForEach(UpdateSpaceCraft);
+                    Ufos.ForEach(UpdateSpaceCraft);
 
-                    List<Entity> concatList = Aliens.Concat(SpaceCrafts).ToList();
+                    List<Entity> concatList = Aliens.Concat(Ufos).ToList();
                     if (!concatList.All(entity => entity.IsDead)) return;
                     BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~enemies eliminated");
                     MissionStep++;
@@ -258,11 +258,11 @@ namespace DefaultMissions
                 Aliens.RemoveAt(0);
             }
 
-            while (SpaceCrafts.Count > 0)
+            while (Ufos.Count > 0)
             {
-                Entity Craft = SpaceCrafts[0];
+                Entity Craft = Ufos[0];
                 Craft.MarkAsNoLongerNeeded();
-                SpaceCrafts.RemoveAt(0);
+                Ufos.RemoveAt(0);
             }
         }
 
@@ -275,11 +275,11 @@ namespace DefaultMissions
                 Aliens.RemoveAt(0);
             }
 
-            while (SpaceCrafts.Count > 0)
+            while (Ufos.Count > 0)
             {
-                Entity Craft = SpaceCrafts[0];
+                Entity Craft = Ufos[0];
                 Craft.Delete();
-                SpaceCrafts.RemoveAt(0);
+                Ufos.RemoveAt(0);
             }
         }
     }
