@@ -38,8 +38,7 @@ namespace DefaultMissions
         public List<Vehicle> UFOS { get; }
 
         public int OriginalVehicleHealth { get; }
-
-
+        
         public override void Start()
         {
             _ufoModel = new Model(_ufoModelName);

@@ -192,7 +192,7 @@ namespace DefaultMissions
                 return;
             }
 
-            Utilities.ArtificalDamage(alienPed, PlayerPed, 1.5f, 30f);
+            Utilities.ArtificalDamage(alienPed, PlayerPed, 1.5f, 75);
 
             float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
 

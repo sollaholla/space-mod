@@ -105,6 +105,7 @@ namespace SpaceMod.DataClasses
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
                         vehicle.IsInvincible = true;
                         vehicle.Velocity = Vector3.Zero;
+                        vehicle.EngineRunning = false;
                     }
                 }
 
@@ -269,8 +270,9 @@ namespace SpaceMod.DataClasses
             float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
             float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
-
-            if (Game.IsControlPressed(2, Control.VehicleFlyMouseControlOverride))
+            float controlNormal = Game.GetControlNormal(2, Control.VehicleFlyMouseControlOverride);
+            
+            if (controlNormal > 0)
             {
                 leftRight *= StaticSettings.MouseControlFlySensitivity;
                 upDown *= StaticSettings.MouseControlFlySensitivity;
@@ -401,6 +403,7 @@ namespace SpaceMod.DataClasses
                     PlayerLastVehicle.Heading = heading;
                     PlayerLastVehicle.Velocity = Vector3.Zero;
                     PlayerLastVehicle.IsInvincible = false;
+                    PlayerLastVehicle.EngineRunning = true;
                 }
                 
                 OrbitalSystem?.Abort();

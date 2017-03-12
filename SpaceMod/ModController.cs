@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -128,9 +129,7 @@ namespace SpaceMod
         {
             return _currentScene;
         }
-
-        //Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, PlayerPed, 0, 0, 0, 6, 50f, 0f, vehicle.Heading, int.MaxValue, int.MinValue);
-
+        
         private void OnAborted(object sender, EventArgs eventArgs)
         {
             Utilities.SetGravityLevel(0);
@@ -337,8 +336,7 @@ namespace SpaceMod
                         UI.Notify(
                             "Your custom scene ~r~failed~s~ to load, because the file specified was either not written correctly or " +
                             "was invalid.");
-                        Abort();
-                        return;
+                        throw new XmlException(newSceneFile);
                     }
 
                     CreateSceneFromCustomXmlScene(newScene);
