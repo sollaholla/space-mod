@@ -96,22 +96,23 @@ namespace DefaultMissions
                 return;
             }
 
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < 1; i++)
             {
-                Vector3 position = origin.Around(75);
-                Vector3 artifical = TryToGetGroundHeight(position);
-                if (artifical != Vector3.Zero) position = artifical;
+                Vector3 position = origin.Around(150);
 
-                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 7.5f), (position - PlayerPosition).ToHeading());
+                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 250),
+                    (position - PlayerPosition).ToHeading());
+                Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+                Function.Call(Hash.TASK_PLANE_MISSION, ped, spaceCraft, 0, PlayerPed, 0, 0, 0, 6, 25, 0, spaceCraft.Heading, 3000, 2515);
 
-                spaceCraft.FreezePosition = true;
                 spaceCraft.MaxHealth = 1000;
                 spaceCraft.Health = spaceCraft.MaxHealth;
+                spaceCraft.MaxSpeed = 50;
+                spaceCraft.Speed = 50;
 
                 Blip blip = spaceCraft.AddBlip();
-                blip.Sprite = BlipSprite.SonicWave;
-                blip.Scale = 0.7f;
                 blip.Name = "UFO";
+                blip.Color = BlipColor.Green;
 
                 Ufos.Add(spaceCraft);
             }
