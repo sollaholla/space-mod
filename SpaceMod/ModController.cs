@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,7 +10,7 @@ using System.Xml;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using NativeUI;
+using SolomanMenu;
 using SpaceMod.DataClasses;
 using SpaceMod.Static;
 
@@ -17,24 +18,20 @@ namespace SpaceMod
 {
     public class ModController : Script
     {
-        private readonly float _enterOrbitHeight = 5000;
-        private readonly Keys _optionsMenuKey = Keys.NumPad9;
+        private float _enterOrbitHeight = 5000;
+        private Keys _optionsMenuKey = Keys.NumPad9;
+        private bool _showCustomUI = true;
+        private bool _useScenarios = true;
 
-
-        private readonly MenuPool _menuPool;
-        private readonly UIMenu _optionsMenu;
-
-        private bool _useScenario = true;
+        private MenuConnector _menuConnector;
+        private SolomanMenu.Menu _menu;
 
         private readonly object _tickLock;
-        
+
         private CustomScene _currentScene;
 
         public ModController()
         {
-            _menuPool = new MenuPool();
-            _menuPool = new MenuPool();
-            _optionsMenu = new UIMenu("Grand Theft Space", "OPTIONS");
             _tickLock = new object();
 
             PlayerPrefs = new PlayerPrefs();
@@ -45,96 +42,17 @@ namespace SpaceMod
             Tick += OnTick;
             Aborted += OnAborted;
 
-            // Loading INI Stuff.
-            _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
-            _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
-            StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
-                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
-            StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
-                StaticSettings.VehicleSurfaceSpawn);
-            StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed",
-                StaticSettings.VehicleFlySpeed);
+            ReadSettings();
+            SaveSettings();
 
-            // Saving INI stuff 
-            Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
-            Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
-            Settings.SetValue("vehicle_settings",
-                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
-            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
-            Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
-            Settings.Save();
-
-            var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
-            var speedItem = new UIMenuListItem("Vehicle Speed", new List<dynamic>()
-            {
-                50,
-                100,
-                150,
-                200,
-                250,
-                300,
-                350,
-                400,
-                450,
-                500
-            }, 0);
-            var useScenarioItem = new UIMenuCheckboxItem("Use Scenarios", true);
-            var debugItem = new UIMenuItem("Log Player Data", "Log the player ped data to file.");
-            var subMenu = _menuPool.AddSubMenu(_optionsMenu, "Scenes");
-            var files = Directory.GetFiles(Database.PathToScenes);
-            for (var i = 0; i < files.Length; i++)
-            {
-                var file = files[i];
-                var customXmlScene = MyXmlSerializer.Deserialize<CustomXmlScene>(file);
-                if (customXmlScene == default(CustomXmlScene))
-                {
-                    UI.Notify($"Failed to load {file}");
-                    continue;
-                }
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                var menuItem = new UIMenuItem(fileName, $"Load {fileName} as a scene.");
-                menuItem.Activated += (sender, item) => SetCurrentScene(customXmlScene);
-                subMenu.AddItem(menuItem);
-            }
-
-            subMenu.RefreshIndex();
-
-            showUIItem.CheckboxEvent += (sender, isChecked) =>
-            {
-                OrbitalSystem.ShowUIPositions = isChecked;
-            };
-
-            speedItem.OnListChanged += (sender, newIndex) =>
-            {
-                int newSpeed = StaticSettings.VehicleFlySpeed = speedItem.IndexToItem(newIndex);
-                Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", newSpeed);
-                Settings.Save();
-            };
-
-            useScenarioItem.CheckboxEvent += (sender, @checked) =>
-            {
-                _useScenario = @checked;
-            };
-
-            debugItem.Activated += (sender, item) =>
-            {
-                DebugLogger.LogEntityData(PlayerPed);
-            };
-
-            _menuPool.Add(_optionsMenu);
-            _optionsMenu.AddItem(showUIItem);
-            _optionsMenu.AddItem(speedItem);
-            _optionsMenu.AddItem(useScenarioItem);
-            _optionsMenu.AddItem(debugItem);
-            _optionsMenu.RefreshIndex();
+            CreateCustomMenu();
         }
 
         public Ped PlayerPed => Game.Player.Character;
 
         public Vector3 PlayerPosition {
             get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
-            set
-            {
+            set {
                 if (PlayerPed.IsInVehicle())
                 {
                     PlayerPed.CurrentVehicle.Position = value;
@@ -156,7 +74,7 @@ namespace SpaceMod
         {
             return _currentScene;
         }
-        
+
         private void OnAborted(object sender, EventArgs eventArgs)
         {
             Utilities.SetGravityLevel(0);
@@ -188,9 +106,9 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            if (_menuPool.IsAnyMenuOpen()) return;
-            if (keyEventArgs.KeyCode == _optionsMenuKey)
-                _optionsMenu.Visible = true;
+            if (_menuConnector.AreMenusVisible()) return;
+            if (keyEventArgs.KeyCode != _optionsMenuKey) return;
+            _menu.Draw = true;
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
@@ -199,14 +117,14 @@ namespace SpaceMod
 
             try
             {
-                _menuPool.ProcessMenus();
+                _menuConnector.UpdateMenus();
 
                 if (PlayerPed.IsDead && _currentScene != null)
                 {
                     CurrentSceneOnExited(null, "cmd_earth", Vector3.Zero);
                     return;
                 }
-                
+
                 DisableWantedStars();
 
                 if (_currentScene != null)
@@ -262,6 +180,162 @@ namespace SpaceMod
             }
         }
 
+        private void ReadSettings()
+        {
+            _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
+            _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+            _showCustomUI = Settings.GetValue("settings", "show_custom_ui", _showCustomUI);
+            _useScenarios = Settings.GetValue("settings", "use_scenarios", _useScenarios);
+            StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
+                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+            StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
+                StaticSettings.VehicleSurfaceSpawn);
+            StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed",
+                StaticSettings.VehicleFlySpeed);
+
+            OrbitalSystem.ShowUIPositions = _showCustomUI;
+        }
+
+        private void SaveSettings()
+        {
+            Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
+            Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
+            Settings.SetValue("settings", "show_custom_ui", _showCustomUI);
+            Settings.SetValue("settings", "use_scenarios", _useScenarios);
+            Settings.SetValue("vehicle_settings",
+                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
+            Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
+            Settings.Save();
+        }
+
+        private void CreateCustomMenu()
+        {
+            _menuConnector = new MenuConnector();
+
+            _menu = new SolomanMenu.Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
+                Color.Purple);
+
+            #region scenes
+
+            var scenesMenu = _menu.AddParentMenu("Scenes", "scenes", _menu.CenterColor, _menu.BannerColor,
+                _menu.SelectionColor);
+            scenesMenu.Width = _menu.Width;
+
+            var files = Directory.GetFiles(Database.PathToScenes);
+            for (var i = 0; i < files.Length; i++)
+            {
+                var file = files[i];
+                var customXmlScene = MyXmlSerializer.Deserialize<CustomXmlScene>(file);
+                if (customXmlScene == default(CustomXmlScene))
+                {
+                    UI.Notify($"Failed to load {file}");
+                    continue;
+                }
+                var fileName = Path.GetFileName(file);
+                var menuItem = new SolomanMenu.MenuItem(fileName);
+                menuItem.ItemActivated += (sender, item) => SetCurrentScene(customXmlScene);
+                scenesMenu.MenuItems.Add(menuItem);
+            }
+
+            #endregion
+
+            #region settings
+
+            var settingsMenu = _menu.AddParentMenu("Settings", "settings", _menu.CenterColor,
+                _menu.BannerColor, _menu.SelectionColor);
+            settingsMenu.Width = _menu.Width;
+
+            #region ui settings
+
+            var userInterfaceMenu = settingsMenu.AddParentMenu("User Interface", "ui", _menu.CenterColor,
+                _menu.BannerColor, _menu.SelectionColor);
+            userInterfaceMenu.Width = _menu.Width;
+
+            var showCustomUICheckbox = new CheckboxMenuItem("Show Custom UI", _showCustomUI);
+            showCustomUICheckbox.Checked += (sender, check) =>
+            {
+                OrbitalSystem.ShowUIPositions = check;
+                _showCustomUI = check;
+            };
+
+            userInterfaceMenu.Add(showCustomUICheckbox);
+
+            #endregion
+
+            #region vehicle settings
+
+            var vehicleSettingsMenu = settingsMenu.AddParentMenu("Vehicle Settings", "vehicle", _menu.CenterColor,
+                _menu.BannerColor, _menu.SelectionColor);
+            vehicleSettingsMenu.Width = _menu.Width;
+
+            var vehicleSpeedList = new ListMenuItem("Vehicle Speed",
+                Enumerable.Range(1, 10).Select(i => (dynamic)(i * 5)).ToList());
+            vehicleSpeedList.IndexChanged += (sender, index, item) =>
+            {
+                int speed = item;
+                StaticSettings.VehicleFlySpeed = speed;
+            };
+
+            var flySensitivity = (int)StaticSettings.MouseControlFlySensitivity;
+            var vehicleSensitivityList = new ListMenuItem("Mouse Control Sensitivity",
+                Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(),
+                flySensitivity);
+            vehicleSensitivityList.IndexChanged += (sender, index, item) =>
+            {
+                StaticSettings.MouseControlFlySensitivity = item;
+            };
+
+            vehicleSettingsMenu.Add(vehicleSpeedList);
+            vehicleSettingsMenu.Add(vehicleSensitivityList);
+
+            #endregion
+
+            #region scene settings
+
+            var sceneSettingsMenu = settingsMenu.AddParentMenu("Scene Settings", "scenes", _menu.CenterColor,
+                _menu.BannerColor, _menu.SelectionColor);
+
+            var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", _showCustomUI);
+            useScenariosCheckbox.Checked += (sender, check) => {
+                _useScenarios = check;
+            };
+
+            sceneSettingsMenu.Add(useScenariosCheckbox);
+
+            #endregion
+
+            var saveSettingsItem = new SolomanMenu.MenuItem("Save Settings");
+            saveSettingsItem.ItemActivated += (sender, item) =>
+            {
+                SaveSettings();
+                UI.Notify("Settings ~b~saved~s~.");
+            };
+
+            settingsMenu.Add(saveSettingsItem);
+
+            #endregion
+
+            #region debug
+
+            var debugButton = new SolomanMenu.MenuItem("Debug Player");
+            debugButton.ItemActivated += (sender, item) =>
+            {
+                DebugLogger.LogEntityData(PlayerPed);
+            };
+
+            _menu.Add(debugButton);
+
+            #endregion
+
+            _menuConnector.Menus.Add(_menu);
+            _menuConnector.Menus.Add(settingsMenu);
+            _menuConnector.Menus.Add(userInterfaceMenu);
+            _menuConnector.Menus.Add(vehicleSettingsMenu);
+            _menuConnector.Menus.Add(sceneSettingsMenu);
+            _menuConnector.Menus.Add(scenesMenu);
+        }
+
         private static void DisableWantedStars()
         {
             Utilities.TerminateScriptByName("re_prison");
@@ -305,7 +379,7 @@ namespace SpaceMod
                     PlayerPed.Rotation = Vector3.Zero;
                 }
 
-                if (_useScenario)
+                if (_useScenarios)
                 {
                     Scenarios = customXmlScene.CustomScenarios?.Select(x =>
                     {
@@ -317,7 +391,7 @@ namespace SpaceMod
                         }
                         var name = x.PathToClass;
                         var type = assembly.GetType(name);
-                        var scenario = (CustomScenario) Activator.CreateInstance(type);
+                        var scenario = (CustomScenario)Activator.CreateInstance(type);
                         return scenario.IsScenarioComplete() ? null : scenario;
 
                     }).Where(x => x != null).ToList();

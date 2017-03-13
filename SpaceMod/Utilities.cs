@@ -247,6 +247,12 @@ namespace SpaceMod
         {
             Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int)type, false, false, false);
         }
+
+        public static void DrawLine(Vector3 start, Vector3 end, Color color)
+        {
+            Function.Call(Hash.DRAW_LINE, start.X, start.Y, start.Z, end.X, end.Y, end.Z, color.R, color.G, color.B,
+                color.A);
+        }
     }
 
     public class LoopedPTFX

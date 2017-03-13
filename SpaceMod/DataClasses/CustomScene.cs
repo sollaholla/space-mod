@@ -19,6 +19,8 @@ namespace SpaceMod.DataClasses
         private readonly object _startLock = new object();
         private readonly object _updateLock = new object();
 
+        private readonly List<Blip> _sceneLinkBlips = new List<Blip>();
+
         private float _leftRightFly;
         private float _upDownFly;
         private float _rollFly;
@@ -85,6 +87,14 @@ namespace SpaceMod.DataClasses
                     };
                     var tuple = new Tuple<UIText, UIText, Link>(text, distanceText, link);
                     DistanceText.Add(tuple);
+                    Blip blip =
+                        World.CreateBlip((SceneData.SurfaceFlag
+                                             ? Database.PlanetSurfaceGalaxyCenter
+                                             : Database.GalaxyCenter) + link.OriginOffset);
+                    blip.Sprite = BlipSprite.Crosshair2;
+                    blip.Color = BlipColor.Blue;
+                    blip.Name = link.Name;
+                    _sceneLinkBlips.Add(blip);
                 });
 
                 MovePlayerToGalaxy();
@@ -163,6 +173,13 @@ namespace SpaceMod.DataClasses
             {
                 IsWormHole = data.IsWormHole
             };
+            if (!string.IsNullOrEmpty(data.Name))
+            {
+                Blip blip = orbital.AddBlip();
+                blip.Sprite = BlipSprite.Crosshair2;
+                blip.Color = BlipColor.Blue;
+                blip.Name = orbital.Name;
+            }
             return orbital;
         }
 
@@ -247,11 +264,6 @@ namespace SpaceMod.DataClasses
                     }
                 }
 
-                if (!SceneData.SurfaceFlag && SceneData.CustomScenarios.Count <= 0)
-                {
-                    Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-                }
-
                 SceneData.Ipls?.ForEach(UpdateTeleports);
 
                 WormHoles?.ForEach(UpdateWormHole);
@@ -298,10 +310,8 @@ namespace SpaceMod.DataClasses
 
             if (fly > 0)
             {
-                var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * StaticSettings.VehicleFlySpeed * _fly;
-                vehicleVelocity.X = Mathf.Clamp(vehicleVelocity.X, -10, 10);
-                vehicleVelocity.Y = Mathf.Clamp(vehicleVelocity.Y, -10, 10);
-                vehicleVelocity.Z = Mathf.Clamp(vehicleVelocity.Z, -10, 10);
+                var vehicleVelocity = vehicle.ForwardVector.Normalized * StaticSettings.VehicleFlySpeed * _fly;
+                //Utilities.DrawLine(vehicle.Position, vehicle.Position + vehicleVelocity * 50, Color.Red);
                 vehicle.Velocity = vehicleVelocity;
             }
         }
@@ -416,6 +426,13 @@ namespace SpaceMod.DataClasses
                     var ipl = SceneData.Ipls[0];
                     RemoveIpl(ipl);
                     IplCount--;
+                }
+
+                while (_sceneLinkBlips.Count > 0)
+                {
+                    var blip = _sceneLinkBlips[0];
+                    blip.Remove();
+                    _sceneLinkBlips.RemoveAt(0);
                 }
 
                 SceneData.CurrentIplData = null;
