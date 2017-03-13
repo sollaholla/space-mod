@@ -45,17 +45,23 @@ namespace SpaceMod
             Tick += OnTick;
             Aborted += OnAborted;
 
+            // Loading INI Stuff.
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
                 StaticSettings.VehicleSurfaceSpawn);
+            StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed",
+                StaticSettings.VehicleFlySpeed);
+
+            // Saving INI stuff 
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
             Settings.SetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
+            Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
             Settings.Save();
 
             var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
@@ -80,9 +86,9 @@ namespace SpaceMod
 
             subMenu.RefreshIndex();
 
-            showUIItem.CheckboxEvent += (sender, @checked) =>
+            showUIItem.CheckboxEvent += (sender, isChecked) =>
             {
-                OrbitalSystem.ShowUIPositions = @checked;
+                OrbitalSystem.ShowUIPositions = isChecked;
             };
 
             useScenarioItem.CheckboxEvent += (sender, @checked) =>

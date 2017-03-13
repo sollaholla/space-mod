@@ -206,18 +206,21 @@ namespace SpaceMod.DataClasses
 
                 OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
-                DistanceText?.ForEach(text =>
+                if (OrbitalSystem.ShowUIPositions)
                 {
-                    var position = Database.GalaxyCenter + text.Item3.OriginOffset;
-                    Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
-                        position, Database.PathToSprites, text.Item3.Name,
-                        text.Item1, text.Item2);
+                    DistanceText?.ForEach(text =>
+                    {
+                        var position = Database.GalaxyCenter + text.Item3.OriginOffset;
+                        Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
+                            position, Database.PathToSprites, text.Item3.Name,
+                            text.Item1, text.Item2);
 
-                    float distance = Vector3.Distance(position, PlayerPosition);
-                    float targetDistance = text.Item3.ExitDistance;
-                    if (distance > targetDistance) return;
-                    Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
-                });
+                        float distance = Vector3.Distance(position, PlayerPosition);
+                        float targetDistance = text.Item3.ExitDistance;
+                        if (distance > targetDistance) return;
+                        Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
+                    });
+                }
 
                 TryToStartNextScene();
 
@@ -295,7 +298,7 @@ namespace SpaceMod.DataClasses
 
             if (fly > 0)
             {
-                var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * 50 * _fly;
+                var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * StaticSettings.VehicleFlySpeed * _fly;
                 vehicleVelocity.X = Mathf.Clamp(vehicleVelocity.X, -10, 10);
                 vehicleVelocity.Y = Mathf.Clamp(vehicleVelocity.Y, -10, 10);
                 vehicleVelocity.Z = Mathf.Clamp(vehicleVelocity.Z, -10, 10);
