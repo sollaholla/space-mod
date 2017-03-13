@@ -100,12 +100,13 @@ namespace DefaultMissions
             {
                 Vector3 position = origin.Around(150);
 
-                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 250),
+                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 150),
                     (position - PlayerPosition).ToHeading());
+
                 Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
                 Function.Call(Hash.TASK_PLANE_MISSION, ped, spaceCraft, 0, PlayerPed, 0, 0, 0, 6, 25, 0, spaceCraft.Heading, 3000, 2515);
 
-                spaceCraft.MaxHealth = 1000;
+                spaceCraft.MaxHealth = 500;
                 spaceCraft.Health = spaceCraft.MaxHealth;
                 spaceCraft.MaxSpeed = 50;
                 spaceCraft.Speed = 50;

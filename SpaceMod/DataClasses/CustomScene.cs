@@ -206,18 +206,21 @@ namespace SpaceMod.DataClasses
 
                 OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
-                DistanceText?.ForEach(text =>
+                if (OrbitalSystem.ShowUIPositions)
                 {
-                    var position = Database.GalaxyCenter + text.Item3.OriginOffset;
-                    Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
-                        position, Database.PathToSprites, text.Item3.Name,
-                        text.Item1, text.Item2);
+                    DistanceText?.ForEach(text =>
+                    {
+                        var position = Database.GalaxyCenter + text.Item3.OriginOffset;
+                        Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
+                            position, Database.PathToSprites, text.Item3.Name,
+                            text.Item1, text.Item2);
 
-                    float distance = Vector3.Distance(position, PlayerPosition);
-                    float targetDistance = text.Item3.ExitDistance;
-                    if (distance > targetDistance) return;
-                    Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
-                });
+                        float distance = Vector3.Distance(position, PlayerPosition);
+                        float targetDistance = text.Item3.ExitDistance;
+                        if (distance > targetDistance) return;
+                        Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
+                    });
+                }
 
                 TryToStartNextScene();
 
@@ -270,7 +273,7 @@ namespace SpaceMod.DataClasses
             float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
             float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
-            float controlNormal = Game.GetControlNormal(2, Control.VehicleFlyMouseControlOverride);
+            float controlNormal = Game.GetControlNormal(0, Control.VehicleFlyMouseControlOverride);
             
             if (controlNormal > 0)
             {

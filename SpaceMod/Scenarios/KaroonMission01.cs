@@ -68,6 +68,7 @@ namespace DefaultMissions
             {
                 Vector3 spawnAround = spawn.Around(100);
                 Vehicle vehicle = World.CreateVehicle(_ufoModel, spawnAround);
+                UFOS.ForEach(ufo => vehicle.SetNoCollision(ufo, true));
                 Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
                 ped.SetDefaultClothes();
                 vehicle.Heading = (playerPed.Position - vehicle.Position).ToHeading();
