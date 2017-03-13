@@ -298,7 +298,7 @@ namespace SpaceMod.DataClasses
 
             if (fly > 0)
             {
-                var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * 50 * _fly;
+                var vehicleVelocity = vehicle.ForwardVector * vehicle.Acceleration * StaticSettings.VehicleFlySpeed * _fly;
                 vehicleVelocity.X = Mathf.Clamp(vehicleVelocity.X, -10, 10);
                 vehicleVelocity.Y = Mathf.Clamp(vehicleVelocity.Y, -10, 10);
                 vehicleVelocity.Z = Mathf.Clamp(vehicleVelocity.Z, -10, 10);

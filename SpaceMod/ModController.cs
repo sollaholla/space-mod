@@ -45,20 +45,39 @@ namespace SpaceMod
             Tick += OnTick;
             Aborted += OnAborted;
 
+            // Loading INI Stuff.
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
                 StaticSettings.VehicleSurfaceSpawn);
+            StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed",
+                StaticSettings.VehicleFlySpeed);
+
+            // Saving INI stuff 
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
             Settings.SetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
+            Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
             Settings.Save();
 
             var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
+            var speedItem = new UIMenuListItem("Vehicle Speed", new List<dynamic>()
+            {
+                50,
+                100,
+                150,
+                200,
+                250,
+                300,
+                350,
+                400,
+                450,
+                500
+            }, 0);
             var useScenarioItem = new UIMenuCheckboxItem("Use Scenarios", true);
             var debugItem = new UIMenuItem("Log Player Data", "Log the player ped data to file.");
             var subMenu = _menuPool.AddSubMenu(_optionsMenu, "Scenes");
@@ -80,9 +99,16 @@ namespace SpaceMod
 
             subMenu.RefreshIndex();
 
-            showUIItem.CheckboxEvent += (sender, @checked) =>
+            showUIItem.CheckboxEvent += (sender, isChecked) =>
             {
-                OrbitalSystem.ShowUIPositions = @checked;
+                OrbitalSystem.ShowUIPositions = isChecked;
+            };
+
+            speedItem.OnListChanged += (sender, newIndex) =>
+            {
+                int newSpeed = StaticSettings.VehicleFlySpeed = speedItem.IndexToItem(newIndex);
+                Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", newSpeed);
+                Settings.Save();
             };
 
             useScenarioItem.CheckboxEvent += (sender, @checked) =>
@@ -97,6 +123,7 @@ namespace SpaceMod
 
             _menuPool.Add(_optionsMenu);
             _optionsMenu.AddItem(showUIItem);
+            _optionsMenu.AddItem(speedItem);
             _optionsMenu.AddItem(useScenarioItem);
             _optionsMenu.AddItem(debugItem);
             _optionsMenu.RefreshIndex();
