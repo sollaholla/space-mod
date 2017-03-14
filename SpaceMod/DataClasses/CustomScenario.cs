@@ -80,7 +80,11 @@ namespace SpaceMod.DataClasses
         {
             lock (_updateLock)
             {
-                if (success) SetScenarioComplete();
+                if (success)
+                {
+                    SetScenarioComplete();
+                    GTA.Native.Function.Call(GTA.Native.Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
+                }                                                          // This can be "TREVOR_SMALL_01" or "DEAD" or "GENERIC_FAILED" too.
                 Completed?.Invoke(this, success);
                 OnEnded(success);
             }
