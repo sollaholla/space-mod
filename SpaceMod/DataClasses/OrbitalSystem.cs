@@ -13,8 +13,6 @@ namespace SpaceMod.DataClasses
 
     public class OrbitalSystem : Entity
     {
-        public static bool ShowUIPositions = true;
-
         private readonly RotationAxis _rotationAxis;
 
         /// <summary>
@@ -54,7 +52,7 @@ namespace SpaceMod.DataClasses
 
             // Update orbitals.
             Orbitals?.ForEach(orbital => orbital?.Orbit());
-            if (ShowUIPositions)
+            if (StaticSettings.showCustomUI)
                 Orbitals?.ForEach(orbital => orbital.ShowUIPosition(Orbitals.IndexOf(orbital)));
         }
 

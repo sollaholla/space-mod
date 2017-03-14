@@ -24,8 +24,6 @@ namespace SpaceMod
         private readonly MenuPool _menuPool;
         private readonly UIMenu _optionsMenu;
 
-        private bool _useScenario = true;
-
         private readonly object _tickLock;
         
         private CustomScene _currentScene;
@@ -48,6 +46,10 @@ namespace SpaceMod
             // Loading INI Stuff.
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+            StaticSettings.showCustomUI = Settings.GetValue("mod", "show_custom_ui",
+                StaticSettings.showCustomUI);
+            StaticSettings.UseScenarios = Settings.GetValue("mod", "use_scenarios",
+                StaticSettings.UseScenarios);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
@@ -58,13 +60,15 @@ namespace SpaceMod
             // Saving INI stuff 
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
+            Settings.SetValue("mod", "show_custom_ui", StaticSettings.showCustomUI);
+            Settings.SetValue("mod", "use_scenarios", StaticSettings.UseScenarios);
             Settings.SetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
-            Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
+            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
             Settings.Save();
 
-            var showUIItem = new UIMenuCheckboxItem("Show Custom UI", true);
+            var showUIItem = new UIMenuCheckboxItem("Show Custom UI", StaticSettings.showCustomUI);
             var speedItem = new UIMenuListItem("Vehicle Speed", new List<dynamic>()
             {
                 50,
@@ -78,7 +82,7 @@ namespace SpaceMod
                 450,
                 500
             }, 0);
-            var useScenarioItem = new UIMenuCheckboxItem("Use Scenarios", true);
+            var useScenarioItem = new UIMenuCheckboxItem("Use Scenarios", StaticSettings.UseScenarios);
             var debugItem = new UIMenuItem("Log Player Data", "Log the player ped data to file.");
             var subMenu = _menuPool.AddSubMenu(_optionsMenu, "Scenes");
             var files = Directory.GetFiles(Database.PathToScenes);
@@ -101,19 +105,24 @@ namespace SpaceMod
 
             showUIItem.CheckboxEvent += (sender, isChecked) =>
             {
-                OrbitalSystem.ShowUIPositions = isChecked;
+                StaticSettings.showCustomUI = isChecked;
+                Settings.SetValue("mod", "show_custom_ui", StaticSettings.showCustomUI);
+                Settings.Save();
             };
 
             speedItem.OnListChanged += (sender, newIndex) =>
             {
-                int newSpeed = StaticSettings.VehicleFlySpeed = speedItem.IndexToItem(newIndex);
+                int newSpeed = speedItem.IndexToItem(newIndex);
+                StaticSettings.VehicleFlySpeed = newSpeed;
                 Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", newSpeed);
                 Settings.Save();
             };
 
             useScenarioItem.CheckboxEvent += (sender, @checked) =>
             {
-                _useScenario = @checked;
+                StaticSettings.UseScenarios = @checked;
+                Settings.SetValue("mod", "use_scenarios", StaticSettings.UseScenarios);
+                Settings.Save();
             };
 
             debugItem.Activated += (sender, item) =>
@@ -305,7 +314,7 @@ namespace SpaceMod
                     PlayerPed.Rotation = Vector3.Zero;
                 }
 
-                if (_useScenario)
+                if (StaticSettings.UseScenarios)
                 {
                     Scenarios = customXmlScene.CustomScenarios?.Select(x =>
                     {
