@@ -223,7 +223,7 @@ namespace SpaceMod.DataClasses
 
                 OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
-                if (StaticSettings.showCustomUI)
+                if (StaticSettings.ShowCustomUI)
                 {
                     DistanceText?.ForEach(text =>
                     {

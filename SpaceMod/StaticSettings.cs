@@ -10,7 +10,7 @@ namespace SpaceMod
     public static class StaticSettings
     {
         // Mod stuff
-        public static bool showCustomUI = true;
+        public static bool ShowCustomUI = true;
         public static bool UseScenarios = true;
 
         // Vehicle stuff.
