@@ -379,7 +379,7 @@ namespace SpaceMod
                     PlayerPed.Rotation = Vector3.Zero;
                 }
 
-                if (_useScenarios)
+                if (StaticSettings.UseScenarios)
                 {
                     Scenarios = customXmlScene.CustomScenarios?.Select(x =>
                     {
