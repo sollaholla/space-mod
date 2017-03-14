@@ -20,8 +20,6 @@ namespace SpaceMod
     {
         private float _enterOrbitHeight = 5000;
         private Keys _optionsMenuKey = Keys.NumPad9;
-        private bool _showCustomUI = true;
-        private bool _useScenarios = true;
 
         private MenuConnector _menuConnector;
         private SolomanMenu.Menu _menu;
@@ -184,24 +182,22 @@ namespace SpaceMod
         {
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
-            _showCustomUI = Settings.GetValue("settings", "show_custom_ui", _showCustomUI);
-            _useScenarios = Settings.GetValue("settings", "use_scenarios", _useScenarios);
+            StaticSettings.ShowCustomUI = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUI);
+            StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
                 StaticSettings.VehicleSurfaceSpawn);
             StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed",
                 StaticSettings.VehicleFlySpeed);
-
-            OrbitalSystem.ShowUIPositions = _showCustomUI;
         }
 
         private void SaveSettings()
         {
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
-            Settings.SetValue("settings", "show_custom_ui", _showCustomUI);
-            Settings.SetValue("settings", "use_scenarios", _useScenarios);
+            Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUI);
+            Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             Settings.SetValue("vehicle_settings",
                 "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
@@ -252,11 +248,10 @@ namespace SpaceMod
                 _menu.BannerColor, _menu.SelectionColor);
             userInterfaceMenu.Width = _menu.Width;
 
-            var showCustomUICheckbox = new CheckboxMenuItem("Show Custom UI", _showCustomUI);
+            var showCustomUICheckbox = new CheckboxMenuItem("Show Custom UI", StaticSettings.ShowCustomUI);
             showCustomUICheckbox.Checked += (sender, check) =>
             {
-                OrbitalSystem.ShowUIPositions = check;
-                _showCustomUI = check;
+                StaticSettings.ShowCustomUI = check;
             };
 
             userInterfaceMenu.Add(showCustomUICheckbox);
@@ -296,9 +291,9 @@ namespace SpaceMod
             var sceneSettingsMenu = settingsMenu.AddParentMenu("Scene Settings", "scenes", _menu.CenterColor,
                 _menu.BannerColor, _menu.SelectionColor);
 
-            var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", _showCustomUI);
+            var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", StaticSettings.UseScenarios);
             useScenariosCheckbox.Checked += (sender, check) => {
-                _useScenarios = check;
+                StaticSettings.UseScenarios = check;
             };
 
             sceneSettingsMenu.Add(useScenariosCheckbox);

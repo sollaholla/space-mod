@@ -52,7 +52,7 @@ namespace SpaceMod.DataClasses
 
             // Update orbitals.
             Orbitals?.ForEach(orbital => orbital?.Orbit());
-            if (StaticSettings.showCustomUI)
+            if (StaticSettings.ShowCustomUI)
                 Orbitals?.ForEach(orbital => orbital.ShowUIPosition(Orbitals.IndexOf(orbital)));
         }
 
