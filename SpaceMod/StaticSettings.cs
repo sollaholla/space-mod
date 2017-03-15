@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA.Math;
+﻿using GTA.Math;
 
 namespace SpaceMod
 {
-    public static class StaticSettings
+    internal static class StaticSettings
     {
         // Mod stuff
         public static bool ShowCustomUI = true;

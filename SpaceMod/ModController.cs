@@ -182,26 +182,26 @@ namespace SpaceMod
         {
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+
             StaticSettings.ShowCustomUI = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUI);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-            StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
-                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
-            StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
-                StaticSettings.VehicleSurfaceSpawn);
-            StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed",
-                StaticSettings.VehicleFlySpeed);
+
+            StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+            StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
+            StaticSettings.VehicleFlySpeed = Settings.GetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
         }
 
         private void SaveSettings()
         {
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
+
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUI);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-            Settings.SetValue("vehicle_settings",
-                "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+
+            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
-            Settings.SetValue<int>("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
+            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
             Settings.Save();
         }
 
@@ -210,12 +210,11 @@ namespace SpaceMod
             _menuConnector = new MenuConnector();
 
             _menu = new SolomanMenu.Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
-                Color.Purple);
+                Color.Purple) {MenuItemHeight = 26};
 
             #region scenes
 
-            var scenesMenu = _menu.AddParentMenu("Scenes", "scenes", _menu.CenterColor, _menu.BannerColor,
-                _menu.SelectionColor);
+            var scenesMenu = _menu.AddParentMenu("Scenes", _menu);
             scenesMenu.Width = _menu.Width;
 
             var files = Directory.GetFiles(Database.PathToScenes);
@@ -231,26 +230,21 @@ namespace SpaceMod
                 var fileName = Path.GetFileName(file);
                 var menuItem = new SolomanMenu.MenuItem(fileName);
                 menuItem.ItemActivated += (sender, item) => SetCurrentScene(customXmlScene);
-                scenesMenu.MenuItems.Add(menuItem);
+                scenesMenu.Add(menuItem);
             }
 
             #endregion
 
             #region settings
 
-            var settingsMenu = _menu.AddParentMenu("Settings", "settings", _menu.CenterColor,
-                _menu.BannerColor, _menu.SelectionColor);
-            settingsMenu.Width = _menu.Width;
+            var settingsMenu = _menu.AddParentMenu("Settings", _menu);
 
             #region ui settings
 
-            var userInterfaceMenu = settingsMenu.AddParentMenu("User Interface", "ui", _menu.CenterColor,
-                _menu.BannerColor, _menu.SelectionColor);
-            userInterfaceMenu.Width = _menu.Width;
+            var userInterfaceMenu = settingsMenu.AddParentMenu("Interface", _menu);
 
             var showCustomUICheckbox = new CheckboxMenuItem("Show Custom UI", StaticSettings.ShowCustomUI);
-            showCustomUICheckbox.Checked += (sender, check) =>
-            {
+            showCustomUICheckbox.Checked += (sender, check) => {
                 StaticSettings.ShowCustomUI = check;
             };
 
@@ -260,24 +254,20 @@ namespace SpaceMod
 
             #region vehicle settings
 
-            var vehicleSettingsMenu = settingsMenu.AddParentMenu("Vehicle Settings", "vehicle", _menu.CenterColor,
-                _menu.BannerColor, _menu.SelectionColor);
+            var vehicleSettingsMenu = settingsMenu.AddParentMenu("Vehicles", _menu);
             vehicleSettingsMenu.Width = _menu.Width;
 
             var vehicleSpeedList = new ListMenuItem("Vehicle Speed",
                 Enumerable.Range(1, 10).Select(i => (dynamic)(i * 5)).ToList());
-            vehicleSpeedList.IndexChanged += (sender, index, item) =>
-            {
-                int speed = item;
-                StaticSettings.VehicleFlySpeed = speed;
+            vehicleSpeedList.IndexChanged += (sender, index, item) => {
+                StaticSettings.VehicleFlySpeed = item;
             };
 
             var flySensitivity = (int)StaticSettings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new ListMenuItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(),
                 flySensitivity);
-            vehicleSensitivityList.IndexChanged += (sender, index, item) =>
-            {
+            vehicleSensitivityList.IndexChanged += (sender, index, item) => {
                 StaticSettings.MouseControlFlySensitivity = item;
             };
 
@@ -288,8 +278,7 @@ namespace SpaceMod
 
             #region scene settings
 
-            var sceneSettingsMenu = settingsMenu.AddParentMenu("Scene Settings", "scenes", _menu.CenterColor,
-                _menu.BannerColor, _menu.SelectionColor);
+            var sceneSettingsMenu = settingsMenu.AddParentMenu("Scenes", _menu);
 
             var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", StaticSettings.UseScenarios);
             useScenariosCheckbox.Checked += (sender, check) => {
@@ -301,10 +290,9 @@ namespace SpaceMod
             #endregion
 
             var saveSettingsItem = new SolomanMenu.MenuItem("Save Settings");
-            saveSettingsItem.ItemActivated += (sender, item) =>
-            {
+            saveSettingsItem.ItemActivated += (sender, item) => {
                 SaveSettings();
-                UI.Notify("Settings ~b~saved~s~.");
+                UI.Notify("Settings ~b~saved~s~.", true);
             };
 
             settingsMenu.Add(saveSettingsItem);
@@ -314,8 +302,7 @@ namespace SpaceMod
             #region debug
 
             var debugButton = new SolomanMenu.MenuItem("Debug Player");
-            debugButton.ItemActivated += (sender, item) =>
-            {
+            debugButton.ItemActivated += (sender, item) => {
                 DebugLogger.LogEntityData(PlayerPed);
             };
 

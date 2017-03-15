@@ -66,17 +66,20 @@ namespace DefaultMissions
 
             for (int i = 0; i < 4; i++)
             {
-                Vector3 spawnAround = spawn.Around(100);
+                Vector3 spawnAround = spawn.Around(400);
                 Vehicle vehicle = World.CreateVehicle(_ufoModel, spawnAround);
                 UFOS.ForEach(ufo => vehicle.SetNoCollision(ufo, true));
                 Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
                 ped.SetDefaultClothes();
+                ped.RelationshipGroup = Database.AlienRelationship;
                 vehicle.Heading = (playerPed.Position - vehicle.Position).ToHeading();
                 vehicle.MaxSpeed = 50;
+                vehicle.IsOnlyDamagedByPlayer = true;
                 Blip blip = vehicle.AddBlip();
                 blip.Name = "UFO";
                 blip.Color = BlipColor.Green;
-                ped.Task.FightAgainst(playerPed);
+                Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, playerPed, 0, 0, 0, 6, 25, 0, vehicle.Heading,
+                    Database.GalaxyCenter.Z - 100, Database.GalaxyCenter.Z - 250);
                 UFOS.Add(vehicle);
             }
         }

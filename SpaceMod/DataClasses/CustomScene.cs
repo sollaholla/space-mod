@@ -47,7 +47,7 @@ namespace SpaceMod.DataClasses
         internal List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
 
         internal IplData LastIpl { get; private set; }
-        
+
         internal Vehicle PlayerLastVehicle { get; private set; }
 
         internal int IplCount { get; private set; }
@@ -65,7 +65,7 @@ namespace SpaceMod.DataClasses
                     SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
 
                 WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
-                
+
                 OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
 
                 DistanceText = new List<Tuple<UIText, UIText, Link>>();
@@ -108,7 +108,7 @@ namespace SpaceMod.DataClasses
                     if (vehicle != null && vehicle.Exists())
                     {
                         PlayerLastVehicle = vehicle;
-                        
+
                         vehicle.Quaternion = Quaternion.Identity;
                         vehicle.Rotation = Vector3.Zero;
                         vehicle.Position = StaticSettings.VehicleSurfaceSpawn + new Vector3(0, 0, 0.5f);
@@ -223,21 +223,21 @@ namespace SpaceMod.DataClasses
 
                 OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
-                if (StaticSettings.ShowCustomUI)
+                DistanceText?.ForEach(text =>
                 {
-                    DistanceText?.ForEach(text =>
+                    var position = Database.GalaxyCenter + text.Item3.OriginOffset;
+                    if (StaticSettings.ShowCustomUI)
                     {
-                        var position = Database.GalaxyCenter + text.Item3.OriginOffset;
                         Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
-                            position, Database.PathToSprites, text.Item3.Name,
-                            text.Item1, text.Item2);
+                                position, Database.PathToSprites, text.Item3.Name,
+                                text.Item1, text.Item2);
+                    }
 
-                        float distance = Vector3.Distance(position, PlayerPosition);
-                        float targetDistance = text.Item3.ExitDistance;
-                        if (distance > targetDistance) return;
-                        Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
-                    });
-                }
+                    float distance = Vector3.Distance(position, PlayerPosition);
+                    float targetDistance = text.Item3.ExitDistance;
+                    if (distance > targetDistance) return;
+                    Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
+                });
 
                 TryToStartNextScene();
 
@@ -285,9 +285,10 @@ namespace SpaceMod.DataClasses
             float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
             float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
-            float controlNormal = Game.GetControlNormal(0, Control.VehicleFlyMouseControlOverride);
-            
-            if (controlNormal > 0)
+            float reverse = Game.GetControlNormal(2, Control.VehicleFlyThrottleDown);
+            float mouseControlNormal = Game.GetControlNormal(0, Control.VehicleFlyMouseControlOverride);
+
+            if (mouseControlNormal > 0)
             {
                 leftRight *= StaticSettings.MouseControlFlySensitivity;
                 upDown *= StaticSettings.MouseControlFlySensitivity;
@@ -311,8 +312,11 @@ namespace SpaceMod.DataClasses
             if (fly > 0)
             {
                 var vehicleVelocity = vehicle.ForwardVector.Normalized * StaticSettings.VehicleFlySpeed * _fly;
-                //Utilities.DrawLine(vehicle.Position, vehicle.Position + vehicleVelocity * 50, Color.Red);
                 vehicle.Velocity = vehicleVelocity;
+            }
+            else if (reverse > 0)
+            {
+                vehicle.Velocity = Vector3.Lerp(vehicle.Velocity, Vector3.Zero, Game.LastFrameTime);
             }
         }
 
@@ -418,7 +422,7 @@ namespace SpaceMod.DataClasses
                     PlayerLastVehicle.IsInvincible = false;
                     PlayerLastVehicle.EngineRunning = true;
                 }
-                
+
                 OrbitalSystem?.Abort();
 
                 while (IplCount > 0)
