@@ -10,6 +10,13 @@ using Font = GTA.Font;
 
 namespace SpaceMod.DataClasses
 {
+    public enum PlayerState
+    {
+        Floating,
+        Mining,
+        Repairing
+    }
+
     public class CustomScene
     {
         public delegate void OnExitEvent(CustomScene scene, string newSceneFile, Vector3 exitRotation);
@@ -25,6 +32,8 @@ namespace SpaceMod.DataClasses
         private float _upDownFly;
         private float _rollFly;
         private float _fly;
+
+        private PlayerState _playerState;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -220,6 +229,7 @@ namespace SpaceMod.DataClasses
             try
             {
                 VehicleFly();
+                PlayerFly();
 
                 OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
 
@@ -281,6 +291,35 @@ namespace SpaceMod.DataClasses
             if (!vehicle.Exists()) return;
             if (vehicle.Driver != PlayerPed) return;
 
+            FlyEntity(vehicle, StaticSettings.VehicleFlySpeed, StaticSettings.MouseControlFlySensitivity,
+                !vehicle.IsOnAllWheels);
+        }
+
+        private void PlayerFly()
+        {
+            if (PlayerPed.IsInVehicle()) return;
+            if (SceneData.SurfaceFlag) return;
+
+            switch (_playerState)
+            {
+                case PlayerState.Floating:
+                    if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
+                        PlayerPed.Weapons.Select(WeaponHash.Unarmed);
+
+                    if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                    {
+                        PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, (AnimationFlags)33, 0.0f);
+                    }
+                    else
+                    {
+                        FlyEntity(PlayerPed, 5, 1.5f);
+                    }
+                    break;
+            }
+        }
+
+        private void FlyEntity(Entity entity, float flySpeed, float sensitivity, bool canFly = true)
+        {
             float leftRight = Game.GetControlNormal(2, Control.MoveLeftRight);
             float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
@@ -290,33 +329,34 @@ namespace SpaceMod.DataClasses
 
             if (mouseControlNormal > 0)
             {
-                leftRight *= StaticSettings.MouseControlFlySensitivity;
-                upDown *= StaticSettings.MouseControlFlySensitivity;
-                roll *= StaticSettings.MouseControlFlySensitivity;
+                leftRight *= sensitivity;
+                upDown *= sensitivity;
+                roll *= sensitivity;
             }
 
-            if (!vehicle.IsOnAllWheels)
-            {
-                _leftRightFly = Mathf.Lerp(_leftRightFly, leftRight, Game.LastFrameTime * 2.5f);
-                _upDownFly = Mathf.Lerp(_upDownFly, upDown, Game.LastFrameTime * 5);
-                _rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
-                _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);
+            _leftRightFly = Mathf.Lerp(_leftRightFly, leftRight, Game.LastFrameTime * 2.5f);
+            _upDownFly = Mathf.Lerp(_upDownFly, upDown, Game.LastFrameTime * 5);
+            _rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
+            _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);
 
-                Quaternion leftRightRotation = Quaternion.FromToRotation(vehicle.ForwardVector, vehicle.RightVector * _leftRightFly);
-                Quaternion upDownRotation = Quaternion.FromToRotation(vehicle.ForwardVector, vehicle.UpVector * _upDownFly);
-                Quaternion rollRotation = Quaternion.FromToRotation(vehicle.RightVector, -vehicle.UpVector * _rollFly);
-                Quaternion rotation = leftRightRotation * upDownRotation * rollRotation * vehicle.Quaternion;
-                vehicle.Quaternion = Quaternion.Lerp(vehicle.Quaternion, rotation, Game.LastFrameTime * 1.3f);
+            if (canFly)
+            {
+                Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector,
+                    entity.RightVector * _leftRightFly);
+                Quaternion upDownRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.UpVector * _upDownFly);
+                Quaternion rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * _rollFly);
+                Quaternion rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion;
+                entity.Quaternion = Quaternion.Lerp(entity.Quaternion, rotation, Game.LastFrameTime * 1.3f);
             }
 
             if (fly > 0)
             {
-                var vehicleVelocity = vehicle.ForwardVector.Normalized * StaticSettings.VehicleFlySpeed * _fly;
-                vehicle.Velocity = vehicleVelocity;
+                var playerVelocity = entity.ForwardVector.Normalized * flySpeed * _fly;
+                entity.Velocity = playerVelocity;
             }
             else if (reverse > 0)
             {
-                vehicle.Velocity = Vector3.Lerp(vehicle.Velocity, Vector3.Zero, Game.LastFrameTime);
+                entity.Velocity = Vector3.Lerp(entity.Velocity, Vector3.Zero, Game.LastFrameTime);
             }
         }
 

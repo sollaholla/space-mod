@@ -92,12 +92,18 @@ namespace SpaceMod
             point = dir + pivot;
             return point;
         }
+
         public static void TerminateScriptByName(string name)
         {
             if (!Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name))
                 return;
 
             Function.Call(Hash.TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME, name);
+        }
+
+        public static bool IsPlayingAnim(this Entity entity, string animDict, string animFile)
+        {
+            return Function.Call<bool>(Hash.IS_ENTITY_PLAYING_ANIM, entity, animDict, animFile, 3);
         }
 
         public static float VDist(this Vector3 a, Vector3 b)
