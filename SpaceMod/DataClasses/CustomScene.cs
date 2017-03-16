@@ -314,6 +314,8 @@ namespace SpaceMod.DataClasses
                     {
                         FlyEntity(PlayerPed, 5, 1.5f);
                     }
+
+                    GameplayCamera.StopShaking();
                     break;
             }
         }
