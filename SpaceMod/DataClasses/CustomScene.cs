@@ -34,6 +34,7 @@ namespace SpaceMod.DataClasses
         private float _fly;
 
         private PlayerState _playerState;
+        private Vehicle _flyHelper;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -108,15 +109,16 @@ namespace SpaceMod.DataClasses
 
                 MovePlayerToGalaxy();
 
+                Vehicle vehicle = PlayerPed.CurrentVehicle;
+
                 if (SceneData.SurfaceFlag)
                 {
-                    Vehicle vehicle = PlayerPed.CurrentVehicle;
-
                     PlayerPed.Task.ClearAllImmediately();
 
                     if (vehicle != null && vehicle.Exists())
                     {
                         PlayerLastVehicle = vehicle;
+                        PlayerLastVehicle.IsPersistent = true;
 
                         vehicle.Quaternion = Quaternion.Identity;
                         vehicle.Rotation = Vector3.Zero;
@@ -126,6 +128,16 @@ namespace SpaceMod.DataClasses
                         vehicle.Velocity = Vector3.Zero;
                         vehicle.EngineRunning = false;
                     }
+                }
+                else
+                {
+                    if (vehicle != null && vehicle.Exists())
+                    {
+                        PlayerLastVehicle = vehicle;
+                        PlayerLastVehicle.IsPersistent = true;
+                    }
+
+                    PlayerPed.CanRagdoll = false;
                 }
 
                 SceneData.Ipls?.ForEach(iplData =>
@@ -297,26 +309,54 @@ namespace SpaceMod.DataClasses
 
         private void PlayerFly()
         {
-            if (PlayerPed.IsInVehicle()) return;
             if (SceneData.SurfaceFlag) return;
-
-            switch (_playerState)
+            if (PlayerPed.IsInVehicle())
             {
-                case PlayerState.Floating:
-                    if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
-                        PlayerPed.Weapons.Select(WeaponHash.Unarmed);
+                DeleteFlyHelper();
+            }
+            else
+            {
+                switch (_playerState)
+                {
+                    case PlayerState.Floating:
+                        {
+                            if (_flyHelper == null)
+                            {
+                                _flyHelper = World.CreateVehicle(VehicleHash.Faggio2, PlayerPosition, PlayerPed.Heading);
+                                _flyHelper.HasCollision = false;
+                                _flyHelper.IsVisible = false;
 
-                    if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
-                    {
-                        PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, (AnimationFlags)33, 0.0f);
-                    }
-                    else
-                    {
-                        FlyEntity(PlayerPed, 5, 1.5f);
-                    }
+                                PlayerPed.AttachTo(_flyHelper, 0);
 
-                    GameplayCamera.StopShaking();
-                    break;
+                                Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
+                                _flyHelper.Velocity = Vector3.Zero;
+                            }
+                            else
+                            {
+                                if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
+                                {
+                                    PlayerPed.Weapons.Select(WeaponHash.Unarmed);
+                                }
+                                if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                {
+                                    PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, (AnimationFlags)33,
+                                        0.0f);
+                                }
+                                else FlyEntity(_flyHelper, 5, 1.5f);
+                            }
+                        }
+                        break;
+                    case PlayerState.Mining:
+                        {
+                            DeleteFlyHelper();
+                        }
+                        break;
+                    case PlayerState.Repairing:
+                        {
+                            DeleteFlyHelper();
+                        }
+                        break;
+                }
             }
         }
 
@@ -449,6 +489,12 @@ namespace SpaceMod.DataClasses
             EnterWormHole(wormHole.Position, data);
         }
 
+        private void DeleteFlyHelper()
+        {
+            _flyHelper?.Delete();
+            _flyHelper = null;
+        }
+
         internal void Delete()
         {
             lock (_updateLock)
@@ -463,6 +509,7 @@ namespace SpaceMod.DataClasses
                     PlayerLastVehicle.Velocity = Vector3.Zero;
                     PlayerLastVehicle.IsInvincible = false;
                     PlayerLastVehicle.EngineRunning = true;
+                    PlayerLastVehicle.IsPersistent = false;
                 }
 
                 OrbitalSystem?.Abort();
@@ -484,6 +531,8 @@ namespace SpaceMod.DataClasses
                 SceneData.CurrentIplData = null;
 
                 GameplayCamera.ShakeAmplitude = 0;
+
+                _flyHelper?.Delete();
             }
         }
 

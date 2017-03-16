@@ -146,7 +146,7 @@ namespace SpaceMod
                             break;
                     }
 
-                    World.Weather = Weather.ExtraSunny;
+                    World.Weather = Weather.Clear;
 
                     if (PlayerPed.CurrentVehicle != null)
                     {
