@@ -210,7 +210,8 @@ namespace SpaceMod
             _menuConnector = new MenuConnector();
 
             _menu = new SolomanMenu.Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
-                Color.Purple) {MenuItemHeight = 26};
+                Color.Purple);
+            _menu.MenuItemHeight = 26;
 
             #region scenes
 
