@@ -34,7 +34,7 @@ namespace SpaceMod.DataClasses
         private float _fly;
 
         private PlayerState _playerState;
-        private Vehicle _flyHelper;
+        private Entity _flyHelper;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -322,13 +322,13 @@ namespace SpaceMod.DataClasses
                         {
                             if (_flyHelper == null)
                             {
-                                _flyHelper = World.CreateVehicle(VehicleHash.Faggio2, PlayerPosition, PlayerPed.Heading);
+                                _flyHelper = World.CreateProp("prop_cs_dildo_01", PlayerPosition, PlayerPed.Rotation, true, false);
                                 _flyHelper.HasCollision = false;
                                 _flyHelper.IsVisible = false;
+                                _flyHelper.HasGravity = false;
 
                                 PlayerPed.AttachTo(_flyHelper, 0);
-
-                                Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
+                                
                                 _flyHelper.Velocity = Vector3.Zero;
                             }
                             else
@@ -491,6 +491,8 @@ namespace SpaceMod.DataClasses
 
         private void DeleteFlyHelper()
         {
+            if (PlayerPed.IsAttachedTo(_flyHelper))
+                PlayerPed.Detach();
             _flyHelper?.Delete();
             _flyHelper = null;
         }
