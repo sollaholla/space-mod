@@ -39,6 +39,8 @@ namespace SpaceMod.DataClasses
         public List<ScenarioData> CustomScenarios { get; set; }
 
         [XmlIgnore] public IplData CurrentIplData { get; set; }
+
+        [XmlIgnore] public string ConfirmedName { get; set; }
     }
 
     public class Link
