@@ -438,6 +438,17 @@ namespace SpaceMod.DataClasses
             }
             else
             {
+                if (Game.IsControlJustPressed(2, Control.VehicleAccelerate) ||
+                    Game.IsControlJustPressed(2, Control.MoveLeft) ||
+                    Game.IsControlJustPressed(2, Control.MoveRight) ||
+                    Game.IsControlJustPressed(2, Control.VehicleBrake))
+                {
+                    _enteringVehicle = false;
+                    return;
+                }
+
+                Vector3 dir = doorPos - _flyHelper.Position;
+                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
                 if (DateTime.UtcNow > _vehicleEnterTimeout)
                 {
                     _enteringVehicle = false;
