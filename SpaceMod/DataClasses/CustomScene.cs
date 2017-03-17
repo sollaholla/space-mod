@@ -447,13 +447,12 @@ namespace SpaceMod.DataClasses
                     return;
                 }
                 
-                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
                 if (DateTime.UtcNow > _vehicleEnterTimeout)
                 {
                     _enteringVehicle = false;
                     return;
                 }
-
+                
                 Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir.Normalized) * _flyHelper.Quaternion;
                 _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
                 _flyHelper.Velocity = dir.Normalized * 1.5f;
