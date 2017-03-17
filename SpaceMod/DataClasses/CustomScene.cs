@@ -353,6 +353,9 @@ namespace SpaceMod.DataClasses
                                 }
                                 else FlyEntity(_flyHelper, 1.5f, 1.5f);
                             }
+
+                            if (PlayerLastVehicle != null)
+                                TryReenterVehicle(PlayerPed, PlayerLastVehicle);
                         }
                         break;
                     case PlayerState.Mining:
@@ -366,6 +369,24 @@ namespace SpaceMod.DataClasses
                         }
                         break;
                 }
+            }
+        }
+
+        private void TryReenterVehicle(Ped ped, Vehicle vehicle)
+        {
+            if (ped.IsInVehicle(vehicle)) return;
+            
+            Vector3 doorPos = vehicle.GetBoneCoord("door_dside_f");
+            float dist = ped.Position.DistanceTo(doorPos);
+
+            if(dist < 3f)
+            {
+                Game.DisableControlThisFrame(2, Control.Enter);
+
+                Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter vehicle.");
+
+                if(Game.IsDisabledControlJustPressed(2, Control.Enter))
+                    ped.Task.WarpIntoVehicle(vehicle, VehicleSeat.Driver);
             }
         }
 
