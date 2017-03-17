@@ -54,6 +54,8 @@ namespace SpaceMod.DataClasses
 
         public OrbitalSystem OrbitalSystem { get; private set; }
 
+        public string SceneFile { get; internal set; }
+
         internal List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
 
         internal IplData LastIpl { get; private set; }
@@ -313,6 +315,7 @@ namespace SpaceMod.DataClasses
             if (PlayerPed.IsInVehicle())
             {
                 DeleteFlyHelper();
+                PlayerPed.Task.ClearAnimation("swimming@base", "idle");
             }
             else
             {
@@ -322,10 +325,14 @@ namespace SpaceMod.DataClasses
                         {
                             if (_flyHelper == null)
                             {
-                                _flyHelper = World.CreateProp("prop_cs_dildo_01", PlayerPosition, PlayerPed.Rotation, true, false);
+                                _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition, PlayerPed.Heading);
+
+                                _flyHelper.FreezePosition = false;
                                 _flyHelper.HasCollision = false;
                                 _flyHelper.IsVisible = false;
                                 _flyHelper.HasGravity = false;
+
+                                Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
 
                                 PlayerPed.AttachTo(_flyHelper, 0);
                                 
@@ -342,7 +349,7 @@ namespace SpaceMod.DataClasses
                                     PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, (AnimationFlags)33,
                                         0.0f);
                                 }
-                                else FlyEntity(_flyHelper, 5, 1.5f);
+                                else FlyEntity(_flyHelper, 1.5f, 1.5f);
                             }
                         }
                         break;
@@ -491,10 +498,12 @@ namespace SpaceMod.DataClasses
 
         private void DeleteFlyHelper()
         {
-            if (PlayerPed.IsAttachedTo(_flyHelper))
-                PlayerPed.Detach();
-            _flyHelper?.Delete();
-            _flyHelper = null;
+            if (_flyHelper != null)
+            {
+                if (PlayerPed.IsAttachedTo(_flyHelper)) PlayerPed.Detach();
+                _flyHelper.Delete();
+                _flyHelper = null;
+            }
         }
 
         internal void Delete()

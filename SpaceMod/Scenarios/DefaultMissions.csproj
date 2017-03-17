@@ -37,8 +37,9 @@
     <Reference Include="ScriptHookVDotNet">
       <HintPath>..\..\..\..\Rockstar Games\GTA V\My References\ScriptHookVDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="SpaceMod">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod.dll</HintPath>
+    <Reference Include="SpaceMod, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\bin\Debug\SpaceMod.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -50,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BigMessage.cs" />
     <Compile Include="KaroonMission01.cs" />
     <Compile Include="MarsMission01.cs" />
     <Compile Include="MoonMission01.cs" />
@@ -57,7 +59,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"
-COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"
+COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default"</PostBuildEvent>
   </PropertyGroup>
 </Project>

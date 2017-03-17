@@ -120,6 +120,7 @@ namespace SpaceMod
                 if (PlayerPed.IsDead && _currentScene != null)
                 {
                     CurrentSceneOnExited(null, "cmd_earth", Vector3.Zero);
+
                     return;
                 }
 
@@ -230,7 +231,7 @@ namespace SpaceMod
                 }
                 var fileName = Path.GetFileName(file);
                 var menuItem = new SolomanMenu.MenuItem(fileName);
-                menuItem.ItemActivated += (sender, item) => SetCurrentScene(customXmlScene);
+                menuItem.ItemActivated += (sender, item) => SetCurrentScene(customXmlScene, fileName);
                 scenesMenu.Add(menuItem);
             }
 
@@ -245,7 +246,8 @@ namespace SpaceMod
             var userInterfaceMenu = settingsMenu.AddParentMenu("Interface", _menu);
 
             var showCustomUICheckbox = new CheckboxMenuItem("Show Custom UI", StaticSettings.ShowCustomUI);
-            showCustomUICheckbox.Checked += (sender, check) => {
+            showCustomUICheckbox.Checked += (sender, check) =>
+            {
                 StaticSettings.ShowCustomUI = check;
             };
 
@@ -260,7 +262,8 @@ namespace SpaceMod
 
             var vehicleSpeedList = new ListMenuItem("Vehicle Speed",
                 Enumerable.Range(1, 10).Select(i => (dynamic)(i * 5)).ToList());
-            vehicleSpeedList.IndexChanged += (sender, index, item) => {
+            vehicleSpeedList.IndexChanged += (sender, index, item) =>
+            {
                 StaticSettings.VehicleFlySpeed = item;
             };
 
@@ -268,7 +271,8 @@ namespace SpaceMod
             var vehicleSensitivityList = new ListMenuItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(),
                 flySensitivity);
-            vehicleSensitivityList.IndexChanged += (sender, index, item) => {
+            vehicleSensitivityList.IndexChanged += (sender, index, item) =>
+            {
                 StaticSettings.MouseControlFlySensitivity = item;
             };
 
@@ -282,7 +286,8 @@ namespace SpaceMod
             var sceneSettingsMenu = settingsMenu.AddParentMenu("Scenes", _menu);
 
             var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", StaticSettings.UseScenarios);
-            useScenariosCheckbox.Checked += (sender, check) => {
+            useScenariosCheckbox.Checked += (sender, check) =>
+            {
                 StaticSettings.UseScenarios = check;
             };
 
@@ -291,7 +296,8 @@ namespace SpaceMod
             #endregion
 
             var saveSettingsItem = new SolomanMenu.MenuItem("Save Settings");
-            saveSettingsItem.ItemActivated += (sender, item) => {
+            saveSettingsItem.ItemActivated += (sender, item) =>
+            {
                 SaveSettings();
                 UI.Notify("Settings ~b~saved~s~.", true);
             };
@@ -303,7 +309,8 @@ namespace SpaceMod
             #region debug
 
             var debugButton = new SolomanMenu.MenuItem("Debug Player");
-            debugButton.ItemActivated += (sender, item) => {
+            debugButton.ItemActivated += (sender, item) =>
+            {
                 DebugLogger.LogEntityData(PlayerPed);
             };
 
@@ -329,16 +336,16 @@ namespace SpaceMod
             Game.MaxWantedLevel = 0;
         }
 
-        private void SetCurrentScene(CustomXmlScene customXmlScene)
+        private void SetCurrentScene(CustomXmlScene customXmlScene, string fileName = default(string))
         {
             Game.FadeScreenOut(1000);
             Wait(1000);
-            CreateSceneFromCustomXmlScene(customXmlScene);
+            CreateSceneFromCustomXmlScene(customXmlScene, fileName);
             Wait(1000);
             Game.FadeScreenIn(1000);
         }
 
-        private void CreateSceneFromCustomXmlScene(CustomXmlScene customXmlScene)
+        private void CreateSceneFromCustomXmlScene(CustomXmlScene customXmlScene, string fileName = default(string))
         {
             lock (_tickLock)
             {
@@ -352,6 +359,7 @@ namespace SpaceMod
                 _currentScene = new CustomScene(customXmlScene);
                 _currentScene.Start();
                 _currentScene.Exited += CurrentSceneOnExited;
+                _currentScene.SceneFile = fileName;
 
                 if (PlayerPed.IsInVehicle())
                 {
@@ -402,8 +410,11 @@ namespace SpaceMod
         {
             lock (_tickLock)
             {
-                Game.FadeScreenOut(1000);
-                Wait(1000);
+                if (!PlayerPed.IsDead)
+                {
+                    Game.FadeScreenOut(1000);
+                    Wait(1000);
+                }
 
                 _currentScene?.Delete();
                 _currentScene = null;
@@ -423,7 +434,9 @@ namespace SpaceMod
                         throw new XmlException(newSceneFile);
                     }
 
-                    CreateSceneFromCustomXmlScene(newScene);
+                    newScene.LastSceneFile = scene.SceneFile;
+
+                    CreateSceneFromCustomXmlScene(newScene, newSceneFile);
 
                     if (PlayerPed.IsInVehicle())
                     {
@@ -436,25 +449,31 @@ namespace SpaceMod
                 }
                 else
                 {
-                    if (PlayerPed.IsInVehicle())
+                    if (!PlayerPed.IsDead)
                     {
-                        var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
-                        playerPedCurrentVehicle.Position = Database.EarthAtmosphereEnterPosition;
-                        playerPedCurrentVehicle.Rotation = Vector3.Zero;
-                        playerPedCurrentVehicle.Heading = 243;
-                        playerPedCurrentVehicle.HasGravity = true;
-                    }
-                    else
-                    {
-                        PlayerPosition = Database.TrevorAirport;
+                        if (PlayerPed.IsInVehicle())
+                        {
+                            var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
+                            playerPedCurrentVehicle.Position = Database.EarthAtmosphereEnterPosition;
+                            playerPedCurrentVehicle.Rotation = Vector3.Zero;
+                            playerPedCurrentVehicle.Heading = 243;
+                            playerPedCurrentVehicle.HasGravity = true;
+                        }
+                        else
+                        {
+                            PlayerPosition = Database.TrevorAirport;
+                        }
                     }
 
                     PlayerPed.HasGravity = true;
                     Utilities.SetGravityLevel(0);
                 }
 
-                Wait(1000);
-                Game.FadeScreenIn(1000);
+                if (!PlayerPed.IsDead)
+                {
+                    Wait(1000);
+                    Game.FadeScreenIn(1000);
+                }
             }
         }
 

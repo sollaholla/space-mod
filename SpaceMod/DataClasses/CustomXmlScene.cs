@@ -40,7 +40,7 @@ namespace SpaceMod.DataClasses
 
         [XmlIgnore] public IplData CurrentIplData { get; set; }
 
-        [XmlIgnore] public string ConfirmedName { get; set; }
+        [XmlIgnore] public string LastSceneFile { get; set; }
     }
 
     public class Link

@@ -98,13 +98,14 @@ namespace DefaultMissions
 
             for (var i = 0; i < 1; i++)
             {
-                Vector3 position = origin.Around(150);
+                Vector3 position = origin.Around(75);
 
+                float heading = (position - PlayerPosition).ToHeading();
                 Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 150),
-                    (position - PlayerPosition).ToHeading());
+                    heading);
 
                 Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
-                Function.Call(Hash.TASK_PLANE_MISSION, ped, spaceCraft, 0, PlayerPed, 0, 0, 0, 6, 25, 0, spaceCraft.Heading, 3000, 2515);
+                Function.Call(Hash.TASK_PLANE_MISSION, ped, spaceCraft, 0, PlayerPed, 0, 0, 0, 6, 25, 0, heading, 3000, 2515);
 
                 spaceCraft.MaxHealth = 500;
                 spaceCraft.Health = spaceCraft.MaxHealth;
