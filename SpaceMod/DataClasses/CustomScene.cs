@@ -334,6 +334,8 @@ namespace SpaceMod.DataClasses
 
                                 Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
 
+                                PlayerPed.Task.ClearAllImmediately();
+
                                 PlayerPed.AttachTo(_flyHelper, 0);
                                 
                                 _flyHelper.Velocity = Vector3.Zero;
@@ -346,7 +348,7 @@ namespace SpaceMod.DataClasses
                                 }
                                 if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
                                 {
-                                    PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, (AnimationFlags)33,
+                                    PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, AnimationFlags.Loop, 
                                         0.0f);
                                 }
                                 else FlyEntity(_flyHelper, 1.5f, 1.5f);
