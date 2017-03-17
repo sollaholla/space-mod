@@ -36,7 +36,9 @@ namespace SpaceMod.DataClasses
         private PlayerState _playerState = PlayerState.Floating;
         private Entity _flyHelper;
         private bool _enteringVehicle;
+        private bool _repairingVehicle;
         private DateTime _vehicleEnterTimeout;
+        private DateTime _repairTimeout;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -386,6 +388,11 @@ namespace SpaceMod.DataClasses
                                 }
                             }
 
+                            if(PlayerLastVehicle.IsDamaged)
+                            {
+                                RepairVehicle(PlayerPed, PlayerLastVehicle);
+                            }
+
                             if (PlayerLastVehicle != null)
                             {
                                 PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
@@ -405,6 +412,41 @@ namespace SpaceMod.DataClasses
                         }
                         break;
                 }
+            }
+        }
+
+        private void RepairVehicle(Ped ped, Vehicle vehicle)
+        {
+            Vector3 repairPos = vehicle.GetOffsetInWorldCoords(new Vector3(0, -1, 3));
+            bool dot = Vector3.Dot((_flyHelper.Position - repairPos).Normalized, vehicle.UpVector) > 0.2f;
+            float dist = ped.Position.DistanceTo(repairPos);
+
+            if (!_repairingVehicle)
+            {
+                if (dot && dist < 5f)
+                {
+                    Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
+                    Game.DisableControlThisFrame(2, Control.Context);
+
+                    if (Game.IsDisabledControlJustPressed(2, Control.Context))
+                    {
+                        _repairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
+                        _repairingVehicle = true;
+                    }
+                }
+            }
+            else
+            {
+                if (DateTime.UtcNow > _repairTimeout)
+                {
+                    _repairingVehicle = false;
+                    return;
+                }
+
+                vehicle.Repair();
+                Utilities.DisplayHelpTextThisFrame("Vehicle fixed!");
+                ped.Task.ClearAllImmediately();
+                _repairingVehicle = false;
             }
         }
 
