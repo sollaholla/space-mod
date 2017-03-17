@@ -351,6 +351,18 @@ namespace SpaceMod.DataClasses
                                 {
                                     PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, AnimationFlags.Loop, 
                                         0.0f);
+
+                                    DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 2);
+
+                                    while (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                    {
+                                        Script.Yield();
+
+                                        if (DateTime.UtcNow > timout)
+                                            break;
+                                    }
+
+                                    PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
                                 }
                                 else FlyEntity(_flyHelper, 1.5f, 1.5f);
                             }

@@ -166,9 +166,14 @@ namespace SpaceMod
             Function.Call(Hash.TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME, name);
         }
 
-        public static bool IsPlayingAnim(this Entity entity, string animDict, string animFile)
+        public static bool IsPlayingAnim(this Entity entity, string animDict, string animName)
         {
-            return Function.Call<bool>(Hash.IS_ENTITY_PLAYING_ANIM, entity, animDict, animFile, 3);
+            return Function.Call<bool>(Hash.IS_ENTITY_PLAYING_ANIM, entity, animDict, animName, 3);
+        }
+
+        public static void SetAnimSpeed(this Entity entity, string animDict, string animName, float multiplier)
+        {
+            Function.Call(Hash.SET_ENTITY_ANIM_SPEED, entity, animDict, animName, multiplier);
         }
 
         public static float VDist(this Vector3 a, Vector3 b)
