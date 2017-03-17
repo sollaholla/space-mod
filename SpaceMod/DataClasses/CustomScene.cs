@@ -386,7 +386,7 @@ namespace SpaceMod.DataClasses
 
                 Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter vehicle.");
 
-                if (Game.IsDisabledControlJustPressed(2, Control.Enter))
+                if (Game.IsDisabledControlPressed(2, Control.Enter))
                 {
                     Vector3 dir = doorPos - _flyHelper.Position;
                     Quaternion rotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir) * ped.Quaternion;
