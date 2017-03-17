@@ -446,8 +446,7 @@ namespace SpaceMod.DataClasses
                     _enteringVehicle = false;
                     return;
                 }
-
-                Vector3 dir = doorPos - _flyHelper.Position;
+                
                 _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
                 if (DateTime.UtcNow > _vehicleEnterTimeout)
                 {
