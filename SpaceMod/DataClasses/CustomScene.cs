@@ -36,6 +36,7 @@ namespace SpaceMod.DataClasses
         private PlayerState _playerState;
         private Entity _flyHelper;
         private bool _enteringVehicle;
+        private DateTime _vehicleEnterTimeout;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -114,15 +115,16 @@ namespace SpaceMod.DataClasses
 
                 Vehicle vehicle = PlayerPed.CurrentVehicle;
 
-                if (SceneData.SurfaceFlag)
+                if (vehicle != null && vehicle.Exists())
                 {
-                    PlayerPed.Task.ClearAllImmediately();
+                    PlayerLastVehicle = vehicle;
+                    PlayerLastVehicle.IsPersistent = true;
+                    PlayerLastVehicle.IsInvincible = true;
+                    PlayerLastVehicle.EngineCanDegrade = false;
 
-                    if (vehicle != null && vehicle.Exists())
+                    if (SceneData.SurfaceFlag)
                     {
-                        PlayerLastVehicle = vehicle;
-                        PlayerLastVehicle.IsPersistent = true;
-
+                        PlayerPed.Task.ClearAllImmediately();
                         vehicle.Quaternion = Quaternion.Identity;
                         vehicle.Rotation = Vector3.Zero;
                         vehicle.Position = StaticSettings.VehicleSurfaceSpawn + new Vector3(0, 0, 0.5f);
@@ -131,16 +133,10 @@ namespace SpaceMod.DataClasses
                         vehicle.Velocity = Vector3.Zero;
                         vehicle.EngineRunning = false;
                     }
-                }
-                else
-                {
-                    if (vehicle != null && vehicle.Exists())
+                    else
                     {
-                        PlayerLastVehicle = vehicle;
-                        PlayerLastVehicle.IsPersistent = true;
+                        PlayerPed.CanRagdoll = false;
                     }
-
-                    PlayerPed.CanRagdoll = false;
                 }
 
                 SceneData.Ipls?.ForEach(iplData =>
@@ -315,11 +311,27 @@ namespace SpaceMod.DataClasses
             if (SceneData.SurfaceFlag) return;
             if (PlayerPed.IsInVehicle())
             {
-                DeleteFlyHelper();
+                if (PlayerLastVehicle.Velocity.Length() > 0.15f)
+                {
+                    PlayerLastVehicle.LockStatus = VehicleLockStatus.StickPlayerInside;
+
+                    if (Game.IsControlJustPressed(2, Control.Enter))
+                    {
+                        Utilities.DisplayHelpTextThisFrame("You must be at a full stop before exiting.");
+                    }
+                }
+                else
+                {
+                    if (PlayerLastVehicle.LockStatus == VehicleLockStatus.StickPlayerInside)
+                    {
+                        PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
+                    }
+                }
+
                 PlayerPed.Task.ClearAnimation("swimming@base", "idle");
                 _enteringVehicle = false;
             }
-            else if (!PlayerPed.IsRagdoll && !PlayerPed.IsGettingUp && !PlayerPed.IsJumpingOutOfVehicle)
+            else if (!PlayerPed.IsRagdoll && !PlayerPed.IsJumpingOutOfVehicle)
             {
                 switch (_playerState)
                 {
@@ -376,6 +388,8 @@ namespace SpaceMod.DataClasses
 
                             if (PlayerLastVehicle != null)
                             {
+                                PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
+                                PlayerLastVehicle.Velocity = Vector3.Zero;
                                 TryReenterVehicle(PlayerPed, PlayerLastVehicle);
                             }
                         }
@@ -397,32 +411,46 @@ namespace SpaceMod.DataClasses
         private void TryReenterVehicle(Ped ped, Vehicle vehicle)
         {
             if (ped.IsInVehicle(vehicle)) return;
-            
+
             Vector3 doorPos = vehicle.HasBone("door_dside_f") ? vehicle.GetBoneCoord("door_dside_f") : vehicle.Position;
+
             float dist = ped.Position.DistanceTo(doorPos);
+
+            Vector3 dir = doorPos - _flyHelper.Position;
 
             if (!_enteringVehicle)
             {
-                if (dist < 10f)
+                bool dot = !vehicle.HasBone("door_dside_f") ||
+                           // This tells us if we're not "behind" the door so we're not trying to go through the vehicle 
+                           // to enter.
+                           Vector3.Dot((_flyHelper.Position - doorPos).Normalized, -vehicle.RightVector) > 0.2f;
+
+                if (dist < 5f && dot)
                 {
                     Game.DisableControlThisFrame(2, Control.Enter);
-
-                    Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter vehicle.");
 
                     if (Game.IsDisabledControlJustPressed(2, Control.Enter))
                     {
                         _enteringVehicle = true;
+                        _vehicleEnterTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 2750);
                     }
                 }
             }
             else
             {
-                Vector3 dir = doorPos - _flyHelper.Position;
-                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
+                if (DateTime.UtcNow > _vehicleEnterTimeout)
+                {
+                    _enteringVehicle = false;
+                    return;
+                }
+
+                Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir.Normalized) * _flyHelper.Quaternion;
+                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
                 _flyHelper.Velocity = dir.Normalized * 1.5f;
 
                 if (PlayerPed.Position.DistanceTo(doorPos) < 1.5f || !vehicle.HasBone("door_dside_f"))
                 {
+                    DeleteFlyHelper();
                     PlayerPed.Detach();
                     PlayerPed.Task.ClearAllImmediately();
                     PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
@@ -578,12 +606,13 @@ namespace SpaceMod.DataClasses
                 if (PlayerLastVehicle != null)
                 {
                     PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
+                    PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
 
+                    PlayerLastVehicle.IsInvincible = false;
                     float heading = PlayerLastVehicle.Heading;
                     PlayerLastVehicle.Quaternion = Quaternion.Identity;
                     PlayerLastVehicle.Heading = heading;
                     PlayerLastVehicle.Velocity = Vector3.Zero;
-                    PlayerLastVehicle.Health = PlayerLastVehicle.MaxHealth;
                     PlayerLastVehicle.IsInvincible = false;
                     PlayerLastVehicle.EngineRunning = true;
                     PlayerLastVehicle.IsPersistent = false;
@@ -652,10 +681,6 @@ namespace SpaceMod.DataClasses
 
                     if (distanceToWormHole > gravitationalPullDistance)
                     {
-                        Vector3 velocity = PlayerPed.IsInVehicle()
-                            ? PlayerPed.CurrentVehicle.Velocity
-                            : PlayerPed.Velocity;
-
                         Vector3 targetDir = wormHolePosition - PlayerPosition;
                         Vector3 targetVelocity = targetDir * 199.861639f; // Speed of light divided by 1,500,000
 

@@ -64,14 +64,14 @@ namespace SpaceMod
             Vector3 right = Vector3.Normalize(Vector3.Cross(up, forward));
             up = Vector3.Cross(forward, right);
             var m00 = right.X;
-            var m01 = right.Z;
-            var m02 = right.Y;
+            var m01 = right.Y;
+            var m02 = right.Z;
             var m10 = up.X;
-            var m11 = up.Z;
-            var m12 = up.Y;
+            var m11 = up.Y;
+            var m12 = up.Z;
             var m20 = forward.X;
-            var m21 = forward.Z;
-            var m22 = forward.Y;
+            var m21 = forward.Y;
+            var m22 = forward.Z;
 
 
             float num8 = (m00 + m11) + m22;

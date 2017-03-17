@@ -24,8 +24,8 @@ namespace DefaultMissions
             if (_notifyTimeTimer < NotifyTime) return;
             if (string.IsNullOrEmpty(CurrentScene.SceneFile)) return;
             if (string.IsNullOrEmpty(CurrentScene.SceneData.LastSceneFile)) return;
-            if ((CurrentScene.SceneFile == MarsSceneName && CurrentScene.SceneData.LastSceneFile == EarthSceneName) ||
-                (CurrentScene.SceneFile == EarthSceneName && CurrentScene.SceneData.LastSceneFile == MarsSceneName)) 
+            if (CurrentScene.SceneFile == MarsSceneName && CurrentScene.SceneData.LastSceneFile == EarthSceneName ||
+                CurrentScene.SceneFile == EarthSceneName && CurrentScene.SceneData.LastSceneFile == MarsSceneName) 
             {
                 BigMessageThread.MessageInstance.ShowMissionPassedMessage("~w~weeks later...");
             }
