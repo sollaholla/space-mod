@@ -380,14 +380,23 @@ namespace SpaceMod.DataClasses
             Vector3 doorPos = vehicle.GetBoneCoord("door_dside_f");
             float dist = ped.Position.DistanceTo(doorPos);
 
-            if(dist < 3f)
+            if (dist < 5f)
             {
                 Game.DisableControlThisFrame(2, Control.Enter);
 
                 Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter vehicle.");
 
-                if(Game.IsDisabledControlJustPressed(2, Control.Enter))
-                    ped.Task.WarpIntoVehicle(vehicle, VehicleSeat.Driver);
+                if (Game.IsDisabledControlJustPressed(2, Control.Enter))
+                {
+                    Vector3 dir = doorPos - _flyHelper.Position;
+                    Quaternion rotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir) * ped.Quaternion;
+                    _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
+
+                    UI.Notify("New Rot: " + dir.ToString());
+                    UI.Notify("Old Rot: " + ped.Rotation.ToString());
+
+                    //ped.Task.WarpIntoVehicle(vehicle, VehicleSeat.Driver);
+                }
             }
         }
 
