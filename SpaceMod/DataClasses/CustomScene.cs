@@ -33,7 +33,7 @@ namespace SpaceMod.DataClasses
         private float _rollFly;
         private float _fly;
 
-        private PlayerState _playerState;
+        private PlayerState _playerState = PlayerState.Floating;
         private Entity _flyHelper;
         private bool _enteringVehicle;
         private DateTime _vehicleEnterTimeout;
@@ -382,7 +382,7 @@ namespace SpaceMod.DataClasses
 
                                         PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
                                     }
-                                    else FlyEntity(_flyHelper, 1.5f, 1.5f);
+                                    else FlyEntity(_flyHelper, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, _flyHelper));
                                 }
                             }
 
@@ -446,13 +446,13 @@ namespace SpaceMod.DataClasses
                     _enteringVehicle = false;
                     return;
                 }
-                
+
                 if (DateTime.UtcNow > _vehicleEnterTimeout)
                 {
                     _enteringVehicle = false;
                     return;
                 }
-                
+
                 Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir.Normalized) * _flyHelper.Quaternion;
                 _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
                 _flyHelper.Velocity = dir.Normalized * 1.5f;
@@ -488,24 +488,24 @@ namespace SpaceMod.DataClasses
             _rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
             _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);
 
+            Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector,
+                entity.RightVector * _leftRightFly);
+            Quaternion upDownRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.UpVector * _upDownFly);
+            Quaternion rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * _rollFly);
+            Quaternion rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion;
+            entity.Quaternion = Quaternion.Lerp(entity.Quaternion, rotation, Game.LastFrameTime * 1.3f);
+
             if (canFly)
             {
-                Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector,
-                    entity.RightVector * _leftRightFly);
-                Quaternion upDownRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.UpVector * _upDownFly);
-                Quaternion rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * _rollFly);
-                Quaternion rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion;
-                entity.Quaternion = Quaternion.Lerp(entity.Quaternion, rotation, Game.LastFrameTime * 1.3f);
-            }
-
-            if (fly > 0)
-            {
-                var playerVelocity = entity.ForwardVector.Normalized * flySpeed * _fly;
-                entity.Velocity = playerVelocity;
-            }
-            else if (reverse > 0)
-            {
-                entity.Velocity = Vector3.Lerp(entity.Velocity, Vector3.Zero, Game.LastFrameTime);
+                if (fly > 0)
+                {
+                    var targetVelocity = entity.ForwardVector.Normalized * flySpeed * _fly;
+                    entity.Velocity = Vector3.Lerp(entity.Velocity, targetVelocity, Game.LastFrameTime * 5);
+                }
+                else if (reverse > 0)
+                {
+                    entity.Velocity = Vector3.Lerp(entity.Velocity, Vector3.Zero, Game.LastFrameTime);
+                }
             }
         }
 
@@ -604,6 +604,54 @@ namespace SpaceMod.DataClasses
                 _flyHelper.Delete();
                 _flyHelper = null;
             }
+        }
+
+        private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f, bool debug = false)
+        {
+            Vector3 min, max;
+
+            entity.Model.GetDimensions(out min, out max);
+
+            Vector3 minOffsetV2 = new Vector3(min.X, min.Y, 0);
+            Vector3 maxOffsetV2 = new Vector3(max.X, max.Y, 0);
+
+            Vector3 minVector2 = PlayerPed.Quaternion * minOffsetV2;
+            Vector3 maxVector2 = PlayerPed.Quaternion * maxOffsetV2;
+
+            var radius = (minVector2 - maxVector2).Length() / 2.5f;
+
+            Vector3 offset = new Vector3(0, 0, radius);
+            offset = PlayerPed.Quaternion * offset;
+
+            min = entity.GetOffsetInWorldCoords(min);
+            max = entity.GetOffsetInWorldCoords(max);
+
+            Vector3 bottom = min - minVector2 + offset;
+            Vector3 middle = (min + max) / 2;
+            Vector3 top = max - maxVector2 - offset;
+
+            if (debug)
+            {
+                World.DrawMarker((MarkerType) 28, bottom, Vector3.RelativeFront, Vector3.Zero,
+                    new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Blue));
+                World.DrawMarker((MarkerType) 28, middle, Vector3.RelativeFront, Vector3.Zero,
+                    new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Purple));
+                World.DrawMarker((MarkerType) 28, top, Vector3.RelativeFront, Vector3.Zero,
+                    new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Orange));
+            }
+
+            RaycastResult ray = World.RaycastCapsule(bottom, (top - bottom).Normalized, (top - bottom).Length(), radius,
+                IntersectOptions.Everything, PlayerPed);
+
+            if (!ray.DitHitAnything) return false;
+            Vector3 normal = ray.SurfaceNormal;
+
+            if (velocityUser != null)
+            {
+                velocityUser.Velocity = (normal * velocityUser.Velocity.Length() + (entity.Position - ray.HitCoords)) * bounceDamp;
+            }
+
+            return true;
         }
 
         internal void Delete()

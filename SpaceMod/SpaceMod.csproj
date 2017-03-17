@@ -66,6 +66,7 @@
     <Compile Include="DataClasses\Scene.cs" />
     <Compile Include="DataClasses\CustomXmlScene.cs" />
     <Compile Include="DataClasses\LockedOrbital.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="ModController.cs" />
     <Compile Include="MyXmlSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
