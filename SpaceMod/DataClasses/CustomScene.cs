@@ -35,6 +35,7 @@ namespace SpaceMod.DataClasses
 
         private PlayerState _playerState;
         private Entity _flyHelper;
+        private bool _enteringVehicle;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -316,6 +317,7 @@ namespace SpaceMod.DataClasses
             {
                 DeleteFlyHelper();
                 PlayerPed.Task.ClearAnimation("swimming@base", "idle");
+                _enteringVehicle = false;
             }
             else if (!PlayerPed.IsRagdoll && !PlayerPed.IsGettingUp && !PlayerPed.IsJumpingOutOfVehicle)
             {
@@ -323,52 +325,59 @@ namespace SpaceMod.DataClasses
                 {
                     case PlayerState.Floating:
                         {
-                            if (_flyHelper == null || !_flyHelper.Exists())
+                            if (!_enteringVehicle)
                             {
-                                _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition, PlayerPed.Heading);
-
-                                _flyHelper.HasCollision = false;
-
-                                _flyHelper.IsVisible = false;
-
-                                _flyHelper.HasGravity = false;
-
-                                Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
-
-                                PlayerPed.Task.ClearAllImmediately();
-
-                                PlayerPed.AttachTo(_flyHelper, 0);
-                                
-                                _flyHelper.Velocity = Vector3.Zero;
-                            }
-                            else
-                            {
-                                if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
+                                if (_flyHelper == null || !_flyHelper.Exists())
                                 {
-                                    PlayerPed.Weapons.Select(WeaponHash.Unarmed);
+                                    _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition,
+                                        PlayerPed.Heading);
+
+                                    _flyHelper.HasCollision = false;
+
+                                    _flyHelper.IsVisible = false;
+
+                                    _flyHelper.HasGravity = false;
+
+                                    Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
+
+                                    PlayerPed.Task.ClearAllImmediately();
+
+                                    PlayerPed.AttachTo(_flyHelper, 0);
+
+                                    _flyHelper.Velocity = Vector3.Zero;
                                 }
-                                if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                else
                                 {
-                                    PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1, AnimationFlags.Loop, 
-                                        0.0f);
-
-                                    DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 2);
-
-                                    while (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                    if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
                                     {
-                                        Script.Yield();
-
-                                        if (DateTime.UtcNow > timout)
-                                            break;
+                                        PlayerPed.Weapons.Select(WeaponHash.Unarmed);
                                     }
+                                    if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                    {
+                                        PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1,
+                                            AnimationFlags.Loop,
+                                            0.0f);
 
-                                    PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
+                                        DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 2);
+
+                                        while (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                        {
+                                            Script.Yield();
+
+                                            if (DateTime.UtcNow > timout)
+                                                break;
+                                        }
+
+                                        PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
+                                    }
+                                    else FlyEntity(_flyHelper, 1.5f, 1.5f);
                                 }
-                                else FlyEntity(_flyHelper, 1.5f, 1.5f);
                             }
 
                             if (PlayerLastVehicle != null)
+                            {
                                 TryReenterVehicle(PlayerPed, PlayerLastVehicle);
+                            }
                         }
                         break;
                     case PlayerState.Mining:
@@ -389,25 +398,34 @@ namespace SpaceMod.DataClasses
         {
             if (ped.IsInVehicle(vehicle)) return;
             
-            Vector3 doorPos = vehicle.GetBoneCoord("door_dside_f");
+            Vector3 doorPos = vehicle.HasBone("door_dside_f") ? vehicle.GetBoneCoord("door_dside_f") : vehicle.Position;
             float dist = ped.Position.DistanceTo(doorPos);
 
-            if (dist < 5f)
+            if (!_enteringVehicle)
             {
-                Game.DisableControlThisFrame(2, Control.Enter);
-
-                Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter vehicle.");
-
-                if (Game.IsDisabledControlJustPressed(2, Control.Enter))
+                if (dist < 10f)
                 {
-                    Vector3 dir = doorPos - _flyHelper.Position;
-                    Quaternion rotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir) * ped.Quaternion;
-                    _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
+                    Game.DisableControlThisFrame(2, Control.Enter);
 
-                    UI.Notify("New Rot: " + dir.ToString());
-                    UI.Notify("Old Rot: " + ped.Rotation.ToString());
+                    Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter vehicle.");
 
-                    //ped.Task.WarpIntoVehicle(vehicle, VehicleSeat.Driver);
+                    if (Game.IsDisabledControlJustPressed(2, Control.Enter))
+                    {
+                        _enteringVehicle = true;
+                    }
+                }
+            }
+            else
+            {
+                Vector3 dir = doorPos - _flyHelper.Position;
+                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, Utilities.LookRotation(dir), Game.LastFrameTime * 5);
+                _flyHelper.Velocity = dir.Normalized * 1.5f;
+
+                if (PlayerPed.Position.DistanceTo(doorPos) < 1.5f || !vehicle.HasBone("door_dside_f"))
+                {
+                    PlayerPed.Detach();
+                    PlayerPed.Task.ClearAllImmediately();
+                    PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
                 }
             }
         }
