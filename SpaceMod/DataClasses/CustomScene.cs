@@ -317,19 +317,20 @@ namespace SpaceMod.DataClasses
                 DeleteFlyHelper();
                 PlayerPed.Task.ClearAnimation("swimming@base", "idle");
             }
-            else
+            else if (!PlayerPed.IsRagdoll && !PlayerPed.IsGettingUp && !PlayerPed.IsJumpingOutOfVehicle)
             {
                 switch (_playerState)
                 {
                     case PlayerState.Floating:
                         {
-                            if (_flyHelper == null)
+                            if (_flyHelper == null || !_flyHelper.Exists())
                             {
                                 _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition, PlayerPed.Heading);
 
-                                _flyHelper.FreezePosition = false;
                                 _flyHelper.HasCollision = false;
+
                                 _flyHelper.IsVisible = false;
+
                                 _flyHelper.HasGravity = false;
 
                                 Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
@@ -533,6 +534,8 @@ namespace SpaceMod.DataClasses
         {
             lock (_updateLock)
             {
+                _flyHelper?.Delete();
+
                 if (PlayerLastVehicle != null)
                 {
                     PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
@@ -541,6 +544,7 @@ namespace SpaceMod.DataClasses
                     PlayerLastVehicle.Quaternion = Quaternion.Identity;
                     PlayerLastVehicle.Heading = heading;
                     PlayerLastVehicle.Velocity = Vector3.Zero;
+                    PlayerLastVehicle.Health = PlayerLastVehicle.MaxHealth;
                     PlayerLastVehicle.IsInvincible = false;
                     PlayerLastVehicle.EngineRunning = true;
                     PlayerLastVehicle.IsPersistent = false;
@@ -565,8 +569,6 @@ namespace SpaceMod.DataClasses
                 SceneData.CurrentIplData = null;
 
                 GameplayCamera.ShakeAmplitude = 0;
-
-                _flyHelper?.Delete();
             }
         }
 
