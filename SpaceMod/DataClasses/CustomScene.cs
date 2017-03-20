@@ -36,7 +36,6 @@ namespace SpaceMod.DataClasses
         private PlayerState _playerState = PlayerState.Floating;
         private Entity _flyHelper;
         private bool _enteringVehicle;
-        private DateTime _vehicleEnterTimeout;
 
         private Vector3 _vehicleRepairPos;
         private Vector3 _vehicleRepairNormal;
