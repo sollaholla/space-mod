@@ -21,7 +21,7 @@ namespace SpaceMod.DataClasses
     {
         public static bool AllowTraversal { get; set; }
 
-        internal Dictionary<string, string> ScrenarioDatabase = new Dictionary<string, string> {
+        internal Dictionary<string, string> ScenarioDatabase = new Dictionary<string, string> {
             {"Drink Coffee",  "WORLD_HUMAN_AA_COFFEE"},
             {"Smoke", "WORLD_HUMAN_AA_SMOKE" },
             {"Smoke 2", "WORLD_HUMAN_SMOKING" },
@@ -205,7 +205,7 @@ namespace SpaceMod.DataClasses
                     ped.Task.WanderAround();
                     break;
                 default:
-                    ped.Task.StartScenario(ScrenarioDatabase[mapObject.Action], ped.Position);
+                    ped.TaskStartScenarioInPlace(ScenarioDatabase[mapObject.Action]);
                     break;
             }
         }

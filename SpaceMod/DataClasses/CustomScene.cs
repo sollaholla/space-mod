@@ -36,9 +36,11 @@ namespace SpaceMod.DataClasses
         private PlayerState _playerState = PlayerState.Floating;
         private Entity _flyHelper;
         private bool _enteringVehicle;
-        private bool _repairingVehicle;
         private DateTime _vehicleEnterTimeout;
-        private DateTime _repairTimeout;
+
+        private Vector3 _vehicleRepairPos;
+        private Vector3 _vehicleRepairNormal;
+        private DateTime _vehicleRepairTimeout;
 
         public CustomScene(CustomXmlScene sceneData)
         {
@@ -121,8 +123,6 @@ namespace SpaceMod.DataClasses
                 {
                     PlayerLastVehicle = vehicle;
                     PlayerLastVehicle.IsPersistent = true;
-                    PlayerLastVehicle.IsInvincible = true;
-                    PlayerLastVehicle.EngineCanDegrade = false;
 
                     if (SceneData.SurfaceFlag)
                     {
@@ -131,7 +131,6 @@ namespace SpaceMod.DataClasses
                         vehicle.Rotation = Vector3.Zero;
                         vehicle.Position = StaticSettings.VehicleSurfaceSpawn + new Vector3(0, 0, 0.5f);
                         vehicle.LandingGear = VehicleLandingGear.Deployed;
-                        vehicle.IsInvincible = true;
                         vehicle.Velocity = Vector3.Zero;
                         vehicle.EngineRunning = false;
                     }
@@ -366,6 +365,7 @@ namespace SpaceMod.DataClasses
                                     {
                                         PlayerPed.Weapons.Select(WeaponHash.Unarmed);
                                     }
+
                                     if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
                                     {
                                         PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1,
@@ -388,13 +388,11 @@ namespace SpaceMod.DataClasses
                                 }
                             }
 
-                            if(PlayerLastVehicle.IsDamaged)
-                            {
-                                RepairVehicle(PlayerPed, PlayerLastVehicle, 8f);
-                            }
-
                             if (PlayerLastVehicle != null)
                             {
+                                if (!_enteringVehicle && PlayerLastVehicle.IsDamaged)
+                                    StartVehicleRepair(PlayerPed, PlayerLastVehicle, 8f);
+
                                 PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
                                 PlayerLastVehicle.Velocity = Vector3.Zero;
                                 TryReenterVehicle(PlayerPed, PlayerLastVehicle);
@@ -403,19 +401,79 @@ namespace SpaceMod.DataClasses
                         break;
                     case PlayerState.Mining:
                         {
-                            DeleteFlyHelper();
+
                         }
                         break;
                     case PlayerState.Repairing:
                         {
-                            DeleteFlyHelper();
+                            if (_vehicleRepairPos == Vector3.Zero ||
+                                _vehicleRepairNormal == Vector3.Zero ||
+                                _flyHelper == null || !_flyHelper.Exists())
+                            {
+                                _playerState = PlayerState.Floating;
+                                return;
+                            }
+
+                            if (Game.IsControlJustPressed(2, Control.VehicleAccelerate) ||
+                                Game.IsControlJustPressed(2, Control.MoveLeft) ||
+                                Game.IsControlJustPressed(2, Control.MoveRight) ||
+                                Game.IsControlJustPressed(2, Control.VehicleBrake))
+                            {
+                                _playerState = PlayerState.Floating;
+                                return;
+                            }
+
+                            float distance = PlayerPosition.DistanceTo(_vehicleRepairPos);
+                            Vector3 min, max, min2, max2;
+                            GetDimensions(PlayerPed, out min, out max, out min2, out max2, out float radius);
+
+                            if (distance > radius)
+                            {
+                                Vector3 dir = _vehicleRepairPos - _flyHelper.Position;
+                                dir.Normalize();
+
+                                Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir) *
+                                                          _flyHelper.Quaternion;
+
+                                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation,
+                                    Game.LastFrameTime * 5);
+
+                                _flyHelper.Velocity = dir * 1.5f;
+
+                                _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+                            }
+                            else
+                            {
+                                Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector,
+                                    -_vehicleRepairNormal) * _flyHelper.Quaternion;
+
+                                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation,
+                                    Game.LastFrameTime * 15);
+
+                                _flyHelper.Velocity = Vector3.Zero;
+
+                                if (!PlayerPed.IsPlayingAnim("amb@world_human_welding@male@base", "base"))
+                                {
+                                    PlayerPed.Task.PlayAnimation("amb@world_human_welding@male@base", "base", 4.0f,
+                                        -4.0f, -1, (AnimationFlags)49, 0.0f);
+                                    return;
+                                }
+
+                                if (DateTime.UtcNow > _vehicleRepairTimeout)
+                                {
+                                    PlayerLastVehicle.Repair();
+                                    UI.Notify("Vehicle ~b~repaired~s~.", true);
+                                    PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
+                                    _playerState = PlayerState.Floating;
+                                }
+                            }
                         }
                         break;
                 }
             }
         }
 
-        private void RepairVehicle(Ped ped, Vehicle vehicle, float maxDistFromVehicle)
+        private void StartVehicleRepair(Ped ped, Vehicle vehicle, float maxDistFromVehicle)
         {
             if (ped.IsInVehicle(vehicle)) return;
 
@@ -424,36 +482,35 @@ namespace SpaceMod.DataClasses
             if (!ray.DitHitEntity) return;
 
             Entity entHit = ray.HitEntity;
-            if ((Vehicle)entHit != vehicle) return;
+            Vehicle entVeh = (Vehicle)entHit;
 
-            Vector3 repairPos = ray.HitCoords;
-            float dist = ped.Position.DistanceTo(repairPos);
+            if (entVeh == null) return;
+            if (entVeh != vehicle) return;
 
-            if (!_repairingVehicle)
+            Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
+            Game.DisableControlThisFrame(2, Control.Context);
+
+            if (Game.IsDisabledControlJustPressed(2, Control.Context))
             {
-                Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
-                Game.DisableControlThisFrame(2, Control.Context);
-
-                if (Game.IsDisabledControlJustPressed(2, Control.Context))
-                {
-                    _repairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
-                    _repairingVehicle = true;
-                }
+                _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
+                _vehicleRepairPos = ray.HitCoords;
+                _vehicleRepairNormal = ray.SurfaceNormal;
+                _playerState = PlayerState.Repairing;
             }
-            else
-            {
-                Vector3 dir = repairPos - ped.Position;
-                if(ped.Position.DistanceTo(repairPos) > 1.5f)
-                {
-                    _flyHelper.Velocity = dir.Normalized * 1.5f;
-                    return;
-                }
+            //else
+            //{
+            //    Vector3 dir = repairPos - ped.Position;
+            //    if(ped.Position.DistanceTo(repairPos) > 1.5f)
+            //    {
+            //        _flyHelper.Velocity = dir.Normalized * 1.5f;
+            //        return;
+            //    }
 
-                vehicle.Repair();
-                Utilities.DisplayHelpTextThisFrame("Vehicle fixed!");
-                ped.Task.ClearAllImmediately();
-                _repairingVehicle = false;
-            }
+            //    vehicle.Repair();
+            //    Utilities.DisplayHelpTextThisFrame("Vehicle fixed!");
+            //    ped.Task.ClearAllImmediately();
+            //    _repairingVehicle = false;
+            //}
         }
 
         private void TryReenterVehicle(Ped ped, Vehicle vehicle)
@@ -480,7 +537,6 @@ namespace SpaceMod.DataClasses
                     if (Game.IsDisabledControlJustPressed(2, Control.Enter))
                     {
                         _enteringVehicle = true;
-                        _vehicleEnterTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 2750);
                     }
                 }
             }
@@ -657,16 +713,10 @@ namespace SpaceMod.DataClasses
         private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f, bool debug = false)
         {
             Vector3 min, max;
+            Vector3 minVector2, maxVector2;
+            float radius;
 
-            entity.Model.GetDimensions(out min, out max);
-
-            Vector3 minOffsetV2 = new Vector3(min.X, min.Y, 0);
-            Vector3 maxOffsetV2 = new Vector3(max.X, max.Y, 0);
-
-            Vector3 minVector2 = PlayerPed.Quaternion * minOffsetV2;
-            Vector3 maxVector2 = PlayerPed.Quaternion * maxOffsetV2;
-
-            var radius = (minVector2 - maxVector2).Length() / 2.5f;
+            GetDimensions(entity, out min, out max, out minVector2, out maxVector2, out radius);
 
             Vector3 offset = new Vector3(0, 0, radius);
             offset = PlayerPed.Quaternion * offset;
@@ -680,11 +730,11 @@ namespace SpaceMod.DataClasses
 
             if (debug)
             {
-                World.DrawMarker((MarkerType) 28, bottom, Vector3.RelativeFront, Vector3.Zero,
+                World.DrawMarker((MarkerType)28, bottom, Vector3.RelativeFront, Vector3.Zero,
                     new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Blue));
-                World.DrawMarker((MarkerType) 28, middle, Vector3.RelativeFront, Vector3.Zero,
+                World.DrawMarker((MarkerType)28, middle, Vector3.RelativeFront, Vector3.Zero,
                     new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Purple));
-                World.DrawMarker((MarkerType) 28, top, Vector3.RelativeFront, Vector3.Zero,
+                World.DrawMarker((MarkerType)28, top, Vector3.RelativeFront, Vector3.Zero,
                     new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Orange));
             }
 
@@ -702,6 +752,18 @@ namespace SpaceMod.DataClasses
             return true;
         }
 
+        private void GetDimensions(Entity entity, out Vector3 min, out Vector3 max, out Vector3 minVector2, out Vector3 maxVector2, out float radius)
+        {
+            entity.Model.GetDimensions(out min, out max);
+
+            Vector3 minOffsetV2 = new Vector3(min.X, min.Y, 0);
+            Vector3 maxOffsetV2 = new Vector3(max.X, max.Y, 0);
+
+            minVector2 = PlayerPed.Quaternion * minOffsetV2;
+            maxVector2 = PlayerPed.Quaternion * maxOffsetV2;
+            radius = (minVector2 - maxVector2).Length() / 2.5f;
+        }
+
         internal void Delete()
         {
             lock (_updateLock)
@@ -712,8 +774,7 @@ namespace SpaceMod.DataClasses
                 {
                     PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
                     PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
-
-                    PlayerLastVehicle.IsInvincible = false;
+                    
                     float heading = PlayerLastVehicle.Heading;
                     PlayerLastVehicle.Quaternion = Quaternion.Identity;
                     PlayerLastVehicle.Heading = heading;

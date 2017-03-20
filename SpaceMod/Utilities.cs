@@ -225,6 +225,11 @@ namespace SpaceMod
                 ped.Position.Z, radius, duration);
         }
 
+        public static void TaskStartScenarioInPlace(this Ped ped, string scenario)
+        {
+            Function.Call(Hash.TASK_START_SCENARIO_IN_PLACE, ped, scenario, 0, 0);
+        }
+
         public static Prop CreatePropNoOffset(Model model, Vector3 position, bool dynamic)
         {
             var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, position.X, position.Y, position.Z, true, true, dynamic));
