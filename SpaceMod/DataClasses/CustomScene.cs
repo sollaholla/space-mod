@@ -390,7 +390,7 @@ namespace SpaceMod.DataClasses
 
                             if(PlayerLastVehicle.IsDamaged)
                             {
-                                RepairVehicle(PlayerPed, PlayerLastVehicle);
+                                RepairVehicle(PlayerPed, PlayerLastVehicle, 8f);
                             }
 
                             if (PlayerLastVehicle != null)
@@ -415,31 +415,37 @@ namespace SpaceMod.DataClasses
             }
         }
 
-        private void RepairVehicle(Ped ped, Vehicle vehicle)
+        private void RepairVehicle(Ped ped, Vehicle vehicle, float maxDistFromVehicle)
         {
-            Vector3 repairPos = vehicle.GetOffsetInWorldCoords(new Vector3(0, -1, 3));
-            bool dot = Vector3.Dot((_flyHelper.Position - repairPos).Normalized, vehicle.UpVector) > 0.2f;
+            if (ped.IsInVehicle(vehicle)) return;
+
+            RaycastResult ray = World.Raycast(ped.Position, ped.ForwardVector, maxDistFromVehicle, IntersectOptions.Everything, ped);
+
+            if (!ray.DitHitEntity) return;
+
+            Entity entHit = ray.HitEntity;
+            if ((Vehicle)entHit != vehicle) return;
+
+            Vector3 repairPos = ray.HitCoords;
             float dist = ped.Position.DistanceTo(repairPos);
 
             if (!_repairingVehicle)
             {
-                if (dot && dist < 5f)
-                {
-                    Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
-                    Game.DisableControlThisFrame(2, Control.Context);
+                Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
+                Game.DisableControlThisFrame(2, Control.Context);
 
-                    if (Game.IsDisabledControlJustPressed(2, Control.Context))
-                    {
-                        _repairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
-                        _repairingVehicle = true;
-                    }
+                if (Game.IsDisabledControlJustPressed(2, Control.Context))
+                {
+                    _repairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
+                    _repairingVehicle = true;
                 }
             }
             else
             {
-                if (DateTime.UtcNow > _repairTimeout)
+                Vector3 dir = repairPos - ped.Position;
+                if(ped.Position.DistanceTo(repairPos) > 1.5f)
                 {
-                    _repairingVehicle = false;
+                    _flyHelper.Velocity = dir.Normalized * 1.5f;
                     return;
                 }
 
@@ -489,22 +495,22 @@ namespace SpaceMod.DataClasses
                     return;
                 }
 
-                if (DateTime.UtcNow > _vehicleEnterTimeout)
-                {
-                    _enteringVehicle = false;
-                    return;
-                }
+                // I removed your DateTime code since there is no point for it
+                // since that code is never run if you are in a vehicle and 
+                // _enteringVehicle is false.
 
                 Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir.Normalized) * _flyHelper.Quaternion;
                 _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
                 _flyHelper.Velocity = dir.Normalized * 1.5f;
 
-                if (PlayerPed.Position.DistanceTo(doorPos) < 1.5f || !vehicle.HasBone("door_dside_f"))
+                if (ped.Position.DistanceTo(doorPos) < 1.5f || !vehicle.HasBone("door_dside_f"))
                 {
                     DeleteFlyHelper();
                     PlayerPed.Detach();
                     PlayerPed.Task.ClearAllImmediately();
                     PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+
+                    _enteringVehicle = false;
                 }
             }
         }
