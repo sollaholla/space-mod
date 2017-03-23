@@ -167,7 +167,7 @@ namespace SpaceMod
                     if (height > _enterOrbitHeight)
                     {
                         CustomXmlScene scene =
-                            MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToScenes + "/" + "EarthOrbit.xml");
+                            MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToScenes + "/" + "EarthOrbit.space");
 
                         SetCurrentScene(scene);
                     }
@@ -211,8 +211,7 @@ namespace SpaceMod
             _menuConnector = new MenuConnector();
 
             _menu = new SolomanMenu.Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
-                Color.Purple);
-            _menu.MenuItemHeight = 26;
+                Color.Purple) {MenuItemHeight = 26};
 
             #region scenes
 
@@ -286,8 +285,7 @@ namespace SpaceMod
             var sceneSettingsMenu = settingsMenu.AddParentMenu("Scenes", _menu);
 
             var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", StaticSettings.UseScenarios);
-            useScenariosCheckbox.Checked += (sender, check) =>
-            {
+            useScenariosCheckbox.Checked += (sender, check) => {
                 StaticSettings.UseScenarios = check;
             };
 
@@ -295,9 +293,21 @@ namespace SpaceMod
 
             #endregion
 
+            #region player settings
+
+            var playerSettingsMenu = settingsMenu.AddParentMenu("Player", _menu);
+
+            var useFloatingCheckbox = new CheckboxMenuItem("Use Floating", StaticSettings.UseFloating);
+            useFloatingCheckbox.Checked += (sender, check) => {
+                StaticSettings.UseFloating = check;
+            };
+
+            playerSettingsMenu.Add(useFloatingCheckbox);
+
+            #endregion
+
             var saveSettingsItem = new SolomanMenu.MenuItem("Save Settings");
-            saveSettingsItem.ItemActivated += (sender, item) =>
-            {
+            saveSettingsItem.ItemActivated += (sender, item) => {
                 SaveSettings();
                 UI.Notify("Settings ~b~saved~s~.", true);
             };
@@ -309,8 +319,7 @@ namespace SpaceMod
             #region debug
 
             var debugButton = new SolomanMenu.MenuItem("Debug Player");
-            debugButton.ItemActivated += (sender, item) =>
-            {
+            debugButton.ItemActivated += (sender, item) => {
                 DebugLogger.LogEntityData(PlayerPed);
             };
 
@@ -323,6 +332,7 @@ namespace SpaceMod
             _menuConnector.Menus.Add(userInterfaceMenu);
             _menuConnector.Menus.Add(vehicleSettingsMenu);
             _menuConnector.Menus.Add(sceneSettingsMenu);
+            _menuConnector.Menus.Add(playerSettingsMenu);
             _menuConnector.Menus.Add(scenesMenu);
         }
 

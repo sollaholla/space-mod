@@ -76,7 +76,9 @@ namespace SpaceMod.DataClasses
                 Prop spaceDome = CreateProp(Vector3.Zero, SceneData.SpaceDomeModel);
 
                 List<Orbital> orbitals =
-                    SceneData.Orbitals?.Select(CreateOrbital).Where(o => o != default(Orbital)).ToList();
+                    SceneData.Orbitals?.Select(x => CreateOrbital(x, SceneData.SurfaceFlag))
+                        .Where(o => o != default(Orbital))
+                        .ToList();
 
                 List<LockedOrbital> lockedOrbitals =
                     SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
@@ -171,7 +173,7 @@ namespace SpaceMod.DataClasses
             return orbital;
         }
 
-        public Orbital CreateOrbital(OrbitalData data)
+        public static Orbital CreateOrbital(OrbitalData data, bool surface)
         {
             if (string.IsNullOrEmpty(data.Model))
             {
@@ -188,7 +190,7 @@ namespace SpaceMod.DataClasses
             DebugLogger.Log($"CreateOrbital::Successfully loaded model: {data.Model}", MessageType.Debug);
             Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
             prop.FreezePosition = true;
-            prop.Position = (SceneData.SurfaceFlag ? Database.PlanetSurfaceGalaxyCenter : Database.GalaxyCenter) + data.OriginOffset;
+            prop.Position = (surface ? Database.PlanetSurfaceGalaxyCenter : Database.GalaxyCenter) + data.OriginOffset;
             Orbital orbital = new Orbital(prop.Handle, data.Name, null, Vector3.Zero, data.RotationSpeed)
             {
                 IsWormHole = data.IsWormHole
@@ -233,6 +235,12 @@ namespace SpaceMod.DataClasses
             return model;
         }
 
+        public static void RemoveIpl(IplData iplData)
+        {
+            iplData.CurrentIpl?.Remove();
+            iplData.Teleports?.ForEach(teleport => RemoveIpl(teleport.EndIpl));
+        }
+
         internal void Update()
         {
             if (!Monitor.TryEnter(_updateLock)) return;
@@ -250,8 +258,7 @@ namespace SpaceMod.DataClasses
                     if (StaticSettings.ShowCustomUI)
                     {
                         Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
-                                position, Database.PathToSprites, text.Item3.Name,
-                                text.Item1, text.Item2);
+                                position, Database.PathToSprites, text.Item3.Name, text.Item2);
                     }
 
                     float distance = Vector3.Distance(position, PlayerPosition);
@@ -337,64 +344,69 @@ namespace SpaceMod.DataClasses
                 {
                     case PlayerState.Floating:
                         {
-                            if (!_enteringVehicle)
+                            if (StaticSettings.UseFloating)
                             {
-                                if (_flyHelper == null || !_flyHelper.Exists())
+                                if (!_enteringVehicle)
                                 {
-                                    _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition,
-                                        PlayerPed.Heading);
-
-                                    _flyHelper.HasCollision = false;
-
-                                    _flyHelper.IsVisible = false;
-
-                                    _flyHelper.HasGravity = false;
-
-                                    Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
-
-                                    PlayerPed.Task.ClearAllImmediately();
-
-                                    PlayerPed.AttachTo(_flyHelper, 0);
-
-                                    _flyHelper.Velocity = Vector3.Zero;
-                                }
-                                else
-                                {
-                                    if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
+                                    if (_flyHelper == null || !_flyHelper.Exists())
                                     {
-                                        PlayerPed.Weapons.Select(WeaponHash.Unarmed);
+                                        _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition,
+                                            PlayerPed.Heading);
+
+                                        _flyHelper.HasCollision = false;
+
+                                        _flyHelper.IsVisible = false;
+
+                                        _flyHelper.HasGravity = false;
+
+                                        Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
+
+                                        PlayerPed.Task.ClearAllImmediately();
+
+                                        PlayerPed.AttachTo(_flyHelper, 0);
+
+                                        _flyHelper.Velocity = Vector3.Zero;
                                     }
-
-                                    if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                    else
                                     {
-                                        PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1,
-                                            AnimationFlags.Loop,
-                                            0.0f);
-
-                                        DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 2);
-
-                                        while (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                        if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
                                         {
-                                            Script.Yield();
-
-                                            if (DateTime.UtcNow > timout)
-                                                break;
+                                            PlayerPed.Weapons.Select(WeaponHash.Unarmed);
                                         }
 
-                                        PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
+                                        if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                        {
+                                            PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1,
+                                                AnimationFlags.Loop,
+                                                0.0f);
+
+                                            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 2);
+
+                                            while (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                                            {
+                                                Script.Yield();
+
+                                                if (DateTime.UtcNow > timout)
+                                                    break;
+                                            }
+
+                                            PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
+                                        }
+                                        else
+                                            FlyEntity(_flyHelper, 1.5f, 1.5f,
+                                                !ArtificialCollision(PlayerPed, _flyHelper));
                                     }
-                                    else FlyEntity(_flyHelper, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, _flyHelper));
                                 }
-                            }
 
-                            if (PlayerLastVehicle != null)
-                            {
-                                if (!_enteringVehicle && PlayerLastVehicle.IsDamaged)
-                                    StartVehicleRepair(PlayerPed, PlayerLastVehicle, 8f);
+                                if (PlayerLastVehicle != null)
+                                {
+                                    if (!_enteringVehicle && PlayerLastVehicle.IsDamaged)
+                                        StartVehicleRepair(PlayerPed, PlayerLastVehicle, 8f);
 
-                                PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
-                                PlayerLastVehicle.Velocity = Vector3.Zero;
-                                TryReenterVehicle(PlayerPed, PlayerLastVehicle);
+                                    PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
+                                    PlayerLastVehicle.Velocity = Vector3.Zero;
+                                    TryReenterVehicle(PlayerPed, PlayerLastVehicle);
+                                }
                             }
                         }
                         break;
@@ -803,15 +815,6 @@ namespace SpaceMod.DataClasses
 
                 GameplayCamera.ShakeAmplitude = 0;
             }
-        }
-
-        private static void RemoveIpl(IplData iplData)
-        {
-            iplData.CurrentIpl?.Remove();
-            iplData.Teleports?.ForEach(teleport =>
-            {
-                RemoveIpl(teleport.EndIpl);
-            });
         }
 
         private void MovePlayerToGalaxy()

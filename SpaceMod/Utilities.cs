@@ -242,7 +242,7 @@ namespace SpaceMod
         }
 
         public static void ShowUIPosition(Entity entity, int index, Vector3 position, string pathToFile, string objectName,
-            UIText nameResText, UIText distanceResText)
+            UIText nameResText)
         {
             if (entity != null)
             {
@@ -270,12 +270,6 @@ namespace SpaceMod
                 /*we offset the y position so that it sits above the image*/);
             nameResText.Draw();
             nameResText.Color = textColor;
-
-            var characterPosition = Game.Player.Character.Position;
-            distanceResText.Caption = $"{Math.Round(position.DistanceTo(characterPosition), MidpointRounding.AwayFromZero)} M";
-            distanceResText.Position = new Point(point.X + halfWidth, imageLowerBount);
-            distanceResText.Draw();
-            //distanceResText.Color = textColor;
 
             if (File.Exists(filename))
                 UI.DrawTexture(filename, index, 1, 60, point, size);

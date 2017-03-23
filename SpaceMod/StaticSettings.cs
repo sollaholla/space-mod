@@ -7,6 +7,7 @@ namespace SpaceMod
         // Mod stuff
         public static bool ShowCustomUI = true;
         public static bool UseScenarios = true;
+        public static bool UseFloating = true;
 
         // Vehicle stuff.
         public static float MouseControlFlySensitivity = 3;

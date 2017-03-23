@@ -16,13 +16,6 @@ namespace SpaceMod.DataClasses
             Shadow = true
         };
 
-        private readonly UIText _distanceText = new UIText(string.Empty, new Point(), 0.5f)
-        {
-            Centered = true,
-            Font = Font.Monospace,
-            Shadow = true
-        };
-
         public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed,
             bool showUIByDefault = true) : base(handle)
         {
@@ -60,7 +53,7 @@ namespace SpaceMod.DataClasses
         {
             if (string.IsNullOrEmpty(Name)) return;
             if (!ShowUIByDefault) return;
-            Utilities.ShowUIPosition(this, index, Position, Database.PathToSprites, Name, _nameText, _distanceText);
+            Utilities.ShowUIPosition(this, index, Position, Database.PathToSprites, Name, _nameText);
         }
     }
 }
