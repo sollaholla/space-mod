@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using GTA;
@@ -61,6 +62,8 @@ namespace SpaceMod.DataClasses
 
         public string SceneFile { get; internal set; }
 
+        public Weather OverrideWeather { get; internal set; }
+
         internal List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
 
         internal IplData LastIpl { get; private set; }
@@ -88,6 +91,10 @@ namespace SpaceMod.DataClasses
                 OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
 
                 DistanceText = new List<Tuple<UIText, UIText, Link>>();
+
+                ScriptSettings settings = ScriptSettings.Load(Database.PathToScenes + "/" + "ExtraSettings.ini");
+                var section = Path.GetFileNameWithoutExtension(SceneFile);
+                OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
 
                 SceneData.SceneLinks.ForEach(link =>
                 {
@@ -660,8 +667,6 @@ namespace SpaceMod.DataClasses
                             Game.FadeScreenOut(1000);
                             Script.Wait(1000);
 
-                            PlayerPosition = end;
-
                             DebugLogger.Log($"Creating Ipl {teleport.EndIpl.Name}", MessageType.Debug);
 
                             Ipl endIpl = new Ipl(teleport.EndIpl.Name, teleport.EndIpl.Type);
@@ -670,6 +675,8 @@ namespace SpaceMod.DataClasses
 
                             LastIpl = SceneData.CurrentIplData;
                             SceneData.CurrentIplData = teleport.EndIpl;
+
+                            PlayerPosition = end;
 
                             Script.Wait(1000);
                             Game.FadeScreenIn(1000);

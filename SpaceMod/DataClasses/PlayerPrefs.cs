@@ -62,6 +62,7 @@ namespace SpaceMod.DataClasses
         }
 
         public List<VehicleUpgradeData> VehicleUpgrades { get; set; }
+
         public List<ResourceData> Resources { get; set; }
 
         private void CreateResources()

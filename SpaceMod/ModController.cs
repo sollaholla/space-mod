@@ -31,8 +31,7 @@ namespace SpaceMod
         public ModController()
         {
             _tickLock = new object();
-
-            PlayerPrefs = new PlayerPrefs();
+            
             Scenarios = new List<CustomScenario>();
 
             Instance = this;
@@ -61,8 +60,6 @@ namespace SpaceMod
                 }
             }
         }
-
-        public PlayerPrefs PlayerPrefs { get; }
 
         public List<CustomScenario> Scenarios { get; private set; }
 
@@ -99,6 +96,9 @@ namespace SpaceMod
             if (_currentScene != null && _currentScene != default(CustomScene))
                 PlayerPosition = Database.TrevorAirport;
 
+            if (_currentScene != null)
+                ResetWeather();
+
             _currentScene = null;
         }
 
@@ -123,7 +123,7 @@ namespace SpaceMod
 
                     return;
                 }
-
+                
                 DisableWantedStars();
 
                 if (_currentScene != null)
@@ -137,17 +137,24 @@ namespace SpaceMod
                     switch (timeType)
                     {
                         case TimeType.Night:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 22, 0, 0);
+                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 0, 0, 0);
                             break;
                         case TimeType.Day:
                             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
                             break;
                         case TimeType.Evening:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 16, 0, 0);
+                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 18, 0, 0);
                             break;
                     }
 
-                    World.Weather = Weather.Clear;
+                    if (_currentScene.OverrideWeather == (Weather) 14)
+                    {
+                        Function.Call(Hash.SET_WEATHER_TYPE_NOW, "HALLOWEEN");
+                    }
+                    else
+                    {
+                        World.Weather = _currentScene.OverrideWeather;
+                    }
 
                     if (PlayerPed.CurrentVehicle != null)
                     {
@@ -218,19 +225,22 @@ namespace SpaceMod
             var scenesMenu = _menu.AddParentMenu("Scenes", _menu);
             scenesMenu.Width = _menu.Width;
 
-            var files = Directory.GetFiles(Database.PathToScenes);
+            var files = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
             for (var i = 0; i < files.Length; i++)
             {
                 var file = files[i];
-                var customXmlScene = MyXmlSerializer.Deserialize<CustomXmlScene>(file);
-                if (customXmlScene == default(CustomXmlScene))
-                {
-                    UI.Notify($"Failed to load {file}");
-                    continue;
-                }
                 var fileName = Path.GetFileName(file);
                 var menuItem = new SolomanMenu.MenuItem(fileName);
-                menuItem.ItemActivated += (sender, item) => SetCurrentScene(customXmlScene, fileName);
+                menuItem.ItemActivated += (sender, item) =>
+                {
+                    var customXmlScene = MyXmlSerializer.Deserialize<CustomXmlScene>(file);
+                    if (customXmlScene == default(CustomXmlScene))
+                    {
+                        UI.Notify($"Failed to load {file}");
+                        return;
+                    }
+                    SetCurrentScene(customXmlScene, fileName);
+                };
                 scenesMenu.Add(menuItem);
             }
 
@@ -346,6 +356,12 @@ namespace SpaceMod
             Game.MaxWantedLevel = 0;
         }
 
+        private static void ResetWeather()
+        {
+            World.Weather = Weather.ExtraSunny;
+            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
+        }
+
         private void SetCurrentScene(CustomXmlScene customXmlScene, string fileName = default(string))
         {
             Game.FadeScreenOut(1000);
@@ -366,10 +382,9 @@ namespace SpaceMod
                     _currentScene.Delete();
                 }
 
-                _currentScene = new CustomScene(customXmlScene);
+                _currentScene = new CustomScene(customXmlScene) {SceneFile = fileName};
                 _currentScene.Start();
                 _currentScene.Exited += CurrentSceneOnExited;
-                _currentScene.SceneFile = fileName;
 
                 if (PlayerPed.IsInVehicle())
                 {
@@ -429,6 +444,7 @@ namespace SpaceMod
                 _currentScene?.Delete();
                 _currentScene = null;
 
+                ResetWeather();
                 EndActiveScenarios();
 
                 if (newSceneFile != "cmd_earth")
@@ -439,8 +455,8 @@ namespace SpaceMod
                     if (newScene == default(CustomXmlScene))
                     {
                         UI.Notify(
-                            "Your custom scene ~r~failed~s~ to load, because the file specified was either not written correctly or " +
-                            "was invalid.");
+                            "Your custom scene ~r~failed~s~ to load, because the file specified was " +
+                            "either not written correctly or was invalid.");
                         throw new XmlException(newSceneFile);
                     }
 
