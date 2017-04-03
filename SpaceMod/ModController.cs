@@ -137,7 +137,7 @@ namespace SpaceMod
                     switch (timeType)
                     {
                         case TimeType.Night:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 0, 0, 0);
+                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 22, 0, 0);
                             break;
                         case TimeType.Day:
                             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);

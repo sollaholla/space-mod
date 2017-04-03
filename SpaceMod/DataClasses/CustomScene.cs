@@ -626,7 +626,7 @@ namespace SpaceMod.DataClasses
                 }
                 else if (reverse > 0)
                 {
-                    entity.Velocity = Vector3.Lerp(entity.Velocity, Vector3.Zero, Game.LastFrameTime);
+                    entity.Velocity = Vector3.Lerp(entity.Velocity, Vector3.Zero, Game.LastFrameTime * 2.5f);
                 }
             }
         }

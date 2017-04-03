@@ -253,15 +253,15 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped Alien = Aliens[0];
-                Alien.MarkAsNoLongerNeeded();
+                Ped alien = Aliens[0];
+                alien.MarkAsNoLongerNeeded();
                 Aliens.RemoveAt(0);
             }
 
             while (Ufos.Count > 0)
             {
-                Entity Craft = Ufos[0];
-                Craft.MarkAsNoLongerNeeded();
+                Entity craft = Ufos[0];
+                craft.MarkAsNoLongerNeeded();
                 Ufos.RemoveAt(0);
             }
         }
@@ -270,15 +270,15 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped Alien = Aliens[0];
-                Alien.Delete();
+                Ped alien = Aliens[0];
+                alien.Delete();
                 Aliens.RemoveAt(0);
             }
 
             while (Ufos.Count > 0)
             {
-                Entity Craft = Ufos[0];
-                Craft.Delete();
+                Entity craft = Ufos[0];
+                craft.Delete();
                 Ufos.RemoveAt(0);
             }
         }

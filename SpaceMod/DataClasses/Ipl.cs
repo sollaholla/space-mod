@@ -94,7 +94,9 @@ namespace SpaceMod.DataClasses
                     }
                     break;
                 case IplType.MapEditor:
-                    _map = MyXmlSerializer.Deserialize<Map>(Database.PathToInteriors + "/" + Name + ".xml");
+
+					_map = MyXmlSerializer.Deserialize<Map>(Database.PathToInteriors + "/" + Name + ".xml");
+
                     if (_map != null)
                     {
                         if (_map.Objects != null)
@@ -124,6 +126,7 @@ namespace SpaceMod.DataClasses
                                         break;
                                 }
                             });
+
                             DebugLogger.Log($"{_map.Objects.Count} Objects Tried To Be Created", MessageType.Debug);
                         }
 

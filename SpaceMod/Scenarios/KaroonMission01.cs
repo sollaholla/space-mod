@@ -20,7 +20,7 @@ namespace DefaultMissions
             Settings.SetValue("settings", "ufo_model", _ufoModelName);
             Settings.Save();
 
-            UFOS = new List<Vehicle>();
+            Ufos = new List<Vehicle>();
             PlayerVehicle = Game.Player.Character.CurrentVehicle;
 
             if (PlayerVehicle != null)
@@ -35,7 +35,7 @@ namespace DefaultMissions
 
         public bool DidLoad { get; private set; }
 
-        public List<Vehicle> UFOS { get; }
+        public List<Vehicle> Ufos { get; }
 
         public int OriginalVehicleHealth { get; }
         
@@ -68,7 +68,7 @@ namespace DefaultMissions
             {
                 Vector3 spawnAround = spawn.Around(400);
                 Vehicle vehicle = World.CreateVehicle(_ufoModel, spawnAround);
-                UFOS.ForEach(ufo => vehicle.SetNoCollision(ufo, true));
+                Ufos.ForEach(ufo => vehicle.SetNoCollision(ufo, true));
                 Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
                 ped.SetDefaultClothes();
                 ped.RelationshipGroup = Database.AlienRelationship;
@@ -80,7 +80,7 @@ namespace DefaultMissions
                 blip.Color = BlipColor.Green;
                 Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, playerPed, 0, 0, 0, 6, 25, 0, vehicle.Heading,
                     Database.GalaxyCenter.Z - 100, Database.GalaxyCenter.Z - 250);
-                UFOS.Add(vehicle);
+                Ufos.Add(vehicle);
             }
         }
 
@@ -99,7 +99,7 @@ namespace DefaultMissions
             }
             else
             {
-                UFOS?.ForEach(vehicle =>
+                Ufos?.ForEach(vehicle =>
                 {
                     // TODO: Figure out a variable for when the vehicle is not dead but is spiraling downward.
                     if (vehicle.IsDead || !vehicle.IsDriveable || vehicle.IsOnFire || vehicle.Driver.IsDead && vehicle.CurrentBlip.Exists())
@@ -107,7 +107,7 @@ namespace DefaultMissions
                         vehicle.CurrentBlip.Remove();
                         vehicle.Driver?.Kill();
 
-                        if (UFOS.TrueForAll(x => !x.CurrentBlip.Exists()))
+                        if (Ufos.TrueForAll(x => !x.CurrentBlip.Exists()))
                         {
                             BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~enemies eliminated");
                             EndScenario(true);
@@ -158,22 +158,22 @@ namespace DefaultMissions
 
         private void MarkVehiclesAsNoLongerNeeded()
         {
-            while (UFOS.Count > 0)
+            while (Ufos.Count > 0)
             {
-                Vehicle vehicle = UFOS[0];
+                Vehicle vehicle = Ufos[0];
                 vehicle.CurrentBlip?.Remove();
                 vehicle.MarkAsNoLongerNeeded();
-                UFOS.RemoveAt(0);
+                Ufos.RemoveAt(0);
             }
         }
 
         private void DeleteAllVehicles()
         {
-            while (UFOS.Count > 0)
+            while (Ufos.Count > 0)
             {
-                Vehicle vehicle = UFOS[0];
+                Vehicle vehicle = Ufos[0];
                 vehicle.Delete();
-                UFOS.RemoveAt(0);
+                Ufos.RemoveAt(0);
             }
         }
 

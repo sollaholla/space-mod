@@ -43,8 +43,6 @@ namespace DefaultMissions
 
         public int OriginalMaxHealth { get; }
 
-        public bool SpawnedUfos { get; private set; }
-
         public Vector3 PlayerPosition {
             get { return PlayerPed.Position; }
             set { PlayerPed.Position = value; }
@@ -159,7 +157,9 @@ namespace DefaultMissions
 
         private void UpdateUfo(Vehicle ufo)
         {
-            if ((ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable) && ufo.CurrentBlip.Exists())
+	        ufo.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "mbi2";
+
+	        if ((ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable) && ufo.CurrentBlip.Exists())
             {
                 ufo.CurrentBlip.Remove();
                 ufo.Driver?.Kill();
@@ -168,8 +168,10 @@ namespace DefaultMissions
         }
 
         public void UpdateAlien(Ped alienPed)
-        {
-            if (alienPed.IsDead)
+		{
+			alienPed.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "mbi2";
+
+			if (alienPed.IsDead)
             {
                 if (alienPed.CurrentBlip.Exists())
                 {
@@ -217,16 +219,16 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped Alien = Aliens[0];
-                Alien.MarkAsNoLongerNeeded();
+                Ped alien = Aliens[0];
+                alien.MarkAsNoLongerNeeded();
                 Aliens.RemoveAt(0);
             }
 
             while (Ufos.Count > 0)
             {
-                Vehicle Craft = Ufos[0];
-                Craft.MarkAsNoLongerNeeded();
-                Craft.Driver?.Delete();
+                Vehicle craft = Ufos[0];
+                craft.MarkAsNoLongerNeeded();
+                craft.Driver?.Delete();
                 Ufos.RemoveAt(0);
             }
         }
@@ -235,15 +237,15 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped Alien = Aliens[0];
-                Alien.Delete();
+                Ped alien = Aliens[0];
+                alien.Delete();
                 Aliens.RemoveAt(0);
             }
 
             while (Ufos.Count > 0)
             {
-                Entity Craft = Ufos[0];
-                Craft.Delete();
+                Entity craft = Ufos[0];
+                craft.Delete();
                 Ufos.RemoveAt(0);
             }
         }

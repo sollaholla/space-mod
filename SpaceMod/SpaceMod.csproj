@@ -63,7 +63,6 @@
     <Compile Include="DataClasses\OrbitalSystem.cs" />
     <Compile Include="DataClasses\Orbital.cs" />
     <Compile Include="DataClasses\PlayerPrefs.cs" />
-    <Compile Include="DataClasses\Scene.cs" />
     <Compile Include="DataClasses\CustomXmlScene.cs" />
     <Compile Include="DataClasses\LockedOrbital.cs" />
     <Compile Include="Debug.cs" />
