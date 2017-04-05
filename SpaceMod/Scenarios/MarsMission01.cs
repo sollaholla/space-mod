@@ -4,9 +4,9 @@ using System.Linq;
 using GTA;
 using GTA.Native;
 using GTA.Math;
-using SpaceMod;
-using SpaceMod.DataClasses;
 using NativeUI;
+using SpaceMod.Extensions;
+using SpaceMod.Scenario;
 
 namespace DefaultMissions
 {

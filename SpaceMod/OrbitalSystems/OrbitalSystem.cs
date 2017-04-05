@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using GTA;
 using GTA.Math;
+using SpaceMod.Extensions;
 
-namespace SpaceMod.DataClasses
+namespace SpaceMod.OrbitalSystems
 {
     public enum RotationAxis
     {
@@ -52,8 +53,8 @@ namespace SpaceMod.DataClasses
 
             // Update orbitals.
             Orbitals?.ForEach(orbital => orbital?.Orbit());
-            if (StaticSettings.ShowCustomUI)
-                Orbitals?.ForEach(orbital => orbital.ShowUIPosition(Orbitals.IndexOf(orbital)));
+            if (StaticSettings.ShowCustomUi)
+                Orbitals?.ForEach(orbital => orbital.ShowUiPosition(Orbitals.IndexOf(orbital)));
         }
 
         private void SetRotation()
@@ -77,7 +78,6 @@ namespace SpaceMod.DataClasses
         private void UpdateLockedOrbital(LockedOrbital lockedOrbital)
         {
             if (!lockedOrbital.IsAttached()) lockedOrbital.AttachTo(this, lockedOrbital.Offset);
-            lockedOrbital.Update(Position);
         }
 
         public void Abort()

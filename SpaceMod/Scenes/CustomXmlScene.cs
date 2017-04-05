@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using GTA.Math;
+using SpaceMod.Scenes.Interiors;
 
-namespace SpaceMod.DataClasses
+namespace SpaceMod.Scenes
 {
     public enum TimeType
     {
@@ -56,31 +56,31 @@ namespace SpaceMod.DataClasses
         public Vector3 ExitRotation { get; set; }
     }
 
-    public class LockedOrbitalData
-    {
-        public string Model { get; set; }
+	public class LockedOrbitalData
+	{
+		public string Model { get; set; }
 
-        public Vector3 Offset { get; set; }
-    }
+		public Vector3 OriginOffset { get; set; }
 
-    public class OrbitalData
-    {
-        public string Name { get; set; }
+		public float Scale { get; set; } = 1.0f;
 
-        public string Model { get; set; }
+		public bool EmitLight { get; set; }
+	}
 
-        public Vector3 OriginOffset { get; set; }
+	public class OrbitalData : LockedOrbitalData
+	{
+		public string Name { get; set; }
 
-        public float RotationSpeed { get; set; }
+		public float RotationSpeed { get; set; }
 
-        public bool IsWormHole { get; set; }
+		public bool IsWormHole { get; set; }
 
-        public float ExitDistance { get; set; } = 1500;
+		public float ExitDistance { get; set; } = 1500;
 
-        public Vector3 ExitRotation { get; set; }
+		public Vector3 ExitRotation { get; set; }
 
-        public string NextSceneFile { get; set; }
-    }
+		public string NextSceneFile { get; set; }
+	}
 
     public class IplData
     {

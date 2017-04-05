@@ -1,6 +1,6 @@
 ﻿using GTA;
 using NativeUI;
-using SpaceMod.DataClasses;
+using SpaceMod.Scenario;
 
 namespace DefaultMissions
 {

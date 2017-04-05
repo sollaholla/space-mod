@@ -1,11 +1,12 @@
-﻿using GTA;
+﻿using System.Drawing;
+using GTA;
 using GTA.Math;
-using System.Drawing;
+using SpaceMod.Extensions;
 using Font = GTA.Font;
 
-namespace SpaceMod.DataClasses
+namespace SpaceMod.OrbitalSystems
 {
-    public class Orbital : Entity
+    public class Orbital : LockedOrbital
     {
         private readonly Vector3 _orbitalVelocity;
 
@@ -16,15 +17,15 @@ namespace SpaceMod.DataClasses
             Shadow = true
         };
 
-        public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed,
-            bool showUIByDefault = true) : base(handle)
+        public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed, bool emitLight,
+				float scale, bool showUiByDefault = true) : base(handle, Vector3.Zero, emitLight, scale)
         {
             _orbitalVelocity = orbitalVelocity;
 
             Name = name;
             OrbitalEntity = orbitalEntity;
             RotationSpeed = rotationSpeed;
-            ShowUIByDefault = showUIByDefault;
+            ShowUiByDefault = showUiByDefault;
         }
 
         public string Name { get; set; }
@@ -33,7 +34,7 @@ namespace SpaceMod.DataClasses
 
         public float RotationSpeed { get; set; }
 
-        public bool ShowUIByDefault { get; set; }
+        public bool ShowUiByDefault { get; set; }
 
         public bool IsWormHole { get; set; }
         
@@ -49,10 +50,10 @@ namespace SpaceMod.DataClasses
             Rotation = rotation;
         }
 
-        public void ShowUIPosition(int index)
+        public void ShowUiPosition(int index)
         {
             if (string.IsNullOrEmpty(Name)) return;
-            if (!ShowUIByDefault) return;
+            if (!ShowUiByDefault) return;
             Utilities.ShowUIPosition(this, index, Position, Database.PathToSprites, Name, _nameText);
         }
     }

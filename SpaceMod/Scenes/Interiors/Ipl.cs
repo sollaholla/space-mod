@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using MapEditor;
-using SpaceMod.Static;
+using SpaceMod.Extensions;
 
-namespace SpaceMod.DataClasses
+namespace SpaceMod.Scenes.Interiors
 {
     public enum IplType
     {

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Xml.Serialization;
 
-namespace SpaceMod.Static
+namespace SpaceMod.Extensions
 {
     public static class MyXmlSerializer
     {

@@ -2,7 +2,7 @@
 using GTA.Math;
 using GTA.Native;
 
-namespace SpaceMod
+namespace SpaceMod.Extensions
 {
     public static class Debug
     {

@@ -1,8 +1,8 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using GTA;
+using SpaceMod.Scenes;
 
-namespace SpaceMod.DataClasses
+namespace SpaceMod.Scenario
 {
     public abstract class CustomScenario
     {
@@ -17,7 +17,7 @@ namespace SpaceMod.DataClasses
 
         private readonly object _updateLock = new object();
 
-        public CustomScene CurrentScene => ModController.Instance.GetCurrentScene();
+        public CustomScene CurrentScene => Core.Instance.GetCurrentScene();
 
         internal bool IsScenarioComplete()
         {

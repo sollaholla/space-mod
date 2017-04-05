@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 
-namespace MapEditor
+namespace SpaceMod.Scenes.Interiors
 {
     public class Map
     {

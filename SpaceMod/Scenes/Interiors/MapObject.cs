@@ -16,7 +16,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 
-namespace MapEditor
+namespace SpaceMod.Scenes.Interiors
 {
     public class MapObject
     {

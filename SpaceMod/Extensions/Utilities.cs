@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 
-namespace SpaceMod
+namespace SpaceMod.Extensions
 {
     public static class Mathf
     {

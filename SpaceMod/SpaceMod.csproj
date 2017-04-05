@@ -54,23 +54,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
-    <Compile Include="DataClasses\CustomScenario.cs" />
-    <Compile Include="DataClasses\CustomScene.cs" />
-    <Compile Include="DataClasses\DebugLogger.cs" />
-    <Compile Include="DataClasses\Ipl.cs" />
-    <Compile Include="DataClasses\Map.cs" />
-    <Compile Include="DataClasses\MapObject.cs" />
-    <Compile Include="DataClasses\OrbitalSystem.cs" />
-    <Compile Include="DataClasses\Orbital.cs" />
-    <Compile Include="DataClasses\PlayerPrefs.cs" />
-    <Compile Include="DataClasses\CustomXmlScene.cs" />
-    <Compile Include="DataClasses\LockedOrbital.cs" />
-    <Compile Include="Debug.cs" />
-    <Compile Include="ModController.cs" />
-    <Compile Include="MyXmlSerializer.cs" />
+    <Compile Include="Scenario\CustomScenario.cs" />
+    <Compile Include="Scenes\CustomScene.cs" />
+    <Compile Include="DebugLogger.cs" />
+    <Compile Include="Scenes\Interiors\Ipl.cs" />
+    <Compile Include="Scenes\Interiors\Map.cs" />
+    <Compile Include="Scenes\Interiors\MapObject.cs" />
+    <Compile Include="OrbitalSystems\OrbitalSystem.cs" />
+    <Compile Include="OrbitalSystems\Orbital.cs" />
+    <Compile Include="Scenes\CustomXmlScene.cs" />
+    <Compile Include="OrbitalSystems\LockedOrbital.cs" />
+    <Compile Include="Extensions\Debug.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="Extensions\MyXmlSerializer.cs" />
+    <Compile Include="Particles\PtfxLooped.cs" />
+    <Compile Include="Particles\PtfxNonLooped.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticSettings.cs" />
-    <Compile Include="Utilities.cs" />
+    <Compile Include="Extensions\Utilities.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

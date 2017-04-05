@@ -5,7 +5,8 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod;
-using SpaceMod.DataClasses;
+using SpaceMod.Extensions;
+using SpaceMod.Scenario;
 
 namespace DefaultMissions
 {

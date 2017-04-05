@@ -2,7 +2,7 @@
 using System.IO;
 using GTA;
 
-namespace SpaceMod.DataClasses
+namespace SpaceMod
 {
     public enum MessageType
     {
@@ -17,7 +17,8 @@ namespace SpaceMod.DataClasses
             const string path = "./scripts/SpaceMod.log";
             var originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
             File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + "\n" : string.Empty)}" +
-                                    $"[{(type == MessageType.Debug ? "DEBUG" : "ERROR")}] [{DateTime.Now.Hour}:{DateTime.Now.Minute}:{DateTime.Now.Second}] {message}");
+                                    $"[{(type == MessageType.Debug ? "DEBUG" : "ERROR")}] " +
+                                    $"[{DateTime.Now.Hour:00}:{DateTime.Now.Minute:00}:{DateTime.Now.Second:00}] {message}");
         }
 
         public static void LogEntityData(Entity entity)
