@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using SpaceMod.Extensions;
+using SpaceMod.Lib;
 using SpaceMod.OrbitalSystems;
 using SpaceMod.Scenes.Interiors;
 using Font = GTA.Font;
@@ -179,6 +181,7 @@ namespace SpaceMod.Scenes
 			DebugLogger.Log($"CreateLockedOrbital::Successfully loaded model: {data.Model}", MessageType.Debug);
 			Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
 			prop.FreezePosition = true;
+			prop.Scale(data.Scale);
 			LockedOrbital orbital = new LockedOrbital(prop.Handle, data.OriginOffset, data.EmitLight, data.Scale);
 			return orbital;
 		}
@@ -201,6 +204,7 @@ namespace SpaceMod.Scenes
 			Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
 			prop.FreezePosition = true;
 			prop.Position = (surface ? Database.PlanetSurfaceGalaxyCenter : Database.GalaxyCenter) + data.OriginOffset;
+			prop.Scale(data.Scale);
 			Orbital orbital = new Orbital(prop.Handle, data.Name, null, Vector3.Zero, data.RotationSpeed,
 				data.EmitLight, data.Scale)
 			{

@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
+    <Compile Include="Lib\CppLib.cs" />
     <Compile Include="Scenario\CustomScenario.cs" />
     <Compile Include="Scenes\CustomScene.cs" />
     <Compile Include="DebugLogger.cs" />

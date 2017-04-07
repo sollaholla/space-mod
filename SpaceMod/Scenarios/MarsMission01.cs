@@ -156,10 +156,13 @@ namespace DefaultMissions
         }
 
         private void UpdateUfo(Vehicle ufo)
-        {
-	        ufo.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "mbi2";
+		{
+			if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
+			{
+				ufo.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "mbi2";
+			}
 
-	        if ((ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable) && ufo.CurrentBlip.Exists())
+			if ((ufo.IsDead || ufo.Driver != null && ufo.Driver.IsDead || !ufo.IsDriveable) && ufo.CurrentBlip.Exists())
             {
                 ufo.CurrentBlip.Remove();
                 ufo.Driver?.Kill();
@@ -169,7 +172,10 @@ namespace DefaultMissions
 
         public void UpdateAlien(Ped alienPed)
 		{
-			alienPed.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "mbi2";
+			if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
+			{
+				alienPed.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "mbi2";
+			}
 
 			if (alienPed.IsDead)
             {

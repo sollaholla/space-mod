@@ -12,6 +12,7 @@ using GTA.Math;
 using GTA.Native;
 using SolomanMenu;
 using SpaceMod.Extensions;
+using SpaceMod.Lib;
 using SpaceMod.Scenario;
 using SpaceMod.Scenes;
 //using Control = GTA.Control;
@@ -83,6 +84,7 @@ namespace SpaceMod
 				Game.FadeScreenIn(0);
 
 			PlayerPed.HasGravity = true;
+			PlayerPed.FreezePosition = false;
 
 			Game.TimeScale = 1.0f;
 			World.RenderingCamera = null;
