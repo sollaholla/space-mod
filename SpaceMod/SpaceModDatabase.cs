@@ -3,14 +3,14 @@ using GTA.Math;
 
 namespace SpaceMod
 {
-	public static class Database
+	public static class SpaceModDatabase
 	{
 		public const string PathToSprites = @"./scripts/SpaceMod/Sprites";
 		public const string PathToInteriors = @"./scripts/SpaceMod/IPL";
 		public const string PathToScenes = @"./scripts/SpaceMod/Scenes";
 		public const string PathToScenarios = @"./scripts/SpaceMod/Scenarios";
 
-		static Database()
+		static SpaceModDatabase()
 		{
 			AlienRelationship = World.AddRelationshipGroup("Aliens");
 			World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, AlienRelationship);

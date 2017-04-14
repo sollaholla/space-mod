@@ -92,7 +92,7 @@ namespace SpaceMod.Scenes.Interiors
                     break;
                 case IplType.MapEditor:
 
-					_map = MyXmlSerializer.Deserialize<Map>(Database.PathToInteriors + "/" + Name + ".xml");
+					_map = MyXmlSerializer.Deserialize<Map>(SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
 
                     if (_map != null)
                     {
@@ -124,14 +124,14 @@ namespace SpaceMod.Scenes.Interiors
                                 }
                             });
 
-                            DebugLogger.Log($"{_map.Objects.Count} Objects Tried To Be Created", MessageType.Debug);
+                            Debug.Log($"{_map.Objects.Count} Objects Tried To Be Created");
                         }
 
-                        DebugLogger.Log($"{Name} Created Successfully", MessageType.Debug);
+                        Debug.Log($"{Name} Created Successfully");
                     }
                     else
                     {
-                        DebugLogger.Log($"Failed To Create {Database.PathToInteriors + "/" + Name + ".xml"}", MessageType.Error);
+                        Debug.Log($"Failed To Create {SpaceModDatabase.PathToInteriors + "/" + Name + ".xml"}", DebugMessageType.Error);
                     }
 
                     break;
@@ -140,7 +140,7 @@ namespace SpaceMod.Scenes.Interiors
 
         private void CreateProp(MapObject mapObject, Model model)
         {
-            var prop = Utilities.CreatePropNoOffset(model, mapObject.Position, mapObject.Dynamic && mapObject.Door);
+            var prop = SpaceModLib.CreatePropNoOffset(model, mapObject.Position, mapObject.Dynamic && mapObject.Door);
             if (prop == null) return;
             prop.FreezePosition = !mapObject.Dynamic;
             prop.Rotation = mapObject.Rotation;

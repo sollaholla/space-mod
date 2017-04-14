@@ -45,7 +45,7 @@ namespace SpaceMod.Extensions
         WideLegStumble = 3
     }
 
-    public static class Utilities
+    public static class SpaceModLib
     {
         public static readonly Random Random = new Random();
 
@@ -114,8 +114,9 @@ namespace SpaceMod.Extensions
             return quaternion;
         }
 
-        public static void ArtificalDamage(Ped ped, Ped target, float damageDistance, float damageMultiplier)
+        public static void ArtificialDamage(Ped ped, Ped target, float damageDistance, float damageMultiplier)
         {
+			if (target.IsInvincible) return;
             var impCoords = ped.GetLastWeaponImpactCoords();
             if (impCoords == Vector3.Zero) return;
             var distanceTo = impCoords.DistanceTo(target.Position);
@@ -133,15 +134,17 @@ namespace SpaceMod.Extensions
                     .Any(entity1 => entity1.Position.DistanceTo(position) < distance);
         }
 
-        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash)
+        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, int accuracy = 50, float heading = 0)
         {
-            var ped = World.CreatePed(PedHash.MovAlien01, position);
+            var ped = World.CreatePed(PedHash.MovAlien01, position, heading);
             ped.Accuracy = 50;
-            ped.Weapons.Give(WeaponHash.Railgun, 15, true, true);
+            ped.Weapons.Give(weaponHash, 15, true, true);
             ped.IsPersistent = true;
-            ped.RelationshipGroup = Database.AlienRelationship;
+            ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
             ped.Voice = "ALIENS";
             ped.Accuracy = 15;
+			ped.SetDefaultClothes();
+	        ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
             Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
             Function.Call(Hash.SET_PED_COMBAT_RANGE, ped.Handle, 2);
             ped.IsFireProof = true;
@@ -322,13 +325,58 @@ namespace SpaceMod.Extensions
             Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int)type, false, false, false);
         }
 
-        [Obsolete("Utilities.DrawLine() is obsolete, please use Debug.DrawLine() instead.")]
+        [Obsolete("SpaceModLib.DrawLine() is obsolete, please use Debug.DrawLine() instead.")]
         public static void DrawLine(Vector3 start, Vector3 end, Color color)
         {
             Function.Call(Hash.DRAW_LINE, start.X, start.Y, start.Z, end.X, end.Y, end.Z, color.R, color.G, color.B,
                 color.A);
         }
-    }
+
+	    public static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, Vector3 destination, CPlaneMission mission,
+			float physicsSpeed, float p9, float heading, float maxAltitude, float minAltitude)
+	    {
+			/*void TASK_PLANE_MISSION(Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, float destinationX, 
+			 * float destinationY, float destinationZ, int missionType, float physicsSpeed, float p9, 
+			 * float heading, float maxAltitude, float minAltitude)*/
+
+			Function.Call(Hash.TASK_PLANE_MISSION, pilot, plane, targetVehicle, targetPed, destination.X, destination.Y, destination.Z, (int)mission, 
+				physicsSpeed, p9, heading, maxAltitude, minAltitude);
+		}
+		public static void SetCombatAttributes(this Ped ped, CombatAttributes attribute, bool enabled)
+		{
+			Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, (int)attribute, enabled);
+		}
+
+		public enum CombatAttributes
+		{
+			CanUseCover = 0,
+			CanUseVehicles = 1,
+			CanDoDrivebys = 2,
+			CanLeaveVehicle = 3,
+			CanFightArmedPedsWhenNotArmed = 5,
+			CanTauntInVehicle = 20,
+			AlwaysFight = 46,
+			IgnoreTrafficWhenDriving = 52
+		}
+
+		public enum CPlaneMission
+		{
+			None = 0,
+			Unk = 1,
+		    CTaskVehicleRam = 2,
+			CTaskVehicleBlock = 3,
+			CTaskVehicleGoToPlane = 4,
+			CTaskVehicleStop = 5,
+			CTaskVehicleAttack = 6,
+			CTaskVehicleFollow = 7,
+			CTaskVehicleFleeAirborne = 8,
+			CTaskVehicleCircle = 9,
+			CTaskVehicleEscort = 10,
+			CTaskVehicleFollowRecording = 15,
+			CTaskVehiclePoliceBehaviour = 16,
+			CTaskVehicleCrash = 17
+		}
+	}
 
     public class LoopedPTFX
     {

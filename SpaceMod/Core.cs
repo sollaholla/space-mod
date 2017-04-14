@@ -78,7 +78,7 @@ namespace SpaceMod
 
 		private void OnAborted(object sender, EventArgs eventArgs)
 		{
-			Utilities.SetGravityLevel(0);
+			SpaceModLib.SetGravityLevel(0);
 
 			if (!PlayerPed.IsDead)
 				Game.FadeScreenIn(0);
@@ -101,7 +101,7 @@ namespace SpaceMod
 			}
 
 			if (_currentScene != null && _currentScene != default(CustomScene))
-				PlayerPosition = Database.TrevorAirport;
+				PlayerPosition = SpaceModDatabase.TrevorAirport;
 
 			if (_currentScene != null)
 				ResetWeather();
@@ -118,6 +118,7 @@ namespace SpaceMod
 
 		private void OnTick(object sender, EventArgs eventArgs)
 		{
+
 			if (!Monitor.TryEnter(_tickLock)) return;
 
 			try
@@ -181,7 +182,7 @@ namespace SpaceMod
 					if (height > _enterOrbitHeight)
 					{
 						CustomXmlScene scene =
-							MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToScenes + "/" + "EarthOrbit.space");
+							MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + "EarthOrbit.space");
 
 						SetCurrentScene(scene);
 					}
@@ -233,7 +234,7 @@ namespace SpaceMod
 			var scenesMenu = _menu.AddParentMenu("Scenes", _menu);
 			scenesMenu.Width = _menu.Width;
 
-			var files = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
+			var files = Directory.GetFiles(SpaceModDatabase.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
 			for (var i = 0; i < files.Length; i++)
 			{
 				var file = files[i];
@@ -342,7 +343,7 @@ namespace SpaceMod
 			var debugButton = new SolomanMenu.MenuItem("Debug Player");
 			debugButton.ItemActivated += (sender, item) =>
 			{
-				DebugLogger.LogEntityData(PlayerPed);
+				Debug.LogEntityData(PlayerPed);
 			};
 
 			_menu.Add(debugButton);
@@ -360,11 +361,11 @@ namespace SpaceMod
 
 		private static void DisableWantedStars()
 		{
-			Utilities.TerminateScriptByName("re_prison");
-			Utilities.TerminateScriptByName("re_prisonlift");
-			Utilities.TerminateScriptByName("am_prison");
-			Utilities.TerminateScriptByName("re_lossantosintl");
-			Utilities.TerminateScriptByName("re_armybase");
+			SpaceModLib.TerminateScriptByName("re_prison");
+			SpaceModLib.TerminateScriptByName("re_prisonlift");
+			SpaceModLib.TerminateScriptByName("am_prison");
+			SpaceModLib.TerminateScriptByName("re_lossantosintl");
+			SpaceModLib.TerminateScriptByName("re_armybase");
 			Game.MaxWantedLevel = 0;
 		}
 
@@ -411,10 +412,10 @@ namespace SpaceMod
 				{
 					Scenarios = customXmlScene.CustomScenarios?.Select(x =>
 					{
-						var assembly = Assembly.LoadFrom(Database.PathToScenarios + "/" + x.Name);
+						var assembly = Assembly.LoadFrom(SpaceModDatabase.PathToScenarios + "/" + x.Name);
 						if (assembly == null)
 						{
-							DebugLogger.Log("Failed to load assembly from: " + x.Name, MessageType.Error);
+							Debug.Log("Failed to load assembly from: " + x.Name, DebugMessageType.Error);
 							return null;
 						}
 						var name = x.PathToClass;
@@ -431,7 +432,7 @@ namespace SpaceMod
 					});
 				}
 
-				Utilities.SetGravityLevel(_currentScene.SceneData.GravityLevel);
+				SpaceModLib.SetGravityLevel(_currentScene.SceneData.GravityLevel);
 			}
 		}
 
@@ -462,7 +463,7 @@ namespace SpaceMod
 				if (newSceneFile != "cmd_earth")
 				{
 					var newScene =
-						MyXmlSerializer.Deserialize<CustomXmlScene>(Database.PathToScenes + "/" + newSceneFile);
+						MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + newSceneFile);
 
 					if (newScene == default(CustomXmlScene))
 					{
@@ -492,19 +493,19 @@ namespace SpaceMod
 						if (PlayerPed.IsInVehicle())
 						{
 							var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
-							playerPedCurrentVehicle.Position = Database.EarthAtmosphereEnterPosition;
+							playerPedCurrentVehicle.Position = SpaceModDatabase.EarthAtmosphereEnterPosition;
 							playerPedCurrentVehicle.Rotation = Vector3.Zero;
 							playerPedCurrentVehicle.Heading = 243;
 							playerPedCurrentVehicle.HasGravity = true;
 						}
 						else
 						{
-							PlayerPosition = Database.TrevorAirport;
+							PlayerPosition = SpaceModDatabase.TrevorAirport;
 						}
 					}
 
 					PlayerPed.HasGravity = true;
-					Utilities.SetGravityLevel(0);
+					SpaceModLib.SetGravityLevel(0);
 				}
 
 				if (!PlayerPed.IsDead)

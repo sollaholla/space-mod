@@ -53,11 +53,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Database.cs" />
+    <Compile Include="SpaceModDatabase.cs" />
     <Compile Include="Lib\CppLib.cs" />
     <Compile Include="Scenario\CustomScenario.cs" />
     <Compile Include="Scenes\CustomScene.cs" />
-    <Compile Include="DebugLogger.cs" />
     <Compile Include="Scenes\Interiors\Ipl.cs" />
     <Compile Include="Scenes\Interiors\Map.cs" />
     <Compile Include="Scenes\Interiors\MapObject.cs" />
@@ -72,7 +71,7 @@
     <Compile Include="Particles\PtfxNonLooped.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticSettings.cs" />
-    <Compile Include="Extensions\Utilities.cs" />
+    <Compile Include="Lib\SpaceModLib.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

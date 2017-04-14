@@ -42,7 +42,7 @@ namespace SpaceMod.OrbitalSystems
         {
             if (OrbitalEntity != null)
             {
-                Position = Utilities.RotatePointAroundPivot(Position, OrbitalEntity.Position, _orbitalVelocity);
+                Position = SpaceModLib.RotatePointAroundPivot(Position, OrbitalEntity.Position, _orbitalVelocity);
             }
 
             var rotation = Rotation;
@@ -54,7 +54,7 @@ namespace SpaceMod.OrbitalSystems
         {
             if (string.IsNullOrEmpty(Name)) return;
             if (!ShowUiByDefault) return;
-            Utilities.ShowUIPosition(this, index, Position, Database.PathToSprites, Name, _nameText);
+            SpaceModLib.ShowUIPosition(this, index, Position, SpaceModDatabase.PathToSprites, Name, _nameText);
         }
     }
 }

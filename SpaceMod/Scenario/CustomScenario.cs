@@ -9,7 +9,7 @@ namespace SpaceMod.Scenario
         private ScriptSettings _settings;
 
         public ScriptSettings Settings
-            => _settings ?? (_settings = ScriptSettings.Load(Database.PathToScenarios + "/" + this + ".ini"));
+            => _settings ?? (_settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + "/" + this + ".ini"));
 
         internal delegate void OnCompletedEvent(CustomScenario scenario, bool success);
 

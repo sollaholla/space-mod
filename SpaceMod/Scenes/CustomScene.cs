@@ -97,7 +97,7 @@ namespace SpaceMod.Scenes
 
 				DistanceText = new List<Tuple<UIText, UIText, Link>>();
 
-				ScriptSettings settings = ScriptSettings.Load(Database.PathToScenes + "/" + "ExtraSettings.ini");
+				ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
 				var section = Path.GetFileNameWithoutExtension(SceneFile);
 				OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
 
@@ -120,8 +120,8 @@ namespace SpaceMod.Scenes
 					DistanceText.Add(tuple);
 					Blip blip =
 						World.CreateBlip((SceneData.SurfaceFlag
-											 ? Database.PlanetSurfaceGalaxyCenter
-											 : Database.GalaxyCenter) + link.OriginOffset);
+											 ? SpaceModDatabase.PlanetSurfaceGalaxyCenter
+											 : SpaceModDatabase.GalaxyCenter) + link.OriginOffset);
 					blip.Sprite = BlipSprite.Crosshair2;
 					blip.Color = BlipColor.Blue;
 					blip.Name = link.Name;
@@ -168,17 +168,17 @@ namespace SpaceMod.Scenes
 		{
 			if (string.IsNullOrEmpty(data.Model))
 			{
-				DebugLogger.Log("CreateLockedOrbital::Entity model was not set in the xml.", MessageType.Error);
+				Debug.Log("CreateLockedOrbital::Entity model was not set in the xml.", DebugMessageType.Error);
 				return default(LockedOrbital);
 			}
 
 			Model model = RequestModel(data.Model);
 			if (!model.IsLoaded)
 			{
-				DebugLogger.Log($"CreateLockedOrbital::Failed to load model: {data.Model}", MessageType.Error);
+				Debug.Log($"CreateLockedOrbital::Failed to load model: {data.Model}", DebugMessageType.Error);
 				return default(LockedOrbital);
 			}
-			DebugLogger.Log($"CreateLockedOrbital::Successfully loaded model: {data.Model}", MessageType.Debug);
+			Debug.Log($"CreateLockedOrbital::Successfully loaded model: {data.Model}");
 			Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
 			prop.FreezePosition = true;
 			prop.Scale(data.Scale);
@@ -190,20 +190,20 @@ namespace SpaceMod.Scenes
 		{
 			if (string.IsNullOrEmpty(data.Model))
 			{
-				DebugLogger.Log("CreateOrbital::Entity model was not set in the xml.", MessageType.Error);
+				Debug.Log("CreateOrbital::Entity model was not set in the xml.", DebugMessageType.Error);
 				return default(Orbital);
 			}
 
 			Model model = RequestModel(data.Model);
 			if (!model.IsLoaded)
 			{
-				DebugLogger.Log($"CreateOrbital::Failed to load model: {data.Model}", MessageType.Error);
+				Debug.Log($"CreateOrbital::Failed to load model: {data.Model}", DebugMessageType.Error);
 				return default(Orbital);
 			}
-			DebugLogger.Log($"CreateOrbital::Successfully loaded model: {data.Model}", MessageType.Debug);
+			Debug.Log($"CreateOrbital::Successfully loaded model: {data.Model}");
 			Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
 			prop.FreezePosition = true;
-			prop.Position = (surface ? Database.PlanetSurfaceGalaxyCenter : Database.GalaxyCenter) + data.OriginOffset;
+			prop.Position = (surface ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + data.OriginOffset;
 			prop.Scale(data.Scale);
 			Orbital orbital = new Orbital(prop.Handle, data.Name, null, Vector3.Zero, data.RotationSpeed,
 				data.EmitLight, data.Scale)
@@ -226,10 +226,10 @@ namespace SpaceMod.Scenes
 			Model model = RequestModel(modelName);
 			if (!model.IsLoaded)
 			{
-				DebugLogger.Log($"CreateProp::Failed to load model: {modelName}", MessageType.Error);
+				Debug.Log($"CreateProp::Failed to load model: {modelName}", DebugMessageType.Error);
 				return default(Prop);
 			}
-			DebugLogger.Log($"CreateProp::Successfully loaded model: {modelName}", MessageType.Debug);
+			Debug.Log($"CreateProp::Successfully loaded model: {modelName}");
 			Prop prop = World.CreateProp(model, position, Vector3.Zero, false, false);
 			prop.FreezePosition = true;
 			return prop;
@@ -265,15 +265,15 @@ namespace SpaceMod.Scenes
 				VehicleFly();
 				PlayerFly();
 
-				OrbitalSystem?.Process(Database.GetValidGalaxyDomePosition(PlayerPed));
+				OrbitalSystem?.Process(SpaceModDatabase.GetValidGalaxyDomePosition(PlayerPed));
 
 				DistanceText?.ForEach(text =>
 				{
-					var position = Database.GalaxyCenter + text.Item3.OriginOffset;
+					var position = SpaceModDatabase.GalaxyCenter + text.Item3.OriginOffset;
 					if (StaticSettings.ShowCustomUi)
 					{
-						Utilities.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
-								position, Database.PathToSprites, text.Item3.Name, text.Item2);
+						SpaceModLib.ShowUIPosition(null, DistanceText.IndexOf(text) + OrbitalSystem.Orbitals.Count,
+								position, SpaceModDatabase.PathToSprites, text.Item3.Name, text.Item2);
 					}
 
 					float distance = Vector3.Distance(position, PlayerPosition);
@@ -299,7 +299,7 @@ namespace SpaceMod.Scenes
 
 					if (distance < 15)
 					{
-						Utilities.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to leave.");
+						SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to leave.");
 
 						Game.DisableControlThisFrame(2, Control.Enter);
 
@@ -347,7 +347,7 @@ namespace SpaceMod.Scenes
 
 					if (Game.IsControlJustPressed(2, Control.Enter))
 					{
-						Utilities.DisplayHelpTextThisFrame("You must be at a full stop before exiting.");
+						SpaceModLib.DisplayHelpTextThisFrame("You must be at a full stop before exiting.");
 					}
 				}
 				else
@@ -521,7 +521,7 @@ namespace SpaceMod.Scenes
 			if (entVeh == null) return;
 			if (entVeh != vehicle) return;
 
-			Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
+			SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to repair vehicle.");
 			Game.DisableControlThisFrame(2, Control.Context);
 
 			if (Game.IsDisabledControlJustPressed(2, Control.Context))
@@ -541,7 +541,7 @@ namespace SpaceMod.Scenes
 			//    }
 
 			//    vehicle.Repair();
-			//    Utilities.DisplayHelpTextThisFrame("Vehicle fixed!");
+			//    SpaceModLib.DisplayHelpTextThisFrame("Vehicle fixed!");
 			//    ped.Task.ClearAllImmediately();
 			//    _repairingVehicle = false;
 			//}
@@ -626,8 +626,7 @@ namespace SpaceMod.Scenes
 			_rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
 			_fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);
 
-			Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector,
-				entity.RightVector * _leftRightFly);
+			Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.RightVector * _leftRightFly);
 			Quaternion upDownRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.UpVector * _upDownFly);
 			Quaternion rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * _rollFly);
 			Quaternion rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion;
@@ -653,7 +652,7 @@ namespace SpaceMod.Scenes
 			{
 				if (orbital == null) return;
 				if (orbital.NextSceneFile == string.Empty) return;
-				Vector3 position = Database.GalaxyCenter + orbital.OriginOffset;
+				Vector3 position = SpaceModDatabase.GalaxyCenter + orbital.OriginOffset;
 				float distance = Vector3.Distance(PlayerPosition, position);
 				if (distance > orbital.ExitDistance) return;
 				Exited?.Invoke(this, orbital.NextSceneFile, orbital.ExitRotation);
@@ -676,14 +675,12 @@ namespace SpaceMod.Scenes
 				{
 					if (distanceToStart < 1.5f && teleport.EndIpl != null)
 					{
-						Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to enter.");
+						SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to enter.");
 						Game.DisableControlThisFrame(2, Control.Context);
 						if (Game.IsDisabledControlJustPressed(2, Control.Context))
 						{
 							Game.FadeScreenOut(1000);
 							Script.Wait(1000);
-
-							DebugLogger.Log($"Creating Ipl {teleport.EndIpl.Name}", MessageType.Debug);
 
 							Ipl endIpl = new Ipl(teleport.EndIpl.Name, teleport.EndIpl.Type);
 							endIpl.Request();
@@ -705,7 +702,7 @@ namespace SpaceMod.Scenes
 
 					if (distanceToEnd < 1.5f)
 					{
-						Utilities.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to exit.");
+						SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to exit.");
 						Game.DisableControlThisFrame(2, Control.Context);
 						if (Game.IsDisabledControlJustPressed(2, Control.Context))
 						{
@@ -842,7 +839,7 @@ namespace SpaceMod.Scenes
 
 		private void MovePlayerToGalaxy()
 		{
-			var position = SceneData.SurfaceFlag ? Database.PlanetSurfaceGalaxyCenter : Database.GalaxyCenter;
+			var position = SceneData.SurfaceFlag ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter;
 			if (!PlayerPed.IsInVehicle()) PlayerPosition = position;
 			else PlayerPed.CurrentVehicle.Position = position;
 		}
@@ -894,7 +891,7 @@ namespace SpaceMod.Scenes
 							Vector3 direction = PlayerPosition - wormHolePosition;
 							direction.Normalize();
 
-							Vector3 targetPos = Utilities.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
+							Vector3 targetPos = SpaceModLib.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
 								new Vector3(0, 0, 2000 * Game.LastFrameTime));
 
 							Vector3 playerPos = PlayerPed.IsInVehicle()

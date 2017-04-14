@@ -55,7 +55,7 @@ namespace DefaultMissions
 
         private void CreateSpaceShips()
         {
-            Vector3 spawn = Database.GalaxyCenter + new Vector3(-1500, 0, 0);
+            Vector3 spawn = SpaceModDatabase.GalaxyCenter + new Vector3(-1500, 0, 0);
             Ped playerPed = Game.Player.Character;
             
             if (!_ufoModel.IsLoaded)
@@ -72,7 +72,7 @@ namespace DefaultMissions
                 Ufos.ForEach(ufo => vehicle.SetNoCollision(ufo, true));
                 Ped ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
                 ped.SetDefaultClothes();
-                ped.RelationshipGroup = Database.AlienRelationship;
+                ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
                 vehicle.Heading = (playerPed.Position - vehicle.Position).ToHeading();
                 vehicle.MaxSpeed = 50;
                 vehicle.IsOnlyDamagedByPlayer = true;
@@ -80,7 +80,7 @@ namespace DefaultMissions
                 blip.Name = "UFO";
                 blip.Color = BlipColor.Green;
                 Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, playerPed, 0, 0, 0, 6, 25, 0, vehicle.Heading,
-                    Database.GalaxyCenter.Z - 100, Database.GalaxyCenter.Z - 250);
+                    SpaceModDatabase.GalaxyCenter.Z - 100, SpaceModDatabase.GalaxyCenter.Z - 250);
                 Ufos.Add(vehicle);
             }
         }
@@ -93,7 +93,7 @@ namespace DefaultMissions
             {
                 UI.ShowSubtitle("An ~g~Alien~s~ convoy approaches!", 7500);
                 CreateSpaceShips();
-                Utilities.DisplayHelpTextThisFrame(
+                SpaceModLib.DisplayHelpTextThisFrame(
                     "**COMS COME THROUGH FROM AN ALIEN AIRCRAFT**\n\n~g~Alien~s~: Turn back now human, or you will be shot down.\n\n" +
                     "~b~You~s~: Not on your life scum-bag. Wait... you mother f**kers speak English?");
                 DidLoad = true;

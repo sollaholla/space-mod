@@ -56,7 +56,7 @@ namespace DefaultMissions
             SpawnEnemies();
             PlayerPed.Weapons.Give(WeaponHash.MicroSMG, 750, true, true);
             UI.Notify("You grabbed a ~b~weapon~s~ out of your space-craft.");
-            Utilities.DisplayHelpTextThisFrame("Your space suit has been equipped with heavy armor to withstand the alien weapons.");
+            SpaceModLib.DisplayHelpTextThisFrame("Your space suit has been equipped with heavy armor to withstand the alien weapons.");
         }
 
         private void SpawnEnemies()
@@ -69,8 +69,7 @@ namespace DefaultMissions
                 Vector3 artificial = TryToGetGroundHeight(position);
                 if (artificial != Vector3.Zero) position = artificial;
 
-                Ped ped = Utilities.CreateAlien(position, WeaponHash.Railgun);
-                ped.SetDefaultClothes();
+                Ped ped = SpaceModLib.CreateAlien(position, WeaponHash.Railgun);
                 ped.Health = 3750;
                 ped.AlwaysDiesOnLowHealth = false;
                 ped.CanRagdoll = false;
@@ -106,9 +105,10 @@ namespace DefaultMissions
                 Vector3 artifical = TryToGetGroundHeight(position);
                 if (artifical != Vector3.Zero) position = artifical;
 
-                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 7.5f), (position - PlayerPosition).ToHeading());
+                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 7.5f));
 
-                spaceCraft.FreezePosition = true;
+	            spaceCraft.Heading = (spaceCraft.Position - PlayerPosition).ToHeading();
+				spaceCraft.FreezePosition = true;
                 spaceCraft.MaxHealth = 1000;
                 spaceCraft.Health = spaceCraft.MaxHealth;
 
@@ -153,7 +153,7 @@ namespace DefaultMissions
                     MissionStep++;
                     break;
                 case 1:
-                    Utilities.DisplayHelpTextThisFrame("Press ~INPUT_SPECIAL_ABILITY_SECONDARY~ to plant your flag!");
+                    SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_SPECIAL_ABILITY_SECONDARY~ to plant your flag!");
                     Game.DisableControlThisFrame(2, Control.SpecialAbilitySecondary);
                     if (!Game.IsDisabledControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
                     PlayerPed.Task.PlayAnimation("pickup_object", "pickup_low");
@@ -185,14 +185,14 @@ namespace DefaultMissions
 
                     if (Aliens.All(alien => alien.IsDead))
                     {
-                        Utilities.DisplayHelpTextThisFrame("You can use the alien's rifles to eliminate their motherships.");
+                        SpaceModLib.DisplayHelpTextThisFrame("You can use the alien's rifles to eliminate their motherships.");
                     }
                 }
 
                 return;
             }
 
-            Utilities.ArtificalDamage(alienPed, PlayerPed, 1.5f, 75);
+            SpaceModLib.ArtificialDamage(alienPed, PlayerPed, 1.5f, 75);
 
             float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
 
