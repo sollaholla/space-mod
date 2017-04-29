@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using GTA;
+using GTA.Math;
 
 namespace SpaceMod.Lib
 {
@@ -22,15 +23,8 @@ namespace SpaceMod.Lib
 		[DllImport("CppLib.dll")]
 		public static extern void CppLib_Unload();
 		
-		/// <summary>
-		/// Sets the scale of the specified entity using its script handle.
-		/// Make sure to use ".Handle" (e.g.prop.Handle) for this.
-		/// Does nothing if the entity doesn't exist.
-		/// </summary>
-		/// <param name="handle"></param>
-		/// <param name="scale"></param>
 		[DllImport("CppLib.dll")]
-		public static extern void CppLib_SetEntityScale(int handle, float scale);
+		public static extern void CppLib_SetEntityScale(int handle, float scaleX, float scaleY, float scaleZ);
 
 		public static void Init()
 		{
@@ -52,11 +46,11 @@ namespace SpaceMod.Lib
 		/// </summary>
 		/// <param name="entity"></param>
 		/// <param name="scale">The scale.</param>
-		public static void Scale(this Entity entity, float scale)
+		public static void Scale(this Entity entity, Vector3 scale)
 		{
 			Init();
 
-			CppLib_SetEntityScale(entity.Handle, scale);
+			CppLib_SetEntityScale(entity.Handle, scale.X, scale.Y, scale.Z);
 		}
 	}
 }

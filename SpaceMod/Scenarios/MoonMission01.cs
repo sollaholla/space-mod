@@ -6,6 +6,7 @@ using GTA.Math;
 using GTA.Native;
 using NativeUI;
 using SpaceMod.Extensions;
+using SpaceMod.Lib;
 using SpaceMod.Scenario;
 
 namespace DefaultMissions
@@ -167,7 +168,7 @@ namespace DefaultMissions
                     MissionStep++;
                     break;
                 case 2:
-                    BigMessageThread.MessageInstance.ShowMissionPassedMessage("~y~scenario complete!");
+                    BigMessageThread.MessageInstance.ShowMissionPassedMessage("~y~moon secure");
                     EndScenario(true);
                     break;
             }

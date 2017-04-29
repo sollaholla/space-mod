@@ -17,8 +17,8 @@ namespace SpaceMod
 			World.SetRelationshipBetweenGroups(Relationship.Hate, AlienRelationship, Game.Player.Character.RelationshipGroup);
 
 			TrevorAirport = new Vector3(1267.619f, 3137.67f, 40.41403f);
-			GalaxyCenter = new Vector3(-9994.448f, -12171.48f, 10000f);
-			PlanetSurfaceGalaxyCenter = new Vector3(-9994.448f, -12171.48f, 2500.197f);
+			GalaxyCenter = new Vector3(-10000f, -10000f, 10000f);
+			PlanetSurfaceGalaxyCenter = new Vector3(-10000f, -10000f, 10000f);
 			EarthAtmosphereEnterPosition = new Vector3(-3874.793f, 3878.417f, 780.7289f);
 		}
 

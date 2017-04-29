@@ -50,6 +50,7 @@ namespace SpaceMod.Scenes
 		public CustomScene(CustomXmlScene sceneData)
 		{
 			SceneData = sceneData;
+			OldVehicles = new List<Vehicle>();
 		}
 
 		internal Ped PlayerPed => Game.Player.Character;
@@ -77,6 +78,8 @@ namespace SpaceMod.Scenes
 
 		internal int IplCount { get; private set; }
 
+		internal List<Vehicle> OldVehicles { get; private set; }
+
 		internal void Start()
 		{
 			lock (_startLock)
@@ -92,14 +95,13 @@ namespace SpaceMod.Scenes
 					SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
 
 				WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
-
 				OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
-
 				DistanceText = new List<Tuple<UIText, UIText, Link>>();
 
 				ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
 				var section = Path.GetFileNameWithoutExtension(SceneFile);
 				OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
+				Vector3 vehicleSpawn = settings.GetValue(section, "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
 
 				SceneData.SceneLinks.ForEach(link =>
 				{
@@ -132,9 +134,10 @@ namespace SpaceMod.Scenes
 
 				Vehicle vehicle = PlayerPed.CurrentVehicle;
 
-				if (vehicle != null && vehicle.Exists())
+				if (Entity.Exists(vehicle))
 				{
 					PlayerLastVehicle = vehicle;
+					PlayerLastVehicle.IsInvincible = true;
 					PlayerLastVehicle.IsPersistent = true;
 
 					if (SceneData.SurfaceFlag)
@@ -142,7 +145,7 @@ namespace SpaceMod.Scenes
 						PlayerPed.Task.ClearAllImmediately();
 						vehicle.Quaternion = Quaternion.Identity;
 						vehicle.Rotation = Vector3.Zero;
-						vehicle.Position = StaticSettings.VehicleSurfaceSpawn + new Vector3(0, 0, 0.5f);
+						vehicle.PositionNoOffset = vehicleSpawn + Vector3.WorldUp;
 						vehicle.LandingGear = VehicleLandingGear.Deployed;
 						vehicle.Velocity = Vector3.Zero;
 						vehicle.EngineRunning = false;
@@ -181,8 +184,8 @@ namespace SpaceMod.Scenes
 			Debug.Log($"CreateLockedOrbital::Successfully loaded model: {data.Model}");
 			Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
 			prop.FreezePosition = true;
-			prop.Scale(data.Scale);
 			LockedOrbital orbital = new LockedOrbital(prop.Handle, data.OriginOffset, data.EmitLight, data.Scale);
+			//prop.Scale(new Vector3(data.Scale, data.Scale, data.Scale));
 			return orbital;
 		}
 
@@ -201,11 +204,9 @@ namespace SpaceMod.Scenes
 				return default(Orbital);
 			}
 			Debug.Log($"CreateOrbital::Successfully loaded model: {data.Model}");
-			Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
+			var prop = SpaceModLib.CreatePropNoOffset(model, (surface ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + data.OriginOffset, false);
 			prop.FreezePosition = true;
-			prop.Position = (surface ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + data.OriginOffset;
-			prop.Scale(data.Scale);
-			Orbital orbital = new Orbital(prop.Handle, data.Name, null, Vector3.Zero, data.RotationSpeed,
+			Orbital orbital = new Orbital(prop.Handle, data.Name, data.RotationSpeed,
 				data.EmitLight, data.Scale)
 			{
 				IsWormHole = data.IsWormHole
@@ -217,6 +218,8 @@ namespace SpaceMod.Scenes
 				blip.Color = BlipColor.Blue;
 				blip.Name = orbital.Name;
 			}
+			//prop.Scale(new Vector3(data.Scale, data.Scale, data.Scale));
+
 			return orbital;
 		}
 
@@ -292,12 +295,12 @@ namespace SpaceMod.Scenes
 
 				TryToStartNextScene();
 
-				if (SceneData.SurfaceFlag && PlayerLastVehicle != null &&
+				if (SceneData.SurfaceFlag && Entity.Exists(PlayerLastVehicle) &&
 					!string.IsNullOrEmpty(SceneData.NextSceneOffSurface))
 				{
-					float distance = Vector3.Distance(PlayerPosition, PlayerLastVehicle.Position);
+					const float distance = 15 * 2;
 
-					if (distance < 15)
+					if (PlayerPosition.DistanceToSquared(PlayerLastVehicle.Position) < distance && !PlayerPed.IsInVehicle())
 					{
 						SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to leave.");
 
@@ -309,9 +312,21 @@ namespace SpaceMod.Scenes
 						}
 					}
 
-					if (PlayerPed.IsGettingIntoAVehicle || PlayerPed.IsInVehicle())
+					if (PlayerPed.IsInVehicle(PlayerLastVehicle))
 					{
 						Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation);
+					}
+					else if (PlayerPed.IsInVehicle())
+					{
+						SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to leave with this vehicle.");
+
+						Game.DisableControlThisFrame(2, Control.Context);
+
+						if (Game.IsDisabledControlJustPressed(2, Control.Context))
+						{
+							OldVehicles.Add(PlayerLastVehicle);
+							PlayerLastVehicle = PlayerPed.CurrentVehicle;
+						}
 					}
 				}
 
@@ -327,13 +342,14 @@ namespace SpaceMod.Scenes
 
 		private void VehicleFly()
 		{
-			Vehicle vehicle = PlayerPed.CurrentVehicle;
-			if (vehicle == null) return;
-			if (!vehicle.Exists()) return;
-			if (vehicle.Driver != PlayerPed) return;
+			if (!Entity.Exists(PlayerLastVehicle))
+				return;
 
-			FlyEntity(vehicle, StaticSettings.VehicleFlySpeed, StaticSettings.MouseControlFlySensitivity,
-				!vehicle.IsOnAllWheels);
+			if (!PlayerPed.IsInVehicle(PlayerLastVehicle))
+				return;
+
+			FlyEntity(PlayerLastVehicle, StaticSettings.VehicleFlySpeed, StaticSettings.MouseControlFlySensitivity,
+				!PlayerLastVehicle.IsOnAllWheels);
 		}
 
 		private void PlayerFly()
@@ -459,7 +475,9 @@ namespace SpaceMod.Scenes
 
 							float distance = PlayerPosition.DistanceTo(_vehicleRepairPos);
 							Vector3 min, max, min2, max2;
-							GetDimensions(PlayerPed, out min, out max, out min2, out max2, out float radius);
+							float radius;
+
+							GetDimensions(PlayerPed, out min, out max, out min2, out max2, out radius);
 
 							if (distance > radius)
 							{
@@ -666,8 +684,8 @@ namespace SpaceMod.Scenes
 				Vector3 start = teleport.Start;
 				Vector3 end = teleport.End;
 
-				World.DrawMarker(MarkerType.UpsideDownCone, start, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Purple);
-				World.DrawMarker(MarkerType.UpsideDownCone, end, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Purple);
+				World.DrawMarker(MarkerType.VerticalCylinder, start - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
+				World.DrawMarker(MarkerType.VerticalCylinder, end - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
 
 				float distanceToStart = Vector3.Distance(PlayerPosition, start);
 				float distanceToEnd = Vector3.Distance(PlayerPosition, end);
@@ -801,6 +819,13 @@ namespace SpaceMod.Scenes
 			{
 				_flyHelper?.Delete();
 
+				while (OldVehicles.Count > 0)
+				{
+					var v = OldVehicles[OldVehicles.Count - 1];
+					v.Delete();
+					OldVehicles.RemoveAt(OldVehicles.Count - 1);
+				}
+
 				if (PlayerLastVehicle != null)
 				{
 					PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
@@ -870,7 +895,9 @@ namespace SpaceMod.Scenes
 					if (distanceToWormHole > gravitationalPullDistance)
 					{
 						Vector3 targetDir = wormHolePosition - PlayerPosition;
-						Vector3 targetVelocity = targetDir * 199.861639f; // Speed of light divided by 1,500,000
+
+						// FIXME: Something wrong here with velocity...
+						Vector3 targetVelocity = targetDir * 50;
 
 						if (PlayerPed.IsInVehicle())
 						{

@@ -5,6 +5,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 using SpaceMod.Extensions;
+using SpaceMod.Lib;
 
 namespace SpaceMod.Scenes.Interiors
 {
@@ -91,43 +92,38 @@ namespace SpaceMod.Scenes.Interiors
                     }
                     break;
                 case IplType.MapEditor:
+					_map = MyXmlSerializer.Deserialize<Map>
+						(SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
 
-					_map = MyXmlSerializer.Deserialize<Map>(SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
-
-                    if (_map != null)
+                    if (_map != null && _map != default(Map))
                     {
-                        if (_map.Objects != null)
-                        {
-                            _map.Objects.ForEach(o =>
-                            {
-                                var model = new Model(o.Hash);
-                                model.Request();
-                                var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
-                                while (!model.IsLoaded)
-                                {
-                                    Script.Yield();
-                                    if (DateTime.UtcNow > timeout2)
-                                        break;
-                                }
+						_map.Objects?.ForEach(mapObject =>
+						{
+							Model model = GetModel(mapObject);
 
-                                switch (o.Type)
-                                {
-                                    case ObjectTypes.Ped:
-                                        CreatePed(o, model);
-                                        break;
-                                    case ObjectTypes.Prop:
-                                        CreateProp(o, model);
-                                        break;
-                                    case ObjectTypes.Vehicle:
-                                        CreateVehicle(o, model);
-                                        break;
-                                }
-                            });
+							switch (mapObject.Type)
+							{
+								case ObjectTypes.Ped:
+									CreatePed(mapObject, model);
+									break;
+								case ObjectTypes.Prop:
+									CreateProp(mapObject, model);
+									break;
+								case ObjectTypes.Vehicle:
+									CreateVehicle(mapObject, model);
+									break;
+							}
+						});
 
-                            Debug.Log($"{_map.Objects.Count} Objects Tried To Be Created");
-                        }
-
-                        Debug.Log($"{Name} Created Successfully");
+	                    if (_map?.Objects != null)
+						{
+							Debug.Log(
+								$"Created {Name} With " + 
+								$"{Peds.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Ped)} Peds | " + 
+								$"{Vehicles.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Vehicle)} Vehicles | " +
+								$"{Props.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Prop)} Props"
+								);
+						}
                     }
                     else
                     {
@@ -138,7 +134,22 @@ namespace SpaceMod.Scenes.Interiors
             }
         }
 
-        private void CreateProp(MapObject mapObject, Model model)
+		private static Model GetModel(MapObject o)
+		{
+			var model = new Model(o.Hash);
+			model.Request();
+			var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
+			while (!model.IsLoaded)
+			{
+				Script.Yield();
+				if (DateTime.UtcNow > timeout2)
+					break;
+			}
+
+			return model;
+		}
+
+		private void CreateProp(MapObject mapObject, Model model)
         {
             var prop = SpaceModLib.CreatePropNoOffset(model, mapObject.Position, mapObject.Dynamic && mapObject.Door);
             if (prop == null) return;

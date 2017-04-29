@@ -41,12 +41,12 @@ namespace SpaceMod.Extensions
 
 		public static void LogEntityData(Entity entity)
 		{
-			Log("Logging entity data: " +
-				$"\nPosition = {entity.Position.X}f, {entity.Position.Y}f, {entity.Position.Z}f" +
-				$"\nHeading = {entity.Heading}" +
-				$"\nRotation = {entity.Rotation.X}f, {entity.Rotation.Y}f, {entity.Rotation.Z}f" +
-				$"\nQuaternion = {entity.Quaternion.X}f, {entity.Quaternion.Y}f, {entity.Quaternion.Z}f {entity.Quaternion.Z}f" +
-				$"\nHash = {entity.Model.Hash}");
+			Log("Logging entity data:\n" +
+				$"\tPosition: {entity.Position}\n" +
+				$"\tHeading: {entity.Heading}\n" +
+				$"\tRotation: {entity.Rotation}\n" +
+				$"\tQuaternion: {entity.Quaternion}\n" +
+				$"\tHash: {entity.Model.Hash}\n");
 
 			UI.Notify("Logged entity data.");
 		}

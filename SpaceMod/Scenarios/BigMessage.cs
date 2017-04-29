@@ -8,8 +8,8 @@ namespace DefaultMissions
     {
         private const float NotifyTime = 1.5f;
 
-        private const string MarsSceneName = "MarsOrbit.xml";
-        private const string EarthSceneName = "EarthOrbit.xml";
+        private const string MarsSceneName = "MarsOrbit.space";
+        private const string EarthSceneName = "EarthOrbit.space";
 
         private float _notifyTimeTimer;
 

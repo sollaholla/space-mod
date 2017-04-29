@@ -7,7 +7,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 
-namespace SpaceMod.Extensions
+namespace SpaceMod.Lib
 {
     public static class Mathf
     {
@@ -550,4 +550,17 @@ namespace SpaceMod.Extensions
         }
     }
 
+	public static class TimeCycleModifier
+	{
+		public static void Set(string name, float strength)
+		{
+			Function.Call(Hash.SET_TIMECYCLE_MODIFIER, name);
+			Function.Call(Hash.SET_TIMECYCLE_MODIFIER_STRENGTH, strength);
+		}
+
+		public static void Clear()
+		{
+			Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
+		}
+	}
 }

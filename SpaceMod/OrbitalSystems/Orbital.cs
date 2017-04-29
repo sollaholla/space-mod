@@ -2,14 +2,13 @@
 using GTA;
 using GTA.Math;
 using SpaceMod.Extensions;
+using SpaceMod.Lib;
 using Font = GTA.Font;
 
 namespace SpaceMod.OrbitalSystems
 {
     public class Orbital : LockedOrbital
     {
-        private readonly Vector3 _orbitalVelocity;
-
         private readonly UIText _nameText = new UIText(string.Empty, new Point(), 0.5f)
         {
             Centered = true,
@@ -17,20 +16,15 @@ namespace SpaceMod.OrbitalSystems
             Shadow = true
         };
 
-        public Orbital(int handle, string name, Entity orbitalEntity, Vector3 orbitalVelocity, float rotationSpeed, bool emitLight,
+        public Orbital(int handle, string name, float rotationSpeed, bool emitLight,
 				float scale, bool showUiByDefault = true) : base(handle, Vector3.Zero, emitLight, scale)
         {
-            _orbitalVelocity = orbitalVelocity;
-
             Name = name;
-            OrbitalEntity = orbitalEntity;
             RotationSpeed = rotationSpeed;
             ShowUiByDefault = showUiByDefault;
         }
 
         public string Name { get; set; }
-
-        public Entity OrbitalEntity { get; set; }
 
         public float RotationSpeed { get; set; }
 
@@ -40,11 +34,6 @@ namespace SpaceMod.OrbitalSystems
         
         public void Orbit()
         {
-            if (OrbitalEntity != null)
-            {
-                Position = SpaceModLib.RotatePointAroundPivot(Position, OrbitalEntity.Position, _orbitalVelocity);
-            }
-
             var rotation = Rotation;
             rotation.Z += Game.LastFrameTime * RotationSpeed;
             Rotation = rotation;

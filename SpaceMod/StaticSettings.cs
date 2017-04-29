@@ -8,7 +8,7 @@ namespace SpaceMod
         public static bool UseScenarios = true;
         public static bool UseFloating = true;
         public static float MouseControlFlySensitivity = 3;
-        public static Vector3 VehicleSurfaceSpawn = new Vector3(-9978f, -12190.14f, 2500f);
+        public static Vector3 VehicleSurfaceSpawn = new Vector3(-10015f, -10015f, 10001f);
         public static int VehicleFlySpeed = 10;
     }
 }

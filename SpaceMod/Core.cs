@@ -15,7 +15,6 @@ using SpaceMod.Extensions;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;
 using SpaceMod.Scenes;
-//using Control = GTA.Control;
 using Menu = SolomanMenu.Menu;
 
 namespace SpaceMod
@@ -118,7 +117,6 @@ namespace SpaceMod
 
 		private void OnTick(object sender, EventArgs eventArgs)
 		{
-
 			if (!Monitor.TryEnter(_tickLock)) return;
 
 			try
@@ -145,7 +143,7 @@ namespace SpaceMod
 					switch (timeType)
 					{
 						case TimeType.Night:
-							World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 22, 0, 0);
+							World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 1, 30, 0);
 							break;
 						case TimeType.Day:
 							World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
