@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using NativeUI;
 using SpaceMod;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;
@@ -91,11 +90,8 @@ namespace DefaultMissions
 
             if (!DidLoad)
             {
-                UI.ShowSubtitle("An ~g~Alien~s~ convoy approaches!", 7500);
+                SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_22", 7500);
                 CreateSpaceShips();
-                SpaceModLib.DisplayHelpTextThisFrame(
-                    "**COMS COME THROUGH FROM AN ALIEN AIRCRAFT**\n\n~g~Alien~s~: Turn back now human, or you will be shot down.\n\n" +
-                    "~b~You~s~: Not on your life scum-bag. Wait... you mother f**kers speak English?");
                 DidLoad = true;
             }
             else
@@ -110,7 +106,7 @@ namespace DefaultMissions
 
                         if (Ufos.TrueForAll(x => !x.CurrentBlip.Exists()))
                         {
-                            BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~enemies eliminated");
+                            BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_3"));
                             EndScenario(true);
                         }
                         return;

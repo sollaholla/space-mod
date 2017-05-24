@@ -65,7 +65,7 @@ namespace SpaceMod.Scenes.Interiors
             Peds = new List<Ped>();
         }
 
-        public bool IsActive => !string.IsNullOrEmpty(Name) && Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) || _map != null && _map.Objects.Any();
+        public bool IsActive => !string.IsNullOrEmpty(Name) && (Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) || _map != null && _map.Objects.Any());
 
         public List<Vehicle> Vehicles { get; }
 
@@ -78,6 +78,7 @@ namespace SpaceMod.Scenes.Interiors
         public void Request()
         {
             if (IsActive) return;
+			Debug.Log("Current IPL Type: " + _type);
             switch (_type)
             {
                 case IplType.GTA:
@@ -90,6 +91,7 @@ namespace SpaceMod.Scenes.Interiors
                         if (DateTime.UtcNow > time)
                             break;
                     }
+					Debug.Log("Tried to request IPL: " + Name);
                     break;
                 case IplType.MapEditor:
 					_map = MyXmlSerializer.Deserialize<Map>
@@ -181,18 +183,24 @@ namespace SpaceMod.Scenes.Interiors
             ped.Quaternion = mapObject.Quaternion;
             if (mapObject.Weapon != null)
                 ped.Weapons.Give(mapObject.Weapon.Value, 15, true, true);
-            ped.SetDefaultClothes();
             SetScenario(mapObject, ped);
-            Relationship relationship;
+
+			Relationship relationship;
             if (Enum.TryParse(mapObject.Relationship, out relationship))
             {
                 if (relationship == Relationship.Hate)
                     ped.RelationshipGroup = Game.GenerateHash("HATES_PLAYER");
-                World.SetRelationshipBetweenGroups(relationship, ped.RelationshipGroup,
-                    Game.Player.Character.RelationshipGroup);
-                World.SetRelationshipBetweenGroups(relationship, Game.Player.Character.RelationshipGroup,
-                    ped.RelationshipGroup);
+
+                World.SetRelationshipBetweenGroups(relationship, ped.RelationshipGroup, Game.Player.Character.RelationshipGroup);
+                World.SetRelationshipBetweenGroups(relationship, Game.Player.Character.RelationshipGroup, ped.RelationshipGroup);
+
+	            if (relationship == Relationship.Companion)
+	            {
+		            ped.CanBeTargetted = false;
+		            ped.RelationshipGroup = Game.Player.Character.RelationshipGroup;
+	            }
             }
+
             ped.BlockPermanentEvents = false;
             model.MarkAsNoLongerNeeded();
             Peds?.Add(ped);

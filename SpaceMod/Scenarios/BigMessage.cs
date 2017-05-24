@@ -1,5 +1,5 @@
 ﻿using GTA;
-using NativeUI;
+using SpaceMod.Lib;
 using SpaceMod.Scenario;
 
 namespace DefaultMissions
@@ -18,7 +18,6 @@ namespace DefaultMissions
         public override void OnUpdate()
         {
             if (Game.IsLoading) return;
-
             _notifyTimeTimer += Game.LastFrameTime;
 
             if (_notifyTimeTimer < NotifyTime) return;
@@ -27,7 +26,7 @@ namespace DefaultMissions
             if (CurrentScene.SceneFile == MarsSceneName && CurrentScene.SceneData.LastSceneFile == EarthSceneName ||
                 CurrentScene.SceneFile == EarthSceneName && CurrentScene.SceneData.LastSceneFile == MarsSceneName) 
             {
-                BigMessageThread.MessageInstance.ShowMissionPassedMessage("~w~weeks later...");
+                BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_5"));
             }
 
             EndScenario(false);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace SpaceMod.Extensions
@@ -9,7 +10,11 @@ namespace SpaceMod.Extensions
         public static T Deserialize<T>(string path)
         {
             var obj = default(T);
-            if (!File.Exists(path)) return obj;
+	        if (!File.Exists(path))
+	        {
+				Debug.Log($"XmlSerializer::Deserialize - File {path} does not exist!");
+		        return obj;
+	        }
             try
             {
                 var serializer = new XmlSerializer(typeof(T));
@@ -20,7 +25,7 @@ namespace SpaceMod.Extensions
             catch (Exception ex)
             {
                 File.WriteAllText(@"./scripts/SpaceModSerializer.log",
-                    $"\n[{DateTime.UtcNow.ToShortDateString()}] {ex.Message}");
+                    $"[{DateTime.UtcNow.ToShortDateString()}] {ex.Message}\n{ex.StackTrace}");
             }
             return obj;
         }
@@ -37,7 +42,7 @@ namespace SpaceMod.Extensions
             catch (Exception ex)
             {
                 File.WriteAllText(@"./scripts/SpaceModSerializer.log",
-                    $"\n[{DateTime.UtcNow.ToShortDateString()}] {ex.Message}");
+                    $"[{DateTime.UtcNow.ToShortDateString()}] {ex.Message}\n{ex.StackTrace}");
             }
         }
     }

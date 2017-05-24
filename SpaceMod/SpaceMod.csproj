@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Lib\V3Parse.cs" />
     <Compile Include="SpaceModDatabase.cs" />
     <Compile Include="Lib\CppLib.cs" />
     <Compile Include="Scenario\CustomScenario.cs" />

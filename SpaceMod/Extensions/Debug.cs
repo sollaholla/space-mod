@@ -37,6 +37,11 @@ namespace SpaceMod.Extensions
 			File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + "\n" : string.Empty)}" +
 									$"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
 									$"[{DateTime.Now.Hour:00}:{DateTime.Now.Minute:00}:{DateTime.Now.Second:00}] {message}");
+
+			if (type == DebugMessageType.Error)
+			{
+				UI.Notify("An error has occured. You can find more information in SpaceMod.log");
+			}
 		}
 
 		public static void LogEntityData(Entity entity)

@@ -20,7 +20,7 @@ namespace DefaultMissions.Scenes.SceneTypes
 
 		public void Spawn()
 		{
-			Model model = new Model("fibufo");
+			Model model = new Model("prop_spinning_anus01");
 
 			if (model.Request(5000))
 			{
@@ -29,21 +29,13 @@ namespace DefaultMissions.Scenes.SceneTypes
 			}
 
 			// TODO: Add europa surface here when its finished.
-			Model surfaceModel = new Model("europa_surface");
+			Model surfaceModel = new Model("sm_prop_europa");
 
 			if (surfaceModel.Request(5000))
 			{
 				Prop p = new Prop(World.CreateProp(surfaceModel, _spawn, false, false).Handle) {FreezePosition = true};
 				_entities.Add(p);
 			}
-
-			//Model domeModel = new Model("spacedome");
-
-			//if (domeModel.Request(5000))
-			//{
-			//	Prop p = new Prop(World.CreateProp(domeModel, _spawn, false, false).Handle) { FreezePosition = true };
-			//	_entities.Add(p);
-			//}
 
 			if (_entities.Count < 2)
 				Failed = true;

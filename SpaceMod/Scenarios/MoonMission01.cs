@@ -4,8 +4,6 @@ using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using NativeUI;
-using SpaceMod.Extensions;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;
 
@@ -56,8 +54,8 @@ namespace DefaultMissions
         {
             SpawnEnemies();
             PlayerPed.Weapons.Give(WeaponHash.MicroSMG, 750, true, true);
-            UI.Notify("You grabbed a ~b~weapon~s~ out of your space-craft.");
-            SpaceModLib.DisplayHelpTextThisFrame("Your space suit has been equipped with heavy armor to withstand the alien weapons.");
+            SpaceModLib.NotifyWithGXT("GTS_LABEL_23");
+            SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_2");
         }
 
         private void SpawnEnemies()
@@ -105,9 +103,14 @@ namespace DefaultMissions
                 Vector3 position = origin.Around(75);
                 Vector3 artifical = TryToGetGroundHeight(position);
                 if (artifical != Vector3.Zero) position = artifical;
+	            position = position + new Vector3(0, 0, 7.5f);
 
-                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position + new Vector3(0, 0, 7.5f));
+				if (World.GetNearbyVehicles(position, 50).Any())
+		            continue;
+				if (World.GetNearbyProps(position, 25).Any())
+					continue;
 
+				Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position);
 	            spaceCraft.Heading = (spaceCraft.Position - PlayerPosition).ToHeading();
 				spaceCraft.FreezePosition = true;
                 spaceCraft.MaxHealth = 1000;
@@ -150,11 +153,11 @@ namespace DefaultMissions
 
                     List<Entity> concatList = Aliens.Concat(Ufos).ToList();
                     if (!concatList.All(entity => entity.IsDead)) return;
-                    BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~enemies eliminated");
+                    BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_3"));
                     MissionStep++;
                     break;
                 case 1:
-                    SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_SPECIAL_ABILITY_SECONDARY~ to plant your flag!");
+                    SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_3");
                     Game.DisableControlThisFrame(2, Control.SpecialAbilitySecondary);
                     if (!Game.IsDisabledControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
                     PlayerPed.Task.PlayAnimation("pickup_object", "pickup_low");
@@ -168,7 +171,7 @@ namespace DefaultMissions
                     MissionStep++;
                     break;
                 case 2:
-                    BigMessageThread.MessageInstance.ShowMissionPassedMessage("~y~moon secure");
+                    BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_4"));
                     EndScenario(true);
                     break;
             }
@@ -184,9 +187,10 @@ namespace DefaultMissions
                     alienPed.CurrentBlip.Remove();
                     alienPed.CanRagdoll = true;
 
-                    if (Aliens.All(alien => alien.IsDead))
+                    if (Aliens.All(alien => alien.IsDead) 
+						&& Ufos.Count > 0 && Ufos.Any(u => !u.IsDead))
                     {
-                        SpaceModLib.DisplayHelpTextThisFrame("You can use the alien's rifles to eliminate their motherships.");
+                        SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_4");
                     }
                 }
 

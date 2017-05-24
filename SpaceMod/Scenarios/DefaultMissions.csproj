@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,10 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\DLL\NativeUI.dll</HintPath>
-    </Reference>
     <Reference Include="ScriptHookVDotNet">
       <HintPath>..\..\..\..\..\Rockstar Games\GTA V\DLL\ScriptHookVDotNet.dll</HintPath>
     </Reference>
@@ -53,8 +50,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigMessage.cs" />
+    <Compile Include="CollectableScenario.cs" />
     <Compile Include="KaroonMission01.cs" />
     <Compile Include="MarsMission01.cs" />
+    <Compile Include="MarsMission02.cs" />
     <Compile Include="MoonMission01.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scenes\MiniScene.cs" />

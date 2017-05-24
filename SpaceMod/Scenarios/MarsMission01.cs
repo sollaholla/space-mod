@@ -6,42 +6,36 @@ using DefaultMissions.Scenes.SceneTypes;
 using GTA;
 using GTA.Native;
 using GTA.Math;
-using NativeUI;
 using SpaceMod;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;
-using SpaceMod.Scenes;
 
 namespace DefaultMissions
 {
 	public class MarsMission01 : CustomScenario
 	{
+		private const string MarsBaseInteriorName = "Mars/mars_base_int_01";
 		private readonly string _ufoModelName = "zanufo";
 
 		private Model _ufoModel;
-
 		private bool _didNotify;
 		private bool _didSetTimeCycle;
 		private bool _isCheckingSats;
+		private Prop _alienEggProp;
 
 		private readonly MarsMissionSatelliteScene _satelliteScene;
-
-		//Position: X:-2013.115 Y:3198.238 Z:32.81007
 		private readonly Vector3 _computerPos = new Vector3(-2013.115f, 3198.238f, 32.81007f);
 
 		public MarsMission01()
 		{
-
 			Aliens = new List<Ped>();
 			Ufos = new List<Vehicle>();
+			_satelliteScene = new MarsMissionSatelliteScene();
+
 			OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
 			OriginalMaxHealth = PlayerPed.MaxHealth;
 			PlayerPed.MaxHealth = 1500;
 			PlayerPed.Health = PlayerPed.MaxHealth;
-			PlayerPed.CanRagdoll = false;
-			PlayerPed.IsExplosionProof = true;
-
-			_satelliteScene = new MarsMissionSatelliteScene();
 
 			_ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
 			CurrentMissionStep = Settings.GetValue("mission", "current_mission_step", 0);
@@ -58,9 +52,9 @@ namespace DefaultMissions
 
 		public Ped PlayerPed => Game.Player.Character;
 
-		public bool OriginalCanPlayerRagdoll { get; }
+		public bool OriginalCanPlayerRagdoll { get; set; }
 
-		public int OriginalMaxHealth { get; }
+		public int OriginalMaxHealth { get; set;  }
 
 		public Prop EnterenceBlocker { get; private set; }
 
@@ -71,6 +65,16 @@ namespace DefaultMissions
 
 		public override void Start()
 		{
+			//ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + "/DefaultMissions.MoonMission01.ini");
+			//if (!settings.GetValue("SCENARIO_CONFIG", "COMPLETE", false))
+			//{
+			//	EndScenario(false);
+			//	return;
+			//}
+
+			PlayerPed.CanRagdoll = false;
+			PlayerPed.IsExplosionProof = true;
+
 			if (CurrentMissionStep == 0 && CurrentScene.SceneFile == "MarsSurface.space")
 			{
 				SpawnEntities();
@@ -146,7 +150,7 @@ namespace DefaultMissions
 			}
 		}
 
-		private static Vector3 TryToGetGroundHeight(Vector3 position)
+		private Vector3 TryToGetGroundHeight(Vector3 position)
 		{
 			var artificial = position.MoveToGroundArtificial();
 			var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
@@ -168,22 +172,24 @@ namespace DefaultMissions
 		{
 			if (CurrentMissionStep < 6 && CurrentScene.SceneFile != "MarsSurface.space")
 				return;
-
 			if (CurrentMissionStep >= 6 && CurrentScene.SceneFile != "EuropaSurface.space")
 				return;
 
 			if (CurrentMissionStep < 1)
 			{
-				if (!Entity.Exists(EnterenceBlocker))
+				if (!Entity.Exists(EnterenceBlocker) && CurrentScene.SceneData.Ipls.Any() && CurrentScene.SceneData.Ipls.Any())
 				{
 					EnterenceBlocker =
 						new Prop(
-							World.CreateProp("lts_prop_lts_elecbox_24b", CurrentScene.SceneData.Ipls[0].Teleports[0].Start, Vector3.Zero,
+							World.CreateProp("lts_prop_lts_elecbox_24b", CurrentScene.SceneData.Ipls[0]?.Teleports[0]?.Start ?? Vector3.Zero, Vector3.Zero,
 								false,
 								false).Handle)
 						{ IsVisible = false };
 				}
 			}
+
+			var isInUfo = IsInInterior("EuropaSurface.space", "Europa/ufo_interior");
+			Vector3 spawnAlienEgg = new Vector3(-10018.03f, -9976.996f, 10042.64f) + Vector3.WorldDown;
 
 			switch (CurrentMissionStep)
 			{
@@ -192,7 +198,7 @@ namespace DefaultMissions
 					{
 						if (!_didNotify)
 						{
-							SpaceModLib.DisplayHelpTextThisFrame("You need to eliminate the remaining enemies first!");
+							SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_1");
 							_didNotify = true;
 						}
 					}
@@ -205,12 +211,11 @@ namespace DefaultMissions
 					Ufos.ForEach(UpdateUfo);
 					if (Aliens.All(a => a.IsDead) && Ufos.All(u => Entity.Exists(u.Driver) && u.Driver.IsDead))
 					{
-						BigMessageThread.MessageInstance.ShowMissionPassedMessage("~r~ enemies eliminated");
 						CurrentMissionStep++;
 					}
 					break;
 				case 1:
-					UI.ShowSubtitle("Go into the ~b~base~s~ and make sure the satellite systems weren't destroyed.", 7000);
+					SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_15");
 					if (Entity.Exists(EnterenceBlocker))
 					{
 						EnterenceBlocker.Delete();
@@ -218,7 +223,7 @@ namespace DefaultMissions
 					CurrentMissionStep++;
 					break;
 				case 2:
-					if (IsInInterior("MarsSurface.space", "Mars/mbi2"))
+					if (IsInInterior("MarsSurface.space", MarsBaseInteriorName))
 					{
 						Vector3[] spawnPoints =
 						{
@@ -227,9 +232,8 @@ namespace DefaultMissions
 							new Vector3(-1991.477f, 3205.936f, 32.81038f),
 							new Vector3(-1997.719f, 3211.335f, 32.83896f)
 						};
-						for (var i = 0; i < spawnPoints.Length; i++)
+						foreach (var spawn in spawnPoints)
 						{
-							var spawn = spawnPoints[i];
 							var alien = SpaceModLib.CreateAlien(spawn, WeaponHash.MicroSMG);
 							alien.Heading = (PlayerPed.Position - alien.Position).ToHeading();
 							alien.Task.FightAgainst(PlayerPed, -1);
@@ -240,10 +244,10 @@ namespace DefaultMissions
 					}
 					break;
 				case 3:
-					Aliens.ForEach(a => UpdateAlien2(a, "MarsSurface.space", "Mars/mbi2"));
+					Aliens.ForEach(a => UpdateAlien2(a, "MarsSurface.space", MarsBaseInteriorName));
 					if (Aliens.All(a => a.IsDead))
 					{
-						UI.ShowSubtitle("Check the satellite systems.", 7000);
+						SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_16");
 						Aliens.Clear();
 						CurrentMissionStep++;
 					}
@@ -259,7 +263,7 @@ namespace DefaultMissions
 
 						if (distance < interactDist)
 						{
-							SpaceModLib.DisplayHelpTextThisFrame("Press ~INPUT_CONTEXT~ to check the satellites.");
+							SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_5");
 							Game.DisableControlThisFrame(2, Control.Talk);
 							Game.DisableControlThisFrame(2, Control.Context);
 
@@ -281,34 +285,40 @@ namespace DefaultMissions
 							return;
 						}
 						_satelliteScene.Update();
-						SpaceModLib.DisplayHelpTextThisFrame(
-							"~b~You:~s~ Holy sh*t! This is on Europa. " +
-							"These f**kers are in more places than I expected. " +
-							"I better go check it out.~n~~n~Press ~INPUT_CONTEXT~ to continue.");
+						SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_6");
 						Game.DisableControlThisFrame(2, Control.Talk);
 						Game.DisableControlThisFrame(2, Control.Context);
 						if (Game.IsDisabledControlJustPressed(2, Control.Context))
 						{
 							_satelliteScene.Remove();
 							TimeCycleModifier.Clear();
+							UI.ShowSubtitle(string.Empty); // just to clear the subtitle.
 							CurrentMissionStep++;
 						}
 						if (!_didSetTimeCycle)
 						{
+							SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_17");
 							TimeCycleModifier.Set("CAMERA_secuirity_FUZZ", 1f);
 							_didSetTimeCycle = true;
 						}
 					}
 					break;
 				case 5:
-					BigMessageThread.MessageInstance.ShowMissionPassedMessage("~y~mars secure");
 					Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-					UI.ShowSubtitle("Go to ~b~Europa~s~ to investigate the ~r~mothership~s~.", 7000);
-					SpaceModLib.DisplayHelpTextThisFrame("~b~You:~s~ This sh*t is getting out of hand.");
+					BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_0"));
+					Script.Wait(1000);
+					SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_18");
 					CurrentMissionStep++;
 					break;
 				case 6:
-					if (IsInInterior("EuropaSurface.space", "Europa/ufo_interior"))
+					if (CurrentScene.SceneFile == "EuropaSurface.space")
+					{
+						SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_19");
+						CurrentMissionStep++;
+					}
+					break;
+				case 7:
+					if (isInUfo)
 					{
 						Vector3[] spawnPoints =
 						{
@@ -317,31 +327,63 @@ namespace DefaultMissions
 							new Vector3(-10024.99f, -9963.521f, 10041.6f),
 							new Vector3(-10015.08f, -9968.357f, 10041.6f),
 						};
-						for (int i = 0; i < spawnPoints.Length; i++)
+						foreach (var spawn in spawnPoints)
 						{
-							var spawn = spawnPoints[i];
 							var alien = SpaceModLib.CreateAlien(spawn, WeaponHash.MicroSMG);
 							alien.Heading = (PlayerPed.Position - alien.Position).ToHeading();
 							alien.Task.FightAgainst(PlayerPed, -1);
 							Aliens.Add(alien);
 						}
+						_alienEggProp = World.CreateProp("sm_alien_egg_w_container", spawnAlienEgg, false, false);
+						_alienEggProp.FreezePosition = true;
+						_alienEggProp.Heading = (PlayerPosition - spawnAlienEgg).ToHeading();
+
 						CurrentMissionStep++;
 					}
 					break;
-				case 7:
-					if (IsInInterior("EuropaSurface.space", "Europa/ufo_interior"))
+				case 8:
+					if (_alienEggProp == null)
+					{
+						CurrentMissionStep = 7;
+						return;
+					}
+
+					if (isInUfo)
 					{
 						Aliens.ForEach(a => UpdateAlien2(a, "EuropaSurface.space", "Europa/ufo_interior"));
 						if (Aliens.All(a => a.IsDead))
 						{
-							BigMessageThread.MessageInstance.ShowMissionPassedMessage("~y~europa secure");
-							Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
 							Aliens.Clear();
+							SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_20");
 							CurrentMissionStep++;
 						}
 					}
 					break;
-				case 8:
+				case 9:
+					if (_alienEggProp == null)
+					{
+						CurrentMissionStep = 7;
+						return;
+					}
+
+					if (isInUfo)
+					{
+						float distance = PlayerPosition.DistanceTo(_alienEggProp.Position);
+						if (distance < 1.3f)
+						{
+							SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_7");
+							Game.DisableControlThisFrame(2, Control.Context);
+
+							if (Game.IsDisabledControlJustPressed(2, Control.Context))
+							{
+								SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_21");
+								BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_1"));
+								Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
+								_alienEggProp.Delete();
+								EndScenario(true);
+							}
+						}
+					}
 					break;
 			}
 		}
@@ -361,7 +403,12 @@ namespace DefaultMissions
 
 			if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
 			{
-				ufo.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "Mars/mbi2";
+				ufo.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == MarsBaseInteriorName;
+			}
+
+			if (Entity.Exists(ufo.Driver))
+			{
+				SpaceModLib.ArtificialDamage(ufo.Driver, PlayerPed, 150, 150);
 			}
 
 			if (ufo.IsDead || (Entity.Exists(ufo.Driver) && ufo.Driver.IsDead) || !ufo.IsDriveable)
@@ -403,7 +450,7 @@ namespace DefaultMissions
 		{
 			if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
 			{
-				alienPed.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == "Mars/mbi2";
+				alienPed.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == MarsBaseInteriorName;
 			}
 
 			if (alienPed.IsDead)
@@ -448,7 +495,6 @@ namespace DefaultMissions
 
 			TimeCycleModifier.Clear();
 			_satelliteScene?.Remove();
-
 		}
 
 		public override void OnEnded(bool success)
@@ -495,6 +541,10 @@ namespace DefaultMissions
 			{
 				EnterenceBlocker.Delete();
 			}
+			if (Entity.Exists(_alienEggProp))
+			{
+				_alienEggProp.Delete();
+			}
 		}
 
 		private void CleanUp()
@@ -518,7 +568,10 @@ namespace DefaultMissions
 			{
 				EnterenceBlocker.Delete();
 			}
+			if (Entity.Exists(_alienEggProp))
+			{
+				_alienEggProp.Delete();
+			}
 		}
-
 	}
 }

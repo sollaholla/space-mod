@@ -22,15 +22,11 @@ namespace SpaceMod
 	public class Core : Script
 	{
 		private float _enterOrbitHeight = 5000;
-
 		private Keys _optionsMenuKey = Keys.NumPad9;
-
 		private MenuConnector _menuConnector;
-
 		private Menu _menu;
 
 		private readonly object _tickLock;
-
 		private CustomScene _currentScene;
 
 		public Core()
@@ -51,7 +47,6 @@ namespace SpaceMod
 		}
 
 		public Ped PlayerPed => Game.Player.Character;
-
 		public Vector3 PlayerPosition {
 			get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
 			set {
@@ -65,9 +60,7 @@ namespace SpaceMod
 				}
 			}
 		}
-
 		public List<CustomScenario> Scenarios { get; private set; }
-
 		internal static Core Instance { get; private set; }
 
 		internal CustomScene GetCurrentScene()
@@ -81,7 +74,6 @@ namespace SpaceMod
 
 			if (!PlayerPed.IsDead)
 				Game.FadeScreenIn(0);
-
 			PlayerPed.HasGravity = true;
 			PlayerPed.FreezePosition = false;
 
@@ -93,25 +85,33 @@ namespace SpaceMod
 			{
 				while (Scenarios.Count > 0)
 				{
-					var scen = Scenarios[0];
-					scen.OnAborted();
+					var scenario = Scenarios[0];
+					scenario.OnAborted();
 					Scenarios.RemoveAt(0);
 				}
 			}
 
-			if (_currentScene != null && _currentScene != default(CustomScene))
-				PlayerPosition = SpaceModDatabase.TrevorAirport;
-
-			if (_currentScene != null)
+			if (_currentScene != default(CustomScene))
+			{
+				GiveRespawnControlToGame();
+				if (!PlayerPed.IsDead)
+					PlayerPosition = SpaceModDatabase.TrevorAirport;
 				ResetWeather();
-
+			}
 			_currentScene = null;
 		}
 
-		private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
+		private void OnKeyUp(object sender, KeyEventArgs e)
 		{
+			if (e.KeyCode == Keys.K)
+			{
+				string input = Game.GetUserInput(100);
+				Function.Call(Hash.REQUEST_IPL, input);
+				UI.ShowSubtitle("Requested IPL: " + input);
+			}
+
 			if (_menuConnector.AreMenusVisible()) return;
-			if (keyEventArgs.KeyCode != _optionsMenuKey) return;
+			if (e.KeyCode != _optionsMenuKey) return;
 			_menu.Draw = true;
 		}
 
@@ -122,13 +122,6 @@ namespace SpaceMod
 			try
 			{
 				_menuConnector.UpdateMenus();
-
-				if (PlayerPed.IsDead && _currentScene != null)
-				{
-					CurrentSceneOnExited(null, "cmd_earth", Vector3.Zero);
-
-					return;
-				}
 
 				DisableWantedStars();
 
@@ -393,9 +386,7 @@ namespace SpaceMod
 					_currentScene.Delete();
 				}
 
-				_currentScene = new CustomScene(customXmlScene) { SceneFile = fileName };
-				_currentScene.Start();
-				_currentScene.Exited += CurrentSceneOnExited;
+				ClearNonPersistantEntities();
 
 				if (PlayerPed.IsInVehicle())
 				{
@@ -405,6 +396,10 @@ namespace SpaceMod
 				{
 					PlayerPed.Rotation = Vector3.Zero;
 				}
+
+				_currentScene = new CustomScene(customXmlScene) { SceneFile = fileName };
+				_currentScene.Start();
+				_currentScene.Exited += CurrentSceneOnExited;
 
 				if (StaticSettings.UseScenarios)
 				{
@@ -442,76 +437,94 @@ namespace SpaceMod
 			}
 		}
 
+		private void ClearNonPersistantEntities(Vector3 pos = default(Vector3), float distance = int.MaxValue)
+		{
+			Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+			Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+			Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+			Function.Call(Hash.SET_NUMBER_OF_PARKED_VEHICLES, 0f);
+			Function.Call((Hash)0xF796359A959DF65D, false);
+
+			Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+			Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f, 0f);
+
+			Function.Call((Hash)0x2F9A292AD0A3BD89);
+			Function.Call((Hash)0x5F3B7749C112D552);
+
+			Function.Call(Hash.DELETE_ALL_TRAINS);
+			Function.Call(Hash.DESTROY_MOBILE_PHONE);
+
+			Function.Call(Hash.SET_GARBAGE_TRUCKS, 0);
+			Function.Call(Hash.SET_RANDOM_BOATS, 0);
+			Function.Call(Hash.SET_RANDOM_TRAINS, 0);
+
+			Function.Call(Hash.CLEAR_AREA_OF_PEDS, pos.X, pos.Y, pos.Z, distance, 0);
+			Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, pos.X, pos.Y, pos.Z, distance, 0);
+			Function.Call(Hash.CLEAR_AREA_OF_COPS, pos.X, pos.Y, pos.Z, distance, 0);
+		}
+
 		private void CurrentSceneOnExited(CustomScene scene, string newSceneFile, Vector3 exitRotation)
 		{
 			lock (_tickLock)
 			{
-				if (!PlayerPed.IsDead)
-				{
-					Game.FadeScreenOut(1000);
-					Wait(1000);
-				}
+				bool isActualScene = newSceneFile != "cmd_earth";
+				CustomXmlScene newScene = DeserialzeSceneFile(scene, newSceneFile);
+				if (isActualScene)
+					if (PlayerPed.IsInVehicle() && newScene.SurfaceFlag)
+						PlayerPed.CurrentVehicle.LandingGear = VehicleLandingGear.Deployed;
+
+				Game.FadeScreenOut(1000);
+				Wait(1000);
 
 				_currentScene?.Delete();
 				_currentScene = null;
 
 				ResetWeather();
 				EndActiveScenarios();
+				ClearNonPersistantEntities();
 
 				if (newSceneFile != "cmd_earth")
 				{
-					var newScene =
-						MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + newSceneFile);
-
-					if (newScene == default(CustomXmlScene))
-					{
-						UI.Notify(
-							"Your custom scene ~r~failed~s~ to load, because the file specified was " +
-							"either not written correctly or was invalid.");
-						throw new XmlException(newSceneFile);
-					}
-
-					newScene.LastSceneFile = scene.SceneFile;
-
 					CreateSceneFromCustomXmlScene(newScene, newSceneFile);
-
 					if (PlayerPed.IsInVehicle())
-					{
 						PlayerPed.CurrentVehicle.Rotation = exitRotation;
-					}
-					else
-					{
-						PlayerPed.Rotation = exitRotation;
-					}
+					else PlayerPed.Rotation = exitRotation;
 				}
 				else
 				{
-					if (!PlayerPed.IsDead)
+					GiveRespawnControlToGame();
+					if (PlayerPed.IsInVehicle())
 					{
-						if (PlayerPed.IsInVehicle())
-						{
-							var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
-							playerPedCurrentVehicle.Position = SpaceModDatabase.EarthAtmosphereEnterPosition;
-							playerPedCurrentVehicle.Rotation = Vector3.Zero;
-							playerPedCurrentVehicle.Heading = 243;
-							playerPedCurrentVehicle.HasGravity = true;
-						}
-						else
-						{
-							PlayerPosition = SpaceModDatabase.TrevorAirport;
-						}
+						Vehicle playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
+						playerPedCurrentVehicle.Position = SpaceModDatabase.EarthAtmosphereEnterPosition;
+						playerPedCurrentVehicle.Rotation = Vector3.Zero;
+						playerPedCurrentVehicle.Heading = 243;
+						playerPedCurrentVehicle.HasGravity = true;
 					}
+					else PlayerPosition = SpaceModDatabase.TrevorAirport;
 
 					PlayerPed.HasGravity = true;
 					SpaceModLib.SetGravityLevel(0);
 				}
-
-				if (!PlayerPed.IsDead)
-				{
-					Wait(1000);
-					Game.FadeScreenIn(1000);
-				}
+				Wait(1000);
+				Game.FadeScreenIn(1000);
 			}
+		}
+
+		private static CustomXmlScene DeserialzeSceneFile(CustomScene scene, string newSceneFile)
+		{
+			if (newSceneFile == "cmd_earth")
+				return null;
+			var newScene = MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + newSceneFile);
+			if (newScene == default(CustomXmlScene))
+			{
+				UI.Notify(
+					"Your custom scene ~r~failed~s~ to load, because the file specified was " +
+					"either not written correctly or was invalid.");
+				throw new XmlException(newSceneFile);
+			}
+			newScene.LastSceneFile = scene.SceneFile;
+			return newScene;
 		}
 
 		private void EndActiveScenarios()
@@ -525,6 +538,16 @@ namespace SpaceMod
 					Scenarios.RemoveAt(0);
 				}
 			}
+		}
+
+		private void GiveRespawnControlToGame()
+		{
+			Game.Globals[4].SetInt(0);
+			Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, false);
+			Function.Call(Hash.SET_FADE_IN_AFTER_DEATH_ARREST, true);
+			Function.Call(Hash.SET_FADE_OUT_AFTER_ARREST, true);
+			Function.Call(Hash.SET_FADE_OUT_AFTER_DEATH, true);
+			Function.Call(Hash.IGNORE_NEXT_RESTART, false);
 		}
 	}
 }
