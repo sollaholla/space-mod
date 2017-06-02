@@ -78,7 +78,7 @@ namespace SpaceMod.Scenes.Interiors
         public void Request()
         {
             if (IsActive) return;
-			Debug.Log("Current IPL Type: " + _type);
+            Debug.Log("Current IPL Type: " + _type);
             switch (_type)
             {
                 case IplType.GTA:
@@ -91,41 +91,41 @@ namespace SpaceMod.Scenes.Interiors
                         if (DateTime.UtcNow > time)
                             break;
                     }
-					Debug.Log("Tried to request IPL: " + Name);
+                    Debug.Log("Tried to request IPL: " + Name);
                     break;
                 case IplType.MapEditor:
-					_map = MyXmlSerializer.Deserialize<Map>
-						(SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
+                    _map = MyXmlSerializer.Deserialize<Map>
+                        (SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
 
                     if (_map != null && _map != default(Map))
                     {
-						_map.Objects?.ForEach(mapObject =>
-						{
-							Model model = GetModel(mapObject);
+                        _map.Objects?.ForEach(mapObject =>
+                        {
+                            Model model = GetModel(mapObject);
 
-							switch (mapObject.Type)
-							{
-								case ObjectTypes.Ped:
-									CreatePed(mapObject, model);
-									break;
-								case ObjectTypes.Prop:
-									CreateProp(mapObject, model);
-									break;
-								case ObjectTypes.Vehicle:
-									CreateVehicle(mapObject, model);
-									break;
-							}
-						});
+                            switch (mapObject.Type)
+                            {
+                                case ObjectTypes.Ped:
+                                    CreatePed(mapObject, model);
+                                    break;
+                                case ObjectTypes.Prop:
+                                    CreateProp(mapObject, model);
+                                    break;
+                                case ObjectTypes.Vehicle:
+                                    CreateVehicle(mapObject, model);
+                                    break;
+                            }
+                        });
 
-	                    if (_map?.Objects != null)
-						{
-							Debug.Log(
-								$"Created {Name} With " + 
-								$"{Peds.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Ped)} Peds | " + 
-								$"{Vehicles.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Vehicle)} Vehicles | " +
-								$"{Props.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Prop)} Props"
-								);
-						}
+                        if (_map?.Objects != null)
+                        {
+                            Debug.Log(
+                                $"Created {Name} With " +
+                                $"{Peds.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Ped)} Peds | " +
+                                $"{Vehicles.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Vehicle)} Vehicles | " +
+                                $"{Props.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Prop)} Props"
+                                );
+                        }
                     }
                     else
                     {
@@ -136,39 +136,43 @@ namespace SpaceMod.Scenes.Interiors
             }
         }
 
-		private static Model GetModel(MapObject o)
-		{
-			var model = new Model(o.Hash);
-			model.Request();
-			var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
-			while (!model.IsLoaded)
-			{
-				Script.Yield();
-				if (DateTime.UtcNow > timeout2)
-					break;
-			}
-
-			return model;
-		}
-
-		private void CreateProp(MapObject mapObject, Model model)
+        private static Model GetModel(MapObject o)
         {
-            var prop = SpaceModLib.CreatePropNoOffset(model, mapObject.Position, mapObject.Dynamic && mapObject.Door);
-            if (prop == null) return;
-            prop.FreezePosition = !mapObject.Dynamic;
+            var model = new Model(o.Hash);
+            model.Request();
+            var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
+            while (!model.IsLoaded)
+            {
+                Script.Yield();
+                if (DateTime.UtcNow > timeout2)
+                    break;
+            }
+
+            return model;
+        }
+
+        private void CreateProp(MapObject mapObject, Model model)
+        {
+            var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, mapObject.Position.X, mapObject.Position.Y, mapObject.Position.Z, true, true, mapObject.Dynamic));
+            if (!Entity.Exists(prop))
+                return;
             prop.Rotation = mapObject.Rotation;
+            prop.FreezePosition = !mapObject.Dynamic;
             prop.Quaternion = mapObject.Quaternion;
+            prop.Position = mapObject.Position;
+            model.MarkAsNoLongerNeeded();
             Props.Add(prop);
         }
 
         private void CreateVehicle(MapObject mapObject, Model model)
         {
             var vehicle = World.CreateVehicle(model, mapObject.Position);
-            if (vehicle == null) return;
+            if (!Entity.Exists(vehicle))
+                return;
             vehicle.Rotation = mapObject.Rotation;
             vehicle.Quaternion = mapObject.Quaternion;
-            vehicle.PrimaryColor = (VehicleColor) mapObject.PrimaryColor;
-            vehicle.SecondaryColor = (VehicleColor) mapObject.SecondaryColor;
+            vehicle.PrimaryColor = (VehicleColor)mapObject.PrimaryColor;
+            vehicle.SecondaryColor = (VehicleColor)mapObject.SecondaryColor;
             vehicle.FreezePosition = !mapObject.Dynamic;
             vehicle.SirenActive = mapObject.SirensActive;
             Vehicles.Add(vehicle);
@@ -176,8 +180,7 @@ namespace SpaceMod.Scenes.Interiors
 
         private void CreatePed(MapObject mapObject, Model model)
         {
-            var ped = World.CreatePed(model, mapObject.Position - new Vector3(0, 0, 1), mapObject.Rotation.Z);
-            if (ped == null) return;
+            var ped = new Ped(World.CreatePed(model, mapObject.Position - Vector3.WorldUp, mapObject.Rotation.Z).Handle);
             if (!mapObject.Dynamic)
                 ped.FreezePosition = true;
             ped.Quaternion = mapObject.Quaternion;
@@ -185,7 +188,7 @@ namespace SpaceMod.Scenes.Interiors
                 ped.Weapons.Give(mapObject.Weapon.Value, 15, true, true);
             SetScenario(mapObject, ped);
 
-			Relationship relationship;
+            Relationship relationship;
             if (Enum.TryParse(mapObject.Relationship, out relationship))
             {
                 if (relationship == Relationship.Hate)
@@ -194,11 +197,11 @@ namespace SpaceMod.Scenes.Interiors
                 World.SetRelationshipBetweenGroups(relationship, ped.RelationshipGroup, Game.Player.Character.RelationshipGroup);
                 World.SetRelationshipBetweenGroups(relationship, Game.Player.Character.RelationshipGroup, ped.RelationshipGroup);
 
-	            if (relationship == Relationship.Companion)
-	            {
-		            ped.CanBeTargetted = false;
-		            ped.RelationshipGroup = Game.Player.Character.RelationshipGroup;
-	            }
+                if (relationship == Relationship.Companion)
+                {
+                    ped.CanBeTargetted = false;
+                    ped.RelationshipGroup = Game.Player.Character.RelationshipGroup;
+                }
             }
 
             ped.BlockPermanentEvents = false;

@@ -1,5 +1,4 @@
-﻿using System;
-using GTA;
+﻿using GTA;
 using GTA.Math;
 using GTA.Native;
 using SpaceMod;
@@ -10,9 +9,11 @@ using SpaceMod.Scenes;
 
 namespace DefaultMissions
 {
-	public class MarsMission02 : CustomScenario
+    public class MarsMission02 : CustomScenario
 	{
-		public int CurrentMissionStep = 0;
+        private const string MarsBaseInterior = "Mars/mars_base_int_01";
+
+        public int CurrentMissionStep = 0;
 		public bool GiveEggToScientist = false;
 		public bool IsMars01Complete = false;
 		public bool DidGetResources = false;
@@ -38,7 +39,6 @@ namespace DefaultMissions
 
 			GiveEggToScientist = Settings.GetValue("mission", "give_scientist_egg", GiveEggToScientist);
 			DidGetResources = Settings.GetValue("mission", "did_get_resources", DidGetResources);
-			Debug.Log("Give scientist egg: " + GiveEggToScientist);
 		}
 
 		public override void OnUpdate()
@@ -68,7 +68,8 @@ namespace DefaultMissions
 
 		private void GiveScientistTheEgg()
 		{
-			if (CurrentScene.SceneData.CurrentIplData?.Name == "Mars/mbi2")
+            IplData currentIplData = CurrentScene.SceneData.CurrentIplData;
+            if (currentIplData?.Name == MarsBaseInterior)
 			{
 				Ped[] peds = CurrentScene.SceneData.CurrentIplData.CurrentIpl.Peds.ToArray();
 				var closestPed = World.GetClosest(PlayerPosition, peds);
@@ -148,7 +149,8 @@ namespace DefaultMissions
 
 		private void CompleteMission()
 		{
-			if (CurrentScene.SceneData.CurrentIplData?.Name == "Mars/mbi2")
+            IplData currentIplData = CurrentScene.SceneData.CurrentIplData;
+            if (currentIplData?.Name == MarsBaseInterior)
 			{
 				Ped[] peds = CurrentScene.SceneData.CurrentIplData.CurrentIpl.Peds.ToArray();
 				var closestPed = World.GetClosest(PlayerPosition, peds);
@@ -167,7 +169,6 @@ namespace DefaultMissions
 							closestPed.Heading = (PlayerPosition - closestPed.Position).ToHeading();
 							Function.Call(Hash._PLAY_AMBIENT_SPEECH1, closestPed.Handle, "Generic_Thanks", "Speech_Params_Force_Shouted_Critical");
 							SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_24", 10000);
-							Debug.Log(Game.GetGXTEntry("GTS_LABEL_24"));
 							Script.Wait(2500);
 							BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("GTS_LABEL_25"));
 							Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");

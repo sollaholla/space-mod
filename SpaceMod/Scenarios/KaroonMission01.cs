@@ -38,7 +38,7 @@ namespace DefaultMissions
         public List<Vehicle> Ufos { get; }
 
         public int OriginalVehicleHealth { get; }
-        
+
         public override void Start()
         {
             _ufoModel = new Model(_ufoModelName);
@@ -56,7 +56,7 @@ namespace DefaultMissions
         {
             Vector3 spawn = SpaceModDatabase.GalaxyCenter + new Vector3(-1500, 0, 0);
             Ped playerPed = Game.Player.Character;
-            
+
             if (!_ufoModel.IsLoaded)
             {
                 UI.Notify($"{_ufoModelName} model failed to load! Make sure you have a valid model in the .ini file.");
@@ -78,8 +78,8 @@ namespace DefaultMissions
                 Blip blip = vehicle.AddBlip();
                 blip.Name = "UFO";
                 blip.Color = BlipColor.Green;
-                Function.Call(Hash.TASK_PLANE_MISSION, ped, vehicle, 0, playerPed, 0, 0, 0, 6, 25, 0, vehicle.Heading,
-                    SpaceModDatabase.GalaxyCenter.Z - 100, SpaceModDatabase.GalaxyCenter.Z - 250);
+                ped.Task.FightAgainst(playerPed);
+                ped.AlwaysKeepTask = true;
                 Ufos.Add(vehicle);
             }
         }
@@ -93,44 +93,45 @@ namespace DefaultMissions
                 SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_22", 7500);
                 CreateSpaceShips();
                 DidLoad = true;
+                return;
             }
-            else
+
+            Ufos?.ForEach(vehicle =>
             {
-                Ufos?.ForEach(vehicle =>
-                {
                     // TODO: Figure out a variable for when the vehicle is not dead but is spiraling downward.
                     if (vehicle.IsDead || !vehicle.IsDriveable || vehicle.IsOnFire || vehicle.Driver.IsDead && vehicle.CurrentBlip.Exists())
-                    {
-                        vehicle.CurrentBlip.Remove();
-                        vehicle.Driver?.Kill();
+                {
+                    vehicle.CurrentBlip.Remove();
+                    vehicle.Driver?.Kill();
+                    vehicle.Explode();
 
-                        if (Ufos.TrueForAll(x => !x.CurrentBlip.Exists()))
-                        {
-                            BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_3"));
-                            EndScenario(true);
-                        }
-                        return;
+                    if (Ufos.TrueForAll(x => !x.CurrentBlip.Exists()))
+                    {
+                        BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_3"));
+                        EndScenario(true);
                     }
+                    return;
+                }
 
-                    if (vehicle.Driver != null)
+                if (vehicle.Driver != null)
+                {
+                    Vector3 lastDamagePos = vehicle.Driver.GetLastWeaponImpactCoords();
+
+                    if (lastDamagePos != Vector3.Zero)
                     {
-                        Vector3 lastDamagePos = vehicle.Driver.GetLastWeaponImpactCoords();
-
-                        if (lastDamagePos != Vector3.Zero)
+                        if (PlayerVehicle != null)
                         {
-                            if (PlayerVehicle != null)
+                            if (lastDamagePos.DistanceTo(PlayerVehicle.Position) < 25)
                             {
-                                if (lastDamagePos.DistanceTo(PlayerVehicle.Position) < 15)
-                                {
-                                    PlayerVehicle.ApplyDamage(PlayerVehicle.GetOffsetFromWorldCoords(lastDamagePos),
-                                        1500, 2500);
-                                    PlayerVehicle.Health -= 50;
-                                }
+                                PlayerVehicle.ApplyDamage(PlayerVehicle.GetOffsetFromWorldCoords(lastDamagePos),
+                                    1500, 2500);
+
+                                PlayerVehicle.Health -= 50;
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         public override void OnEnded(bool success)
