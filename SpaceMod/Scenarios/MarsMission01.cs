@@ -45,17 +45,11 @@ namespace DefaultMissions
 		}
 
 		public int CurrentMissionStep { get; protected set; }
-
 		public List<Ped> Aliens { get; }
-
 		public List<Vehicle> Ufos { get; }
-
 		public Ped PlayerPed => Game.Player.Character;
-
 		public bool OriginalCanPlayerRagdoll { get; set; }
-
 		public int OriginalMaxHealth { get; set;  }
-
 		public Prop EnterenceBlocker { get; private set; }
 
 		public Vector3 PlayerPosition {
@@ -65,20 +59,10 @@ namespace DefaultMissions
 
 		public override void Start()
 		{
-			//ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + "/DefaultMissions.MoonMission01.ini");
-			//if (!settings.GetValue("SCENARIO_CONFIG", "COMPLETE", false))
-			//{
-			//	EndScenario(false);
-			//	return;
-			//}
-
 			PlayerPed.CanRagdoll = false;
 			PlayerPed.IsExplosionProof = true;
-
 			if (CurrentMissionStep == 0 && CurrentScene.SceneFile == "MarsSurface.space")
-			{
 				SpawnEntities();
-			}
 		}
 
 		public void SpawnEntities()
@@ -174,23 +158,20 @@ namespace DefaultMissions
 				return;
 			if (CurrentMissionStep >= 6 && CurrentScene.SceneFile != "EuropaSurface.space")
 				return;
-
 			if (CurrentMissionStep < 1)
 			{
 				if (!Entity.Exists(EnterenceBlocker) && CurrentScene.SceneData.Ipls.Any() && CurrentScene.SceneData.Ipls.Any())
 				{
-					EnterenceBlocker =
-						new Prop(
-							World.CreateProp("lts_prop_lts_elecbox_24b", CurrentScene.SceneData.Ipls[0]?.Teleports[0]?.Start ?? Vector3.Zero, Vector3.Zero,
-								false,
-								false).Handle)
-						{ IsVisible = false };
+                    Vector3 position = CurrentScene.SceneData.Ipls[0]?.Teleports[0]?.Start ?? Vector3.Zero;
+                    EnterenceBlocker = new Prop(World.CreateProp("lts_prop_lts_elecbox_24b", position, Vector3.Zero, false, false).Handle)
+                    {
+                        IsVisible = false
+                    };
 				}
 			}
 
 			var isInUfo = IsInInterior("EuropaSurface.space", "Europa/ufo_interior");
 			Vector3 spawnAlienEgg = new Vector3(-10018.03f, -9976.996f, 10042.64f) + Vector3.WorldDown;
-
 			switch (CurrentMissionStep)
 			{
 				case 0:
@@ -397,27 +378,18 @@ namespace DefaultMissions
 		private void UpdateUfo(Vehicle ufo)
 		{
 			if (ufo.IsDead)
-			{
 				return;
-			}
 
 			if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
-			{
 				ufo.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == MarsBaseInteriorName;
-			}
 
 			if (Entity.Exists(ufo.Driver))
-			{
 				SpaceModLib.ArtificialDamage(ufo.Driver, PlayerPed, 150, 150);
-			}
 
 			if (ufo.IsDead || (Entity.Exists(ufo.Driver) && ufo.Driver.IsDead) || !ufo.IsDriveable)
 			{
 				if (Entity.Exists(ufo.Driver) && !ufo.Driver.IsDead)
-				{
 					ufo.Driver.Kill();
-				}
-
 				ufo.CurrentBlip.Remove();
 				ufo.Explode();
 			}
@@ -431,14 +403,12 @@ namespace DefaultMissions
 
 				var dir = PlayerPosition - ufo.Position;
 				dir.Z = 0;
-
 				bool inAngle = Vector3.Angle(ufo.ForwardVector, dir) < 5;
 
 				if (!inAngle)
 					ufo.Velocity = Vector3.Zero;
 
 				ufo.Speed = inAngle ? 5 : 0;
-
 				return;
 			}
 
@@ -449,9 +419,7 @@ namespace DefaultMissions
 		private void UpdateAlien(Ped alienPed)
 		{
 			if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
-			{
 				alienPed.FreezePosition = CurrentScene.SceneData.CurrentIplData.Name == MarsBaseInteriorName;
-			}
 
 			if (alienPed.IsDead)
 			{
@@ -466,13 +434,10 @@ namespace DefaultMissions
 			}
 
 			SpaceModLib.ArtificialDamage(alienPed, PlayerPed, 1.5f, 75);
-
 			float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
 
 			if (distance > 25)
-			{
 				alienPed.Task.RunTo(PlayerPed.Position, true);
-			}
 		}
 
 		private void UpdateAlien2(Ped ped, string scene, string interior)
@@ -500,19 +465,13 @@ namespace DefaultMissions
 		public override void OnEnded(bool success)
 		{
 			if (success)
-			{
 				MarkEntitesAsNotNeeded();
-			}
-			else
-			{
-				CleanUp();
-			}
+			else CleanUp();
 
 			PlayerPed.MaxHealth = OriginalMaxHealth;
 			PlayerPed.Health = PlayerPed.MaxHealth;
 			PlayerPed.CanRagdoll = OriginalCanPlayerRagdoll;
 			PlayerPed.IsExplosionProof = false;
-
 			Settings.SetValue("mission", "current_mission_step", CurrentMissionStep);
 			Settings.Save();
 

@@ -30,18 +30,18 @@ namespace SpaceMod.Scenes
         public event OnExitEvent Exited;
         public event OnMinedObjectEvent Mined;
 
-        private readonly object _startLock = new object();
-        private readonly object _updateLock = new object();
-
-        private readonly List<Blip> _sceneLinkBlips = new List<Blip>();
+        private readonly object _startLock;
+        private readonly object _updateLock;
+        private readonly List<Prop> _registeredMineableObjects;
+        private readonly List<Blip> _sceneLinkBlips;
 
         private float _leftRightFly;
         private float _upDownFly;
         private float _rollFly;
         private float _fly;
-
-        private PlayerState _playerState = PlayerState.Floating;
         private Entity _flyHelper;
+
+        private PlayerState _playerState;
         private bool _enteringVehicle;
 
         private Vector3 _vehicleRepairPos;
@@ -53,68 +53,61 @@ namespace SpaceMod.Scenes
         private DateTime _mineTime;
         private bool _startMining;
 
-        private readonly List<Prop> _registeredMineableObjects = new List<Prop>();
-
         public CustomScene(CustomXmlScene sceneData)
         {
             SceneData = sceneData;
             OldVehicles = new List<Vehicle>();
+            DistanceText = new List<Tuple<UIText, UIText, Link>>();
+
+            _registeredMineableObjects = new List<Prop>();
+            _sceneLinkBlips = new List<Blip>();
+            _playerState = PlayerState.Floating;
+            _startLock = new object();
+            _updateLock = new object();
         }
 
         internal Ped PlayerPed => Game.Player.Character;
-
         internal Vector3 PlayerPosition {
             get { return PlayerPed.Position; }
             set { PlayerPed.Position = value; }
         }
 
         public CustomXmlScene SceneData { get; }
-
         public List<Orbital> WormHoles { get; private set; }
-
         public OrbitalSystem OrbitalSystem { get; private set; }
-
         public string SceneFile { get; internal set; }
 
-        public Weather OverrideWeather { get; internal set; }
-
+        internal Weather OverrideWeather { get; private set; }
         internal List<Tuple<UIText, UIText, Link>> DistanceText { get; private set; }
-
         internal IplData LastIpl { get; private set; }
-
         internal Vehicle PlayerLastVehicle { get; private set; }
-
         internal int IplCount { get; private set; }
-
         internal List<Vehicle> OldVehicles { get; }
 
         internal void Start()
         {
             lock (_startLock)
             {
+                // Set audio to no ambience.
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
 
+                // Create space dome.
                 Prop spaceDome = CreateProp(Vector3.Zero, SceneData.SpaceDomeModel);
-                List<Orbital> orbitals = SceneData.Orbitals?.Select(x => CreateOrbital(x, SceneData.SurfaceFlag))
-                        .Where(o => o != default(Orbital))
-                        .ToList();
+                List<Orbital> orbitals = SceneData.Orbitals?.Select(x => CreateOrbital(x, SceneData.SurfaceFlag)).Where(o => o != default(Orbital)).ToList();
                 List<LockedOrbital> lockedOrbitals = SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
 
                 WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
                 OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
-                DistanceText = new List<Tuple<UIText, UIText, Link>>();
 
+                // Get settings.
                 ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
                 var section = Path.GetFileNameWithoutExtension(SceneFile);
                 OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
-                Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"),
-                    StaticSettings.VehicleSurfaceSpawn);
+                Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.VehicleSurfaceSpawn);
 
                 SceneData.SceneLinks.ForEach(link =>
                 {
-
                     if (string.IsNullOrEmpty(link.Name)) return;
-
                     var text = new UIText(string.Empty, new Point(), 0.5f)
                     {
                         Centered = true,
@@ -127,18 +120,14 @@ namespace SpaceMod.Scenes
                         Font = Font.Monospace,
                         Shadow = true
                     };
-
                     var tuple = new Tuple<UIText, UIText, Link>(text, distanceText, link);
                     DistanceText.Add(tuple);
-                    Blip blip = new Blip(World.CreateBlip((SceneData.SurfaceFlag
-                        ? SpaceModDatabase.PlanetSurfaceGalaxyCenter
-                        : SpaceModDatabase.GalaxyCenter) + link.OriginOffset).Handle)
+                    Blip blip = new Blip(World.CreateBlip((SceneData.SurfaceFlag ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + link.OriginOffset).Handle)
                     {
                         Sprite = BlipSprite.Crosshair2,
                         Color = BlipColor.Blue,
                         Name = link.Name
                     };
-
                     _sceneLinkBlips.Add(blip);
                 });
 
@@ -164,12 +153,11 @@ namespace SpaceMod.Scenes
                         {
                             if (DateTime.UtcNow > groundPlacementTimeout)
                             {
-                                Debug.Log("Couldn't place vehicle on ground properly.", DebugMessageType.Error);
+                                Debug.Log("Couldn't place vehicle on ground properly.", DebugMessageType.Debug);
                                 break;
                             }
                             Script.Yield();
                         }
-                        //vehicle.FreezePosition = false;
                     }
                     else PlayerPed.CanRagdoll = false;
                     Script.Yield();
@@ -184,12 +172,11 @@ namespace SpaceMod.Scenes
                     iplData.CurrentIpl = ipl;
                 });
 
-                if (SceneData.Ipls != null)
-                    IplCount = SceneData.Ipls.Count;
+                if (SceneData.Ipls != null) IplCount = SceneData.Ipls.Count;
             }
         }
 
-        public static LockedOrbital CreateLockedOrbital(LockedOrbitalData data)
+        internal static LockedOrbital CreateLockedOrbital(LockedOrbitalData data)
         {
             if (string.IsNullOrEmpty(data.Model))
             {
@@ -211,7 +198,7 @@ namespace SpaceMod.Scenes
             return orbital;
         }
 
-        public static Orbital CreateOrbital(OrbitalData data, bool surface)
+        internal static Orbital CreateOrbital(OrbitalData data, bool surface)
         {
             if (string.IsNullOrEmpty(data.Model))
             {
@@ -244,7 +231,7 @@ namespace SpaceMod.Scenes
             return orbital;
         }
 
-        public static Prop CreateProp(Vector3 position, string modelName)
+        internal static Prop CreateProp(Vector3 position, string modelName)
         {
             if (string.IsNullOrEmpty(modelName)) return default(Prop);
             Model model = RequestModel(modelName);
@@ -259,8 +246,8 @@ namespace SpaceMod.Scenes
             prop.FreezePosition = true;
             return prop;
         }
-        
-        public static Model RequestModel(string modelName, int time = 5)
+
+        internal static Model RequestModel(string modelName, int time = 5)
         {
             Model model = new Model(modelName);
             var timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, time);
@@ -274,7 +261,7 @@ namespace SpaceMod.Scenes
             return model;
         }
 
-        public static void RemoveIpl(IplData iplData)
+        internal static void RemoveIpl(IplData iplData)
         {
             iplData.CurrentIpl?.Remove();
             iplData.Teleports?.ForEach(teleport => RemoveIpl(teleport.EndIpl));
@@ -287,15 +274,15 @@ namespace SpaceMod.Scenes
             try
             {
                 UI.HideHudComponentThisFrame(HudComponent.AreaName);
-                VehicleFly();
-                PlayerFly();
-                HandleDeath();
+                WormHoles?.ForEach(UpdateWormHole);
                 OrbitalSystem?.Process(SpaceModDatabase.GetValidGalaxyDomePosition(PlayerPed));
+                SceneData.Ipls?.ForEach(UpdateTeleports);
+                PlayerFly();
+                VehicleFly();
+                HandleDeath();
                 ShowDistanceText();
                 TryToStartNextScene();
                 HandlePlayerVehicle();
-                SceneData.Ipls?.ForEach(UpdateTeleports);
-                WormHoles?.ForEach(UpdateWormHole);
             }
             finally
             {
@@ -827,14 +814,11 @@ namespace SpaceMod.Scenes
             {
                 Vector3 start = teleport.Start;
                 Vector3 end = teleport.End;
-
-                World.DrawMarker(MarkerType.VerticalCylinder, start - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
-                World.DrawMarker(MarkerType.VerticalCylinder, end - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
-
                 float distanceToStart = Vector3.Distance(PlayerPosition, start);
                 float distanceToEnd = Vector3.Distance(PlayerPosition, end);
                 if (teleport.EndIpl.CurrentIpl == null)
                 {
+                    World.DrawMarker(MarkerType.VerticalCylinder, start - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
                     if (distanceToStart < 1.5f && teleport.EndIpl != null)
                     {
                         SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_12");
@@ -843,16 +827,12 @@ namespace SpaceMod.Scenes
                         {
                             Game.FadeScreenOut(1000);
                             Script.Wait(1000);
-
                             Ipl endIpl = new Ipl(teleport.EndIpl.Name, teleport.EndIpl.Type);
                             endIpl.Request();
                             teleport.EndIpl.CurrentIpl = endIpl;
-
                             LastIpl = SceneData.CurrentIplData;
                             SceneData.CurrentIplData = teleport.EndIpl;
-
                             PlayerPosition = end;
-
                             Script.Wait(1000);
                             Game.FadeScreenIn(1000);
                         }
@@ -860,28 +840,26 @@ namespace SpaceMod.Scenes
                 }
                 else
                 {
+                    LastIpl?.CurrentIpl?.Hide();
+                    World.DrawMarker(MarkerType.VerticalCylinder, end - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
                     UpdateTeleports(teleport.EndIpl);
+                    if (distanceToEnd >= 1.5f)
+                        return;
 
-                    if (distanceToEnd < 1.5f)
-                    {
-                        SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_13");
-                        Game.DisableControlThisFrame(2, Control.Context);
-                        if (Game.IsDisabledControlJustPressed(2, Control.Context))
-                        {
-                            Game.FadeScreenOut(1000);
-                            Script.Wait(1000);
+                    SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_13");
+                    Game.DisableControlThisFrame(2, Control.Context);
+                    if (!Game.IsDisabledControlJustPressed(2, Control.Context))
+                        return;
 
-                            PlayerPosition = start;
-
-                            teleport.EndIpl.CurrentIpl.Remove();
-                            teleport.EndIpl.CurrentIpl = null;
-
-                            SceneData.CurrentIplData = LastIpl;
-
-                            Script.Wait(1000);
-                            Game.FadeScreenIn(1000);
-                        }
-                    }
+                    Game.FadeScreenOut(1000);
+                    Script.Wait(1000);
+                    PlayerPosition = start;
+                    LastIpl?.CurrentIpl?.Unhide();
+                    teleport.EndIpl.CurrentIpl.Remove();
+                    teleport.EndIpl.CurrentIpl = null;
+                    SceneData.CurrentIplData = LastIpl;
+                    Script.Wait(1000);
+                    Game.FadeScreenIn(1000);
                 }
             });
         }
@@ -986,7 +964,8 @@ namespace SpaceMod.Scenes
                 }
 
                 OrbitalSystem?.Abort();
-                SceneData.Ipls?.ForEach(iplData => {
+                SceneData.Ipls?.ForEach(iplData =>
+                {
                     iplData.CurrentIpl?.Remove();
                 });
 
@@ -1019,67 +998,42 @@ namespace SpaceMod.Scenes
             float gravitationalPullDistance = orbitalData.ExitDistance * 15f;
 
             if (distanceToWormHole <= orbitalData.ExitDistance)
-            {
                 Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation);
-            }
             else
             {
                 if (distanceToWormHole <= escapeDistance)
                 {
                     if (!GameplayCamera.IsShaking)
-                    {
                         GameplayCamera.Shake(CameraShake.SkyDiving, 0);
-                    }
-                    else
-                    {
-                        GameplayCamera.ShakeAmplitude = 1.5f;
-                    }
+                    else GameplayCamera.ShakeAmplitude = 1.5f;
 
                     if (distanceToWormHole > gravitationalPullDistance)
                     {
                         Vector3 targetDir = wormHolePosition - PlayerPosition;
-
-                        // FIXME: Something wrong here with velocity...
                         Vector3 targetVelocity = targetDir * 50;
 
                         if (PlayerPed.IsInVehicle())
-                        {
                             PlayerPed.CurrentVehicle.Velocity = targetVelocity;
-                        }
-                        else
-                        {
-                            PlayerPed.Velocity = targetVelocity;
-                        }
+                        else PlayerPed.Velocity = targetVelocity;
                     }
                     else
                     {
                         DateTime timeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 7);
                         while (DateTime.UtcNow < timeout)
                         {
-                            Script.Yield();
-
                             Vector3 direction = PlayerPosition - wormHolePosition;
                             direction.Normalize();
-
                             Vector3 targetPos = SpaceModLib.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
                                 new Vector3(0, 0, 2000 * Game.LastFrameTime));
-
                             Vector3 playerPos = PlayerPed.IsInVehicle()
                                 ? PlayerPed.CurrentVehicle.Position
                                 : PlayerPosition;
-
                             Vector3 targetVelocity = targetPos - playerPos;
-
                             if (PlayerPed.IsInVehicle())
-                            {
                                 PlayerPed.CurrentVehicle.Velocity = targetVelocity;
-                            }
-                            else
-                            {
-                                PlayerPed.Velocity = targetVelocity;
-                            }
+                            else PlayerPed.Velocity = targetVelocity;
+                            Script.Yield();
                         }
-
                         Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation);
                     }
                 }

@@ -17,7 +17,7 @@ namespace SpaceMod.Scenes.Interiors
 
     public class Ipl
     {
-        public static bool AllowTraversal { get; set; }
+        //public static bool AllowTraversal { get; set; }
 
         internal Dictionary<string, string> ScenarioDatabase = new Dictionary<string, string> {
             {"Drink Coffee",  "WORLD_HUMAN_AA_COFFEE"},
@@ -53,12 +53,13 @@ namespace SpaceMod.Scenes.Interiors
         };
 
         private readonly IplType _type;
+        private bool _hidden;
         private Map _map;
 
         public Ipl(string name, IplType type = IplType.GTA)
         {
-            Name = name;
             _type = type;
+            Name = name;
 
             Vehicles = new List<Vehicle>();
             Props = new List<Prop>();
@@ -66,13 +67,9 @@ namespace SpaceMod.Scenes.Interiors
         }
 
         public bool IsActive => !string.IsNullOrEmpty(Name) && (Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) || _map != null && _map.Objects.Any());
-
         public List<Vehicle> Vehicles { get; }
-
         public List<Prop> Props { get; }
-
         public List<Ped> Peds { get; }
-
         public string Name { get; }
 
         public void Request()
@@ -91,47 +88,46 @@ namespace SpaceMod.Scenes.Interiors
                         if (DateTime.UtcNow > time)
                             break;
                     }
-                    Debug.Log("Tried to request IPL: " + Name);
+                    Debug.Log("Request GTA IPL: " + Name);
                     break;
                 case IplType.MapEditor:
-                    _map = MyXmlSerializer.Deserialize<Map>
-                        (SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
-
+                    _map = MyXmlSerializer.Deserialize<Map>(SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
                     if (_map != null && _map != default(Map))
                     {
-                        _map.Objects?.ForEach(mapObject =>
-                        {
-                            Model model = GetModel(mapObject);
-
-                            switch (mapObject.Type)
-                            {
-                                case ObjectTypes.Ped:
-                                    CreatePed(mapObject, model);
-                                    break;
-                                case ObjectTypes.Prop:
-                                    CreateProp(mapObject, model);
-                                    break;
-                                case ObjectTypes.Vehicle:
-                                    CreateVehicle(mapObject, model);
-                                    break;
-                            }
-                        });
-
-                        if (_map?.Objects != null)
-                        {
-                            Debug.Log(
-                                $"Created {Name} With " +
-                                $"{Peds.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Ped)} Peds | " +
-                                $"{Vehicles.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Vehicle)} Vehicles | " +
-                                $"{Props.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Prop)} Props"
-                                );
-                        }
+                        _map.Objects?.ForEach(InstantiateObject);
+                        LogMapObjects();
                     }
-                    else
-                    {
-                        Debug.Log($"Failed To Create {SpaceModDatabase.PathToInteriors + "/" + Name + ".xml"}", DebugMessageType.Error);
-                    }
+                    else Debug.Log($"Failed To Create {SpaceModDatabase.PathToInteriors + "/" + Name + ".xml"}", DebugMessageType.Error);
+                    break;
+            }
+        }
 
+        private void LogMapObjects()
+        {
+            if (_map?.Objects != null)
+            {
+                Debug.Log(
+                    $"Created {Name} With " +
+                    $"{Peds.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Ped)} Peds | " +
+                    $"{Vehicles.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Vehicle)} Vehicles | " +
+                    $"{Props.Count}/{_map.Objects.Count(i => i.Type == ObjectTypes.Prop)} Props"
+                    );
+            }
+        }
+
+        private void InstantiateObject(MapObject mapObject)
+        {
+            Model model = GetModel(mapObject);
+            switch (mapObject.Type)
+            {
+                case ObjectTypes.Ped:
+                    CreatePed(mapObject, model);
+                    break;
+                case ObjectTypes.Prop:
+                    CreateProp(mapObject, model);
+                    break;
+                case ObjectTypes.Vehicle:
+                    CreateVehicle(mapObject, model);
                     break;
             }
         }
@@ -147,7 +143,6 @@ namespace SpaceMod.Scenes.Interiors
                 if (DateTime.UtcNow > timeout2)
                     break;
             }
-
             return model;
         }
 
@@ -274,6 +269,32 @@ namespace SpaceMod.Scenes.Interiors
                 ped?.Delete();
                 Peds.RemoveAt(0);
             }
+        }
+
+        public void Hide()
+        {
+            if (_type != IplType.GTA)
+                return;
+            if (_hidden)
+                return;
+
+            Peds.ForEach(p => p.IsVisible = false);
+            Vehicles.ForEach(v => v.IsVisible = false);
+            Props.ForEach(p => p.IsVisible = false);
+            _hidden = true;
+        }
+
+        public void Unhide()
+        {
+            if (_type != IplType.GTA)
+                return;
+            if (!_hidden)
+                return;
+
+            Peds.ForEach(p => p.IsVisible = true);
+            Vehicles.ForEach(v => v.IsVisible = true);
+            Props.ForEach(p => p.IsVisible = true);
+            _hidden = false;
         }
     }
 }

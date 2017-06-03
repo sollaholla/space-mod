@@ -19,7 +19,7 @@ using Menu = SolomanMenu.Menu;
 
 namespace SpaceMod
 {
-    public class Core : Script
+    internal class Core : Script
     {
         private float _enterOrbitHeight = 5000;
         private Keys _optionsMenuKey = Keys.NumPad9;
@@ -42,7 +42,6 @@ namespace SpaceMod
 
             ReadSettings();
             SaveSettings();
-
             CreateCustomMenu();
         }
 
@@ -103,13 +102,6 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.K)
-            {
-                string input = Game.GetUserInput(100);
-                Function.Call(Hash.REQUEST_IPL, input);
-                UI.ShowSubtitle("Requested IPL: " + input);
-            }
-
             if (_menuConnector.AreMenusVisible()) return;
             if (e.KeyCode != _optionsMenuKey) return;
             _menu.Draw = true;
@@ -118,66 +110,13 @@ namespace SpaceMod
         private void OnTick(object sender, EventArgs eventArgs)
         {
             if (!Monitor.TryEnter(_tickLock)) return;
-
             try
             {
                 _menuConnector.UpdateMenus();
 
                 DisableWantedStars();
-
-                if (_currentScene != null)
-                {
-                    Scenarios?.ForEach(scenario => scenario.Update());
-
-                    Function.Call(Hash._CLEAR_CLOUD_HAT);
-
-                    TimeType timeType = _currentScene.SceneData.CurrentIplData?.Time ?? _currentScene.SceneData.Time;
-
-                    switch (timeType)
-                    {
-                        case TimeType.Night:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 1, 30, 0);
-                            break;
-                        case TimeType.Day:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
-                            break;
-                        case TimeType.Evening:
-                            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 18, 0, 0);
-                            break;
-                    }
-
-                    if (_currentScene.OverrideWeather == (Weather)14)
-                    {
-                        Function.Call(Hash.SET_WEATHER_TYPE_NOW, "HALLOWEEN");
-                    }
-                    else
-                    {
-                        World.Weather = _currentScene.OverrideWeather;
-                    }
-
-                    if (PlayerPed.CurrentVehicle != null)
-                    {
-                        PlayerPed.CurrentVehicle.HasGravity = _currentScene.SceneData.UseGravity;
-                    }
-                    else
-                    {
-                        PlayerPed.HasGravity = _currentScene.SceneData.UseGravity;
-                    }
-
-                    _currentScene.Update();
-                }
-                else
-                {
-                    float height = PlayerPed.HeightAboveGround;
-
-                    if (height > _enterOrbitHeight)
-                    {
-                        CustomXmlScene scene =
-                            MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + "EarthOrbit.space");
-
-                        SetCurrentScene(scene);
-                    }
-                }
+                if (_currentScene != null) DoSceneUpdate();
+                else DoEarthUpdate();
             }
             finally
             {
@@ -185,14 +124,62 @@ namespace SpaceMod
             }
         }
 
+        private void DoEarthUpdate()
+        {
+            float height = PlayerPed.HeightAboveGround;
+
+            if (height > _enterOrbitHeight)
+            {
+                CustomXmlScene scene =
+                    MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + "EarthOrbit.space");
+                SetCurrentScene(scene);
+            }
+        }
+
+        private void DoSceneUpdate()
+        {
+            Scenarios?.ForEach(scenario => scenario.Update());
+
+            SetTime();
+            SetWeather();
+
+            if (PlayerPed.CurrentVehicle != null)
+                PlayerPed.CurrentVehicle.HasGravity = _currentScene.SceneData.UseGravity;
+            else PlayerPed.HasGravity = _currentScene.SceneData.UseGravity;
+
+            _currentScene.Update();
+        }
+
+        private void SetWeather()
+        {
+            Function.Call(Hash._CLEAR_CLOUD_HAT);
+            if (_currentScene.OverrideWeather == (Weather)14) Function.Call(Hash.SET_WEATHER_TYPE_NOW, "HALLOWEEN");
+            else World.Weather = _currentScene.OverrideWeather;
+        }
+
+        private void SetTime()
+        {
+            TimeType timeType = _currentScene.SceneData.CurrentIplData?.Time ?? _currentScene.SceneData.Time;
+            switch (timeType)
+            {
+                case TimeType.Night:
+                    World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 1, 30, 0);
+                    break;
+                case TimeType.Day:
+                    World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
+                    break;
+                case TimeType.Evening:
+                    World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 18, 0, 0);
+                    break;
+            }
+        }
+
         private void ReadSettings()
         {
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
-
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
             StaticSettings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
@@ -202,10 +189,8 @@ namespace SpaceMod
         {
             Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
-
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-
             Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
@@ -215,7 +200,6 @@ namespace SpaceMod
         private void CreateCustomMenu()
         {
             _menuConnector = new MenuConnector();
-
             _menu = new Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
                 Color.Purple)
             { MenuItemHeight = 26 };
@@ -360,7 +344,7 @@ namespace SpaceMod
             Game.MaxWantedLevel = 0;
         }
 
-        private static void ResetWeather()
+        private void ResetWeather()
         {
             World.Weather = Weather.ExtraSunny;
             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
@@ -382,20 +366,12 @@ namespace SpaceMod
                 EndActiveScenarios();
 
                 if (_currentScene != null && _currentScene != default(CustomScene))
-                {
                     _currentScene.Delete();
-                }
 
                 ClearNonPersistantEntities();
 
-                if (PlayerPed.IsInVehicle())
-                {
-                    PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
-                }
-                else
-                {
-                    PlayerPed.Rotation = Vector3.Zero;
-                }
+                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
+                else PlayerPed.Rotation = Vector3.Zero;
 
                 _currentScene = new CustomScene(customXmlScene) { SceneFile = fileName };
                 _currentScene.Start();
@@ -431,8 +407,7 @@ namespace SpaceMod
 
         private void ScenarioOnCompleted(CustomScenario scenario, bool success)
         {
-            lock (_tickLock)
-            {
+            lock (_tickLock) {
                 Scenarios.Remove(scenario);
             }
         }
@@ -469,21 +444,9 @@ namespace SpaceMod
             {
                 bool isActualScene = newSceneFile != "cmd_earth";
                 CustomXmlScene newScene = DeserialzeSceneFile(scene, newSceneFile);
-                if (isActualScene)
-                {
-                    Vehicle vehicle = PlayerPed.CurrentVehicle;
-                    if (PlayerPed.IsInVehicle() && newScene.SurfaceFlag && Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle))
-                    {
-                        Function.Call(Hash._0xCFC8BE9A5E1FE575, vehicle.Handle, 0);
-                        DateTime landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
-                        while (Function.Call<int>(Hash._0x9B0F3DCA3DB0F4CD, vehicle.Handle) != 0)
-                        {
-                            if (DateTime.UtcNow > landingGrearTimeout)
-                                break;
-                            Yield();
-                        }
-                    }
-                }
+
+                if (isActualScene && newScene.SurfaceFlag)
+                    RaiseLandingGear();
 
                 Game.FadeScreenOut(1000);
                 Wait(1000);
@@ -514,12 +477,28 @@ namespace SpaceMod
                         playerPedCurrentVehicle.HasGravity = true;
                     }
                     else PlayerPosition = SpaceModDatabase.TrevorAirport;
-
                     PlayerPed.HasGravity = true;
                     SpaceModLib.SetGravityLevel(0);
                 }
+
                 Wait(1000);
                 Game.FadeScreenIn(1000);
+            }
+        }
+
+        private void RaiseLandingGear()
+        {
+            Vehicle vehicle = PlayerPed.CurrentVehicle;
+            if (PlayerPed.IsInVehicle() && Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle))
+            {
+                Function.Call(Hash._0xCFC8BE9A5E1FE575, vehicle.Handle, 0);
+                DateTime landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
+                while (Function.Call<int>(Hash._0x9B0F3DCA3DB0F4CD, vehicle.Handle) != 0)
+                {
+                    if (DateTime.UtcNow > landingGrearTimeout)
+                        break;
+                    Yield();
+                }
             }
         }
 
@@ -532,7 +511,7 @@ namespace SpaceMod
             {
                 UI.Notify(
                     "Your custom scene ~r~failed~s~ to load, because the file specified was " +
-                    "either not written correctly or was invalid.");
+                    "either was invalid.");
                 throw new XmlException(newSceneFile);
             }
             newScene.LastSceneFile = scene.SceneFile;
