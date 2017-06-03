@@ -60,7 +60,7 @@ namespace DefaultMissions
 				if (!i.Item2.Exists() && !i.Item1.Collected)
 				{
 					i.Item1.Collected = true;
-					BigMessageThread.MessageInstance.ShowColoredShard(Game.GetGXTEntry("BM_LABEL_7"),
+					ScaleFormMessages.Message.SHOW_SHARD_CENTERED_MP_MESSAGE(Game.GetGXTEntry("BM_LABEL_7"),
 						$"{Collectables.DataCollectables.FindAll(x => x.Collected).Count}/{Collectables.DataCollectables.Count} {Game.GetGXTEntry("BM_LABEL_8")}", HudColor.HudColourBlack,
 						HudColor.HudColourPickup);
 					Effects.Start(ScreenEffect.MenuMgHeistOut);

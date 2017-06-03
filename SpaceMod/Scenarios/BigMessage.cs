@@ -26,9 +26,8 @@ namespace DefaultMissions
             if (CurrentScene.SceneFile == MarsSceneName && CurrentScene.SceneData.LastSceneFile == EarthSceneName ||
                 CurrentScene.SceneFile == EarthSceneName && CurrentScene.SceneData.LastSceneFile == MarsSceneName) 
             {
-                BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_5"));
+                ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_5"));
             }
-
             EndScenario(false);
         }
 

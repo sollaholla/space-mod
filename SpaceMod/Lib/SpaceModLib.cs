@@ -130,10 +130,38 @@ namespace SpaceMod.Lib
         DontTazemeBro,
     }
 
+    public enum CombatAttributes
+    {
+        CanUseCover = 0,
+        CanUseVehicles = 1,
+        CanDoDrivebys = 2,
+        CanLeaveVehicle = 3,
+        CanFightArmedPedsWhenNotArmed = 5,
+        CanTauntInVehicle = 20,
+        AlwaysFight = 46,
+        IgnoreTrafficWhenDriving = 52
+    }
+
+    public enum CPlaneMission
+    {
+        None = 0,
+        Unk = 1,
+        CTaskVehicleRam = 2,
+        CTaskVehicleBlock = 3,
+        CTaskVehicleGoToPlane = 4,
+        CTaskVehicleStop = 5,
+        CTaskVehicleAttack = 6,
+        CTaskVehicleFollow = 7,
+        CTaskVehicleFleeAirborne = 8,
+        CTaskVehicleCircle = 9,
+        CTaskVehicleEscort = 10,
+        CTaskVehicleFollowRecording = 15,
+        CTaskVehiclePoliceBehaviour = 16,
+        CTaskVehicleCrash = 17
+    }
+
     public static class SpaceModLib
     {
-        public static readonly Random Random = new Random();
-
         public static Quaternion LookRotation(Vector3 forward)
         {
             Vector3 up = Vector3.WorldUp;
@@ -321,8 +349,7 @@ namespace SpaceMod.Lib
             return Vector3.Distance(entity.Position - entity.UpVector, entity.Position.MoveToGroundArtificial(entity));
         }
 
-        public static void ShowUIPosition(Entity entity, int index, Vector3 position, string pathToFile, string objectName,
-            UIText nameResText)
+        internal static void ShowUIPosition(Entity entity, int index, Vector3 position, string pathToFile, string objectName, UIText nameResText)
         {
             if (entity != null)
             {
@@ -401,15 +428,8 @@ namespace SpaceMod.Lib
         {
             Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int)type, false, false, false);
         }
-
-        [Obsolete("SpaceModLib.DrawLine() is obsolete, please use Debug.DrawLine() instead.", true)]
-        public static void DrawLine(Vector3 start, Vector3 end, Color color)
-        {
-            Function.Call(Hash.DRAW_LINE, start.X, start.Y, start.Z, end.X, end.Y, end.Z, color.R, color.G, color.B, color.A);
-        }
-
-        public static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, Vector3 destination, CPlaneMission mission,
-            float physicsSpeed, float p9, float heading, float maxAltitude, float minAltitude)
+        
+        internal static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, Vector3 destination, CPlaneMission mission, float physicsSpeed, float p9, float heading, float maxAltitude, float minAltitude)
         {
             /*void TASK_PLANE_MISSION(Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, float destinationX, 
 			 * float destinationY, float destinationZ, int missionType, float physicsSpeed, float p9, 
@@ -440,36 +460,6 @@ namespace SpaceMod.Lib
         {
             Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, gxtEntry);
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
-        }
-
-        public enum CombatAttributes
-        {
-            CanUseCover = 0,
-            CanUseVehicles = 1,
-            CanDoDrivebys = 2,
-            CanLeaveVehicle = 3,
-            CanFightArmedPedsWhenNotArmed = 5,
-            CanTauntInVehicle = 20,
-            AlwaysFight = 46,
-            IgnoreTrafficWhenDriving = 52
-        }
-
-        public enum CPlaneMission
-        {
-            None = 0,
-            Unk = 1,
-            CTaskVehicleRam = 2,
-            CTaskVehicleBlock = 3,
-            CTaskVehicleGoToPlane = 4,
-            CTaskVehicleStop = 5,
-            CTaskVehicleAttack = 6,
-            CTaskVehicleFollow = 7,
-            CTaskVehicleFleeAirborne = 8,
-            CTaskVehicleCircle = 9,
-            CTaskVehicleEscort = 10,
-            CTaskVehicleFollowRecording = 15,
-            CTaskVehiclePoliceBehaviour = 16,
-            CTaskVehicleCrash = 17
         }
     }
 
@@ -659,18 +649,21 @@ namespace SpaceMod.Lib
         }
     }
 
-    public class BigMessageHandler
+    /// <summary>
+    /// Original source: Guad Maz
+    /// </summary>
+    public class ScaleFormMessage
     {
         private Scaleform _sc;
         private int _start;
         private int _timer;
 
-        public BigMessageHandler()
+        public ScaleFormMessage()
         {
 
         }
 
-        public void Load()
+        internal void Load()
         {
             if (_sc != null) return;
             _sc = new Scaleform("MP_BIG_MESSAGE_FREEMODE");
@@ -679,13 +672,13 @@ namespace SpaceMod.Lib
             while (!Function.Call<bool>(Hash.HAS_SCALEFORM_MOVIE_LOADED, _sc.Handle) && DateTime.Now.Subtract(start).TotalMilliseconds < timeout) Script.Yield();
         }
 
-        public void Dispose()
+        internal void Dispose()
         {
             Function.Call(Hash.SET_SCALEFORM_MOVIE_AS_NO_LONGER_NEEDED, new OutputArgument(_sc.Handle));
             _sc = null;
         }
 
-        public void ShowMissionPassedMessage(string msg, int time = 5000)
+        public void SHOW_MISSION_PASSED_MESSAGE(string msg, int time = 5000)
         {
             Load();
             _start = Game.GameTime;
@@ -693,7 +686,7 @@ namespace SpaceMod.Lib
             _timer = time;
         }
 
-        public void ShowColoredShard(string msg, string desc, HudColor textColor, HudColor bgColor, int time = 5000)
+        public void SHOW_SHARD_CENTERED_MP_MESSAGE(string msg, string desc, HudColor textColor, HudColor bgColor, int time = 5000)
         {
             Load();
             _start = Game.GameTime;
@@ -701,15 +694,7 @@ namespace SpaceMod.Lib
             _timer = time;
         }
 
-        public void ShowOldMessage(string msg, int time = 5000)
-        {
-            Load();
-            _start = Game.GameTime;
-            _sc.CallFunction("SHOW_MISSION_PASSED_MESSAGE", msg);
-            _timer = time;
-        }
-
-        public void ShowSimpleShard(string title, string subtitle, int time = 5000)
+        public void SHOW_SHARD_CREW_RANKUP_MP_MESSAGE(string title, string subtitle, int time = 5000)
         {
             Load();
             _start = Game.GameTime;
@@ -717,7 +702,7 @@ namespace SpaceMod.Lib
             _timer = time;
         }
 
-        public void ShowRankupMessage(string msg, string subtitle, int rank, int time = 5000)
+        public void SHOW_BIG_MP_MESSAGE(string msg, string subtitle, int rank, int time = 5000)
         {
             Load();
             _start = Game.GameTime;
@@ -725,15 +710,15 @@ namespace SpaceMod.Lib
             _timer = time;
         }
 
-        public void ShowWeaponPurchasedMessage(string bigMessage, string weaponName, WeaponHash weapon, int time = 5000)
+        public void SHOW_WEAPON_PURCHASED(string msg, string weaponName, WeaponHash weapon, int time = 5000)
         {
             Load();
             _start = Game.GameTime;
-            _sc.CallFunction("SHOW_WEAPON_PURCHASED", bigMessage, weaponName, unchecked((int)weapon), "", 100);
+            _sc.CallFunction("SHOW_WEAPON_PURCHASED", msg, weaponName, unchecked((int)weapon), "", 100);
             _timer = time;
         }
 
-        public void ShowMpMessageLarge(string msg, int time = 5000)
+        public void SHOW_CENTERED_MP_MESSAGE_LARGE(string msg, int time = 5000)
         {
             Load();
             _start = Game.GameTime;
@@ -742,13 +727,13 @@ namespace SpaceMod.Lib
             _timer = time;
         }
 
-        public void ShowCustomShard(string funcName, params object[] paremeters)
+        public void CALL_FUNCTION(string funcName, params object[] paremeters)
         {
             Load();
             _sc.CallFunction(funcName, paremeters);
         }
 
-        internal void Update()
+        internal void DoTransition()
         {
             if (_sc == null) return;
             _sc.Render2D();
@@ -762,17 +747,16 @@ namespace SpaceMod.Lib
         }
     }
 
-    public class BigMessageThread : Script
+    public class ScaleFormMessages : Script
     {
-        public static BigMessageHandler MessageInstance { get; set; }
-
-        public BigMessageThread()
+        public static ScaleFormMessage Message { get; set; }
+        public ScaleFormMessages()
         {
-            MessageInstance = new BigMessageHandler();
+            Message = new ScaleFormMessage();
 
             Tick += (sender, args) =>
             {
-                MessageInstance.Update();
+                Message.DoTransition();
             };
         }
     }

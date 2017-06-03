@@ -124,7 +124,7 @@ namespace DefaultMissions
 				spaceCraft.Heading = (PlayerPed.Position - spaceCraft.Position).ToHeading();
 
 				ped.Task.FightAgainst(PlayerPed);
-				ped.SetCombatAttributes(SpaceModLib.CombatAttributes.AlwaysFight, true);
+				ped.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
 
 				Blip blip = spaceCraft.AddBlip();
 				blip.Name = "UFO";
@@ -286,7 +286,7 @@ namespace DefaultMissions
 					break;
 				case 5:
 					Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-					BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_0"));
+					ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_0"));
 					Script.Wait(1000);
 					SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_18");
 					CurrentMissionStep++;
@@ -358,7 +358,7 @@ namespace DefaultMissions
 							if (Game.IsDisabledControlJustPressed(2, Control.Context))
 							{
 								SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_21");
-								BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_1"));
+								ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_1"));
 								Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
 								_alienEggProp.Delete();
 								EndScenario(true);

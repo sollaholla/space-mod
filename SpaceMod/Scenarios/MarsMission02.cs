@@ -170,7 +170,7 @@ namespace DefaultMissions
 							Function.Call(Hash._PLAY_AMBIENT_SPEECH1, closestPed.Handle, "Generic_Thanks", "Speech_Params_Force_Shouted_Critical");
 							SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_24", 10000);
 							Script.Wait(2500);
-							BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("GTS_LABEL_25"));
+							ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("GTS_LABEL_25"));
 							Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
 							Function.Call(Hash._PLAY_AMBIENT_SPEECH1, PlayerPed.Handle, "Generic_Shocked_Med", "Speech_Params_Force_Shouted_Critical");
 							EndScenario(true);

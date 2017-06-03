@@ -103,7 +103,7 @@ namespace SpaceMod.Scenes
                 ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
                 var section = Path.GetFileNameWithoutExtension(SceneFile);
                 OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
-                Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.VehicleSurfaceSpawn);
+                Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.DefaultVehicleSpawn);
 
                 SceneData.SceneLinks.ForEach(link =>
                 {
@@ -354,7 +354,7 @@ namespace SpaceMod.Scenes
             {
                 Game.TimeScale = 0.3f;
                 Function.Call(Hash.START_AUDIO_SCENE, "DEATH_SCENE");
-                BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_2"), 1000);
+                ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_2"), 1000);
                 Game.PlaySound("ScreenFlash", "WastedSounds");
                 Script.Wait(1500);
                 Game.FadeScreenOut(1000);

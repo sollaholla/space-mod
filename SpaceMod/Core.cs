@@ -181,7 +181,7 @@ namespace SpaceMod
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
-            StaticSettings.VehicleSurfaceSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
+            StaticSettings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
             StaticSettings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
         }
 
@@ -192,7 +192,7 @@ namespace SpaceMod
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
-            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.VehicleSurfaceSpawn);
+            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
             Settings.Save();
         }
@@ -334,7 +334,7 @@ namespace SpaceMod
             _menuConnector.Menus.Add(scenesMenu);
         }
 
-        private static void DisableWantedStars()
+        private void DisableWantedStars()
         {
             SpaceModLib.TerminateScriptByName("re_prison");
             SpaceModLib.TerminateScriptByName("re_prisonlift");
@@ -502,7 +502,7 @@ namespace SpaceMod
             }
         }
 
-        private static CustomXmlScene DeserialzeSceneFile(CustomScene scene, string newSceneFile)
+        private CustomXmlScene DeserialzeSceneFile(CustomScene scene, string newSceneFile)
         {
             if (newSceneFile == "cmd_earth")
                 return null;

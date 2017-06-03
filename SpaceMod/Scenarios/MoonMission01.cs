@@ -153,7 +153,7 @@ namespace DefaultMissions
 
                     List<Entity> concatList = Aliens.Concat(Ufos).ToList();
                     if (!concatList.All(entity => entity.IsDead)) return;
-                    BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_3"));
+                    ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_3"));
                     MissionStep++;
                     break;
                 case 1:
@@ -171,7 +171,7 @@ namespace DefaultMissions
                     MissionStep++;
                     break;
                 case 2:
-                    BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_4"));
+                    ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_4"));
                     EndScenario(true);
                     break;
             }

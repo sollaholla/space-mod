@@ -107,7 +107,7 @@ namespace DefaultMissions
 
                     if (Ufos.TrueForAll(x => !x.CurrentBlip.Exists()))
                     {
-                        BigMessageThread.MessageInstance.ShowMissionPassedMessage(Game.GetGXTEntry("BM_LABEL_3"));
+                        ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_3"));
                         EndScenario(true);
                     }
                     return;

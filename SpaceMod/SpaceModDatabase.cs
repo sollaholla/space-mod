@@ -23,11 +23,8 @@ namespace SpaceMod
 		}
 
 		public static Vector3 TrevorAirport { get; }
-
 		public static Vector3 GalaxyCenter { get; }
-
 		public static Vector3 PlanetSurfaceGalaxyCenter { get; }
-
 		public static Vector3 EarthAtmosphereEnterPosition { get; }
 
 		/// <summary>
