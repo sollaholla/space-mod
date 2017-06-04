@@ -32,11 +32,8 @@ namespace DefaultMissions
         }
 
         public Vehicle PlayerVehicle { get; }
-
-        public bool DidLoad { get; private set; }
-
         public List<Vehicle> Ufos { get; }
-
+        public bool DidLoad { get; private set; }
         public int OriginalVehicleHealth { get; }
 
         public override void Start()

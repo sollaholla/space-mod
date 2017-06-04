@@ -17,8 +17,6 @@ namespace SpaceMod.Scenes.Interiors
 
     public class Ipl
     {
-        //public static bool AllowTraversal { get; set; }
-
         internal Dictionary<string, string> ScenarioDatabase = new Dictionary<string, string> {
             {"Drink Coffee",  "WORLD_HUMAN_AA_COFFEE"},
             {"Smoke", "WORLD_HUMAN_AA_SMOKE" },
@@ -250,30 +248,23 @@ namespace SpaceMod.Scenes.Interiors
 
         private void RemoveMap_INTERNAL()
         {
-            while (_map.Objects.Count > 0)
-            {
-                _map.Objects.RemoveAt(0);
-            }
-
-            while (Props.Count > 0)
-            {
+            while (Props.Count > 0) {
                 var prop = Props[0];
                 prop?.Delete();
                 Props.RemoveAt(0);
             }
-
-            while (Vehicles.Count > 0)
-            {
+            while (Vehicles.Count > 0) {
                 var vehicle = Vehicles[0];
                 vehicle?.Delete();
                 Vehicles.RemoveAt(0);
             }
-
-            while (Peds.Count > 0)
-            {
+            while (Peds.Count > 0) {
                 var ped = Peds[0];
                 ped?.Delete();
                 Peds.RemoveAt(0);
+            }
+            while (_map.Objects.Count > 0) {
+                _map.Objects.RemoveAt(0);
             }
         }
 

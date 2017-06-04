@@ -298,11 +298,15 @@ namespace SpaceMod.Scenes
 
         private void RemoveIpl(IplData iplData)
         {
-            iplData.CurrentIpl?.Remove();
-            iplData.Teleports?.ForEach(teleport => RemoveIpl(teleport.EndIpl));
+            if (iplData == null)
+                return;
 
-            if (iplData.CurrentIpl != null)
-                RemovedInterior?.Invoke(this, iplData.CurrentIpl);
+            iplData.CurrentIpl?.Remove();
+            iplData.Teleports?.ForEach(teleport => {
+                teleport?.EndBlip?.Remove();
+                teleport?.StartBlip?.Remove();
+                RemoveIpl(teleport?.EndIpl);
+            });
         }
 
         internal void Update()
@@ -1022,17 +1026,7 @@ namespace SpaceMod.Scenes
                 }
 
                 OrbitalSystem?.Abort();
-                SceneData.Ipls?.ForEach(iplData =>
-                {
-                    iplData.CurrentIpl?.Remove();
-                    iplData.Teleports?.ForEach(tp =>
-                    {
-                        tp.EndBlip?.Remove();
-                        tp.StartBlip?.Remove();
-                    });
-                    if (iplData.CurrentIpl != null)
-                        RemovedInterior?.Invoke(this, iplData.CurrentIpl);
-                });
+                SceneData.Ipls?.ForEach(RemoveIpl);
 
                 while (_sceneLinkBlips.Count > 0)
                 {
