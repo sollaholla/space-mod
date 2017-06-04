@@ -1,7 +1,13 @@
-﻿using System.Collections.Generic;
+﻿/*
+ *  Soloman Northrop (c) 2017
+ *  https://www.youtube.com/channel/UCd7mQswuowjJCeaChSgnYtA
+ */
+
+using System.Collections.Generic;
 using System.Xml.Serialization;
 using GTA.Math;
 using SpaceMod.Scenes.Interiors;
+using GTA;
 
 namespace SpaceMod.Scenes
 {
@@ -11,9 +17,16 @@ namespace SpaceMod.Scenes
         Evening,
         Night
     }
-
+    
+    [System.Serializable]
     public class CustomXmlScene
     {
+        public CustomXmlScene()
+        {
+            Time = TimeType.Night;
+            GravityLevel = 3;
+        }
+
         public string SpaceDomeModel { get; set; }
 
         public List<OrbitalData> Orbitals { get; set; }
@@ -22,11 +35,11 @@ namespace SpaceMod.Scenes
 
         public List<Link> SceneLinks { get; set; }
 
-        public TimeType Time { get; set; } = TimeType.Night;
+        public TimeType Time { get; set; }
 
         public bool UseGravity { get; set; }
 
-        public int GravityLevel { get; set; } = 3;
+        public int GravityLevel { get; set; }
 
         public bool SurfaceFlag { get; set; }
 
@@ -35,7 +48,7 @@ namespace SpaceMod.Scenes
         public Vector3 SurfaceExitRotation { get; set; }
 
         public List<IplData> Ipls { get; set; }
-        
+
         public List<ScenarioData> CustomScenarios { get; set; }
 
         [XmlIgnore] public IplData CurrentIplData { get; set; }
@@ -43,68 +56,99 @@ namespace SpaceMod.Scenes
         [XmlIgnore] public string LastSceneFile { get; set; }
     }
 
+    [System.Serializable]
     public class Link
     {
+        public Link()
+        {
+            ExitDistance = 1500;
+        }
+
         public string Name { get; set; }
 
         public string NextSceneFile { get; set; }
 
         public Vector3 OriginOffset { get; set; }
 
-        public float ExitDistance { get; set; } = 1500;
+        public float ExitDistance { get; set; }
 
         public Vector3 ExitRotation { get; set; }
     }
 
-	public class LockedOrbitalData
-	{
-		public string Model { get; set; }
-
-		public Vector3 OriginOffset { get; set; }
-
-		public float Scale { get; set; } = 1.0f;
-
-		public bool EmitLight { get; set; }
-	}
-
-	public class OrbitalData : LockedOrbitalData
-	{
-		public string Name { get; set; }
-
-		public float RotationSpeed { get; set; }
-
-		public bool IsWormHole { get; set; }
-
-		public float ExitDistance { get; set; } = 1500;
-
-		public Vector3 ExitRotation { get; set; }
-
-		public string NextSceneFile { get; set; }
-	}
-
-    public class IplData
+    [System.Serializable]
+    public partial class LockedOrbitalData
     {
+        public LockedOrbitalData()
+        {
+            Scale = 1.0f;
+        }
+
+        public string Model { get; set; }
+
+        public Vector3 OriginOffset { get; set; }
+
+        public float Scale { get; set; }
+
+        public bool EmitLight { get; set; }
+    }
+
+    [System.Serializable]
+    public partial class OrbitalData : LockedOrbitalData
+    {
+        public OrbitalData()
+        {
+            ExitDistance = 1500;
+        }
+
         public string Name { get; set; }
 
-        public IplType Type { get; set; } = IplType.MapEditor;
+        public float RotationSpeed { get; set; }
+
+        public bool IsWormHole { get; set; }
+
+        public float ExitDistance { get; set; }
+
+        public Vector3 ExitRotation { get; set; }
+
+        public string NextSceneFile { get; set; }
+    }
+
+    [System.Serializable]
+    public partial class IplData
+    {
+        public IplData()
+        {
+            Type = IplType.MapEditor;
+            Time = TimeType.Night;
+        }
+
+        public string Name { get; set; }
+
+        public IplType Type { get; set; }
 
         public List<Teleport> Teleports { get; set; }
 
-        public TimeType Time { get; set; } = TimeType.Night;
+        public TimeType Time { get; set; }
 
         [XmlIgnore] public Ipl CurrentIpl { get; set; }
     }
 
-    public class Teleport
+    [System.Serializable]
+    public partial class Teleport
     {
         public Vector3 Start { get; set; }
 
         public Vector3 End { get; set; }
 
         public IplData EndIpl { get; set; }
+
+        [XmlIgnore] public Blip StartBlip { get; set; }
+
+        [XmlIgnore] public Blip EndBlip { get; set; }
     }
 
-    public class ScenarioData
+    [System.Serializable]
+    public partial class ScenarioData
     {
         public string Name { get; set; }
 

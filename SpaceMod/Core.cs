@@ -45,22 +45,17 @@ namespace SpaceMod
             CreateCustomMenu();
         }
 
+        internal static Core Instance { get; private set; }
+
         public Ped PlayerPed => Game.Player.Character;
         public Vector3 PlayerPosition {
             get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
             set {
-                if (PlayerPed.IsInVehicle())
-                {
-                    PlayerPed.CurrentVehicle.Position = value;
-                }
-                else
-                {
-                    PlayerPed.Position = value;
-                }
+                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
+                else PlayerPed.Position = value;
             }
         }
         public List<CustomScenario> Scenarios { get; private set; }
-        internal static Core Instance { get; private set; }
 
         internal CustomScene GetCurrentScene()
         {

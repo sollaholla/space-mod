@@ -170,10 +170,40 @@ namespace SpaceMod.Scenes
                     Ipl ipl = new Ipl(iplData.Name, iplData.Type);
                     ipl.Request();
                     iplData.CurrentIpl = ipl;
+                    iplData.Teleports?.ForEach(AddTPBlips);
+
+                    ipl.Markers?.ForEach(m =>
+                    {
+                        if (m.TeleportTarget == null)
+                            return;
+
+                        Teleport tp;
+                        iplData.Teleports.Add(tp = new Teleport {
+                            Start = m.Position,
+                            End = m.TeleportTarget.Value,
+                        });
+                        AddTPBlips(tp);
+                    });
                 });
 
-                if (SceneData.Ipls != null) IplCount = SceneData.Ipls.Count;
+                if (SceneData.Ipls != null)
+                    IplCount = SceneData.Ipls.Count;
             }
+        }
+
+        private static void AddTPBlips(Teleport tp)
+        {
+            tp.StartBlip = new Blip(World.CreateBlip(tp.Start).Handle)
+            {
+                Name = "Enterance",
+                Sprite = BlipSprite.PointOfInterest
+            };
+            tp.EndBlip = new Blip(World.CreateBlip(tp.End).Handle)
+            {
+                Name = "Exit",
+                Sprite = BlipSprite.PointOfInterest,
+                Alpha = 0
+            };
         }
 
         internal static LockedOrbital CreateLockedOrbital(LockedOrbitalData data)
@@ -810,16 +840,24 @@ namespace SpaceMod.Scenes
 
         private void UpdateTeleports(IplData data)
         {
+            if (data == null)
+                return;
+
             data.Teleports?.ForEach(teleport =>
             {
                 Vector3 start = teleport.Start;
                 Vector3 end = teleport.End;
                 float distanceToStart = Vector3.Distance(PlayerPosition, start);
                 float distanceToEnd = Vector3.Distance(PlayerPosition, end);
-                if (teleport.EndIpl.CurrentIpl == null)
+                if (teleport.EndIpl?.CurrentIpl == null)
                 {
+                    if (Blip.Exists(teleport.StartBlip))
+                        teleport.StartBlip.Alpha = 255;
+                    if (Blip.Exists(teleport.EndBlip))
+                        teleport.EndBlip.Alpha = 0;
+
                     World.DrawMarker(MarkerType.VerticalCylinder, start - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
-                    if (distanceToStart < 1.5f && teleport.EndIpl != null)
+                    if (distanceToStart < 1.5f)
                     {
                         SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_12");
                         Game.DisableControlThisFrame(2, Control.Context);
@@ -827,11 +865,14 @@ namespace SpaceMod.Scenes
                         {
                             Game.FadeScreenOut(1000);
                             Script.Wait(1000);
-                            Ipl endIpl = new Ipl(teleport.EndIpl.Name, teleport.EndIpl.Type);
-                            endIpl.Request();
-                            teleport.EndIpl.CurrentIpl = endIpl;
+                            if (teleport.EndIpl != null && !string.IsNullOrEmpty(teleport.EndIpl.Name))
+                            {
+                                Ipl endIpl = new Ipl(teleport.EndIpl.Name, teleport.EndIpl.Type);
+                                endIpl.Request();
+                                teleport.EndIpl.CurrentIpl = endIpl;
+                            }
                             LastIpl = SceneData.CurrentIplData;
-                            SceneData.CurrentIplData = teleport.EndIpl;
+                            SceneData.CurrentIplData = teleport.EndIpl ?? default(IplData);
                             PlayerPosition = end;
                             Script.Wait(1000);
                             Game.FadeScreenIn(1000);
@@ -840,6 +881,11 @@ namespace SpaceMod.Scenes
                 }
                 else
                 {
+                    if (Blip.Exists(teleport.StartBlip))
+                        teleport.StartBlip.Alpha = 0;
+                    if (Blip.Exists(teleport.EndBlip))
+                        teleport.EndBlip.Alpha = 255;
+
                     LastIpl?.CurrentIpl?.Hide();
                     World.DrawMarker(MarkerType.VerticalCylinder, end - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.5f, 0.5f, 0.5f), Color.Gold);
                     UpdateTeleports(teleport.EndIpl);
@@ -855,8 +901,11 @@ namespace SpaceMod.Scenes
                     Script.Wait(1000);
                     PlayerPosition = start;
                     LastIpl?.CurrentIpl?.Unhide();
-                    teleport.EndIpl.CurrentIpl.Remove();
-                    teleport.EndIpl.CurrentIpl = null;
+                    if (teleport.EndIpl != null)
+                    {
+                        teleport.EndIpl.CurrentIpl.Remove();
+                        teleport.EndIpl.CurrentIpl = null;
+                    }
                     SceneData.CurrentIplData = LastIpl;
                     Script.Wait(1000);
                     Game.FadeScreenIn(1000);
@@ -967,6 +1016,11 @@ namespace SpaceMod.Scenes
                 SceneData.Ipls?.ForEach(iplData =>
                 {
                     iplData.CurrentIpl?.Remove();
+                    iplData.Teleports?.ForEach(tp =>
+                    {
+                        tp.EndBlip?.Remove();
+                        tp.StartBlip?.Remove();
+                    });
                 });
 
                 while (_sceneLinkBlips.Count > 0)

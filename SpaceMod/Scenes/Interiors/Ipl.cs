@@ -70,7 +70,9 @@ namespace SpaceMod.Scenes.Interiors
         public List<Vehicle> Vehicles { get; }
         public List<Prop> Props { get; }
         public List<Ped> Peds { get; }
+        public List<Marker> Markers { get; private set; }
         public string Name { get; }
+        public IplType Type => _type;
 
         public void Request()
         {
@@ -94,6 +96,8 @@ namespace SpaceMod.Scenes.Interiors
                     _map = MyXmlSerializer.Deserialize<Map>(SpaceModDatabase.PathToInteriors + "/" + Name + ".xml");
                     if (_map != null && _map != default(Map))
                     {
+                        Markers = _map.Markers ?? new List<Marker>();
+
                         _map.Objects?.ForEach(InstantiateObject);
                         LogMapObjects();
                     }
@@ -152,7 +156,10 @@ namespace SpaceMod.Scenes.Interiors
             if (!Entity.Exists(prop))
                 return;
             prop.Rotation = mapObject.Rotation;
-            prop.FreezePosition = !mapObject.Dynamic;
+            if (!mapObject.Dynamic && !mapObject.Door)
+            {
+                prop.FreezePosition = true;
+            }
             prop.Quaternion = mapObject.Quaternion;
             prop.Position = mapObject.Position;
             model.MarkAsNoLongerNeeded();
