@@ -24,9 +24,13 @@ namespace SpaceMod.Scenes
 
     public class CustomScene
     {
+        public delegate void OnLoadedInterior(CustomScene sender, Ipl ipl);
+        public delegate void OnRemovedInterior(CustomScene sender, Ipl ipl);
         public delegate void OnExitEvent(CustomScene scene, string newSceneFile, Vector3 exitRotation);
         public delegate void OnMinedObjectEvent(CustomScene scene, Prop mineableObject);
 
+        public static event OnRemovedInterior RemovedInterior;
+        public static event OnLoadedInterior LoadedInterior;
         public event OnExitEvent Exited;
         public event OnMinedObjectEvent Mined;
 
@@ -171,7 +175,6 @@ namespace SpaceMod.Scenes
                     ipl.Request();
                     iplData.CurrentIpl = ipl;
                     iplData.Teleports?.ForEach(AddTPBlips);
-
                     ipl.Markers?.ForEach(m =>
                     {
                         if (m.TeleportTarget == null)
@@ -184,6 +187,8 @@ namespace SpaceMod.Scenes
                         });
                         AddTPBlips(tp);
                     });
+
+                    LoadedInterior?.Invoke(this, ipl);
                 });
 
                 if (SceneData.Ipls != null)
@@ -291,10 +296,13 @@ namespace SpaceMod.Scenes
             return model;
         }
 
-        internal static void RemoveIpl(IplData iplData)
+        private void RemoveIpl(IplData iplData)
         {
             iplData.CurrentIpl?.Remove();
             iplData.Teleports?.ForEach(teleport => RemoveIpl(teleport.EndIpl));
+
+            if (iplData.CurrentIpl != null)
+                RemovedInterior?.Invoke(this, iplData.CurrentIpl);
         }
 
         internal void Update()
@@ -842,7 +850,6 @@ namespace SpaceMod.Scenes
         {
             if (data == null)
                 return;
-
             data.Teleports?.ForEach(teleport =>
             {
                 Vector3 start = teleport.Start;
@@ -870,6 +877,7 @@ namespace SpaceMod.Scenes
                                 Ipl endIpl = new Ipl(teleport.EndIpl.Name, teleport.EndIpl.Type);
                                 endIpl.Request();
                                 teleport.EndIpl.CurrentIpl = endIpl;
+                                LoadedInterior?.Invoke(this, endIpl);
                             }
                             LastIpl = SceneData.CurrentIplData;
                             SceneData.CurrentIplData = teleport.EndIpl ?? default(IplData);
@@ -904,6 +912,7 @@ namespace SpaceMod.Scenes
                     if (teleport.EndIpl != null)
                     {
                         teleport.EndIpl.CurrentIpl.Remove();
+                        RemovedInterior?.Invoke(this, teleport.EndIpl.CurrentIpl);
                         teleport.EndIpl.CurrentIpl = null;
                     }
                     SceneData.CurrentIplData = LastIpl;
@@ -1021,6 +1030,8 @@ namespace SpaceMod.Scenes
                         tp.EndBlip?.Remove();
                         tp.StartBlip?.Remove();
                     });
+                    if (iplData.CurrentIpl != null)
+                        RemovedInterior?.Invoke(this, iplData.CurrentIpl);
                 });
 
                 while (_sceneLinkBlips.Count > 0)
@@ -1032,8 +1043,6 @@ namespace SpaceMod.Scenes
 
                 SceneData.CurrentIplData = null;
                 GameplayCamera.ShakeAmplitude = 0;
-
-
                 Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
             }
         }

@@ -237,7 +237,6 @@ namespace SpaceMod.Scenes.Interiors
         public void Remove()
         {
             if (!IsActive) return;
-
             switch (_type)
             {
                 case IplType.GTA:
