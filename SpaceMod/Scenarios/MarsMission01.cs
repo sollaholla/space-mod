@@ -32,16 +32,26 @@ namespace DefaultMissions
             Ufos = new List<Vehicle>();
             _satelliteScene = new MarsMissionSatelliteScene();
 
-            OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
-            OriginalMaxHealth = PlayerPed.MaxHealth;
-            PlayerPed.MaxHealth = 1500;
-            PlayerPed.Health = PlayerPed.MaxHealth;
-
             _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
             CurrentMissionStep = Settings.GetValue("mission", "current_mission_step", 0);
             Settings.SetValue("settings", "ufo_model", _ufoModelName);
             Settings.SetValue("mission", "current_mission_step", CurrentMissionStep);
             Settings.Save();
+
+            SetupPlayer();
+        }
+
+        private void SetupPlayer()
+        {
+            OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
+
+            if (CurrentScene.SceneFile.Equals("MarsSurface.space") && CurrentMissionStep < 6)
+            {
+                OriginalMaxHealth = PlayerPed.MaxHealth;
+                PlayerPed.MaxHealth = 1500;
+                PlayerPed.Health = PlayerPed.MaxHealth;
+            }
+            else OriginalMaxHealth = -1;
         }
 
         public int CurrentMissionStep { get; protected set; }
@@ -496,8 +506,11 @@ namespace DefaultMissions
                 MarkEntitesAsNotNeeded();
             else CleanUp();
 
-            PlayerPed.MaxHealth = OriginalMaxHealth;
-            PlayerPed.Health = PlayerPed.MaxHealth;
+            if (OriginalMaxHealth != -1)
+            {
+                PlayerPed.MaxHealth = OriginalMaxHealth;
+                PlayerPed.Health = PlayerPed.MaxHealth;
+            }
             PlayerPed.CanRagdoll = OriginalCanPlayerRagdoll;
             PlayerPed.IsExplosionProof = false;
             Settings.SetValue("mission", "current_mission_step", CurrentMissionStep);

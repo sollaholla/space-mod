@@ -95,8 +95,8 @@ namespace DefaultMissions
 
             Ufos?.ForEach(vehicle =>
             {
-                    // TODO: Figure out a variable for when the vehicle is not dead but is spiraling downward.
-                    if (vehicle.IsDead || !vehicle.IsDriveable || vehicle.IsOnFire || vehicle.Driver.IsDead && vehicle.CurrentBlip.Exists())
+                // TODO: Figure out a variable for when the vehicle is not dead but is spiraling downward.
+                if (vehicle.IsDead || !vehicle.IsDriveable || vehicle.IsOnFire || vehicle.Driver.IsDead && vehicle.CurrentBlip.Exists())
                 {
                     vehicle.CurrentBlip.Remove();
                     vehicle.Driver?.Kill();
@@ -110,24 +110,26 @@ namespace DefaultMissions
                     return;
                 }
 
-                if (vehicle.Driver != null)
-                {
-                    Vector3 lastDamagePos = vehicle.Driver.GetLastWeaponImpactCoords();
+                if (vehicle.Driver == null)
+                    return;
 
-                    if (lastDamagePos != Vector3.Zero)
-                    {
-                        if (PlayerVehicle != null)
-                        {
-                            if (lastDamagePos.DistanceTo(PlayerVehicle.Position) < 25)
-                            {
-                                PlayerVehicle.ApplyDamage(PlayerVehicle.GetOffsetFromWorldCoords(lastDamagePos),
-                                    1500, 2500);
+                Vector3 lastDamagePos = vehicle.Driver.GetLastWeaponImpactCoords();
 
-                                PlayerVehicle.Health -= 50;
-                            }
-                        }
-                    }
-                }
+                if (lastDamagePos == Vector3.Zero)
+                    return;
+
+                if (PlayerVehicle == null)
+                    return;
+
+                float distance;
+                if ((distance = lastDamagePos.DistanceTo(PlayerVehicle.Position)) >= 25)
+                    return;
+
+                if (distance == 0)
+                    distance = 1;
+
+                PlayerVehicle.Health -= 50 / (int)distance;
+                PlayerVehicle.EngineHealth -= 120 / distance;
             });
         }
 
