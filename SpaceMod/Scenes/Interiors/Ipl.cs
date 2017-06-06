@@ -241,12 +241,12 @@ namespace SpaceMod.Scenes.Interiors
                     Function.Call(Hash.REMOVE_IPL, Name);
                     break;
                 case IplType.MapEditor:
-                    RemoveMap_INTERNAL();
+                    RemoveMap();
                     break;
             }
         }
 
-        private void RemoveMap_INTERNAL()
+        private void RemoveMap()
         {
             while (Props.Count > 0) {
                 var prop = Props[0];

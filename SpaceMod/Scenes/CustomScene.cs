@@ -34,6 +34,9 @@ namespace SpaceMod.Scenes
         public event OnExitEvent Exited;
         public event OnMinedObjectEvent Mined;
 
+        //private float _distanceLimitHorizontal = 307.2f;
+        //private float _distanceLimitVertical = 15.0f;
+
         private readonly object _startLock;
         private readonly object _updateLock;
         private readonly List<Prop> _registeredMineableObjects;
@@ -108,6 +111,8 @@ namespace SpaceMod.Scenes
                 var section = Path.GetFileNameWithoutExtension(SceneFile);
                 OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
                 Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.DefaultVehicleSpawn);
+                //_distanceLimitVertical = settings.GetValue(section, "distance_limit_vertical", _distanceLimitVertical);
+                //_distanceLimitHorizontal = settings.GetValue(section, "distance_limit_horizontal", _distanceLimitHorizontal);
 
                 SceneData.SceneLinks.ForEach(link =>
                 {
@@ -325,12 +330,18 @@ namespace SpaceMod.Scenes
                 ShowDistanceText();
                 TryToStartNextScene();
                 HandlePlayerVehicle();
+                //CheckDistances();
             }
             finally
             {
                 Monitor.Exit(_updateLock);
             }
         }
+
+        //private void CheckDistances()
+        //{
+
+        //}
 
         private void HandlePlayerVehicle()
         {

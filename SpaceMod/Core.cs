@@ -218,6 +218,7 @@ namespace SpaceMod
                         UI.Notify($"Failed to load {file}");
                         return;
                     }
+                    _menuConnector.Menus?.ForEach(m => m.Draw = false);
                     SetCurrentScene(customXmlScene, fileName);
                 };
                 scenesMenu.Add(menuItem);
