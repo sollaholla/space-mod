@@ -481,7 +481,7 @@ namespace DefaultMissions
         private void UpdateInteriorAlien(Ped alien)
         {
             var isMovable = PlayerPosition.DistanceTo(alien.Position) < 1000;
-            alien.FreezePosition = isMovable;
+            alien.FreezePosition = !isMovable;
             alien.IsVisible = isMovable;
 
             if (!alien.IsDead || !alien.IsPersistent)
