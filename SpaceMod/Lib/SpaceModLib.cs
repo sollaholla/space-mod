@@ -281,6 +281,22 @@ namespace SpaceMod.Lib
             Function.Call(Hash.TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME, name);
         }
 
+        public static void RequestScript(string name)
+        {
+            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name))
+                return;
+
+            Function.Call(Hash.REQUEST_SCRIPT, name);
+            var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
+            while(DateTime.UtcNow < timeout)
+            {
+                if (Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
+                    break;
+
+                Script.Yield();
+            }
+        }
+
         public static bool IsPlayingAnim(this Entity entity, string animDict, string animName)
         {
             return Function.Call<bool>(Hash.IS_ENTITY_PLAYING_ANIM, entity, animDict, animName, 3);

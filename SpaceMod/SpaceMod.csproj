@@ -55,7 +55,7 @@
   <ItemGroup>
     <Compile Include="Lib\V3Parse.cs" />
     <Compile Include="SpaceModDatabase.cs" />
-    <Compile Include="Lib\CppLib.cs" />
+    <Compile Include="Lib\GTSLib.cs" />
     <Compile Include="Scenario\CustomScenario.cs" />
     <Compile Include="Scenes\CustomScene.cs" />
     <Compile Include="Scenes\Interiors\Ipl.cs" />

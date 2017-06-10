@@ -51,6 +51,12 @@ namespace DefaultMissions
                 PlayerPed.MaxHealth = 1500;
                 PlayerPed.Health = PlayerPed.MaxHealth;
             }
+            else if (CurrentScene.SceneFile.Equals("EuropaSurface.space"))
+            {
+                OriginalMaxHealth = PlayerPed.MaxHealth;
+                PlayerPed.MaxHealth = 500;
+                PlayerPed.Health = PlayerPed.MaxHealth;
+            }
             else OriginalMaxHealth = -1;
         }
 
@@ -229,7 +235,6 @@ namespace DefaultMissions
                         _alienEggProp = World.CreateProp("sm_alien_egg_w_container", _spawnAlienEgg, false, false);
                         _alienEggProp.FreezePosition = true;
                         _alienEggProp.Heading = (PlayerPosition - _spawnAlienEgg).ToHeading();
-                        UI.Notify("Spawned!!");
                         CurrentMissionStep++;
                     }
                     break;
@@ -259,7 +264,7 @@ namespace DefaultMissions
                     if (CurrentScene.SceneData.CurrentIplData?.Name == "Europa/ufo_interior")
                     {
                         float distance = PlayerPosition.DistanceTo(_alienEggProp.Position);
-                        if (distance < 1.3f)
+                        if (distance < 2)
                         {
                             SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_7");
                             Game.DisableControlThisFrame(2, Control.Context);

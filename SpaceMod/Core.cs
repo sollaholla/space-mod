@@ -27,7 +27,12 @@ namespace SpaceMod
         private Menu _menu;
 
         private readonly object _tickLock;
+        private bool _missionsComplete;
         private CustomScene _currentScene;
+        private Ped colonel;
+        private bool endMissionComplete;
+        private bool disableWantedStars = true;
+        private bool resetWantedLevel;
 
         public Core()
         {
@@ -70,10 +75,14 @@ namespace SpaceMod
                 Game.FadeScreenIn(0);
             PlayerPed.HasGravity = true;
             PlayerPed.FreezePosition = false;
+            PlayerPed.Task.ClearAll();
+            PlayerPed.FreezePosition = false;
+            GTSLib.CutCredits();
 
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
             _currentScene?.Delete();
+            colonel?.Delete();
 
             if (Scenarios != null)
             {
@@ -109,6 +118,7 @@ namespace SpaceMod
             {
                 _menuConnector.UpdateMenus();
 
+                DoEndMission();
                 DisableWantedStars();
                 if (_currentScene != null) DoSceneUpdate();
                 else DoEarthUpdate();
@@ -116,6 +126,66 @@ namespace SpaceMod
             finally
             {
                 Monitor.Exit(_tickLock);
+            }
+        }
+
+        private void DoEndMission()
+        {
+            if (!_missionsComplete || endMissionComplete || _currentScene != null)
+            {
+                colonel?.Delete();
+                colonel = null;
+                return;
+            }
+
+            if (!Entity.Exists(colonel))
+                colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
+
+            if (!colonel.CurrentBlip.Exists())
+                new Blip(colonel.AddBlip().Handle)
+                {
+                    Sprite = BlipSprite.GTAOMission,
+                    Color = BlipColor.White,
+                    Scale = 2,
+                    Name = "Colonel Larson"
+                };
+
+            float distance = Vector3.Distance(PlayerPosition, colonel.Position);
+            if (distance > 1.75f)
+                return;
+
+            World.DrawMarker(MarkerType.UpsideDownCone, colonel.Position + Vector3.WorldUp * 1.5f, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
+            SpaceModLib.DisplayHelpTextWithGXT("END_LABEL_1");
+
+            if (Game.IsControlJustPressed(2, GTA.Control.Context))
+            {
+                Function.Call(Hash._PLAY_AMBIENT_SPEECH1, colonel.Handle, "Generic_Hi", "Speech_Params_Force");
+                PlayerPed.FreezePosition = true;
+                PlayerPed.Heading = (colonel.Position - PlayerPosition).ToHeading();
+                PlayerPed.Task.StandStill(-1);
+
+                while (colonel.Exists())
+                {
+                    SpaceModLib.ShowSubtitleWithGXT("END_LABEL_2", 10000);
+                    Wait(10000);
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, PlayerPed.Handle, "Generic_Thanks", "Speech_Params_Force_Shouted_Critical");
+                    SpaceModLib.ShowSubtitleWithGXT("END_LABEL_3");
+                    Wait(5000);
+                    Game.FadeScreenOut(1000);
+                    Wait(1000);
+                    colonel.Delete();
+                    PlayerPed.Task.ClearAllImmediately();
+                    PlayerPed.FreezePosition = false;
+                    Wait(1000);
+                    Game.FadeScreenIn(1000);
+                    endMissionComplete = true;
+                    Settings.SetValue("settings", "end_mission_complete", endMissionComplete);
+                    Settings.Save();
+                    GTSLib.RollCredits();
+                    Wait(30000);
+                    GTSLib.CutCredits();
+                    Yield();
+                }
             }
         }
 
@@ -127,7 +197,7 @@ namespace SpaceMod
             {
                 CustomXmlScene scene =
                     MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + "EarthOrbit.space");
-                SetCurrentScene(scene);
+                SetCurrentScene(scene, "EarthOrbit.space");
             }
         }
 
@@ -173,11 +243,25 @@ namespace SpaceMod
         {
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+            endMissionComplete = Settings.GetValue("settings", "end_mission_complete", endMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
             StaticSettings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
+            CheckMissionsStatus();
+        }
+
+        private void CheckMissionsStatus()
+        {
+            string dm = "/DefaultMissions.";
+            ScriptSettings mars1Settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + dm + "MarsMission01.ini");
+            ScriptSettings mars2Settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + dm + "MarsMission02.ini");
+            ScriptSettings moonSettings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + dm + "MoonMission01.ini");
+            _missionsComplete =
+                mars1Settings.GetValue("scenario_config", "complete", false) &&
+                mars2Settings.GetValue("scenario_config", "complete", false) &&
+                moonSettings.GetValue("scenario_config", "complete", false);
         }
 
         private void SaveSettings()
@@ -307,6 +391,13 @@ namespace SpaceMod
 
             settingsMenu.Add(saveSettingsItem);
 
+            var disableWantedLevelCheckbox = new CheckboxMenuItem("Disable Wanted Level", disableWantedStars);
+            disableWantedLevelCheckbox.Checked += (a, b) => {
+                disableWantedStars = b;
+            };
+
+            settingsMenu.Add(disableWantedLevelCheckbox);
+
             #endregion
 
             #region debug
@@ -329,14 +420,31 @@ namespace SpaceMod
             _menuConnector.Menus.Add(playerSettingsMenu);
             _menuConnector.Menus.Add(scenesMenu);
         }
-
+        
         private void DisableWantedStars()
         {
+            if (!disableWantedStars)
+            {
+                if (!resetWantedLevel)
+                {
+                    SpaceModLib.RequestScript("re_prison");
+                    SpaceModLib.RequestScript("re_prisonlift");
+                    SpaceModLib.RequestScript("am_prison");
+                    SpaceModLib.RequestScript("re_lossantosintl");
+                    SpaceModLib.RequestScript("re_armybase");
+                    SpaceModLib.RequestScript("restrictedareas");
+                    Game.MaxWantedLevel = 5;
+                    resetWantedLevel = true;
+                }
+                return;
+            }
+            resetWantedLevel = false;
             SpaceModLib.TerminateScriptByName("re_prison");
             SpaceModLib.TerminateScriptByName("re_prisonlift");
             SpaceModLib.TerminateScriptByName("am_prison");
             SpaceModLib.TerminateScriptByName("re_lossantosintl");
             SpaceModLib.TerminateScriptByName("re_armybase");
+            SpaceModLib.TerminateScriptByName("restrictedareas");
             Game.MaxWantedLevel = 0;
         }
 
@@ -405,6 +513,7 @@ namespace SpaceMod
         {
             lock (_tickLock) {
                 Scenarios.Remove(scenario);
+                CheckMissionsStatus();
             }
         }
 
