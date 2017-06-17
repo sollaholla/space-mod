@@ -31,9 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NativeUI">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\DLL\NativeUI.dll</HintPath>
-    </Reference>
     <Reference Include="ScriptHookVDotNet">
       <HintPath>..\..\..\..\Rockstar Games\GTA V\DLL\ScriptHookVDotNet.dll</HintPath>
     </Reference>

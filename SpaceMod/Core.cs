@@ -33,6 +33,9 @@ namespace SpaceMod
         private bool endMissionComplete;
         private bool disableWantedStars = true;
         private bool resetWantedLevel;
+        private bool overrideTimecycleModifier;
+        private string spaceTimecycle;
+        private bool resetTimecycle;
 
         public Core()
         {
@@ -102,6 +105,8 @@ namespace SpaceMod
                 ResetWeather();
             }
             _currentScene = null;
+
+            Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
@@ -117,7 +122,7 @@ namespace SpaceMod
             try
             {
                 _menuConnector.UpdateMenus();
-
+                
                 DoEndMission();
                 DisableWantedStars();
                 if (_currentScene != null) DoSceneUpdate();
@@ -203,6 +208,17 @@ namespace SpaceMod
 
         private void DoSceneUpdate()
         {
+            if (overrideTimecycleModifier)
+            {
+                Function.Call(Hash.SET_TIMECYCLE_MODIFIER, spaceTimecycle);
+                resetTimecycle = false;
+            }
+            else if (!resetTimecycle)
+            {
+                Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
+                resetTimecycle = true;
+            }
+
             Scenarios?.ForEach(scenario => scenario.Update());
 
             SetTime();
@@ -246,6 +262,8 @@ namespace SpaceMod
             endMissionComplete = Settings.GetValue("settings", "end_mission_complete", endMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
+            overrideTimecycleModifier = Settings.GetValue("settings", "override_timecycle", overrideTimecycleModifier);
+            spaceTimecycle = Settings.GetValue("settings", "space_timecycle", spaceTimecycle);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
             StaticSettings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
@@ -270,6 +288,8 @@ namespace SpaceMod
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
+            Settings.SetValue("settings", "override_timecycle", overrideTimecycleModifier);
+            Settings.SetValue("settings", "space_timecycle", spaceTimecycle);
             Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
@@ -395,8 +415,13 @@ namespace SpaceMod
             disableWantedLevelCheckbox.Checked += (a, b) => {
                 disableWantedStars = b;
             };
-
             settingsMenu.Add(disableWantedLevelCheckbox);
+
+            var overrideTimecycle = new CheckboxMenuItem("Override TimeCycleModifier", overrideTimecycleModifier);
+            overrideTimecycle.Checked += (a, b) => {
+                overrideTimecycleModifier = b;
+            };
+            settingsMenu.Add(overrideTimecycle);
 
             #endregion
 
