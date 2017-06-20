@@ -103,6 +103,8 @@ namespace DefaultMissions
                     Vector3 offsetFromGal = new Vector3(0, 125, 60);
                     Asteroid = World.CreateProp("prop_asteroid01", SpaceModDatabase.GalaxyCenter + offsetFromGal, Vector3.Zero, true,
                         false);
+                    if (Asteroid == null)
+                        return;
                     // need more info on the because i have no clue what the rest of the params actually do.
                     // not even sure what the weight units are, maybe KG? 
                     //Object object, float weight, float p2, float p3, float p4, float p5, float gravity, float p7, float p8, float p9, float p10, float buoyancy

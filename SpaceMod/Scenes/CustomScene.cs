@@ -33,14 +33,14 @@ namespace SpaceMod.Scenes
         public static event OnLoadedInterior LoadedInterior;
         public event OnExitEvent Exited;
         public event OnMinedObjectEvent Mined;
-
-        //private float _distanceLimitHorizontal = 307.2f;
-        //private float _distanceLimitVertical = 15.0f;
-
+        
         private readonly object _startLock;
         private readonly object _updateLock;
         private readonly List<Prop> _registeredMineableObjects;
         private readonly List<Blip> _sceneLinkBlips;
+
+        private float jumpForce = 1.5f;
+        private bool useLowGJumping;
 
         private float _leftRightFly;
         private float _upDownFly;
@@ -71,12 +71,8 @@ namespace SpaceMod.Scenes
             _playerState = PlayerState.Floating;
             _startLock = new object();
             _updateLock = new object();
-        }
 
-        internal Ped PlayerPed => Game.Player.Character;
-        internal Vector3 PlayerPosition {
-            get { return PlayerPed.Position; }
-            set { PlayerPed.Position = value; }
+            useLowGJumping = StaticSettings.MoonJump;
         }
 
         public CustomXmlScene SceneData { get; }
@@ -90,130 +86,100 @@ namespace SpaceMod.Scenes
         internal Vehicle PlayerLastVehicle { get; private set; }
         internal int IplCount { get; private set; }
         internal List<Vehicle> OldVehicles { get; }
+        internal Ped PlayerPed => Game.Player.Character;
+        internal Vector3 PlayerPosition {
+            get { return PlayerPed.Position; }
+            set { PlayerPed.Position = value; }
+        }
 
         internal void Start()
         {
             lock (_startLock)
             {
-                // Set audio to no ambience.
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+                CreateSpace();
+                LoadIpls();
 
-                // Create space dome.
-                Prop spaceDome = CreateProp(Vector3.Zero, SceneData.SpaceDomeModel);
-                List<Orbital> orbitals = SceneData.Orbitals?.Select(x => CreateOrbital(x, SceneData.SurfaceFlag)).Where(o => o != default(Orbital)).ToList();
-                List<LockedOrbital> lockedOrbitals = SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
-
-                WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
-                OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
-
-                // Get settings.
                 ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
                 var section = Path.GetFileNameWithoutExtension(SceneFile);
                 OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
                 Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.DefaultVehicleSpawn);
-                //_distanceLimitVertical = settings.GetValue(section, "distance_limit_vertical", _distanceLimitVertical);
-                //_distanceLimitHorizontal = settings.GetValue(section, "distance_limit_horizontal", _distanceLimitHorizontal);
+                jumpForce = settings.GetValue(section, "jump_force_override", jumpForce);
+                useLowGJumping = settings.GetValue(section, "low_gravity_jumping", useLowGJumping);
 
-                SceneData.SceneLinks.ForEach(link =>
-                {
-                    if (string.IsNullOrEmpty(link.Name)) return;
-                    var text = new UIText(string.Empty, new Point(), 0.5f)
-                    {
-                        Centered = true,
-                        Font = Font.Monospace,
-                        Shadow = true
-                    };
-                    var distanceText = new UIText(string.Empty, new Point(), 0.5f)
-                    {
-                        Centered = true,
-                        Font = Font.Monospace,
-                        Shadow = true
-                    };
-                    var tuple = new Tuple<UIText, UIText, Link>(text, distanceText, link);
-                    DistanceText.Add(tuple);
-                    Blip blip = new Blip(World.CreateBlip((SceneData.SurfaceFlag ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + link.OriginOffset).Handle)
-                    {
-                        Sprite = BlipSprite.Crosshair2,
-                        Color = BlipColor.Blue,
-                        Name = link.Name
-                    };
-                    _sceneLinkBlips.Add(blip);
-                });
-
-                Vehicle vehicle = PlayerPed.CurrentVehicle;
-                if (Entity.Exists(vehicle))
-                {
-                    PlayerLastVehicle = vehicle;
-                    PlayerLastVehicle.IsInvincible = true;
-                    PlayerLastVehicle.IsPersistent = true;
-                    if (SceneData.SurfaceFlag)
-                    {
-                        PlayerPed.Task.ClearAllImmediately();
-                        vehicle.EngineRunning = false;
-                        vehicle.Quaternion = Quaternion.Identity;
-                        vehicle.Rotation = Vector3.Zero;
-                        vehicle.FreezePosition = true;
-                        vehicle.Velocity = Vector3.Zero;
-                        vehicle.Speed = 0;
-                        vehicle.PositionNoOffset = vehicleSpawn + Vector3.WorldUp;
-                        Script.Yield();
-                        DateTime groundPlacementTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
-                        while (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f))
-                        {
-                            if (DateTime.UtcNow > groundPlacementTimeout)
-                            {
-                                Debug.Log("Couldn't place vehicle on ground properly.", DebugMessageType.Debug);
-                                break;
-                            }
-                            Script.Yield();
-                        }
-                    }
-                    else PlayerPed.CanRagdoll = false;
-                    Script.Yield();
-                }
-
+                PlaceCurrentVehicleOnGround(vehicleSpawn);
                 MovePlayerToGalaxy();
-
-                SceneData.Ipls?.ForEach(iplData =>
-                {
-                    Ipl ipl = new Ipl(iplData.Name, iplData.Type);
-                    ipl.Request();
-                    iplData.CurrentIpl = ipl;
-                    iplData.Teleports?.ForEach(AddTPBlips);
-                    ipl.Markers?.ForEach(m =>
-                    {
-                        if (m.TeleportTarget == null)
-                            return;
-
-                        Teleport tp;
-                        iplData.Teleports.Add(tp = new Teleport {
-                            Start = m.Position,
-                            End = m.TeleportTarget.Value,
-                        });
-                        AddTPBlips(tp);
-                    });
-
-                    LoadedInterior?.Invoke(this, ipl);
-                });
-
-                if (SceneData.Ipls != null)
-                    IplCount = SceneData.Ipls.Count;
             }
         }
 
-        private static void AddTPBlips(Teleport tp)
+        internal void Update()
         {
-            tp.StartBlip = new Blip(World.CreateBlip(tp.Start).Handle)
+            if (!Monitor.TryEnter(_updateLock)) return;
+
+            try
             {
-                Name = "Enterance",
-                Sprite = BlipSprite.PointOfInterest
-            };
-            tp.EndBlip = new Blip(World.CreateBlip(tp.End).Handle)
+                UI.HideHudComponentThisFrame(HudComponent.AreaName);
+
+                if (useLowGJumping && SceneData.SurfaceFlag) PlayerPed.SetSuperJumpThisFrame(jumpForce, 1.3f, false);
+
+                WormHoles?.ForEach(UpdateWormHole);
+                OrbitalSystem?.Process(SpaceModDatabase.GetValidGalaxyDomePosition(PlayerPed));
+                SceneData.Ipls?.ForEach(UpdateTeleports);
+                PlayerFly();
+                VehicleFly();
+                HandleDeath();
+                ShowDistanceText();
+                TryToStartNextScene();
+                HandlePlayerVehicle();
+            }
+            finally
             {
-                Name = "Exit",
-                Sprite = BlipSprite.PointOfInterest,
-                Alpha = 0
-            };
+                Monitor.Exit(_updateLock);
+            }
+        }
+
+        internal void Delete()
+        {
+            lock (_updateLock)
+            {
+                _flyHelper?.Delete();
+
+                while (OldVehicles.Count > 0)
+                {
+                    var v = OldVehicles[0];
+                    v.Delete();
+                    OldVehicles.RemoveAt(0);
+                }
+
+                if (PlayerLastVehicle != null)
+                {
+                    PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
+                    PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
+
+                    float heading = PlayerLastVehicle.Heading;
+                    PlayerLastVehicle.Quaternion = Quaternion.Identity;
+                    PlayerLastVehicle.Heading = heading;
+                    PlayerLastVehicle.Velocity = Vector3.Zero;
+                    PlayerLastVehicle.IsInvincible = false;
+                    PlayerLastVehicle.EngineRunning = true;
+                    PlayerLastVehicle.FreezePosition = false;
+                    PlayerLastVehicle.IsPersistent = false;
+                }
+
+                OrbitalSystem?.Abort();
+                SceneData.Ipls?.ForEach(RemoveIpl);
+
+                while (_sceneLinkBlips.Count > 0)
+                {
+                    var blip = _sceneLinkBlips[0];
+                    blip.Remove();
+                    _sceneLinkBlips.RemoveAt(0);
+                }
+
+                SceneData.CurrentIplData = null;
+                GameplayCamera.ShakeAmplitude = 0;
+                Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+            }
         }
 
         internal static LockedOrbital CreateLockedOrbital(LockedOrbitalData data)
@@ -301,6 +267,123 @@ namespace SpaceMod.Scenes
             return model;
         }
 
+        private void LoadIpls()
+        {
+            SceneData.Ipls?.ForEach(iplData =>
+            {
+                Ipl ipl = new Ipl(iplData.Name, iplData.Type);
+                ipl.Request();
+                iplData.CurrentIpl = ipl;
+                iplData.Teleports?.ForEach(CreateBlipsForTeleport);
+                ipl.Markers?.ForEach(m =>
+                {
+                    if (m.TeleportTarget == null)
+                        return;
+
+                    Teleport tp;
+                    iplData.Teleports.Add(tp = new Teleport
+                    {
+                        Start = m.Position,
+                        End = m.TeleportTarget.Value,
+                    });
+                    CreateBlipsForTeleport(tp);
+                });
+
+                LoadedInterior?.Invoke(this, ipl);
+            });
+
+            if (SceneData.Ipls != null)
+                IplCount = SceneData.Ipls.Count;
+        }
+
+        private void CreateSpace()
+        {
+            Prop spaceDome = CreateProp(Vector3.Zero, SceneData.SpaceDomeModel);
+            List<Orbital> orbitals = SceneData.Orbitals?.Select(x => CreateOrbital(x, SceneData.SurfaceFlag)).Where(o => o != default(Orbital)).ToList();
+            List<LockedOrbital> lockedOrbitals = SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
+
+            WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
+            OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
+            SceneData.SceneLinks.ForEach(CreateLink);
+        }
+
+        private void CreateLink(Link link)
+        {
+            if (string.IsNullOrEmpty(link.Name)) return;
+            var text = new UIText(string.Empty, new Point(), 0.5f)
+            {
+                Centered = true,
+                Font = Font.Monospace,
+                Shadow = true
+            };
+            var distanceText = new UIText(string.Empty, new Point(), 0.5f)
+            {
+                Centered = true,
+                Font = Font.Monospace,
+                Shadow = true
+            };
+            var tuple = new Tuple<UIText, UIText, Link>(text, distanceText, link);
+            DistanceText.Add(tuple);
+            Blip blip = new Blip(World.CreateBlip((SceneData.SurfaceFlag ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + link.OriginOffset).Handle)
+            {
+                Sprite = BlipSprite.Crosshair2,
+                Color = BlipColor.Blue,
+                Name = link.Name
+            };
+            _sceneLinkBlips.Add(blip);
+        }
+
+        private void PlaceCurrentVehicleOnGround(Vector3 vehicleSpawn)
+        {
+            Vehicle vehicle = PlayerPed.CurrentVehicle;
+            if (Entity.Exists(vehicle))
+            {
+                PlayerLastVehicle = vehicle;
+                PlayerLastVehicle.IsInvincible = true;
+                PlayerLastVehicle.IsPersistent = true;
+                if (SceneData.SurfaceFlag)
+                {
+                    PlayerPed.Task.ClearAllImmediately();
+                    vehicle.EngineRunning = false;
+                    vehicle.Quaternion = Quaternion.Identity;
+                    vehicle.Rotation = Vector3.Zero;
+                    vehicle.Heading = 230f;
+                    vehicle.FreezePosition = true;
+                    vehicle.Velocity = Vector3.Zero;
+                    vehicle.Speed = 0;
+                    vehicle.PositionNoOffset = vehicleSpawn + Vector3.WorldUp;
+                    Script.Yield();
+                    DateTime groundPlacementTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
+                    while (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f))
+                    {
+                        if (DateTime.UtcNow > groundPlacementTimeout)
+                        {
+                            Debug.Log("Couldn't place vehicle on ground properly.", DebugMessageType.Debug);
+                            break;
+                        }
+                        Script.Yield();
+                    }
+                }
+                else PlayerPed.CanRagdoll = false;
+                Script.Yield();
+            }
+        }
+
+        private void CreateBlipsForTeleport(Teleport tp)
+        {
+            tp.StartBlip = new Blip(World.CreateBlip(tp.Start).Handle)
+            {
+                Name = "Enterance",
+                Sprite = BlipSprite.Garage2
+            };
+            tp.EndBlip = new Blip(World.CreateBlip(tp.End).Handle)
+            {
+                Name = "Exit",
+                Sprite = BlipSprite.Garage2,
+                Alpha = 0
+            };
+        }
+
         private void RemoveIpl(IplData iplData)
         {
             if (iplData == null)
@@ -313,35 +396,6 @@ namespace SpaceMod.Scenes
                 RemoveIpl(teleport?.EndIpl);
             });
         }
-
-        internal void Update()
-        {
-            if (!Monitor.TryEnter(_updateLock)) return;
-
-            try
-            {
-                UI.HideHudComponentThisFrame(HudComponent.AreaName);
-                WormHoles?.ForEach(UpdateWormHole);
-                OrbitalSystem?.Process(SpaceModDatabase.GetValidGalaxyDomePosition(PlayerPed));
-                SceneData.Ipls?.ForEach(UpdateTeleports);
-                PlayerFly();
-                VehicleFly();
-                HandleDeath();
-                ShowDistanceText();
-                TryToStartNextScene();
-                HandlePlayerVehicle();
-                //CheckDistances();
-            }
-            finally
-            {
-                Monitor.Exit(_updateLock);
-            }
-        }
-
-        //private void CheckDistances()
-        //{
-
-        //}
 
         private void HandlePlayerVehicle()
         {
@@ -1006,50 +1060,6 @@ namespace SpaceMod.Scenes
             minVector2 = PlayerPed.Quaternion * minOffsetV2;
             maxVector2 = PlayerPed.Quaternion * maxOffsetV2;
             radius = (minVector2 - maxVector2).Length() / 2.5f;
-        }
-
-        internal void Delete()
-        {
-            lock (_updateLock)
-            {
-                _flyHelper?.Delete();
-
-                while (OldVehicles.Count > 0)
-                {
-                    var v = OldVehicles[0];
-                    v.Delete();
-                    OldVehicles.RemoveAt(0);
-                }
-
-                if (PlayerLastVehicle != null)
-                {
-                    PlayerPed.SetIntoVehicle(PlayerLastVehicle, VehicleSeat.Driver);
-                    PlayerLastVehicle.LockStatus = VehicleLockStatus.None;
-
-                    float heading = PlayerLastVehicle.Heading;
-                    PlayerLastVehicle.Quaternion = Quaternion.Identity;
-                    PlayerLastVehicle.Heading = heading;
-                    PlayerLastVehicle.Velocity = Vector3.Zero;
-                    PlayerLastVehicle.IsInvincible = false;
-                    PlayerLastVehicle.EngineRunning = true;
-                    PlayerLastVehicle.FreezePosition = false;
-                    PlayerLastVehicle.IsPersistent = false;
-                }
-
-                OrbitalSystem?.Abort();
-                SceneData.Ipls?.ForEach(RemoveIpl);
-
-                while (_sceneLinkBlips.Count > 0)
-                {
-                    var blip = _sceneLinkBlips[0];
-                    blip.Remove();
-                    _sceneLinkBlips.RemoveAt(0);
-                }
-
-                SceneData.CurrentIplData = null;
-                GameplayCamera.ShakeAmplitude = 0;
-                Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
-            }
         }
 
         private void MovePlayerToGalaxy()

@@ -9,6 +9,8 @@ using GTA.Math;
 using SpaceMod;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;
+using SpaceMod.Scenes.Interiors;
+using SpaceMod.Scenes;
 
 namespace DefaultMissions
 {
@@ -251,6 +253,7 @@ namespace DefaultMissions
                         {
                             Aliens.Clear();
                             SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_20");
+
                             CurrentMissionStep++;
                         }
                     }
@@ -347,6 +350,15 @@ namespace DefaultMissions
             {
                 SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_16");
                 Aliens.Clear();
+
+                IplData iplData = CurrentScene.SceneData.Ipls?.Find(x => x.Name == "Mars/mars_base_int_01");
+                if (iplData != null)
+                {
+                    Ipl ipl = iplData.CurrentIpl;
+                    if (ipl != null)
+                        ipl.Peds?.ForEach(ped => ped?.Task.ClearAll());
+                }
+
                 CurrentMissionStep++;
             }
         }

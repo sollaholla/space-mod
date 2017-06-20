@@ -250,6 +250,8 @@ namespace SpaceMod.Lib
         public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, int accuracy = 50, float heading = 0)
         {
             var ped = World.CreatePed(PedHash.MovAlien01, position, heading);
+            if (ped == null)
+                return new Ped(0);
             ped.Accuracy = 50;
             ped.Weapons.Give(weaponHash, 15, true, true);
             ped.IsPersistent = true;

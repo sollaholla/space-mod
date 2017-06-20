@@ -21,21 +21,24 @@ namespace SpaceMod
 {
     internal class Core : Script
     {
-        private float _enterOrbitHeight = 5000;
-        private Keys _optionsMenuKey = Keys.NumPad9;
         private MenuConnector _menuConnector;
         private Menu _menu;
 
-        private readonly object _tickLock;
         private bool _missionsComplete;
-        private CustomScene _currentScene;
-        private Ped colonel;
+        private bool preloadModels = true;
         private bool endMissionComplete;
         private bool disableWantedStars = true;
         private bool resetWantedLevel;
         private bool overrideTimecycleModifier;
-        private string spaceTimecycle;
         private bool resetTimecycle;
+        private bool menuEnabled = true;
+        private string spaceTimecycle;
+        private float _enterOrbitHeight = 5000;
+        private Keys _optionsMenuKey = Keys.NumPad9;
+        private CustomScene _currentScene;
+        private Ped colonel;
+
+        private readonly object _tickLock;
 
         public Core()
         {
@@ -51,10 +54,11 @@ namespace SpaceMod
             ReadSettings();
             SaveSettings();
             CreateCustomMenu();
+
+            RequestModels();
         }
 
         internal static Core Instance { get; private set; }
-
         public Ped PlayerPed => Game.Player.Character;
         public Vector3 PlayerPosition {
             get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
@@ -111,7 +115,7 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (_menuConnector.AreMenusVisible()) return;
+            if (_menuConnector?.AreMenusVisible() ?? false) return;
             if (e.KeyCode != _optionsMenuKey) return;
             _menu.Draw = true;
         }
@@ -121,16 +125,40 @@ namespace SpaceMod
             if (!Monitor.TryEnter(_tickLock)) return;
             try
             {
-                _menuConnector.UpdateMenus();
-                
+                _menuConnector?.UpdateMenus();
+
                 DoEndMission();
                 DisableWantedStars();
+
                 if (_currentScene != null) DoSceneUpdate();
                 else DoEarthUpdate();
             }
             finally
             {
                 Monitor.Exit(_tickLock);
+            }
+        }
+
+        private void RequestModels()
+        {
+            if (!preloadModels)
+                return;
+
+            const string fileName = "./scripts/SpaceMod/RequestOnStart.txt";
+            if (!File.Exists(fileName))
+                return;
+
+            using (StreamReader sr = File.OpenText(fileName))
+            {
+                string s = String.Empty;
+
+                while ((s = sr.ReadLine()) != null)
+                {
+                    s = s.Trim();
+                    Model m = new Model(s);
+                    if (!m.IsLoaded)
+                        m.Request();
+                }
             }
         }
 
@@ -144,16 +172,20 @@ namespace SpaceMod
             }
 
             if (!Entity.Exists(colonel))
+            {
                 colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
+                return;
+            }
 
             if (!colonel.CurrentBlip.Exists())
-                new Blip(colonel.AddBlip().Handle)
-                {
+            {
+                new Blip(colonel.AddBlip().Handle) {
                     Sprite = BlipSprite.GTAOMission,
                     Color = BlipColor.White,
-                    Scale = 2,
+                    Scale = 1.5f,
                     Name = "Colonel Larson"
                 };
+            }
 
             float distance = Vector3.Distance(PlayerPosition, colonel.Position);
             if (distance > 1.75f)
@@ -259,15 +291,35 @@ namespace SpaceMod
         {
             _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+            menuEnabled = Settings.GetValue("mod", "menu_enabled", menuEnabled);
+            preloadModels = Settings.GetValue("mod", "pre_load_models", preloadModels);
             endMissionComplete = Settings.GetValue("settings", "end_mission_complete", endMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             overrideTimecycleModifier = Settings.GetValue("settings", "override_timecycle", overrideTimecycleModifier);
             spaceTimecycle = Settings.GetValue("settings", "space_timecycle", spaceTimecycle);
+            StaticSettings.MoonJump = Settings.GetValue("settings", "low_gravity_jumping", StaticSettings.MoonJump);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
             StaticSettings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
             CheckMissionsStatus();
+        }
+
+        private void SaveSettings()
+        {
+            Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
+            Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
+            Settings.SetValue("mod", "menu_enabled", menuEnabled);
+            Settings.SetValue("mod", "pre_load_models", preloadModels);
+            Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
+            Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
+            Settings.SetValue("settings", "override_timecycle", overrideTimecycleModifier);
+            Settings.SetValue("settings", "space_timecycle", spaceTimecycle);
+            Settings.SetValue("settings", "low_gravity_jumping", StaticSettings.MoonJump);
+            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
+            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
+            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
+            Settings.Save();
         }
 
         private void CheckMissionsStatus()
@@ -282,22 +334,11 @@ namespace SpaceMod
                 moonSettings.GetValue("scenario_config", "complete", false);
         }
 
-        private void SaveSettings()
-        {
-            Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
-            Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
-            Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
-            Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-            Settings.SetValue("settings", "override_timecycle", overrideTimecycleModifier);
-            Settings.SetValue("settings", "space_timecycle", spaceTimecycle);
-            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
-            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
-            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", StaticSettings.VehicleFlySpeed);
-            Settings.Save();
-        }
-
         private void CreateCustomMenu()
         {
+            if (!menuEnabled)
+                return;
+
             _menuConnector = new MenuConnector();
             _menu = new Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
                 Color.Purple)
@@ -339,8 +380,7 @@ namespace SpaceMod
             var userInterfaceMenu = settingsMenu.AddParentMenu("Interface", _menu);
 
             var showCustomUiCheckbox = new CheckboxMenuItem("Show Custom UI", StaticSettings.ShowCustomUi);
-            showCustomUiCheckbox.Checked += (sender, check) =>
-            {
+            showCustomUiCheckbox.Checked += (sender, check) => {
                 StaticSettings.ShowCustomUi = check;
             };
 
@@ -353,10 +393,11 @@ namespace SpaceMod
             var vehicleSettingsMenu = settingsMenu.AddParentMenu("Vehicles", _menu);
             vehicleSettingsMenu.Width = _menu.Width;
 
+            List<dynamic> lst;
+            int flyIndex;
             var vehicleSpeedList = new ListMenuItem("Vehicle Speed",
-                Enumerable.Range(1, 10).Select(i => (dynamic)(i * 5)).ToList());
-            vehicleSpeedList.IndexChanged += (sender, index, item) =>
-            {
+                lst = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(), (flyIndex = lst.IndexOf(StaticSettings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
+            vehicleSpeedList.IndexChanged += (sender, index, item) => {
                 StaticSettings.VehicleFlySpeed = item;
             };
 
@@ -483,12 +524,12 @@ namespace SpaceMod
         {
             Game.FadeScreenOut(1000);
             Wait(1000);
-            CreateSceneFromCustomXmlScene(customXmlScene, fileName);
+            CreateScene(customXmlScene, fileName);
             Wait(1000);
             Game.FadeScreenIn(1000);
         }
 
-        private void CreateSceneFromCustomXmlScene(CustomXmlScene customXmlScene, string fileName = default(string))
+        private void CreateScene(CustomXmlScene customXmlScene, string fileName = default(string))
         {
             lock (_tickLock)
             {
@@ -497,7 +538,7 @@ namespace SpaceMod
                 if (_currentScene != null && _currentScene != default(CustomScene))
                     _currentScene.Delete();
 
-                ClearNonPersistantEntities();
+                ClearAllEntities();
 
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
@@ -526,7 +567,7 @@ namespace SpaceMod
                     Scenarios?.ForEach(scenario =>
                     {
                         scenario.Start();
-                        scenario.Completed += ScenarioOnCompleted;
+                        scenario.Completed += ScenarioComplete;
                     });
                 }
 
@@ -534,7 +575,23 @@ namespace SpaceMod
             }
         }
 
-        private void ScenarioOnCompleted(CustomScenario scenario, bool success)
+        private CustomXmlScene ReadSceneFile(CustomScene scene, string newSceneFile)
+        {
+            if (newSceneFile == "cmd_earth")
+                return null;
+            var newScene = MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + newSceneFile);
+            if (newScene == default(CustomXmlScene))
+            {
+                UI.Notify(
+                    "Your custom scene ~r~failed~s~ to load, because the file specified was " +
+                    "either was invalid.");
+                throw new XmlException(newSceneFile);
+            }
+            newScene.LastSceneFile = scene.SceneFile;
+            return newScene;
+        }
+
+        private void ScenarioComplete(CustomScenario scenario, bool success)
         {
             lock (_tickLock) {
                 Scenarios.Remove(scenario);
@@ -542,30 +599,32 @@ namespace SpaceMod
             }
         }
 
-        private void ClearNonPersistantEntities(Vector3 pos = default(Vector3), float distance = int.MaxValue)
+        private void ClearAllEntities(Vector3 pos = default(Vector3), float distance = int.MaxValue)
         {
+            // Non persistent entities.
             Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
             Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
             Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
             Function.Call(Hash.SET_NUMBER_OF_PARKED_VEHICLES, 0f);
             Function.Call((Hash)0xF796359A959DF65D, false);
-
             Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
             Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f, 0f);
-
             Function.Call((Hash)0x2F9A292AD0A3BD89);
             Function.Call((Hash)0x5F3B7749C112D552);
-
             Function.Call(Hash.DELETE_ALL_TRAINS);
             Function.Call(Hash.DESTROY_MOBILE_PHONE);
-
             Function.Call(Hash.SET_GARBAGE_TRUCKS, 0);
             Function.Call(Hash.SET_RANDOM_BOATS, 0);
             Function.Call(Hash.SET_RANDOM_TRAINS, 0);
-
             Function.Call(Hash.CLEAR_AREA_OF_PEDS, pos.X, pos.Y, pos.Z, distance, 0);
             Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, pos.X, pos.Y, pos.Z, distance, 0);
             Function.Call(Hash.CLEAR_AREA_OF_COPS, pos.X, pos.Y, pos.Z, distance, 0);
+
+            // All entities.
+            Entity[] entities = World.GetAllEntities();
+            foreach(Entity e in entities)
+                if (e != PlayerPed.CurrentVehicle)
+                    e?.Delete();
         }
 
         private void CurrentSceneOnExited(CustomScene scene, string newSceneFile, Vector3 exitRotation)
@@ -573,7 +632,7 @@ namespace SpaceMod
             lock (_tickLock)
             {
                 bool isActualScene = newSceneFile != "cmd_earth";
-                CustomXmlScene newScene = DeserialzeSceneFile(scene, newSceneFile);
+                CustomXmlScene newScene = ReadSceneFile(scene, newSceneFile);
 
                 if (isActualScene && newScene.SurfaceFlag)
                     RaiseLandingGear();
@@ -586,11 +645,11 @@ namespace SpaceMod
 
                 ResetWeather();
                 EndActiveScenarios();
-                ClearNonPersistantEntities();
+                ClearAllEntities();
 
                 if (newSceneFile != "cmd_earth")
                 {
-                    CreateSceneFromCustomXmlScene(newScene, newSceneFile);
+                    CreateScene(newScene, newSceneFile);
                     if (PlayerPed.IsInVehicle())
                         PlayerPed.CurrentVehicle.Rotation = exitRotation;
                     else PlayerPed.Rotation = exitRotation;
@@ -630,22 +689,6 @@ namespace SpaceMod
                     Yield();
                 }
             }
-        }
-
-        private CustomXmlScene DeserialzeSceneFile(CustomScene scene, string newSceneFile)
-        {
-            if (newSceneFile == "cmd_earth")
-                return null;
-            var newScene = MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + newSceneFile);
-            if (newScene == default(CustomXmlScene))
-            {
-                UI.Notify(
-                    "Your custom scene ~r~failed~s~ to load, because the file specified was " +
-                    "either was invalid.");
-                throw new XmlException(newSceneFile);
-            }
-            newScene.LastSceneFile = scene.SceneFile;
-            return newScene;
         }
 
         private void EndActiveScenarios()
