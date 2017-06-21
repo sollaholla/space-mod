@@ -32,11 +32,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\DLL\ScriptHookVDotNet.dll</HintPath>
+      <HintPath>C:\Users\GAMEON\Documents\Visual Studio 2017\Projects\CustomVehicleSpawns\CustomVehicleSpawns\bin\Debug\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SolomanMenu, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\DLL\SolomanMenu.dll</HintPath>
+      <HintPath>..\..\Games\Grand Theft Auto V\scripts\SolomanMenu.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -74,8 +74,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts"
-COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts"
+COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

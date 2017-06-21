@@ -26,7 +26,9 @@ namespace DefaultMissions
 		public CDataCollectables Collectables { get; private set; }
 		public List<Tuple<CDataCollectablesItem, Prop>> CurrentPickups { get; }
 
-		public override void Start()
+        public override void OnEnterScene() { }
+
+        public override void Start()
 		{
 			if (!File.Exists(Path))
 				return;

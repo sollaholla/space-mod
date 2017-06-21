@@ -73,6 +73,12 @@ namespace SpaceMod.Scenario
         public abstract void OnAborted();
 
         /// <summary>
+        /// Called whenever you enter the specified scene. It is called even if you have 
+        /// completed the mission. 
+        /// </summary>
+        public abstract void OnEnterScene();
+
+        /// <summary>
         /// End's this scenario and discontinues running it.
         /// </summary>
         /// <param name="success">True if we completed this scenario.</param>

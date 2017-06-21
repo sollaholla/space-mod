@@ -36,6 +36,8 @@ namespace DefaultMissions
         public bool DidLoad { get; private set; }
         public int OriginalVehicleHealth { get; }
 
+        public override void OnEnterScene() { }
+
         public override void Start()
         {
             _ufoModel = new Model(_ufoModelName);
