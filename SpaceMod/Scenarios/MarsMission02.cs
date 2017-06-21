@@ -25,6 +25,8 @@ namespace DefaultMissions
         public Ped PlayerPed => Game.Player.Character;
         public Vector3 PlayerPosition => PlayerPed.Position;
 
+        public override void OnEnterScene() { }
+
         public override void Start()
         {
             ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + "/DefaultMissions.MarsMission01.ini");

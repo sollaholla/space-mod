@@ -12,7 +12,9 @@ namespace DefaultMissions
     public class MoonMission01 : CustomScenario
     {
         private readonly string _ufoModelName = "zanufo";
+        private bool isFlagPlaced = false;
         private Model _ufoModel;
+        private Vector3 flagPosition;
 
         public MoonMission01()
         {
@@ -27,8 +29,36 @@ namespace DefaultMissions
             PlayerPed.IsExplosionProof = true;
 
             _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
+            flagPosition = StringToVector3(Settings.GetValue("settings", "flag_position", ""));
             Settings.SetValue("settings", "ufo_model", _ufoModelName);
             Settings.Save();
+        }
+
+        private Vector3 StringToVector3(string vector3String)
+        {
+            Vector3 vector3 = Vector3.Zero;
+
+            float x = 0f;
+            float y = 0f;
+            float z = 0f;
+
+            char delimiter = ' ';
+            string[] splitStrings = vector3String.Split(delimiter);
+
+            foreach (string str in splitStrings)
+            {
+                string newStr = str.Remove(0, 2);
+
+                if (str.ToLower().Contains("x"))
+                    x = float.Parse(newStr);
+                else if (str.ToLower().Contains("y"))
+                    y = float.Parse(newStr);
+                else if (str.ToLower().Contains("z"))
+                    z = float.Parse(newStr);
+            }
+
+            vector3 = new Vector3(x, y, z);
+            return vector3;
         }
 
         public int MissionStep { get; private set; }
@@ -48,6 +78,20 @@ namespace DefaultMissions
         public Vector3 PlayerPosition {
             get { return PlayerPed.Position; }
             set { PlayerPed.Position = value; }
+        }
+
+        public override void OnEnterScene()
+        {
+            if(!isFlagPlaced && Settings.GetValue("scenario_config", "complete", false) == true)
+            {
+                Prop prop = World.CreateProp("ind_prop_dlc_flag_01", flagPosition, Vector3.Zero, false, false);
+
+                if (prop != null)
+                {
+                    prop.FreezePosition = true;
+                    prop.MarkAsNoLongerNeeded();
+                }
+            }
         }
 
         public override void Start()
@@ -161,8 +205,15 @@ namespace DefaultMissions
                     Game.DisableControlThisFrame(2, Control.SpecialAbilitySecondary);
                     if (!Game.IsDisabledControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
                     PlayerPed.Task.PlayAnimation("pickup_object", "pickup_low");
-                    Prop prop = World.CreateProp("ind_prop_dlc_flag_01", PlayerPosition + PlayerPed.ForwardVector - PlayerPed.UpVector,
-                        Vector3.Zero, false, false);
+                    flagPosition = PlayerPosition + PlayerPed.ForwardVector - PlayerPed.UpVector;
+                    Prop prop = World.CreateProp("ind_prop_dlc_flag_01", flagPosition, Vector3.Zero, false, false);
+                    isFlagPlaced = true;
+
+                    Settings.SetValue("settings", "flag_position", flagPosition);
+                    Settings.Save();
+
+                    UI.ShowSubtitle(flagPosition.ToString());
+
                     if (prop != null)
                     {
                         prop.FreezePosition = true;

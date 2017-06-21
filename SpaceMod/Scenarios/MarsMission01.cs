@@ -75,6 +75,8 @@ namespace DefaultMissions
             set { PlayerPed.Position = value; }
         }
 
+        public override void OnEnterScene() { }
+
         public override void Start()
         {
             PlayerPed.CanRagdoll = false;

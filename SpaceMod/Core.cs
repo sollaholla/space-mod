@@ -640,6 +640,7 @@ namespace SpaceMod
                         var name = x.PathToClass;
                         var type = assembly.GetType(name);
                         var scenario = (CustomScenario)Activator.CreateInstance(type);
+                        scenario.OnEnterScene();
                         return scenario.IsScenarioComplete() ? null : scenario;
 
                     }).Where(x => x != null).ToList();

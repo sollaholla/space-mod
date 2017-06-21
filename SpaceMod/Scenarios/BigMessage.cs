@@ -1,4 +1,5 @@
-﻿using GTA;
+﻿using System;
+using GTA;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;
 
@@ -12,6 +13,8 @@ namespace DefaultMissions
         private const string EarthSceneName = "EarthOrbit.space";
 
         private float _notifyTimeTimer;
+
+        public override void OnEnterScene() { }
 
         public override void Start() { }
 
