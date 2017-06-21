@@ -27,6 +27,7 @@ namespace SpaceMod
         private bool _missionsComplete;
         private bool preloadModels = true;
         private bool endMissionComplete;
+        private bool introMissionComplete;
         private bool disableWantedStars = true;
         private bool resetWantedLevel;
         private bool overrideTimecycleModifier;
@@ -127,6 +128,7 @@ namespace SpaceMod
             {
                 _menuConnector?.UpdateMenus();
 
+                DoIntroMission();
                 DoEndMission();
                 DisableWantedStars();
 
@@ -162,9 +164,9 @@ namespace SpaceMod
             }
         }
 
-        private void DoEndMission()
+        private void DoIntroMission()
         {
-            if (!_missionsComplete || endMissionComplete || _currentScene != null)
+            if (_missionsComplete || endMissionComplete && _currentScene != null || introMissionComplete)
             {
                 colonel?.Delete();
                 colonel = null;
@@ -174,6 +176,81 @@ namespace SpaceMod
             if (!Entity.Exists(colonel))
             {
                 colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
+                colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
+                World.SetRelationshipBetweenGroups(Relationship.Companion, colonel.RelationshipGroup, PlayerPed.RelationshipGroup);
+                return;
+            }
+
+            if (!colonel.CurrentBlip.Exists())
+            {
+                new Blip(colonel.AddBlip().Handle)
+                {
+                    Sprite = BlipSprite.GTAOMission,
+                    Color = BlipColor.White,
+                    Scale = 1.5f,
+                    Name = "Colonel Larson"
+                };
+            }
+
+            float distance = Vector3.Distance(PlayerPosition, colonel.Position);
+            if (distance > 1.75f)
+                return;
+
+            World.DrawMarker(MarkerType.UpsideDownCone, colonel.Position + Vector3.WorldUp * 1.5f, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
+            SpaceModLib.DisplayHelpTextWithGXT("END_LABEL_1");
+
+            if (Game.IsControlJustPressed(2, GTA.Control.Context))
+            {
+                Function.Call(Hash._PLAY_AMBIENT_SPEECH1, colonel.Handle, "Generic_Hi", "Speech_Params_Force");
+                PlayerPed.FreezePosition = true;
+                PlayerPed.Heading = (colonel.Position - PlayerPosition).ToHeading();
+                PlayerPed.Task.StandStill(-1);
+
+                while (Entity.Exists(colonel))
+                {
+                    SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_1", 10000);
+                    Wait(10000);
+
+                    SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_2");
+                    Wait(4000);
+
+                    SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_3");
+                    Wait(4000);
+
+                    Game.FadeScreenOut(1000);
+                    Wait(1000);
+                    PlayerPed.Task.ClearAllImmediately();
+                    PlayerPed.FreezePosition = false;
+                    colonel.Delete();
+                    Wait(1000);
+                    Game.FadeScreenIn(1000);
+
+                    introMissionComplete = true;
+                    Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
+                    Settings.Save();
+
+                    Yield();
+                }
+            }
+        }
+
+        private void DoEndMission()
+        {
+            if (!_missionsComplete || endMissionComplete || _currentScene != null)
+            {
+                if(introMissionComplete)
+                {
+                    colonel?.Delete();
+                    colonel = null;
+                }
+                return;
+            }
+
+            if (!Entity.Exists(colonel))
+            {
+                colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
+                colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
+                World.SetRelationshipBetweenGroups(Relationship.Companion, colonel.RelationshipGroup, PlayerPed.RelationshipGroup);
                 return;
             }
 
@@ -294,6 +371,7 @@ namespace SpaceMod
             menuEnabled = Settings.GetValue("mod", "menu_enabled", menuEnabled);
             preloadModels = Settings.GetValue("mod", "pre_load_models", preloadModels);
             endMissionComplete = Settings.GetValue("settings", "end_mission_complete", endMissionComplete);
+            introMissionComplete = Settings.GetValue("settings", "intro_mission_complete", introMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             overrideTimecycleModifier = Settings.GetValue("settings", "override_timecycle", overrideTimecycleModifier);
@@ -311,6 +389,8 @@ namespace SpaceMod
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
             Settings.SetValue("mod", "menu_enabled", menuEnabled);
             Settings.SetValue("mod", "pre_load_models", preloadModels);
+            Settings.SetValue("settings", "end_mission_complete", endMissionComplete);
+            Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
             Settings.SetValue("settings", "override_timecycle", overrideTimecycleModifier);
