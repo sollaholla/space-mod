@@ -15,6 +15,7 @@ namespace DefaultMissions
         private bool isFlagPlaced = false;
         private Model _ufoModel;
         private Vector3 flagPosition;
+        private Prop flag;
 
         public MoonMission01()
         {
@@ -84,12 +85,12 @@ namespace DefaultMissions
         {
             if(!isFlagPlaced && Settings.GetValue("scenario_config", "complete", false) == true)
             {
-                Prop prop = World.CreateProp("ind_prop_dlc_flag_01", flagPosition, Vector3.Zero, false, false);
+                flag = World.CreateProp("ind_prop_dlc_flag_01", flagPosition, Vector3.Zero, false, false);
 
-                if (prop != null)
+                if (flag != null)
                 {
-                    prop.FreezePosition = true;
-                    prop.MarkAsNoLongerNeeded();
+                    flag.FreezePosition = true;
+                    flag.MarkAsNoLongerNeeded();
                 }
             }
         }
@@ -206,7 +207,7 @@ namespace DefaultMissions
                     if (!Game.IsDisabledControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
                     PlayerPed.Task.PlayAnimation("pickup_object", "pickup_low");
                     flagPosition = PlayerPosition + PlayerPed.ForwardVector - PlayerPed.UpVector;
-                    Prop prop = World.CreateProp("ind_prop_dlc_flag_01", flagPosition, Vector3.Zero, false, false);
+                    flag = World.CreateProp("ind_prop_dlc_flag_01", flagPosition, Vector3.Zero, false, false);
                     isFlagPlaced = true;
 
                     Settings.SetValue("settings", "flag_position", flagPosition);
@@ -214,10 +215,10 @@ namespace DefaultMissions
 
                     UI.ShowSubtitle(flagPosition.ToString());
 
-                    if (prop != null)
+                    if (flag != null)
                     {
-                        prop.FreezePosition = true;
-                        prop.MarkAsNoLongerNeeded();
+                        flag.FreezePosition = true;
+                        flag.MarkAsNoLongerNeeded();
                     }
                     MissionStep++;
                     break;
@@ -301,6 +302,7 @@ namespace DefaultMissions
             PlayerPed.Health = PlayerPed.MaxHealth;
             PlayerPed.CanRagdoll = OriginalCanRagdollState;
             PlayerPed.IsExplosionProof = false;
+            flag?.Delete();
 
             CleanUp();
         }
