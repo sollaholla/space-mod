@@ -128,7 +128,7 @@ namespace DefaultMissions
                 if (distance == 0)
                     distance = 1;
 
-                PlayerVehicle.Health -= 50 / (int)distance;
+                PlayerVehicle.Health -= 50 / ((int)distance + 1);
                 PlayerVehicle.EngineHealth -= 120 / distance;
             });
         }

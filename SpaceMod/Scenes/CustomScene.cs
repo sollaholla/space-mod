@@ -102,7 +102,7 @@ namespace SpaceMod.Scenes
 
                 ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
                 var section = Path.GetFileNameWithoutExtension(SceneFile);
-                OverrideWeather = (Weather)settings.GetValue(section, "weather", 0);
+                OverrideWeather = (Weather)settings.GetValue(section, "weather", 9);
                 Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.DefaultVehicleSpawn);
                 jumpForce = settings.GetValue(section, "jump_force_override", jumpForce);
                 useLowGJumping = settings.GetValue(section, "low_gravity_jumping", useLowGJumping);
@@ -505,6 +505,13 @@ namespace SpaceMod.Scenes
             // here's when we're flying around and stuff.
             if (PlayerPed.IsInVehicle())
             {
+                if (!Entity.Exists(PlayerLastVehicle))
+                {
+                    PlayerLastVehicle = PlayerPed.CurrentVehicle;
+                    PlayerLastVehicle.HasGravity = false;
+                    Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerLastVehicle.Handle, false);
+                }
+
                 if (PlayerLastVehicle.Velocity.Length() > 0.15f)
                 {
                     PlayerLastVehicle.LockStatus = VehicleLockStatus.StickPlayerInside;
@@ -815,12 +822,7 @@ namespace SpaceMod.Scenes
 
             if (!_enteringVehicle)
             {
-                bool dot = !vehicle.HasBone("door_dside_f") ||
-                           // This tells us if we're not "behind" the door so we're not trying to go through the vehicle 
-                           // to enter.
-                           Vector3.Dot((_flyHelper.Position - doorPos).Normalized, -vehicle.RightVector) > 0.2f;
-
-                if (dist < 5f && dot)
+                if (dist < 10f)
                 {
                     Game.DisableControlThisFrame(2, Control.Enter);
 
