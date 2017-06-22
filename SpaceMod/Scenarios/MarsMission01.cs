@@ -30,7 +30,7 @@ namespace DefaultMissions
 
         public MarsMission01()
         {
-            Aliens = new List<Ped>();
+            Aliens = new List<AlienData>();
             Ufos = new List<Vehicle>();
             _satelliteScene = new MarsMissionSatelliteScene();
 
@@ -43,27 +43,8 @@ namespace DefaultMissions
             SetupPlayer();
         }
 
-        private void SetupPlayer()
-        {
-            OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
-
-            if (CurrentScene.SceneFile.Equals("MarsSurface.space") && CurrentMissionStep < 6)
-            {
-                OriginalMaxHealth = PlayerPed.MaxHealth;
-                PlayerPed.MaxHealth = 1500;
-                PlayerPed.Health = PlayerPed.MaxHealth;
-            }
-            else if (CurrentScene.SceneFile.Equals("EuropaSurface.space"))
-            {
-                OriginalMaxHealth = PlayerPed.MaxHealth;
-                PlayerPed.MaxHealth = 500;
-                PlayerPed.Health = PlayerPed.MaxHealth;
-            }
-            else OriginalMaxHealth = -1;
-        }
-
         public int CurrentMissionStep { get; protected set; }
-        public List<Ped> Aliens { get; }
+        public List<AlienData> Aliens { get; }
         public List<Vehicle> Ufos { get; }
         public Ped PlayerPed => Game.Player.Character;
         public bool OriginalCanPlayerRagdoll { get; set; }
@@ -83,6 +64,25 @@ namespace DefaultMissions
             PlayerPed.IsExplosionProof = true;
             if (CurrentMissionStep == 0 && CurrentScene.SceneFile == "MarsSurface.space")
                 SpawnEntities();
+        }
+
+        private void SetupPlayer()
+        {
+            OriginalCanPlayerRagdoll = PlayerPed.CanRagdoll;
+
+            if (CurrentScene.SceneFile.Equals("MarsSurface.space") && CurrentMissionStep < 6)
+            {
+                OriginalMaxHealth = PlayerPed.MaxHealth;
+                PlayerPed.MaxHealth = 1500;
+                PlayerPed.Health = PlayerPed.MaxHealth;
+            }
+            else if (CurrentScene.SceneFile.Equals("EuropaSurface.space"))
+            {
+                OriginalMaxHealth = PlayerPed.MaxHealth;
+                PlayerPed.MaxHealth = 500;
+                PlayerPed.Health = PlayerPed.MaxHealth;
+            }
+            else OriginalMaxHealth = -1;
         }
 
         public void SpawnEntities()
@@ -105,7 +105,7 @@ namespace DefaultMissions
                 blip.Name = "Alien";
                 blip.Scale = 0.7f;
 
-                Aliens.Add(ped);
+                Aliens.Add(new AlienData { Ped = ped, StoppingDistance = new Random().Next(22, 28) });
             }
 
             _ufoModel = new Model(_ufoModelName);
@@ -130,8 +130,7 @@ namespace DefaultMissions
                 Vector3 position = origin.Around(75);
                 position.Z = SpaceModDatabase.PlanetSurfaceGalaxyCenter.Z + 45;
 
-                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position,
-                    0);
+                Vehicle spaceCraft = World.CreateVehicle(_ufoModel, position, 0);
                 spaceCraft.IsOnlyDamagedByPlayer = true;
 
                 Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, SpaceModLib.GetAlienModel());
@@ -231,10 +230,10 @@ namespace DefaultMissions
                         };
                         foreach (var spawn in spawnPoints)
                         {
-                            var alien = SpaceModLib.CreateAlien(spawn, WeaponHash.MicroSMG);
-                            alien.Heading = (PlayerPed.Position - alien.Position).ToHeading();
-                            alien.Task.FightAgainst(PlayerPed, -1);
-                            Aliens.Add(alien);
+                            var ped = SpaceModLib.CreateAlien(spawn, WeaponHash.MicroSMG);
+                            ped.Heading = (PlayerPed.Position - ped.Position).ToHeading();
+                            ped.Task.FightAgainst(PlayerPed, -1);
+                            Aliens.Add(new AlienData { Ped = ped });
                         }
                         _alienEggProp = World.CreateProp("sm_alien_egg_w_container", _spawnAlienEgg, false, false);
                         _alienEggProp.FreezePosition = true;
@@ -251,7 +250,7 @@ namespace DefaultMissions
                     if (CurrentScene.SceneFile == "EuropaSurface.space")
                     {
                         Aliens.ForEach(UpdateUfoInteriorAliens);
-                        if (Aliens.All(a => a.IsDead))
+                        if (Aliens.All(a => a.Ped.IsDead))
                         {
                             Aliens.Clear();
                             SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_20");
@@ -288,12 +287,56 @@ namespace DefaultMissions
             }
         }
 
-        private void UpdateUfoInteriorAliens(Ped alien)
+        private void UpdateUfoInteriorAliens(AlienData alien)
         {
+            var alienPed = alien.Ped;
+
             var freeze = CurrentScene.SceneData.CurrentIplData?.Name != "Europa/ufo_interior";
-            alien.FreezePosition = freeze;
-            alien.IsVisible = !freeze;
-            alien.Task.FightAgainst(PlayerPed);
+            alienPed.FreezePosition = freeze;
+            alienPed.IsVisible = !freeze;
+            alienPed.Task.FightAgainst(PlayerPed);
+        }
+
+        private void UpdateAlien(AlienData alien)
+        {
+            var alienPed = alien.Ped;
+
+            if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
+                alienPed.FreezePosition = PlayerPosition.DistanceTo(alienPed.Position) > 1000;
+
+            if (alienPed.IsDead)
+            {
+                if (alienPed.IsPersistent)
+                    alienPed.MarkAsNoLongerNeeded();
+
+                if (Blip.Exists(alienPed.CurrentBlip))
+                    alienPed.CurrentBlip.Remove();
+
+                if (!alienPed.CanRagdoll)
+                    alienPed.CanRagdoll = true;
+
+                return;
+            }
+
+            SpaceModLib.ArtificialDamage(alienPed, PlayerPed, 1.5f, 75);
+            float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
+
+            if (distance > alien.StoppingDistance)
+                alienPed.Task.RunTo(PlayerPed.Position, true);
+        }
+
+        private void UpdateInteriorAlien(AlienData alien)
+        {
+            var alienPed = alien.Ped;
+
+            var isMovable = PlayerPosition.DistanceTo(alienPed.Position) < 1000;
+            alienPed.FreezePosition = !isMovable;
+            alienPed.IsVisible = isMovable;
+
+            if (!alienPed.IsDead || !alienPed.IsPersistent)
+                return;
+
+            alienPed.MarkAsNoLongerNeeded();
         }
 
         private void StartSatteliteScene()
@@ -348,7 +391,7 @@ namespace DefaultMissions
 
         private void CheckInteriorAliens()
         {
-            if (Aliens.All(a => a.IsDead))
+            if (Aliens.All(a => a.Ped.IsDead))
             {
                 SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_16");
                 Aliens.Clear();
@@ -380,7 +423,7 @@ namespace DefaultMissions
                 alien.Heading = (PlayerPed.Position - alien.Position).ToHeading();
                 alien.Task.FightAgainst(PlayerPed, -1);
                 //alien.AddBlip().Scale = 0.7f;
-                Aliens.Add(alien);
+                Aliens.Add(new AlienData { Ped = alien });
             }
         }
 
@@ -393,7 +436,7 @@ namespace DefaultMissions
 
         private void CheckAliensAndUfo()
         {
-            if (Aliens.All(a => a.IsDead) && Ufos.All(u => Entity.Exists(u.Driver) && u.Driver.IsDead))
+            if (Aliens.All(a => a.Ped.IsDead) && Ufos.All(u => Entity.Exists(u.Driver) && u.Driver.IsDead))
             {
                 CurrentMissionStep++;
             }
@@ -471,44 +514,6 @@ namespace DefaultMissions
 
         }
 
-        private void UpdateAlien(Ped alienPed)
-        {
-            if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
-                alienPed.FreezePosition = PlayerPosition.DistanceTo(alienPed.Position) > 1000;
-
-            if (alienPed.IsDead)
-            {
-                if (alienPed.IsPersistent)
-                    alienPed.MarkAsNoLongerNeeded();
-
-                if (Blip.Exists(alienPed.CurrentBlip))
-                    alienPed.CurrentBlip.Remove();
-
-                if (!alienPed.CanRagdoll)
-                    alienPed.CanRagdoll = true;
-
-                return;
-            }
-
-            SpaceModLib.ArtificialDamage(alienPed, PlayerPed, 1.5f, 75);
-            float distance = Vector3.Distance(PlayerPosition, alienPed.Position);
-
-            if (distance > 25)
-                alienPed.Task.RunTo(PlayerPed.Position, true);
-        }
-
-        private void UpdateInteriorAlien(Ped alien)
-        {
-            var isMovable = PlayerPosition.DistanceTo(alien.Position) < 1000;
-            alien.FreezePosition = !isMovable;
-            alien.IsVisible = isMovable;
-
-            if (!alien.IsDead || !alien.IsPersistent)
-                return;
-
-            alien.MarkAsNoLongerNeeded();
-        }
-
         public override void OnAborted()
         {
             CleanUp();
@@ -543,8 +548,8 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped alien = Aliens[0];
-                alien.MarkAsNoLongerNeeded();
+                var alien = Aliens[0];
+                alien.Ped.MarkAsNoLongerNeeded();
                 Aliens.RemoveAt(0);
             }
 
@@ -570,8 +575,8 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped alien = Aliens[0];
-                alien.Delete();
+                var alien = Aliens[0];
+                alien.Ped.Delete();
                 Aliens.RemoveAt(0);
             }
 

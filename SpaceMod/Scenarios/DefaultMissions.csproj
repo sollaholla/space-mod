@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="BigMessage.cs" />
     <Compile Include="CollectableScenario.cs" />
+    <Compile Include="Data.cs" />
     <Compile Include="KaroonMission01.cs" />
     <Compile Include="MarsMission01.cs" />
     <Compile Include="MarsMission02.cs" />

@@ -19,7 +19,7 @@ namespace DefaultMissions
 
         public MoonMission01()
         {
-            Aliens = new List<Ped>();
+            Aliens = new List<AlienData>();
             Ufos = new List<Entity>();
             Random = new Random();
             OriginalPlayerHealth = PlayerPed.MaxHealth;
@@ -37,7 +37,7 @@ namespace DefaultMissions
 
         public int MissionStep { get; private set; }
 
-        public List<Ped> Aliens { get; }
+        public List<AlienData> Aliens { get; }
 
         public List<Entity> Ufos { get; }
 
@@ -96,7 +96,7 @@ namespace DefaultMissions
                 blip.Name = "Alien";
                 blip.Scale = 0.7f;
 
-                Aliens.Add(ped);
+                Aliens.Add(new AlienData { Ped = ped, StoppingDistance = new Random().Next(25, 28) });
             }
 
             _ufoModel = new Model(_ufoModelName);
@@ -169,7 +169,7 @@ namespace DefaultMissions
                     Aliens.ForEach(UpdateAlien);
                     Ufos.ForEach(UpdateSpaceCraft);
 
-                    List<Entity> concatList = Aliens.Concat(Ufos).ToList();
+                    List<Entity> concatList = Aliens.Select(x => x.Ped).Concat(Ufos).ToList();
                     if (!concatList.All(entity => entity.IsDead)) return;
                     ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_3"));
                     MissionStep++;
@@ -200,8 +200,9 @@ namespace DefaultMissions
             }
         }
 
-        private void UpdateAlien(Ped alienPed)
+        private void UpdateAlien(AlienData alien)
         {
+            var alienPed = alien.Ped;
             if (alienPed.IsDead)
             {
                 if (alienPed.CurrentBlip.Exists())
@@ -210,7 +211,7 @@ namespace DefaultMissions
                     alienPed.CurrentBlip.Remove();
                     alienPed.CanRagdoll = true;
 
-                    if (Aliens.All(alien => alien.IsDead) 
+                    if (Aliens.All(a => a.Ped.IsDead) 
 						&& Ufos.Count > 0 && Ufos.Any(u => !u.IsDead))
                     {
                         SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_4");
@@ -282,8 +283,8 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped alien = Aliens[0];
-                alien.MarkAsNoLongerNeeded();
+                var alien = Aliens[0];
+                alien.Ped.MarkAsNoLongerNeeded();
                 Aliens.RemoveAt(0);
             }
 
@@ -299,8 +300,8 @@ namespace DefaultMissions
         {
             while (Aliens.Count > 0)
             {
-                Ped alien = Aliens[0];
-                alien.Delete();
+                var alien = Aliens[0];
+                alien.Ped.Delete();
                 Aliens.RemoveAt(0);
             }
 
