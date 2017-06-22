@@ -162,6 +162,27 @@ namespace SpaceMod.Lib
 
     public static class SpaceModLib
     {
+        private const string AlienModelsTextFile = "./scripts/SpaceMod/Aliens.txt";
+        private const string DefaultAlienModel = "S_M_M_MovAlien_01";
+        private static string[] alienModels;
+
+        static SpaceModLib()
+        {
+            alienModels = new string[0];
+
+            if (File.Exists(AlienModelsTextFile))
+            {
+                string[] text = File.ReadAllLines(AlienModelsTextFile).Select(x => x.Trim()).ToArray();
+                alienModels = text;
+            }
+        }
+
+        public static string GetAlienModel()
+        {
+            Random rand = new Random();
+            return alienModels.Length > 0 ? alienModels[rand.Next(alienModels.Length)] : DefaultAlienModel;
+        }
+        
         public static Quaternion LookRotation(Vector3 forward)
         {
             Vector3 up = Vector3.WorldUp;
@@ -249,13 +270,11 @@ namespace SpaceMod.Lib
 
         public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, int accuracy = 50, float heading = 0)
         {
-            var ped = World.CreatePed(PedHash.MovAlien01, position, heading);
-            if (ped == null)
-                return new Ped(0);
+            var ped = World.CreatePed(GetAlienModel(), position, heading);
+            if (ped == null) return new Ped(0);
             ped.Accuracy = 50;
             ped.Weapons.Give(weaponHash, 15, true, true);
             ped.IsPersistent = true;
-            ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
             ped.Voice = "ALIENS";
             ped.Accuracy = 15;
             ped.SetDefaultClothes();

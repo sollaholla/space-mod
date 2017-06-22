@@ -122,9 +122,6 @@ namespace SpaceMod.Scenes
 
             try
             {
-                if (SceneData == null)
-                    return;
-
                 UI.HideHudComponentThisFrame(HudComponent.AreaName);
 
                 if (!SceneData.SurfaceFlag && !Game.IsLoading && !Game.IsScreenFadedOut)

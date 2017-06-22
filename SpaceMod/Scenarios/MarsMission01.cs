@@ -134,7 +134,7 @@ namespace DefaultMissions
                     0);
                 spaceCraft.IsOnlyDamagedByPlayer = true;
 
-                Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+                Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, SpaceModLib.GetAlienModel());
                 ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
                 ped.IsOnlyDamagedByPlayer = true;
                 ped.SetDefaultClothes();
