@@ -26,7 +26,7 @@ namespace SpaceMod.Scenes
     {
         public delegate void OnLoadedInterior(CustomScene sender, Ipl ipl);
         public delegate void OnRemovedInterior(CustomScene sender, Ipl ipl);
-        public delegate void OnExitEvent(CustomScene scene, string newSceneFile, Vector3 exitRotation);
+        public delegate void OnExitEvent(CustomScene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset);
         public delegate void OnMinedObjectEvent(CustomScene scene, Prop mineableObject);
 
         public static event OnRemovedInterior RemovedInterior;
@@ -436,7 +436,7 @@ namespace SpaceMod.Scenes
 
             if (PlayerPed.IsInVehicle(PlayerLastVehicle))
             {
-                Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation);
+                Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation, SceneData.SurfaceExitOffset);
             }
             else if (PlayerPed.IsInVehicle())
             {
@@ -464,7 +464,7 @@ namespace SpaceMod.Scenes
                 float distance = Vector3.Distance(position, PlayerPosition);
                 float targetDistance = text.Item3.ExitDistance;
                 if (distance > targetDistance) return;
-                Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation);
+                Exited?.Invoke(this, text.Item3.NextSceneFile, text.Item3.ExitRotation, Vector3.Zero);
             });
         }
 
@@ -483,7 +483,7 @@ namespace SpaceMod.Scenes
                 Function.Call(Hash.NETWORK_RESURRECT_LOCAL_PLAYER, spawn.X, spawn.Y, spawn.Z, 0, false, false);
                 Function.Call(Hash._RESET_LOCALPLAYER_STATE);
                 Function.Call(Hash.STOP_AUDIO_SCENE, "DEATH_SCENE");
-                Exited?.Invoke(this, SceneFile, Vector3.Zero);
+                Exited?.Invoke(this, SceneFile, Vector3.Zero, Vector3.Zero);
                 Script.Wait(500);
                 Game.FadeScreenIn(1000);
                 Game.TimeScale = 1.0f;
@@ -926,7 +926,7 @@ namespace SpaceMod.Scenes
                 Vector3 position = SpaceModDatabase.GalaxyCenter + orbital.OriginOffset;
                 float distance = Vector3.Distance(PlayerPosition, position);
                 if (distance > orbital.ExitDistance) return;
-                Exited?.Invoke(this, orbital.NextSceneFile, orbital.ExitRotation);
+                Exited?.Invoke(this, orbital.NextSceneFile, orbital.ExitRotation, Vector3.Zero);
             });
         }
 
@@ -1091,7 +1091,7 @@ namespace SpaceMod.Scenes
             float gravitationalPullDistance = orbitalData.ExitDistance * 15f;
 
             if (distanceToWormHole <= orbitalData.ExitDistance)
-                Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation);
+                Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation, Vector3.Zero);
             else
             {
                 if (distanceToWormHole <= escapeDistance)
@@ -1127,7 +1127,7 @@ namespace SpaceMod.Scenes
                             else PlayerPed.Velocity = targetVelocity;
                             Script.Yield();
                         }
-                        Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation);
+                        Exited?.Invoke(this, orbitalData.NextSceneFile, orbitalData.ExitRotation, Vector3.Zero);
                     }
                 }
             }

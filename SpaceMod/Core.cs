@@ -25,6 +25,9 @@ namespace SpaceMod
         private Menu _menu;
 
         private bool _missionsComplete;
+        private string defaultSpaceScene = "EarthOrbit.space";
+        private Vector3 defaultSpaceOffset = new Vector3(750, 0, 0);
+        private Vector3 defaultSpaceRotation = new Vector3(0, 0, 90);
         private bool preloadModels = true;
         private bool endMissionComplete;
         private bool introMissionComplete;
@@ -314,8 +317,12 @@ namespace SpaceMod
             if (height > _enterOrbitHeight)
             {
                 CustomXmlScene scene =
-                    MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + "EarthOrbit.space");
-                SetCurrentScene(scene, "EarthOrbit.space");
+                    MyXmlSerializer.Deserialize<CustomXmlScene>(SpaceModDatabase.PathToScenes + "/" + defaultSpaceScene);
+                SetCurrentScene(scene, defaultSpaceScene);
+
+                PlayerPosition += defaultSpaceOffset;
+                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = defaultSpaceRotation;
+                else PlayerPed.Rotation = defaultSpaceRotation;
             }
         }
 
@@ -363,6 +370,7 @@ namespace SpaceMod
             _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
             menuEnabled = Settings.GetValue("mod", "menu_enabled", menuEnabled);
             preloadModels = Settings.GetValue("mod", "pre_load_models", preloadModels);
+            defaultSpaceScene = Settings.GetValue("mod", "default_orbit_scene", defaultSpaceScene);
             endMissionComplete = Settings.GetValue("settings", "end_mission_complete", endMissionComplete);
             introMissionComplete = Settings.GetValue("settings", "intro_mission_complete", introMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
@@ -380,6 +388,7 @@ namespace SpaceMod
             Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
             Settings.SetValue("mod", "menu_enabled", menuEnabled);
             Settings.SetValue("mod", "pre_load_models", preloadModels);
+            Settings.SetValue("mod", "default_orbit_scene", defaultSpaceScene);
             Settings.SetValue("settings", "end_mission_complete", endMissionComplete);
             Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
@@ -703,7 +712,7 @@ namespace SpaceMod
             }
         }
 
-        private void CurrentSceneOnExited(CustomScene scene, string newSceneFile, Vector3 exitRotation)
+        private void CurrentSceneOnExited(CustomScene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset)
         {
             lock (_tickLock)
             {
@@ -726,9 +735,19 @@ namespace SpaceMod
                 if (newSceneFile != "cmd_earth")
                 {
                     CreateScene(newScene, newSceneFile);
+
+                    // AFTER creating the scene we set our offsets/rotations so that
+                    // values set within the start of the scene are overriden.
                     if (PlayerPed.IsInVehicle())
+                    {
                         PlayerPed.CurrentVehicle.Rotation = exitRotation;
-                    else PlayerPed.Rotation = exitRotation;
+                        PlayerPed.CurrentVehicle.Position += exitOffset;
+                    }
+                    else
+                    {
+                        PlayerPed.Rotation = exitRotation;
+                        PlayerPed.Position += exitOffset;
+                    }
                 }
                 else
                 {

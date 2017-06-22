@@ -47,6 +47,8 @@ namespace SpaceMod.Scenes
 
         public Vector3 SurfaceExitRotation { get; set; }
 
+        public Vector3 SurfaceExitOffset { get; set; }
+
         public List<IplData> Ipls { get; set; }
 
         public List<ScenarioData> CustomScenarios { get; set; }
