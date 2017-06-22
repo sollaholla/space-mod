@@ -44,6 +44,7 @@ namespace SpaceMod.Scenes
         private string timeCycleMod = string.Empty;
         private bool resetTimeCycle;
         private bool didRaiseGears;
+        //private bool didFloatingHelpText;
 
         private float _leftRightFly;
         private float _upDownFly;
@@ -888,7 +889,13 @@ namespace SpaceMod.Scenes
 
         private void FlyEntity(Entity entity, float flySpeed, float sensitivity, bool canFly = true)
         {
-            float leftRight = Game.GetControlNormal(2, Control.MoveLeftRight);
+            UI.HideHudComponentThisFrame(HudComponent.WeaponWheel);
+            Game.DisableControlThisFrame(2, Control.WeaponWheelLeftRight);
+            Game.DisableControlThisFrame(2, Control.WeaponWheelNext);
+            Game.DisableControlThisFrame(2, Control.WeaponWheelPrev);
+            Game.DisableControlThisFrame(2, Control.WeaponWheelUpDown);
+            Game.DisableControlThisFrame(2, Control.SelectWeapon);
+            float leftRight = Game.CurrentInputMode == InputMode.MouseAndKeyboard ? Game.GetControlNormal(2, Control.MoveLeftRight) : Game.GetControlNormal(2, Control.VehicleFlyYawRight) - Game.GetControlNormal(2, Control.VehicleFlyYawLeft);
             float upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             float roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
             float fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);

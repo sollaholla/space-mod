@@ -11,19 +11,12 @@ using GTA;
 
 namespace SpaceMod.Scenes
 {
-    public enum TimeType
-    {
-        Day,
-        Evening,
-        Night
-    }
-    
     [System.Serializable]
     public class CustomXmlScene
     {
         public CustomXmlScene()
         {
-            Time = TimeType.Night;
+            Time = 23;
             GravityLevel = 3;
         }
 
@@ -35,7 +28,7 @@ namespace SpaceMod.Scenes
 
         public List<Link> SceneLinks { get; set; }
 
-        public TimeType Time { get; set; }
+        public int Time { get; set; }
 
         public bool UseGravity { get; set; }
 
@@ -121,7 +114,7 @@ namespace SpaceMod.Scenes
         public IplData()
         {
             Type = IplType.MapEditor;
-            Time = TimeType.Night;
+            Time = 23;
         }
 
         public string Name { get; set; }
@@ -130,7 +123,7 @@ namespace SpaceMod.Scenes
 
         public List<Teleport> Teleports { get; set; }
 
-        public TimeType Time { get; set; }
+        public int Time { get; set; }
 
         [XmlIgnore] public Ipl CurrentIpl { get; set; }
     }

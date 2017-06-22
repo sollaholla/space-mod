@@ -349,19 +349,8 @@ namespace SpaceMod
 
         private void SetTime()
         {
-            TimeType timeType = _currentScene.SceneData.CurrentIplData?.Time ?? _currentScene.SceneData.Time;
-            switch (timeType)
-            {
-                case TimeType.Night:
-                    World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 1, 30, 0);
-                    break;
-                case TimeType.Day:
-                    World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 9, 0, 0);
-                    break;
-                case TimeType.Evening:
-                    World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 18, 0, 0);
-                    break;
-            }
+            int time = _currentScene.SceneData.CurrentIplData?.Time ?? _currentScene.SceneData.Time;
+            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, time, 0, 0);
         }
 
         private void ReadSettings()
