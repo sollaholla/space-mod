@@ -41,6 +41,8 @@ namespace SpaceMod.Scenes
 
         private float jumpForce = 1.5f;
         private bool useLowGJumping;
+        private string timeCycleMod = string.Empty;
+        private bool resetTimeCycle;
 
         private float _leftRightFly;
         private float _upDownFly;
@@ -106,6 +108,7 @@ namespace SpaceMod.Scenes
                 Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.DefaultVehicleSpawn);
                 jumpForce = settings.GetValue(section, "jump_force_override", jumpForce);
                 useLowGJumping = settings.GetValue(section, "low_gravity_jumping", useLowGJumping);
+                timeCycleMod = settings.GetValue(section, "time_cycle_mod", timeCycleMod);
 
                 PlaceCurrentVehicleOnGround(vehicleSpawn);
                 MovePlayerToGalaxy();
@@ -121,6 +124,16 @@ namespace SpaceMod.Scenes
                 UI.HideHudComponentThisFrame(HudComponent.AreaName);
 
                 if (useLowGJumping && SceneData.SurfaceFlag) PlayerPed.SetSuperJumpThisFrame(jumpForce, 1.3f, false);
+                if (!string.IsNullOrEmpty(timeCycleMod))
+                {
+                    Function.Call(Hash.SET_TIMECYCLE_MODIFIER, timeCycleMod);
+                    resetTimeCycle = false;
+                }
+                else if (!resetTimeCycle)
+                {
+                    Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
+                    resetTimeCycle = true;
+                }
 
                 WormHoles?.ForEach(UpdateWormHole);
                 OrbitalSystem?.Process(SpaceModDatabase.GetValidGalaxyDomePosition(PlayerPed));

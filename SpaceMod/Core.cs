@@ -30,10 +30,7 @@ namespace SpaceMod
         private bool introMissionComplete;
         private bool disableWantedStars = true;
         private bool resetWantedLevel;
-        private bool overrideTimecycleModifier;
-        private bool resetTimecycle;
         private bool menuEnabled = true;
-        private string spaceTimecycle;
         private float _enterOrbitHeight = 5000;
         private Keys _optionsMenuKey = Keys.NumPad9;
         private CustomScene _currentScene;
@@ -166,31 +163,24 @@ namespace SpaceMod
 
         private void DoIntroMission()
         {
-            if (_missionsComplete || endMissionComplete && _currentScene != null || introMissionComplete)
+            if (!_missionsComplete || endMissionComplete || _currentScene != null || introMissionComplete)
             {
-                colonel?.Delete();
-                colonel = null;
+                if (!introMissionComplete)
+                {
+                    colonel?.Delete();
+                    colonel = null;
+                }
                 return;
             }
 
             if (!Entity.Exists(colonel))
             {
                 colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
-                colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
-                World.SetRelationshipBetweenGroups(Relationship.Companion, colonel.RelationshipGroup, PlayerPed.RelationshipGroup);
                 return;
             }
 
-            if (!colonel.CurrentBlip.Exists())
-            {
-                new Blip(colonel.AddBlip().Handle)
-                {
-                    Sprite = BlipSprite.GTAOMission,
-                    Color = BlipColor.White,
-                    Scale = 1.5f,
-                    Name = "Colonel Larson"
-                };
-            }
+            SetColonelRelationship();
+            CreateColonelBlip();
 
             float distance = Vector3.Distance(PlayerPosition, colonel.Position);
             if (distance > 1.75f)
@@ -248,21 +238,12 @@ namespace SpaceMod
 
             if (!Entity.Exists(colonel))
             {
-                colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
-                colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
-                World.SetRelationshipBetweenGroups(Relationship.Companion, colonel.RelationshipGroup, PlayerPed.RelationshipGroup);
+                colonel = World.CreatePed(PedHash.Marine01SMM, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
                 return;
             }
 
-            if (!colonel.CurrentBlip.Exists())
-            {
-                new Blip(colonel.AddBlip().Handle) {
-                    Sprite = BlipSprite.GTAOMission,
-                    Color = BlipColor.White,
-                    Scale = 1.5f,
-                    Name = "Colonel Larson"
-                };
-            }
+            SetColonelRelationship();
+            CreateColonelBlip();
 
             float distance = Vector3.Distance(PlayerPosition, colonel.Position);
             if (distance > 1.75f)
@@ -303,6 +284,29 @@ namespace SpaceMod
             }
         }
 
+        private void SetColonelRelationship()
+        {
+            if (colonel.RelationshipGroup != PlayerPed.RelationshipGroup)
+            {
+                colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
+                World.SetRelationshipBetweenGroups(Relationship.Companion, colonel.RelationshipGroup, PlayerPed.RelationshipGroup);
+            }
+        }
+
+        private void CreateColonelBlip()
+        {
+            if (!colonel.CurrentBlip.Exists())
+            {
+                new Blip(colonel.AddBlip().Handle)
+                {
+                    Sprite = BlipSprite.GTAOMission,
+                    Color = BlipColor.White,
+                    Scale = 1.5f,
+                    Name = "Colonel Larson"
+                };
+            }
+        }
+
         private void DoEarthUpdate()
         {
             float height = PlayerPed.HeightAboveGround;
@@ -317,17 +321,6 @@ namespace SpaceMod
 
         private void DoSceneUpdate()
         {
-            if (overrideTimecycleModifier)
-            {
-                Function.Call(Hash.SET_TIMECYCLE_MODIFIER, spaceTimecycle);
-                resetTimecycle = false;
-            }
-            else if (!resetTimecycle)
-            {
-                Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-                resetTimecycle = true;
-            }
-
             Scenarios?.ForEach(scenario => scenario.Update());
 
             SetTime();
@@ -374,8 +367,6 @@ namespace SpaceMod
             introMissionComplete = Settings.GetValue("settings", "intro_mission_complete", introMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             StaticSettings.UseScenarios = Settings.GetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-            overrideTimecycleModifier = Settings.GetValue("settings", "override_timecycle", overrideTimecycleModifier);
-            spaceTimecycle = Settings.GetValue("settings", "space_timecycle", spaceTimecycle);
             StaticSettings.MoonJump = Settings.GetValue("settings", "low_gravity_jumping", StaticSettings.MoonJump);
             StaticSettings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             StaticSettings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
@@ -393,8 +384,6 @@ namespace SpaceMod
             Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
-            Settings.SetValue("settings", "override_timecycle", overrideTimecycleModifier);
-            Settings.SetValue("settings", "space_timecycle", spaceTimecycle);
             Settings.SetValue("settings", "low_gravity_jumping", StaticSettings.MoonJump);
             Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", StaticSettings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", StaticSettings.DefaultVehicleSpawn);
@@ -538,12 +527,6 @@ namespace SpaceMod
             };
             settingsMenu.Add(disableWantedLevelCheckbox);
 
-            var overrideTimecycle = new CheckboxMenuItem("Override TimeCycleModifier", overrideTimecycleModifier);
-            overrideTimecycle.Checked += (a, b) => {
-                overrideTimecycleModifier = b;
-            };
-            settingsMenu.Add(overrideTimecycle);
-
             #endregion
 
             #region debug
@@ -614,6 +597,7 @@ namespace SpaceMod
             lock (_tickLock)
             {
                 EndActiveScenarios();
+                CheckMissionsStatus();
 
                 if (_currentScene != null && _currentScene != default(CustomScene))
                     _currentScene.Delete();
@@ -704,8 +688,19 @@ namespace SpaceMod
             // All entities.
             Entity[] entities = World.GetAllEntities();
             foreach(Entity e in entities)
-                if (e != PlayerPed.CurrentVehicle)
-                    e?.Delete();
+            {
+                if (!e.IsDead)
+                    continue;
+
+                //if (e.GetType() == typeof(Vehicle))
+                //{
+                //    Vehicle v = (Vehicle)e;
+                //    if (v != null)
+                //        if (v == PlayerPed.LastVehicle || PlayerPed.IsInVehicle(v))
+                //            continue;
+                //}
+                e?.Delete();
+            }
         }
 
         private void CurrentSceneOnExited(CustomScene scene, string newSceneFile, Vector3 exitRotation)

@@ -30,36 +30,9 @@ namespace DefaultMissions
             PlayerPed.IsExplosionProof = true;
 
             _ufoModelName = Settings.GetValue("settings", "ufo_model", _ufoModelName);
-            flagPosition = StringToVector3(Settings.GetValue("settings", "flag_position", ""));
+            flagPosition = V3Parse.Read(Settings.GetValue("settings", "flag_position"), Vector3.Zero);
             Settings.SetValue("settings", "ufo_model", _ufoModelName);
             Settings.Save();
-        }
-
-        private Vector3 StringToVector3(string vector3String)
-        {
-            Vector3 vector3 = Vector3.Zero;
-
-            float x = 0f;
-            float y = 0f;
-            float z = 0f;
-
-            char delimiter = ' ';
-            string[] splitStrings = vector3String.Split(delimiter);
-
-            foreach (string str in splitStrings)
-            {
-                string newStr = str.Remove(0, 2);
-
-                if (str.ToLower().Contains("x"))
-                    x = float.Parse(newStr);
-                else if (str.ToLower().Contains("y"))
-                    y = float.Parse(newStr);
-                else if (str.ToLower().Contains("z"))
-                    z = float.Parse(newStr);
-            }
-
-            vector3 = new Vector3(x, y, z);
-            return vector3;
         }
 
         public int MissionStep { get; private set; }
@@ -212,8 +185,6 @@ namespace DefaultMissions
 
                     Settings.SetValue("settings", "flag_position", flagPosition);
                     Settings.Save();
-
-                    UI.ShowSubtitle(flagPosition.ToString());
 
                     if (flag != null)
                     {
