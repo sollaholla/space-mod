@@ -43,6 +43,7 @@ namespace SpaceMod.Scenes
         private bool useLowGJumping;
         private string timeCycleMod = string.Empty;
         private bool resetTimeCycle;
+        private bool didRaiseGears;
 
         private float _leftRightFly;
         private float _upDownFly;
@@ -121,7 +122,19 @@ namespace SpaceMod.Scenes
 
             try
             {
+                if (SceneData == null)
+                    return;
+
                 UI.HideHudComponentThisFrame(HudComponent.AreaName);
+
+                if (!SceneData.SurfaceFlag && !Game.IsLoading && !Game.IsScreenFadedOut)
+                {
+                    if (!didRaiseGears && Entity.Exists(PlayerPed.CurrentVehicle))
+                    {
+                        PlayerPed.CurrentVehicle.LandingGear = VehicleLandingGear.Retracted;
+                        didRaiseGears = true;
+                    }
+                }
 
                 if (useLowGJumping && SceneData.SurfaceFlag) PlayerPed.SetSuperJumpThisFrame(jumpForce, 1.3f, false);
                 if (!string.IsNullOrEmpty(timeCycleMod))

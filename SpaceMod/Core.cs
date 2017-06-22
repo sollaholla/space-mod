@@ -371,6 +371,8 @@ namespace SpaceMod
             menuEnabled = Settings.GetValue("mod", "menu_enabled", menuEnabled);
             preloadModels = Settings.GetValue("mod", "pre_load_models", preloadModels);
             defaultSpaceScene = Settings.GetValue("mod", "default_orbit_scene", defaultSpaceScene);
+            defaultSpaceOffset = V3Parse.Read(Settings.GetValue("mod", "default_orbit_offset"), defaultSpaceOffset);
+            defaultSpaceRotation = V3Parse.Read(Settings.GetValue("mod", "default_orbit_rotation"), defaultSpaceRotation);
             endMissionComplete = Settings.GetValue("settings", "end_mission_complete", endMissionComplete);
             introMissionComplete = Settings.GetValue("settings", "intro_mission_complete", introMissionComplete);
             StaticSettings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
@@ -390,6 +392,8 @@ namespace SpaceMod
             Settings.SetValue("mod", "pre_load_models", preloadModels);
             Settings.SetValue("mod", "default_orbit_scene", defaultSpaceScene);
             Settings.SetValue("settings", "end_mission_complete", endMissionComplete);
+            Settings.SetValue("mod", "default_orbit_offset", defaultSpaceOffset);
+            Settings.SetValue("mod", "default_orbit_rotation", defaultSpaceRotation);
             Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
             Settings.SetValue("settings", "show_custom_ui", StaticSettings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", StaticSettings.UseScenarios);
