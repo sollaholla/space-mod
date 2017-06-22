@@ -134,16 +134,18 @@ namespace DefaultMissions
                 spaceCraft.IsOnlyDamagedByPlayer = true;
 
                 Ped ped = spaceCraft.CreatePedOnSeat(VehicleSeat.Driver, SpaceModLib.GetAlienModel());
+                ped.IsInvincible = true;
                 ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
                 ped.IsOnlyDamagedByPlayer = true;
                 ped.SetDefaultClothes();
-
-                spaceCraft.MaxHealth = 2500;
-                spaceCraft.Health = spaceCraft.MaxHealth;
+                
                 spaceCraft.Heading = (PlayerPed.Position - spaceCraft.Position).ToHeading();
 
                 ped.Task.FightAgainst(PlayerPed);
                 ped.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
+
+                spaceCraft.MaxHealth = 1000;
+                spaceCraft.Health = spaceCraft.MaxHealth;
 
                 Blip blip = spaceCraft.AddBlip();
                 blip.Name = "UFO";
@@ -484,11 +486,14 @@ namespace DefaultMissions
             if (Entity.Exists(ufo.Driver))
                 SpaceModLib.ArtificialDamage(ufo.Driver, PlayerPed, 150, 150);
 
-            if (ufo.IsDead || (Entity.Exists(ufo.Driver) && ufo.Driver.IsDead) || !ufo.IsDriveable)
+            if (ufo.IsDead || (Entity.Exists(ufo.Driver) && ufo.Driver.IsDead))
             {
                 if (Entity.Exists(ufo.Driver) && !ufo.Driver.IsDead)
                     ufo.Driver.Kill();
+
                 ufo.CurrentBlip.Remove();
+                ufo.Health = 0;
+                ufo.EngineHealth = 0;
                 ufo.Explode();
             }
 
