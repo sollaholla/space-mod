@@ -477,7 +477,7 @@ namespace DefaultMissions
 
         private void UpdateUfo(Vehicle ufo)
         {
-            if (ufo.IsDead)
+            if (!ufo.IsPersistent)
                 return;
 
             if (!string.IsNullOrEmpty(CurrentScene.SceneData.CurrentIplData?.Name))
@@ -495,6 +495,7 @@ namespace DefaultMissions
                 ufo.Health = 0;
                 ufo.EngineHealth = 0;
                 ufo.Explode();
+                ufo.MarkAsNoLongerNeeded();
             }
 
             ufo.Rotation = new Vector3(0, 0, ufo.Rotation.Z);
