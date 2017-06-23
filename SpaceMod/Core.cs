@@ -691,7 +691,7 @@ namespace SpaceMod
             Entity[] entities = World.GetAllEntities();
             foreach(Entity e in entities)
             {
-                if (!e.IsDead)
+                if (!e.IsDead && (e.GetType() == typeof(Ped) || e.GetType() == typeof(Vehicle)))
                     continue;
 
                 //if (e.GetType() == typeof(Vehicle))

@@ -44,6 +44,7 @@ namespace SpaceMod.Scenes
         private string timeCycleMod = string.Empty;
         private bool resetTimeCycle;
         private bool didRaiseGears;
+        private float timeCycleStrength = 1.0f;
         //private bool didFloatingHelpText;
 
         private float _leftRightFly;
@@ -111,6 +112,7 @@ namespace SpaceMod.Scenes
                 jumpForce = settings.GetValue(section, "jump_force_override", jumpForce);
                 useLowGJumping = settings.GetValue(section, "low_gravity_jumping", useLowGJumping);
                 timeCycleMod = settings.GetValue(section, "time_cycle_mod", timeCycleMod);
+                timeCycleStrength = settings.GetValue(section, "time_cycle_strength", timeCycleStrength);
 
                 PlaceCurrentVehicleOnGround(vehicleSpawn);
                 MovePlayerToGalaxy();
@@ -138,6 +140,7 @@ namespace SpaceMod.Scenes
                 if (!string.IsNullOrEmpty(timeCycleMod))
                 {
                     Function.Call(Hash.SET_TIMECYCLE_MODIFIER, timeCycleMod);
+                    Function.Call(Hash.SET_TIMECYCLE_MODIFIER_STRENGTH, timeCycleStrength);
                     resetTimeCycle = false;
                 }
                 else if (!resetTimeCycle)
@@ -171,7 +174,7 @@ namespace SpaceMod.Scenes
                 while (OldVehicles.Count > 0)
                 {
                     var v = OldVehicles[0];
-                    v.Delete();
+                    v?.Delete();
                     OldVehicles.RemoveAt(0);
                 }
 
@@ -423,7 +426,6 @@ namespace SpaceMod.Scenes
 
         private void HandlePlayerVehicle()
         {
-            if (!Entity.Exists(PlayerLastVehicle)) return;
             if (!SceneData.SurfaceFlag)
             {
                 //PlayerLastVehicle.LandingGear = VehicleLandingGear.Retracted;
@@ -433,7 +435,7 @@ namespace SpaceMod.Scenes
             if (string.IsNullOrEmpty(SceneData.NextSceneOffSurface)) return;
             const float distance = 15 * 2;
 
-            if (PlayerPosition.DistanceToSquared(PlayerLastVehicle.Position) < distance && !PlayerPed.IsInVehicle())
+            if (PlayerLastVehicle != null && PlayerPosition.DistanceToSquared(PlayerLastVehicle.Position) < distance && !PlayerPed.IsInVehicle())
             {
                 SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_8");
 
@@ -445,7 +447,7 @@ namespace SpaceMod.Scenes
                 }
             }
 
-            if (PlayerPed.IsInVehicle(PlayerLastVehicle))
+            if (PlayerLastVehicle != null && PlayerPed.IsInVehicle())
             {
                 Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation, SceneData.SurfaceExitOffset);
             }
@@ -909,7 +911,7 @@ namespace SpaceMod.Scenes
                 roll *= sensitivity;
             }
 
-            _leftRightFly = Mathf.Lerp(_leftRightFly, leftRight, Game.LastFrameTime * 2.5f);
+            _leftRightFly = Mathf.Lerp(_leftRightFly, leftRight, Game.LastFrameTime * .7f);
             _upDownFly = Mathf.Lerp(_upDownFly, upDown, Game.LastFrameTime * 5);
             _rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
             _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);

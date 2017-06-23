@@ -64,6 +64,7 @@ namespace DefaultMissions
                 {
                     flag.FreezePosition = true;
                     flag.MarkAsNoLongerNeeded();
+                    flag.LodDistance = -1;
                 }
             }
         }
