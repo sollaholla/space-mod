@@ -28,6 +28,7 @@ namespace SpaceMod
         private string defaultSpaceScene = "EarthOrbit.space";
         private Vector3 defaultSpaceOffset = new Vector3(750, 0, 0);
         private Vector3 defaultSpaceRotation = new Vector3(0, 0, 90);
+        private bool isMissionInProgress = false;
         private bool preloadModels = true;
         private bool endMissionComplete;
         private bool introMissionComplete;
@@ -38,6 +39,8 @@ namespace SpaceMod
         private Keys _optionsMenuKey = Keys.NumPad9;
         private CustomScene _currentScene;
         private Ped colonel;
+
+        private IntroMission mission = null;
 
         private readonly object _tickLock;
 
@@ -92,6 +95,8 @@ namespace SpaceMod
             _currentScene?.Delete();
             colonel?.Delete();
 
+            mission.OnAborted();
+
             if (Scenarios != null)
             {
                 while (Scenarios.Count > 0)
@@ -117,6 +122,7 @@ namespace SpaceMod
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
             if (_menuConnector?.AreMenusVisible() ?? false) return;
+
             if (e.KeyCode != _optionsMenuKey) return;
             _menu.Draw = true;
         }
@@ -164,11 +170,23 @@ namespace SpaceMod
             }
         }
 
+        public void SetIntroMissionComplete()
+        {
+            introMissionComplete = true;
+            Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
+            Settings.Save();
+        }
+
+        public void SetMissionInProgress(bool toggle)
+        {
+            isMissionInProgress = toggle;
+        }
+
         private void DoIntroMission()
         {
-            if (!_missionsComplete || endMissionComplete || _currentScene != null || introMissionComplete)
+            if (_missionsComplete || endMissionComplete || _currentScene != null || introMissionComplete)
             {
-                if (!introMissionComplete)
+                if (introMissionComplete)
                 {
                     colonel?.Delete();
                     colonel = null;
@@ -176,55 +194,25 @@ namespace SpaceMod
                 return;
             }
 
-            if (!Entity.Exists(colonel))
+            if (!Entity.Exists(colonel) && !isMissionInProgress)
             {
                 colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
                 return;
             }
 
+            if (colonel == null)
+                return;
+
             SetColonelRelationship();
             CreateColonelBlip();
 
-            float distance = Vector3.Distance(PlayerPosition, colonel.Position);
-            if (distance > 1.75f)
-                return;
-
-            World.DrawMarker(MarkerType.UpsideDownCone, colonel.Position + Vector3.WorldUp * 1.5f, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
-            SpaceModLib.DisplayHelpTextWithGXT("END_LABEL_1");
-
-            if (Game.IsControlJustPressed(2, GTA.Control.Context))
+            if(mission == null)
             {
-                Function.Call(Hash._PLAY_AMBIENT_SPEECH1, colonel.Handle, "Generic_Hi", "Speech_Params_Force");
-                PlayerPed.FreezePosition = true;
-                PlayerPed.Heading = (colonel.Position - PlayerPosition).ToHeading();
-                PlayerPed.Task.StandStill(-1);
-
-                while (Entity.Exists(colonel))
-                {
-                    SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_1", 10000);
-                    Wait(10000);
-
-                    SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_2");
-                    Wait(4000);
-
-                    SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_3");
-                    Wait(4000);
-
-                    Game.FadeScreenOut(1000);
-                    Wait(1000);
-                    PlayerPed.Task.ClearAllImmediately();
-                    PlayerPed.FreezePosition = false;
-                    colonel.Delete();
-                    Wait(1000);
-                    Game.FadeScreenIn(1000);
-
-                    introMissionComplete = true;
-                    Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
-                    Settings.Save();
-
-                    Yield();
-                }
+                mission = new IntroMission(colonel);
+                mission.Start();
             }
+
+            mission.Update();
         }
 
         private void DoEndMission()
