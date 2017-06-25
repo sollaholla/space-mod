@@ -66,11 +66,6 @@ namespace SpaceMod.Missions
                 Script.Yield();
 
             humaneLabsIpl = new Ipl("v_lab");
-
-            if (missionStep == 0 /*|| missionStep == someLastMissionStep...*/)
-            {
-                CreateColonel();
-            }
         }
 
         private void CreateColonel()
