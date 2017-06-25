@@ -228,6 +228,7 @@ namespace SpaceMod.Scenes
             prop.FreezePosition = true;
             LockedOrbital orbital = new LockedOrbital(prop.Handle, data.OriginOffset, data.EmitLight, data.Scale);
             //prop.Scale(new Vector3(data.Scale, data.Scale, data.Scale));
+            model.MarkAsNoLongerNeeded();
             return orbital;
         }
 
@@ -260,6 +261,7 @@ namespace SpaceMod.Scenes
                 blip.Color = BlipColor.Blue;
                 blip.Name = orbital.Name;
             }
+            model.MarkAsNoLongerNeeded();
             //prop.Scale(new Vector3(data.Scale, data.Scale, data.Scale));
             return orbital;
         }
@@ -277,6 +279,7 @@ namespace SpaceMod.Scenes
             Prop prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
             prop.Position = position;
             prop.FreezePosition = true;
+            model.MarkAsNoLongerNeeded();
             return prop;
         }
 

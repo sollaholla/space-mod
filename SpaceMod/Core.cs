@@ -32,7 +32,7 @@ namespace SpaceMod
         private Vector3 defaultSpaceRotation = new Vector3(0, 0, 90);
         private bool menuEnabled = true;
         private bool isMissionInProgress = false;
-        private bool preloadModels = true;
+        private bool preloadModels = false;
         private bool disableWantedStars = true;
         private bool resetWantedLevel = false;
         private float enterOrbitHeight = 5000;
@@ -57,7 +57,6 @@ namespace SpaceMod
         public Core()
         {
             _tickLock = new object();
-
             Scenarios = new List<CustomScenario>();
 
             Instance = this;
@@ -68,7 +67,6 @@ namespace SpaceMod
             ReadSettings();
             SaveSettings();
             CreateCustomMenu();
-
             RequestModels();
         }
 
@@ -162,7 +160,6 @@ namespace SpaceMod
                     DisableWantedStars();
                     if (currentScene != null) DoSceneUpdate();
                     else DoEarthUpdate();
-
                     RunInternalMissions();
                 }
                 // Locks our tick method so that if the last tick did 
@@ -410,51 +407,6 @@ namespace SpaceMod
             }
         }
 
-        //public void SetIntroMissionComplete()
-        //{
-        //    introMissionComplete = true;
-        //    Settings.SetValue("settings", "intro_mission_complete", introMissionComplete);
-        //    Settings.Save();
-        //}
-
-        //public void SetMissionInProgress(bool toggle)
-        //{
-        //    isMissionInProgress = toggle;
-        //}
-
-        //private void DoIntroMission()
-        //{
-        //    if (_missionsComplete || endMissionComplete || _currentScene != null || introMissionComplete)
-        //    {
-        //        if (introMissionComplete)
-        //        {
-        //            colonel?.Delete();
-        //            colonel = null;
-        //        }
-        //        return;
-        //    }
-
-        //    if (!Entity.Exists(colonel) && !isMissionInProgress)
-        //    {
-        //        colonel = World.CreatePed(PedHash.Marine03SMY, new Vector3(-2356.895f, 3248.412f, 101.4508f), 313.5386f);
-        //        return;
-        //    }
-
-        //    if (colonel == null)
-        //        return;
-
-        //    SetColonelRelationship();
-        //    CreateColonelBlip();
-
-        //    if(mission == null)
-        //    {
-        //        mission = new IntroMission(colonel);
-        //        mission.Start();
-        //    }
-
-        //    mission.Update();
-        //}
-
         //private void DoEndMission()
         //{
         //    if (!_missionsComplete || endMissionComplete || _currentScene != null)
@@ -515,29 +467,6 @@ namespace SpaceMod
         //    }
         //}
 
-        //private void SetColonelRelationship()
-        //{
-        //    if (colonel.RelationshipGroup != PlayerPed.RelationshipGroup)
-        //    {
-        //        colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
-        //        World.SetRelationshipBetweenGroups(Relationship.Companion, colonel.RelationshipGroup, PlayerPed.RelationshipGroup);
-        //    }
-        //}
-
-        //private void CreateColonelBlip()
-        //{
-        //    if (!colonel.CurrentBlip.Exists())
-        //    {
-        //        new Blip(colonel.AddBlip().Handle)
-        //        {
-        //            Sprite = BlipSprite.GTAOMission,
-        //            Color = BlipColor.White,
-        //            Scale = 1.5f,
-        //            Name = "Colonel Larson"
-        //        };
-        //    }
-        //}
-
         private void DoEarthUpdate()
         {
             float height = PlayerPed.HeightAboveGround;
@@ -583,9 +512,7 @@ namespace SpaceMod
                     introMission.Update();
                     introMission.Completed += (scenario, success) =>
                     {
-                        missionStatus = 1;
-                        Settings.SetValue("main_mission", "mission_status", missionStatus);
-                        Settings.Save();
+                        SetMissionStatus(1);
                         introMission = null;
                     };
                 }
@@ -599,6 +526,13 @@ namespace SpaceMod
             {
                 // TODO: Make end mission start.
             }
+        }
+
+        private void SetMissionStatus(int value)
+        {
+            missionStatus = value;
+            Settings.SetValue("main_mission", "mission_status", missionStatus);
+            Settings.Save();
         }
 
         private void SetWeather()
@@ -730,39 +664,29 @@ namespace SpaceMod
 
         private void ClearAllEntities(Vector3 pos = default(Vector3), float distance = int.MaxValue)
         {
-            // Non persistent entities.
-            Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
-            Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
-            Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
-            Function.Call(Hash.SET_NUMBER_OF_PARKED_VEHICLES, 0f);
-            Function.Call((Hash)0xF796359A959DF65D, false);
-            Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
-            Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f, 0f);
-            Function.Call((Hash)0x2F9A292AD0A3BD89);
-            Function.Call((Hash)0x5F3B7749C112D552);
-            Function.Call(Hash.DELETE_ALL_TRAINS);
-            Function.Call(Hash.DESTROY_MOBILE_PHONE);
-            Function.Call(Hash.SET_GARBAGE_TRUCKS, 0);
-            Function.Call(Hash.SET_RANDOM_BOATS, 0);
-            Function.Call(Hash.SET_RANDOM_TRAINS, 0);
-            Function.Call(Hash.CLEAR_AREA_OF_PEDS, pos.X, pos.Y, pos.Z, distance, 0);
-            Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, pos.X, pos.Y, pos.Z, distance, 0);
-            Function.Call(Hash.CLEAR_AREA_OF_COPS, pos.X, pos.Y, pos.Z, distance, 0);
-
-            // All entities.
+            //Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+            //Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+            //Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+            //Function.Call(Hash.SET_NUMBER_OF_PARKED_VEHICLES, 0f);
+            //Function.Call((Hash)0xF796359A959DF65D, false);
+            //Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f);
+            //Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0f, 0f);
+            //Function.Call((Hash)0x2F9A292AD0A3BD89);
+            //Function.Call((Hash)0x5F3B7749C112D552);
+            //Function.Call(Hash.DELETE_ALL_TRAINS);
+            //Function.Call(Hash.DESTROY_MOBILE_PHONE);
+            //Function.Call(Hash.SET_GARBAGE_TRUCKS, 0);
+            //Function.Call(Hash.SET_RANDOM_BOATS, 0);
+            //Function.Call(Hash.SET_RANDOM_TRAINS, 0);
+            //Function.Call(Hash.CLEAR_AREA_OF_PEDS, pos.X, pos.Y, pos.Z, distance, 0);
+            //Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, pos.X, pos.Y, pos.Z, distance, 0);
+            //Function.Call(Hash.CLEAR_AREA_OF_COPS, pos.X, pos.Y, pos.Z, distance, 0);
             Entity[] entities = World.GetAllEntities();
             foreach (Entity e in entities)
             {
                 if (!e.IsDead && (e.GetType() == typeof(Ped) || e.GetType() == typeof(Vehicle)))
                     continue;
 
-                //if (e.GetType() == typeof(Vehicle))
-                //{
-                //    Vehicle v = (Vehicle)e;
-                //    if (v != null)
-                //        if (v == PlayerPed.LastVehicle || PlayerPed.IsInVehicle(v))
-                //            continue;
-                //}
                 e?.Delete();
             }
         }

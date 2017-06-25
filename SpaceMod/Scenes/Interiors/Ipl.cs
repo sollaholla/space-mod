@@ -176,6 +176,7 @@ namespace SpaceMod.Scenes.Interiors
             vehicle.FreezePosition = !mapObject.Dynamic;
             vehicle.SirenActive = mapObject.SirensActive;
             Vehicles.Add(vehicle);
+            model.MarkAsNoLongerNeeded();
         }
 
         private void CreatePed(MapObject mapObject, Model model)

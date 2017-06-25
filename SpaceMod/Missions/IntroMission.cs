@@ -65,6 +65,8 @@ namespace SpaceMod.Missions
             while (Game.IsLoading)
                 Script.Yield();
 
+            CreateColonel();
+
             humaneLabsIpl = new Ipl("v_lab");
         }
 

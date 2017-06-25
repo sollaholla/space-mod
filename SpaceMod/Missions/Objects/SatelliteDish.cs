@@ -64,7 +64,11 @@ namespace SpaceMod.Missions.Objects
         /// </summary>
         public void CreateLaptop()
         {
-            Laptop = World.CreateProp(new Model("p_cs_laptop_02"), LaptopPosition, LaptopRotation, false, false);
+            Model m = new Model("p_cs_laptop_02");
+            if (!m.IsLoaded)
+                m.Request(5000);
+            Laptop = World.CreateProp(m, LaptopPosition, LaptopRotation, false, false);
+            m.MarkAsNoLongerNeeded();
         }
 
         /// <summary>

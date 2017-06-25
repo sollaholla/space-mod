@@ -34,7 +34,7 @@ namespace SpaceMod.Extensions
 		{
 			const string path = "./scripts/SpaceMod.log";
 			var originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
-			File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + "\n" : string.Empty)}" +
+			File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
 									$"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
 									$"[{DateTime.Now.Hour:00}:{DateTime.Now.Minute:00}:{DateTime.Now.Second:00}] {message}");
 
@@ -46,12 +46,12 @@ namespace SpaceMod.Extensions
 
 		public static void LogEntityData(Entity entity)
 		{
-			Log("Logging entity data:\n" +
-				$"\tPosition: {entity.Position}\n" +
-				$"\tHeading: {entity.Heading}\n" +
-				$"\tRotation: {entity.Rotation}\n" +
-				$"\tQuaternion: {entity.Quaternion}\n" +
-				$"\tHash: {entity.Model.Hash}\n");
+			Log($"Logging entity data:{Environment.NewLine}" +
+				$"\tPosition: {entity.Position}{Environment.NewLine}" +
+				$"\tHeading: {entity.Heading}{Environment.NewLine}" +
+				$"\tRotation: {entity.Rotation}{Environment.NewLine}" +
+				$"\tQuaternion: {entity.Quaternion}{Environment.NewLine}" +
+				$"\tHash: {entity.Model.Hash}{Environment.NewLine}");
 
 			UI.Notify("Logged entity data.");
 		}
