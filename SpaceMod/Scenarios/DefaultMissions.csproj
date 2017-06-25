@@ -32,10 +32,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>C:\Users\GAMEON\Documents\Visual Studio 2017\Projects\CustomVehicleSpawns\CustomVehicleSpawns\bin\Debug\ScriptHookVDotNet.dll</HintPath>
+      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SolomanMenu">
-      <HintPath>..\..\..\Games\Grand Theft Auto V\scripts\SolomanMenu.dll</HintPath>
+      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SolomanMenu.dll</HintPath>
     </Reference>
     <Reference Include="SpaceMod, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -65,7 +65,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default\"
-COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default\"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default\"
+COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\SpaceMod\Scenarios\Default\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
