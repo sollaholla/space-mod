@@ -31,7 +31,6 @@ namespace SpaceMod
         private Vector3 defaultSpaceOffset = new Vector3(750, 0, 0);
         private Vector3 defaultSpaceRotation = new Vector3(0, 0, 90);
         private bool menuEnabled = true;
-        private bool isMissionInProgress = false;
         private bool preloadModels = false;
         private bool disableWantedStars = true;
         private bool resetWantedLevel = false;
@@ -39,7 +38,7 @@ namespace SpaceMod
         private Keys optionsMenuKey = Keys.NumPad9;
         private CustomScene currentScene;
         // If 0, then intro. If 1, then ending. If 2, then completed.
-        private int missionStatus = 0;
+        private int missionStatus = 2;
         #endregion
 
         #region Internal Missions

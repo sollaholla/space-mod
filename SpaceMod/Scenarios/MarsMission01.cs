@@ -138,7 +138,7 @@ namespace DefaultMissions
                 ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
                 ped.IsOnlyDamagedByPlayer = true;
                 ped.SetDefaultClothes();
-                
+
                 spaceCraft.Heading = (PlayerPed.Position - spaceCraft.Position).ToHeading();
 
                 ped.Task.FightAgainst(PlayerPed);
@@ -368,6 +368,7 @@ namespace DefaultMissions
             if (_satelliteScene.Failed)
             {
                 _satelliteScene.Remove();
+                CurrentScene.SetTimeCycle();
                 CurrentMissionStep++;
                 return;
             }
@@ -379,6 +380,7 @@ namespace DefaultMissions
             if (Game.IsDisabledControlJustPressed(2, Control.Context))
             {
                 _satelliteScene.Remove();
+                CurrentScene.SetTimeCycle();
                 TimeCycleModifier.Clear();
                 UI.ShowSubtitle(string.Empty); // just to clear the subtitle.
                 CurrentMissionStep++;
@@ -402,8 +404,7 @@ namespace DefaultMissions
                 if (iplData != null)
                 {
                     Ipl ipl = iplData.CurrentIpl;
-                    if (ipl != null)
-                        ipl.Peds?.ForEach(ped => ped?.Task.ClearAll());
+                    if (ipl != null) ipl.Peds?.ForEach(ped => ped?.Task.ClearAll());
                 }
 
                 CurrentMissionStep++;
@@ -412,19 +413,17 @@ namespace DefaultMissions
 
         private void SpawnInteriorAliens()
         {
-            Vector3[] spawnPoints =
-                                {
-                        new Vector3(-2014.449f, 3216.207f, 32.81112f),
-                        new Vector3(-1989.808f, 3212.001f, 32.81171f),
-                        new Vector3(-1991.477f, 3205.936f, 32.81038f),
-                        new Vector3(-1997.719f, 3211.335f, 32.83896f)
-                    };
+            Vector3[] spawnPoints = {
+                new Vector3(-2014.449f, 3216.207f, 32.81112f),
+                new Vector3(-1989.808f, 3212.001f, 32.81171f),
+                new Vector3(-1991.477f, 3205.936f, 32.81038f),
+                new Vector3(-1997.719f, 3211.335f, 32.83896f)
+            };
             foreach (var spawn in spawnPoints)
             {
                 var alien = SpaceModLib.CreateAlien(spawn, WeaponHash.MicroSMG);
                 alien.Heading = (PlayerPed.Position - alien.Position).ToHeading();
                 alien.Task.FightAgainst(PlayerPed, -1);
-                //alien.AddBlip().Scale = 0.7f;
                 Aliens.Add(new AlienData { Ped = alien });
             }
         }
@@ -432,16 +431,15 @@ namespace DefaultMissions
         private void DeleteEnteranceBlocker()
         {
             SpaceModLib.ShowSubtitleWithGXT("GTS_LABEL_15");
-            if (Entity.Exists(EnterenceBlocker))
-                EnterenceBlocker.Delete();
+            if (Entity.Exists(EnterenceBlocker)) EnterenceBlocker.Delete();
         }
 
         private void CheckAliensAndUfo()
         {
-            if (Aliens.All(a => a.Ped.IsDead) && Ufos.All(u => Entity.Exists(u.Driver) && u.Driver.IsDead))
-            {
-                CurrentMissionStep++;
-            }
+            if (!(Aliens.All(a => a.Ped.IsDead) && Ufos.All(u => Entity.Exists(u.Driver) && u.Driver.IsDead)))
+                return;
+
+            CurrentMissionStep++;
         }
 
         private void UpdateBlockEnterance()

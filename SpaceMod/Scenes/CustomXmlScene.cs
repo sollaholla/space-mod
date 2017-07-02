@@ -18,6 +18,11 @@ namespace SpaceMod.Scenes
         {
             Time = 23;
             GravityLevel = 3;
+            Orbitals = new List<OrbitalData>();
+            LockedOrbitals = new List<LockedOrbitalData>();
+            SceneLinks = new List<Link>();
+            Ipls = new List<IplData>();
+            CustomScenarios = new List<ScenarioData>();
         }
 
         public string SpaceDomeModel { get; set; }
@@ -46,9 +51,10 @@ namespace SpaceMod.Scenes
 
         public List<ScenarioData> CustomScenarios { get; set; }
 
-        [XmlIgnore] public IplData CurrentIplData { get; set; }
-
-        [XmlIgnore] public string LastSceneFile { get; set; }
+        [XmlIgnore]
+        public IplData CurrentIplData { get; set; }
+        [XmlIgnore]
+        public string LastSceneFile { get; set; }
     }
 
     [System.Serializable]
@@ -115,6 +121,7 @@ namespace SpaceMod.Scenes
         {
             Type = IplType.MapEditor;
             Time = 23;
+            Teleports = new List<Teleport>();
         }
 
         public string Name { get; set; }
@@ -125,7 +132,8 @@ namespace SpaceMod.Scenes
 
         public int Time { get; set; }
 
-        [XmlIgnore] public Ipl CurrentIpl { get; set; }
+        [XmlIgnore]
+        public Ipl CurrentIpl { get; set; }
     }
 
     [System.Serializable]
@@ -137,9 +145,10 @@ namespace SpaceMod.Scenes
 
         public IplData EndIpl { get; set; }
 
-        [XmlIgnore] public Blip StartBlip { get; set; }
-
-        [XmlIgnore] public Blip EndBlip { get; set; }
+        [XmlIgnore]
+        public Blip StartBlip { get; set; }
+        [XmlIgnore]
+        public Blip EndBlip { get; set; }
     }
 
     [System.Serializable]

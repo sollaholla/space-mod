@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet.dll</HintPath>
+      <HintPath>..\..\..\..\..\DLL References\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SolomanMenu">
       <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SolomanMenu.dll</HintPath>

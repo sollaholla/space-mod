@@ -42,7 +42,7 @@ namespace SpaceMod.Scenes
         private float jumpForce = 1.5f;
         private bool useLowGJumping;
         private string timeCycleMod = string.Empty;
-        private bool resetTimeCycle;
+        private bool resetTimeCycle = true;
         private bool didRaiseGears;
         private float timeCycleStrength = 1.0f;
         //private bool didFloatingHelpText;
@@ -65,6 +65,10 @@ namespace SpaceMod.Scenes
         private DateTime _mineTime;
         private bool _startMining;
 
+        /// <summary>
+        /// Our standard constructor.
+        /// </summary>
+        /// <param name="sceneData">The data this scene is based off of.</param>
         public CustomScene(CustomXmlScene sceneData)
         {
             SceneData = sceneData;
@@ -80,9 +84,24 @@ namespace SpaceMod.Scenes
             useLowGJumping = StaticSettings.MoonJump;
         }
 
+        /// <summary>
+        /// The <see cref="CustomXmlScene"/> file that was deserialized.
+        /// </summary>
         public CustomXmlScene SceneData { get; }
+
+        /// <summary>
+        /// The wormholes in this scene.
+        /// </summary>
         public List<Orbital> WormHoles { get; private set; }
+
+        /// <summary>
+        /// The orbital system of this scene.
+        /// </summary>
         public OrbitalSystem OrbitalSystem { get; private set; }
+
+        /// <summary>
+        /// The name of the scene file without extension.
+        /// </summary>
         public string SceneFile { get; internal set; }
 
         internal Weather OverrideWeather { get; private set; }
@@ -107,14 +126,15 @@ namespace SpaceMod.Scenes
 
                 ScriptSettings settings = ScriptSettings.Load(SpaceModDatabase.PathToScenes + "/" + "ExtraSettings.ini");
                 var section = Path.GetFileNameWithoutExtension(SceneFile);
-                OverrideWeather = (Weather)settings.GetValue(section, "weather", 9);
+                OverrideWeather = (Weather)settings.GetValue(section, "weather", 1);
                 Vector3 vehicleSpawn = V3Parse.Read(settings.GetValue(section, "vehicle_surface_spawn"), StaticSettings.DefaultVehicleSpawn);
                 jumpForce = settings.GetValue(section, "jump_force_override", jumpForce);
                 useLowGJumping = settings.GetValue(section, "low_gravity_jumping", useLowGJumping);
                 timeCycleMod = settings.GetValue(section, "time_cycle_mod", timeCycleMod);
                 timeCycleStrength = settings.GetValue(section, "time_cycle_strength", timeCycleStrength);
+                SetTimeCycle();
 
-                PlaceCurrentVehicleOnGround(vehicleSpawn);
+                ConfigurePlayerVehicleForSpace(vehicleSpawn);
                 MovePlayerToGalaxy();
             }
         }
@@ -136,17 +156,9 @@ namespace SpaceMod.Scenes
                     }
                 }
 
-                if (useLowGJumping && SceneData.SurfaceFlag) PlayerPed.SetSuperJumpThisFrame(jumpForce, 1.3f, false);
-                if (!string.IsNullOrEmpty(timeCycleMod))
+                if (useLowGJumping && SceneData.SurfaceFlag)
                 {
-                    Function.Call(Hash.SET_TIMECYCLE_MODIFIER, timeCycleMod);
-                    Function.Call(Hash.SET_TIMECYCLE_MODIFIER_STRENGTH, timeCycleStrength);
-                    resetTimeCycle = false;
-                }
-                else if (!resetTimeCycle)
-                {
-                    Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-                    resetTimeCycle = true;
+                    PlayerPed.SetSuperJumpThisFrame(jumpForce, 1.3f, false);
                 }
 
                 WormHoles?.ForEach(UpdateWormHole);
@@ -206,6 +218,7 @@ namespace SpaceMod.Scenes
                 SceneData.CurrentIplData = null;
                 GameplayCamera.ShakeAmplitude = 0;
                 Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+                Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             }
         }
 
@@ -297,6 +310,18 @@ namespace SpaceMod.Scenes
             return model;
         }
 
+        /// <summary>
+        /// Set the timecycle mod and strength to our internal <see cref="timeCycleMod"/> and <see cref="timeCycleStrength"/>.
+        /// </summary>
+        public void SetTimeCycle()
+        {
+            if (!string.IsNullOrEmpty(timeCycleMod))
+            {
+                Function.Call(Hash.SET_TIMECYCLE_MODIFIER, timeCycleMod);
+                Function.Call(Hash.SET_TIMECYCLE_MODIFIER_STRENGTH, timeCycleStrength);
+            }
+        }
+
         private void LoadIpls()
         {
             SceneData.Ipls?.ForEach(iplData =>
@@ -363,14 +388,14 @@ namespace SpaceMod.Scenes
             _sceneLinkBlips.Add(blip);
         }
 
-        private void PlaceCurrentVehicleOnGround(Vector3 vehicleSpawn)
+        private void ConfigurePlayerVehicleForSpace(Vector3 vehicleSpawn)
         {
             Vehicle vehicle = PlayerPed.CurrentVehicle;
             if (Entity.Exists(vehicle))
             {
                 PlayerLastVehicle = vehicle;
-                PlayerLastVehicle.IsInvincible = true;
-                PlayerLastVehicle.IsPersistent = true;
+                vehicle.IsInvincible = true;
+                vehicle.IsPersistent = true;
                 if (SceneData.SurfaceFlag)
                 {
                     PlayerPed.Task.ClearAllImmediately();
@@ -450,7 +475,7 @@ namespace SpaceMod.Scenes
                 }
             }
 
-            if (PlayerLastVehicle != null && PlayerPed.IsInVehicle())
+            if (PlayerLastVehicle != null && PlayerPed.IsInVehicle(PlayerLastVehicle))
             {
                 Exited?.Invoke(this, SceneData.NextSceneOffSurface, SceneData.SurfaceExitRotation, SceneData.SurfaceExitOffset);
             }
@@ -1155,6 +1180,10 @@ namespace SpaceMod.Scenes
             }
         }
 
+        /// <summary>
+        /// Register a prop as a "minable object".
+        /// </summary>
+        /// <param name="prop"></param>
         public void RegisterObjectForMining(Prop prop)
         {
             if (_registeredMineableObjects.Contains(prop))
@@ -1162,6 +1191,10 @@ namespace SpaceMod.Scenes
             _registeredMineableObjects.Add(prop);
         }
 
+        /// <summary>
+        /// Unregister a prop as a "minable object".
+        /// </summary>
+        /// <param name="prop"></param>
         public void UnregisterObjectForMining(Prop prop)
         {
             _registeredMineableObjects.Remove(prop);
