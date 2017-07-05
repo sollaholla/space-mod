@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using GTA;
 using GTA.Math;
-using GTA.Native;
 using SpaceMod;
 using SpaceMod.Lib;
 using SpaceMod.Scenario;

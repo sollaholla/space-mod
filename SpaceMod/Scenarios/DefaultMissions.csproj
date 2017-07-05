@@ -32,10 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>..\..\..\..\..\DLL References\ScriptHookVDotNet.dll</HintPath>
-    </Reference>
-    <Reference Include="SolomanMenu">
-      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SolomanMenu.dll</HintPath>
+      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SpaceMod, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>

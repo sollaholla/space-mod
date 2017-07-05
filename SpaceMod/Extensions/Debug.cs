@@ -30,9 +30,19 @@ namespace SpaceMod.Extensions
         {
             Function.Call(Hash.DRAW_DEBUG_SPHERE, position.X, position.Y, position.Z, radius, color.R, color.G, color.B, color.A);
 		}
+
+        const string path = "./scripts/SpaceMod.log";
+
+        public static void ClearLog()
+        {
+            if (File.Exists(path))
+            {
+                File.WriteAllText(path, string.Empty);
+            }
+        }
+
 		public static void Log(object message, DebugMessageType type = DebugMessageType.Debug)
 		{
-			const string path = "./scripts/SpaceMod.log";
 			var originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
 			File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
 									$"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +

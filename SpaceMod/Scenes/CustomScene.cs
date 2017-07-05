@@ -33,7 +33,8 @@ namespace SpaceMod.Scenes
         public static event OnLoadedInterior LoadedInterior;
         public event OnExitEvent Exited;
         public event OnMinedObjectEvent Mined;
-        
+
+        private const BlipColor OrbitalBlipColors = (BlipColor)27;
         private readonly object _startLock;
         private readonly object _updateLock;
         private readonly List<Prop> _registeredMineableObjects;
@@ -42,28 +43,28 @@ namespace SpaceMod.Scenes
         private float jumpForce = 1.5f;
         private bool useLowGJumping;
         private string timeCycleMod = string.Empty;
-        private bool resetTimeCycle = true;
         private bool didRaiseGears;
         private float timeCycleStrength = 1.0f;
-        //private bool didFloatingHelpText;
 
-        private float _leftRightFly;
-        private float _upDownFly;
-        private float _rollFly;
-        private float _fly;
-        private Entity _flyHelper;
+        private float leftRightFly;
+        private float upDownFly;
+        private float rollFly;
+        private float fly;
+        private Entity flyHelper;
 
-        private PlayerState _playerState;
-        private bool _enteringVehicle;
+        private PlayerState playerState;
+        private bool enteringVehicle;
 
-        private Vector3 _vehicleRepairPos;
-        private Vector3 _vehicleRepairNormal;
-        private DateTime _vehicleRepairTimeout;
+        private Vector3 vehicleRepairPos;
+        private Vector3 vehicleRepairNormal;
+        private DateTime vehicleRepairTimeout;
 
-        private Prop _currentMineableObject;
-        private Vector3 _lastMinePos;
-        private DateTime _mineTime;
-        private bool _startMining;
+        private Prop currentMineableObject;
+        private Vector3 lastMinePos;
+        private DateTime mineTime;
+        private bool startMining;
+
+        private bool didFloatTutorialInfo;
 
         /// <summary>
         /// Our standard constructor.
@@ -77,7 +78,7 @@ namespace SpaceMod.Scenes
 
             _registeredMineableObjects = new List<Prop>();
             _sceneLinkBlips = new List<Blip>();
-            _playerState = PlayerState.Floating;
+            playerState = PlayerState.Floating;
             _startLock = new object();
             _updateLock = new object();
 
@@ -120,6 +121,8 @@ namespace SpaceMod.Scenes
         {
             lock (_startLock)
             {
+                didFloatTutorialInfo = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", didFloatTutorialInfo);
+
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
                 CreateSpace();
                 LoadIpls();
@@ -161,6 +164,8 @@ namespace SpaceMod.Scenes
                     PlayerPed.SetSuperJumpThisFrame(jumpForce, 1.3f, false);
                 }
 
+                Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME);
+
                 WormHoles?.ForEach(UpdateWormHole);
                 OrbitalSystem?.Process(SpaceModDatabase.GetValidGalaxyDomePosition(PlayerPed));
                 SceneData.Ipls?.ForEach(UpdateTeleports);
@@ -181,7 +186,7 @@ namespace SpaceMod.Scenes
         {
             lock (_updateLock)
             {
-                _flyHelper?.Delete();
+                flyHelper?.Delete();
 
                 while (OldVehicles.Count > 0)
                 {
@@ -271,7 +276,7 @@ namespace SpaceMod.Scenes
             {
                 Blip blip = orbital.AddBlip();
                 blip.Sprite = BlipSprite.Crosshair2;
-                blip.Color = BlipColor.Blue;
+                blip.Color = OrbitalBlipColors;
                 blip.Name = orbital.Name;
             }
             model.MarkAsNoLongerNeeded();
@@ -358,7 +363,7 @@ namespace SpaceMod.Scenes
             List<LockedOrbital> lockedOrbitals = SceneData.LockedOrbitals?.Select(CreateLockedOrbital).Where(o => o != default(LockedOrbital)).ToList();
 
             WormHoles = orbitals?.Where(x => x.IsWormHole).ToList();
-            OrbitalSystem = new OrbitalSystem(spaceDome.Handle, orbitals, lockedOrbitals, -0.3f);
+            OrbitalSystem = new OrbitalSystem(spaceDome?.Handle ?? 0, orbitals, lockedOrbitals, -0.3f);
             SceneData.SceneLinks.ForEach(CreateLink);
         }
 
@@ -382,7 +387,7 @@ namespace SpaceMod.Scenes
             Blip blip = new Blip(World.CreateBlip((SceneData.SurfaceFlag ? SpaceModDatabase.PlanetSurfaceGalaxyCenter : SpaceModDatabase.GalaxyCenter) + link.OriginOffset).Handle)
             {
                 Sprite = BlipSprite.Crosshair2,
-                Color = BlipColor.Blue,
+                Color = OrbitalBlipColors,
                 Name = link.Name
             };
             _sceneLinkBlips.Add(blip);
@@ -445,7 +450,8 @@ namespace SpaceMod.Scenes
                 return;
 
             iplData.CurrentIpl?.Remove();
-            iplData.Teleports?.ForEach(teleport => {
+            iplData.Teleports?.ForEach(teleport =>
+            {
                 teleport?.EndBlip?.Remove();
                 teleport?.StartBlip?.Remove();
                 RemoveIpl(teleport?.EndIpl);
@@ -584,19 +590,19 @@ namespace SpaceMod.Scenes
                 }
 
                 PlayerPed.Task.ClearAnimation("swimming@base", "idle");
-                _enteringVehicle = false;
+                enteringVehicle = false;
             }
             // here's where we're in space without a vehicle.
             else if (!PlayerPed.IsRagdoll && !PlayerPed.IsJumpingOutOfVehicle)
             {
-                switch (_playerState)
+                switch (playerState)
                 {
                     // this let's us float
                     case PlayerState.Floating:
                         if (StaticSettings.UseFloating)
                         {
                             // make sure that we're floating first!
-                            if (!_enteringVehicle)
+                            if (!enteringVehicle)
                             {
                                 ToggleFloat();
                             }
@@ -611,43 +617,43 @@ namespace SpaceMod.Scenes
                                 TryReenterVehicle(PlayerPed, PlayerLastVehicle);
 
                                 // we also want to let the player mine stuff, repair stuff, etc.
-                                if (!_enteringVehicle)
+                                if (!enteringVehicle)
                                 {
                                     // the vehicle is damaged so let's allow the player to repair it.
                                     if (PlayerLastVehicle.IsDamaged || PlayerLastVehicle.EngineHealth < 1000)
                                     {
                                         StartVehicleRepair(PlayerPed, PlayerLastVehicle, 8f);
                                     }
-
-                                    // we also want to allow the player to mine asteroids!
-                                    StartMiningAsteroids(PlayerPed, PlayerLastVehicle, 5f);
                                 }
                             }
+
+                            // we also want to allow the player to mine asteroids!
+                            StartMiningAsteroids(PlayerPed, PlayerLastVehicle, 5f);
                         }
                         break;
                     // this let's us mine asteroids.
                     case PlayerState.Mining:
                         {
-                            if (_currentMineableObject == null || !Entity.Exists(_flyHelper) || _lastMinePos == Vector3.Zero)
+                            if (currentMineableObject == null || !Entity.Exists(flyHelper) || lastMinePos == Vector3.Zero)
                             {
-                                if (Entity.Exists(_flyHelper))
+                                if (Entity.Exists(flyHelper))
                                 {
-                                    _flyHelper.Detach();
+                                    flyHelper.Detach();
                                 }
 
-                                _playerState = PlayerState.Floating;
+                                playerState = PlayerState.Floating;
                                 return;
                             }
 
                             // attach the player to the mineable object.
-                            if (!_startMining)
+                            if (!startMining)
                             {
-                                var dir = _lastMinePos - _flyHelper.Position;
+                                var dir = lastMinePos - flyHelper.Position;
                                 dir.Normalize();
-                                _flyHelper.Quaternion = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir) * _flyHelper.Quaternion;
-                                _mineTime = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
-                                _flyHelper.Position = _lastMinePos - dir;
-                                _startMining = true;
+                                flyHelper.Quaternion = Quaternion.FromToRotation(flyHelper.ForwardVector, dir) * flyHelper.Quaternion;
+                                mineTime = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+                                flyHelper.Position = lastMinePos - dir;
+                                startMining = true;
                             }
                             else
                             {
@@ -658,21 +664,21 @@ namespace SpaceMod.Scenes
                                     return;
                                 }
 
-                                if (DateTime.UtcNow > _mineTime)
+                                if (DateTime.UtcNow > mineTime)
                                 {
                                     PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
-                                    _flyHelper.Detach();
-                                    _flyHelper.HasCollision = false;
-                                    _flyHelper.IsVisible = false;
-                                    _flyHelper.HasGravity = false;
+                                    flyHelper.Detach();
+                                    flyHelper.HasCollision = false;
+                                    flyHelper.IsVisible = false;
+                                    flyHelper.HasGravity = false;
                                     PlayerPed.IsVisible = true;
-                                    Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
+                                    Function.Call(Hash.SET_VEHICLE_GRAVITY, flyHelper, false);
                                     SpaceModLib.NotifyWithGXT("GTS_LABEL_26");
-                                    Mined?.Invoke(this, _currentMineableObject);
-                                    _lastMinePos = Vector3.Zero;
-                                    _currentMineableObject = null;
-                                    _startMining = false;
-                                    _playerState = PlayerState.Floating;
+                                    Mined?.Invoke(this, currentMineableObject);
+                                    lastMinePos = Vector3.Zero;
+                                    currentMineableObject = null;
+                                    startMining = false;
+                                    playerState = PlayerState.Floating;
                                 }
                             }
                         }
@@ -681,10 +687,10 @@ namespace SpaceMod.Scenes
                     case PlayerState.Repairing:
                         {
                             // the vehicle repair failed somehow and we need to fallback to the first switch case.
-                            if (_vehicleRepairPos == Vector3.Zero || _vehicleRepairNormal == Vector3.Zero || _flyHelper == null ||
-                                !_flyHelper.Exists())
+                            if (vehicleRepairPos == Vector3.Zero || vehicleRepairNormal == Vector3.Zero || flyHelper == null ||
+                                !flyHelper.Exists())
                             {
-                                _playerState = PlayerState.Floating;
+                                playerState = PlayerState.Floating;
                                 return;
                             }
 
@@ -694,12 +700,12 @@ namespace SpaceMod.Scenes
                                 Game.IsControlJustPressed(2, Control.MoveRight) ||
                                 Game.IsControlJustPressed(2, Control.VehicleBrake))
                             {
-                                _playerState = PlayerState.Floating;
+                                playerState = PlayerState.Floating;
                                 return;
                             }
 
                             // get some params for this sequence.
-                            float distance = PlayerPosition.DistanceTo(_vehicleRepairPos);
+                            float distance = PlayerPosition.DistanceTo(vehicleRepairPos);
                             Vector3 min, max, min2, max2;
                             float radius;
                             GetDimensions(PlayerPed, out min, out max, out min2, out max2, out radius);
@@ -708,25 +714,25 @@ namespace SpaceMod.Scenes
                             if (distance > radius)
                             {
                                 // make sure to rotate the fly helper towards the repair point.
-                                Vector3 dir = _vehicleRepairPos - _flyHelper.Position;
+                                Vector3 dir = vehicleRepairPos - flyHelper.Position;
                                 dir.Normalize();
-                                Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir) * _flyHelper.Quaternion;
-                                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 5);
+                                Quaternion lookRotation = Quaternion.FromToRotation(flyHelper.ForwardVector, dir) * flyHelper.Quaternion;
+                                flyHelper.Quaternion = Quaternion.Lerp(flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 5);
 
                                 // now move the fly helper towards the direction of the repair point.
-                                _flyHelper.Velocity = dir * 1.5f;
+                                flyHelper.Velocity = dir * 1.5f;
 
                                 // make sure that we update the timer so that if the time runs out, we will fallback to the floating case.
-                                _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+                                vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
                             }
                             else
                             {
                                 // since we're in tange of the vehicle we want to start the repair sequence.
                                 // we're going to stop the movement of the player, and play the repairing animation.
-                                Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, -_vehicleRepairNormal) *
-                                                          _flyHelper.Quaternion;
-                                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
-                                _flyHelper.Velocity = Vector3.Zero;
+                                Quaternion lookRotation = Quaternion.FromToRotation(flyHelper.ForwardVector, -vehicleRepairNormal) *
+                                                          flyHelper.Quaternion;
+                                flyHelper.Quaternion = Quaternion.Lerp(flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
+                                flyHelper.Velocity = Vector3.Zero;
 
                                 // we're returning in this if, so that if we're for some reason not yet playing the animation, we
                                 // want to wait for it to start.
@@ -738,7 +744,7 @@ namespace SpaceMod.Scenes
                                 }
 
                                 // if we've reached the end of the timer, then we're done repairing.
-                                if (DateTime.UtcNow > _vehicleRepairTimeout)
+                                if (DateTime.UtcNow > vehicleRepairTimeout)
                                 {
                                     // repair the vehicle.
                                     PlayerLastVehicle.Repair();
@@ -750,13 +756,13 @@ namespace SpaceMod.Scenes
                                     PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
 
                                     // reset the player to the floating sate.
-                                    _playerState = PlayerState.Floating;
+                                    playerState = PlayerState.Floating;
                                 }
                             }
                         }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException("The player state specified is out of range, and does not exist.");
                 }
             }
         }
@@ -764,7 +770,7 @@ namespace SpaceMod.Scenes
         private void StartMiningAsteroids(Ped ped, Vehicle playerVehicle, float maxDistanceFromObject)
         {
             // make sure the ped isn't in a vehicle. which he shouldn't be, but just in case.
-            if (ped.IsInVehicle(playerVehicle)) return;
+            if (Entity.Exists(playerVehicle) && ped.IsInVehicle(playerVehicle)) return;
 
             // let's start our raycast.
             RaycastResult ray = World.Raycast(ped.Position, ped.ForwardVector, maxDistanceFromObject, IntersectOptions.Everything, ped);
@@ -781,9 +787,9 @@ namespace SpaceMod.Scenes
                 Game.DisableControlThisFrame(2, Control.Context);
                 if (Game.IsDisabledControlJustPressed(2, Control.Context))
                 {
-                    _currentMineableObject = entHit as Prop;
-                    _lastMinePos = ray.HitCoords;
-                    _playerState = PlayerState.Mining;
+                    currentMineableObject = entHit as Prop;
+                    lastMinePos = ray.HitCoords;
+                    playerState = PlayerState.Mining;
                 }
             }
         }
@@ -791,19 +797,24 @@ namespace SpaceMod.Scenes
         private void ToggleFloat()
         {
             // so this is when we're not floating
-            if (_flyHelper == null || !_flyHelper.Exists())
+            if (flyHelper == null || !flyHelper.Exists())
             {
-                _flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition, PlayerPed.Heading);
+                flyHelper = World.CreateVehicle(VehicleHash.Panto, PlayerPosition, PlayerPed.Heading);
 
-                _flyHelper.HasCollision = false;
-                _flyHelper.IsVisible = false;
-                _flyHelper.HasGravity = false;
+                if (flyHelper != null)
+                {
+                    flyHelper.HasCollision = false;
+                    flyHelper.IsVisible = false;
+                    flyHelper.HasGravity = false;
 
-                Function.Call(Hash.SET_VEHICLE_GRAVITY, _flyHelper, false);
-                PlayerPed.Task.ClearAllImmediately();
-                PlayerPed.AttachTo(_flyHelper, 0);
+                    Function.Call(Hash.SET_VEHICLE_GRAVITY, flyHelper, false);
+                    PlayerPed.Task.ClearAllImmediately();
+                    PlayerPed.AttachTo(flyHelper, 0);
 
-                _flyHelper.Velocity = Vector3.Zero;
+                    flyHelper.Velocity = Vector3.Zero;
+
+
+                }
             }
             else // and this is when we're floating
             {
@@ -833,7 +844,14 @@ namespace SpaceMod.Scenes
                 }
                 else // now we're playing the swimming animation.
                 {
-                    FlyEntity(_flyHelper, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, _flyHelper));
+                    if (!didFloatTutorialInfo)
+                    {
+                        SpaceModLib.DisplayHelpTextThisFrame("~BLIP_INFO_ICON~ To rotate your character:~n~Use ~INPUT_VEH_FLY_YAW_LEFT~ ~INPUT_VEH_FLY_YAW_RIGHT~ for left and right.~n~Use ~INPUT_VEH_FLY_ROLL_LR~ for roll.~n~Use ~INPUT_VEH_FLY_PITCH_UD~ for up-down pitch.", "CELL_EMAIL_BCON");
+                        Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", didFloatTutorialInfo = true);
+                        Core.Instance.Settings.Save();
+                    }
+
+                    FlyEntity(flyHelper, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, flyHelper));
                 }
             }
         }
@@ -857,10 +875,10 @@ namespace SpaceMod.Scenes
 
             if (Game.IsDisabledControlJustPressed(2, Control.Context))
             {
-                _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
-                _vehicleRepairPos = ray.HitCoords;
-                _vehicleRepairNormal = ray.SurfaceNormal;
-                _playerState = PlayerState.Repairing;
+                vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
+                vehicleRepairPos = ray.HitCoords;
+                vehicleRepairNormal = ray.SurfaceNormal;
+                playerState = PlayerState.Repairing;
             }
         }
 
@@ -872,9 +890,9 @@ namespace SpaceMod.Scenes
 
             float dist = ped.Position.DistanceTo(doorPos);
 
-            Vector3 dir = doorPos - _flyHelper.Position;
+            Vector3 dir = doorPos - flyHelper.Position;
 
-            if (!_enteringVehicle)
+            if (!enteringVehicle)
             {
                 if (dist < 10f)
                 {
@@ -882,7 +900,7 @@ namespace SpaceMod.Scenes
 
                     if (Game.IsDisabledControlJustPressed(2, Control.Enter))
                     {
-                        _enteringVehicle = true;
+                        enteringVehicle = true;
                     }
                 }
             }
@@ -893,7 +911,7 @@ namespace SpaceMod.Scenes
                     Game.IsControlJustPressed(2, Control.MoveRight) ||
                     Game.IsControlJustPressed(2, Control.VehicleBrake))
                 {
-                    _enteringVehicle = false;
+                    enteringVehicle = false;
                     return;
                 }
 
@@ -901,9 +919,9 @@ namespace SpaceMod.Scenes
                 // since that code is never run if you are in a vehicle and 
                 // _enteringVehicle is false.
 
-                Quaternion lookRotation = Quaternion.FromToRotation(_flyHelper.ForwardVector, dir.Normalized) * _flyHelper.Quaternion;
-                _flyHelper.Quaternion = Quaternion.Lerp(_flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
-                _flyHelper.Velocity = dir.Normalized * 1.5f;
+                Quaternion lookRotation = Quaternion.FromToRotation(flyHelper.ForwardVector, dir.Normalized) * flyHelper.Quaternion;
+                flyHelper.Quaternion = Quaternion.Lerp(flyHelper.Quaternion, lookRotation, Game.LastFrameTime * 15);
+                flyHelper.Velocity = dir.Normalized * 1.5f;
 
                 if (ped.Position.DistanceTo(doorPos) < 1.5f || !vehicle.HasBone("door_dside_f"))
                 {
@@ -912,7 +930,7 @@ namespace SpaceMod.Scenes
                     PlayerPed.Task.ClearAllImmediately();
                     PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
 
-                    _enteringVehicle = false;
+                    enteringVehicle = false;
                 }
             }
         }
@@ -939,14 +957,14 @@ namespace SpaceMod.Scenes
                 roll *= sensitivity;
             }
 
-            _leftRightFly = Mathf.Lerp(_leftRightFly, leftRight, Game.LastFrameTime * .7f);
-            _upDownFly = Mathf.Lerp(_upDownFly, upDown, Game.LastFrameTime * 5);
-            _rollFly = Mathf.Lerp(_rollFly, roll, Game.LastFrameTime * 5);
-            _fly = Mathf.Lerp(_fly, fly, Game.LastFrameTime * 1.3f);
+            leftRightFly = Mathf.Lerp(leftRightFly, leftRight, Game.LastFrameTime * .7f);
+            upDownFly = Mathf.Lerp(upDownFly, upDown, Game.LastFrameTime * 5);
+            rollFly = Mathf.Lerp(rollFly, roll, Game.LastFrameTime * 5);
+            this.fly = Mathf.Lerp(this.fly, fly, Game.LastFrameTime * 1.3f);
 
-            Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.RightVector * _leftRightFly);
-            Quaternion upDownRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.UpVector * _upDownFly);
-            Quaternion rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * _rollFly);
+            Quaternion leftRightRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.RightVector * leftRightFly);
+            Quaternion upDownRotation = Quaternion.FromToRotation(entity.ForwardVector, entity.UpVector * upDownFly);
+            Quaternion rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * rollFly);
             Quaternion rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion;
             entity.Quaternion = Quaternion.Lerp(entity.Quaternion, rotation, Game.LastFrameTime * 1.3f);
 
@@ -954,7 +972,7 @@ namespace SpaceMod.Scenes
             {
                 if (fly > 0)
                 {
-                    var targetVelocity = entity.ForwardVector.Normalized * flySpeed * _fly;
+                    var targetVelocity = entity.ForwardVector.Normalized * flySpeed * this.fly;
                     entity.Velocity = Vector3.Lerp(entity.Velocity, targetVelocity, Game.LastFrameTime * 5);
                 }
                 else if (reverse > 0)
@@ -1062,11 +1080,11 @@ namespace SpaceMod.Scenes
 
         private void DeleteFlyHelper()
         {
-            if (_flyHelper != null)
+            if (flyHelper != null)
             {
-                if (PlayerPed.IsAttachedTo(_flyHelper)) PlayerPed.Detach();
-                _flyHelper.Delete();
-                _flyHelper = null;
+                if (PlayerPed.IsAttachedTo(flyHelper)) PlayerPed.Detach();
+                flyHelper.Delete();
+                flyHelper = null;
             }
         }
 

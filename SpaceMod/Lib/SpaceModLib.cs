@@ -343,10 +343,17 @@ namespace SpaceMod.Lib
             return Function.Call<bool>(Hash.IS_HELP_MESSAGE_BEING_DISPLAYED);
         }
 
-        public static void DisplayHelpTextThisFrame(string helpText)
+        public static void DisplayHelpTextThisFrame(string helpText, string format = "STRING")
         {
-            Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, "STRING");
-            Function.Call(Hash._0x6C188BE134E074AA, helpText);
+            Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, format);
+
+            const int MaxLen = 99;
+
+            for (int i = 0; i < helpText.Length; i += MaxLen)
+            {
+                Function.Call(Hash._0x6C188BE134E074AA, helpText.Substring(i, Math.Min(MaxLen, helpText.Length - i)));
+            }
+
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
         }
 

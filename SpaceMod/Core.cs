@@ -67,6 +67,8 @@ namespace SpaceMod
             SaveSettings();
             CreateCustomMenu();
             RequestModels();
+
+            Debug.Log("Space::Core::Initialized!", DebugMessageType.Debug);
         }
 
         #region Properties
