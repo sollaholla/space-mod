@@ -52,6 +52,7 @@ namespace SpaceMod.Particles
         public void Stop()
         {
             Function.Call(Hash.STOP_PARTICLE_FX_LOOPED, Handle, 1);
+            Function.Call(Hash._REMOVE_NAMED_PTFX_ASSET, Asset);
             Handle = -1;
         }
     }

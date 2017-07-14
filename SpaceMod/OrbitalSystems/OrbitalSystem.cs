@@ -5,7 +5,7 @@ using SpaceMod.Lib;
 
 namespace SpaceMod.OrbitalSystems
 {
-    public enum RotationAxis
+    public enum SkyboxRotationAxis
     {
         Z,
         X,
@@ -14,96 +14,90 @@ namespace SpaceMod.OrbitalSystems
 
     public class OrbitalSystem : Entity
     {
-        private readonly RotationAxis _rotationAxis;
-
-        /// <summary>
-        /// This is an orbital system derived from entity, who's handle is a skybox / prop. Check the <see cref="SpaceModDatabase.SpaceDomeModel"/> 
-        /// for an example of a dome / skybox.
-        /// </summary>
-        /// <param name="handle">The handle of the dome / prop that's the skybox.</param>
-        /// <param name="orbitals">The orbital entity's</param>
-        /// <param name="lockedOrbitals">These entities will be locked to the orbital.</param>
-        /// <param name="skyboxRotationSpeed">The rotation speed of the skybox.</param>
-        /// <param name="rotationAxis">The axis we wish to rotate the skybox on.</param>
-        public OrbitalSystem(int handle, List<Orbital> orbitals, List<LockedOrbital> lockedOrbitals,
-            float skyboxRotationSpeed = 0, RotationAxis rotationAxis = RotationAxis.Z) : base(handle)
+        private readonly SkyboxRotationAxis rotationAxis;
+        
+        public OrbitalSystem(Prop prop, List<Orbital> orbitals, List<AttachedOrbital> attachedOrbitals, float rotationSpeed = 0, SkyboxRotationAxis rotationAxis = SkyboxRotationAxis.Z) : base(prop.Handle)
         {
             Orbitals = orbitals;
-            LockedOrbitals = lockedOrbitals;
-            _rotationAxis = rotationAxis;
-            SkyboxRotationSpeed = skyboxRotationSpeed;
+            AttachedOrbitals = attachedOrbitals;
+            SkyboxRotationSpeed = rotationSpeed;
+
+            this.rotationAxis = rotationAxis;
         }
 
-        public float SkyboxRotationSpeed { get; set; }
+        public float SkyboxRotationSpeed { get; }
 
         public List<Orbital> Orbitals { get; }
 
-        public List<LockedOrbital> LockedOrbitals { get; }
+        public List<AttachedOrbital> AttachedOrbitals { get; }
 
-        public void Process(Vector3 galaxyCenter)
+        public void Update()
         {
             // Set our rotation.
-            SetRotation();
+            //Rotate();
 
             // Stay at the galaxy center. Cause' you ain't leavin boi.
-            Position = galaxyCenter;
+            Position = Database.GetGalaxPosition();
 
             // Update locked orbitals.
-            LockedOrbitals?.ForEach(UpdateLockedOrbital);
+            AttachedOrbitals  ?.ForEach(AttachOrbital);
 
             // Update orbitals.
-            Orbitals?.ForEach(orbital => orbital?.Orbit());
-            if (StaticSettings.ShowCustomUi)
-                Orbitals?.ForEach(orbital => orbital.ShowUiPosition(Orbitals.IndexOf(orbital)));
+            Orbitals        ?.ForEach(orbital => orbital?.Rotate());
         }
 
-        private void SetRotation()
+        private void Rotate()
         {
-            var rotation = Rotation;
-            switch (_rotationAxis)
+            Vector3 rotation = Rotation;
+
+            switch (rotationAxis)
             {
-                case RotationAxis.Z:
+                case SkyboxRotationAxis.Z:
                     rotation.Z += Game.LastFrameTime * SkyboxRotationSpeed;
                     break;
-                case RotationAxis.X:
+                case SkyboxRotationAxis.X:
                     rotation.X += Game.LastFrameTime * SkyboxRotationSpeed;
                     break;
-                case RotationAxis.Y:
+                case SkyboxRotationAxis.Y:
                     rotation.Y += Game.LastFrameTime * SkyboxRotationSpeed;
                     break;
             }
+
             Rotation = rotation;
         }
 
-        private void UpdateLockedOrbital(LockedOrbital lockedOrbital)
+        private void AttachOrbital(AttachedOrbital attachedOrbital)
         {
-            if (!lockedOrbital.IsAttached()) lockedOrbital.AttachTo(this, lockedOrbital.Offset);
+            if (!attachedOrbital.IsAttachedTo(this))
+            {
+                attachedOrbital.AttachTo(this, attachedOrbital.AttachOffset);
+            }
         }
 
-        public void Abort()
+        public new void Delete()
         {
-            Delete();
-            while (LockedOrbitals.Count > 0)
+            foreach(AttachedOrbital o in AttachedOrbitals)
             {
-                LockedOrbitals[0]?.Delete();
-                LockedOrbitals.RemoveAt(0);
+                o.Delete();
             }
-            while (Orbitals.Count > 0)
+
+            foreach (Orbital o in Orbitals)
             {
-                Orbitals[0]?.Delete();
-                Orbitals.RemoveAt(0);
+                o.Delete();
             }
+
+            base.Delete();
         }
 
         /// <summary>
         /// Returns all planets positions and rotations in the array order 0 to length.
         /// </summary>
         /// <returns></returns>
-        public string GetInfo()
+        public override string ToString()
         {
-            var str = string.Empty;
-            Orbitals.ForEach(p => str += $"{p.Name}: position = {p.Position} | rotation = {p.Rotation}\n");
-            return str;
+            string ret = string.Empty;
+            Orbitals.ForEach(o => ret += $"{o.Name}: position = {o.Position} | rotation = {o.Rotation}\n");
+            return ret;
         }
     }
 }

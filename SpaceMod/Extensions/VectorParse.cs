@@ -1,9 +1,9 @@
 ﻿using System;
 using GTA.Math;
 
-namespace SpaceMod.Lib
+namespace SpaceMod.Extensions
 {
-	public static class V3Parse
+	public static class ParseVector3
 	{
 		/// <summary>
 		/// Read a <see cref="Vector3"/> from a <see cref="string"/> representation. Format should be "X:1 Y:2 Z:3". If any number fails to be parsed,

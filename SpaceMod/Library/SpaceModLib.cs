@@ -268,9 +268,9 @@ namespace SpaceMod.Lib
                     .Any(entity1 => entity1.Position.DistanceTo(position) < distance);
         }
 
-        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, int accuracy = 50, float heading = 0)
+        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, PedHash? model = null, int accuracy = 50, float heading = 0)
         {
-            var ped = World.CreatePed(GetAlienModel(), position, heading);
+            var ped = model != null ? World.CreatePed(model.Value, position, heading) : World.CreatePed(GetAlienModel(), position, heading);
             if (ped == null) return new Ped(0);
             ped.Accuracy = 50;
             ped.Weapons.Give(weaponHash, 15, true, true);
@@ -278,10 +278,11 @@ namespace SpaceMod.Lib
             ped.Voice = "ALIENS";
             ped.Accuracy = 15;
             ped.SetDefaultClothes();
-            ped.RelationshipGroup = SpaceModDatabase.AlienRelationship;
+            ped.RelationshipGroup = Database.AlienRelationshipGroup;
             Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
             Function.Call(Hash.SET_PED_COMBAT_RANGE, ped.Handle, 2);
             ped.IsFireProof = true;
+            ped.IsEnemy = true;
             ped.Money = 0;
             return ped;
         }
@@ -308,7 +309,9 @@ namespace SpaceMod.Lib
                 return;
 
             Function.Call(Hash.REQUEST_SCRIPT, name);
+
             var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
+
             while(DateTime.UtcNow < timeout)
             {
                 if (Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
@@ -393,79 +396,29 @@ namespace SpaceMod.Lib
             return Vector3.Distance(entity.Position - entity.UpVector, entity.Position.MoveToGroundArtificial(entity));
         }
 
-        internal static void ShowUIPosition(Entity entity, int index, Vector3 position, string pathToFile, string objectName, UIText nameResText)
-        {
-            if (entity != null)
-            {
-                if (entity.IsOccluded) return;
-                if (!entity.IsOnScreen || !IsOnScreen(entity.Position)) return;
-            }
-            else
-            {
-                if (!IsOnScreen(position)) return;
-            }
-
-            var point = UI.WorldToScreen(position);
-            var filename = Path.Combine(pathToFile, "Reticle.png");
-            var size = new Size(125 / 2, 125 / 2);
-            var halfWidth = size.Width / 2;
-            var halfHeight = size.Height / 2;
-            var imageUpperBound = point.Y - halfHeight;
-            var textColor = Color.DarkMagenta;
-            const int upperTextOffset = 25;
-
-            point = new Point(point.X - halfWidth, imageUpperBound);
-            nameResText.Caption = objectName;
-            nameResText.Position = new Point(point.X + halfWidth, imageUpperBound - upperTextOffset
-                /*we offset the y position so that it sits above the image*/);
-            nameResText.Draw();
-            nameResText.Color = textColor;
-
-            if (File.Exists(filename))
-                UI.DrawTexture(filename, index, 1, 60, point, size);
-        }
-
-        public static void SetSuperJumpThisFrame(this Ped ped, float jumpForce, float rollHeight, bool useRoll = true)
-        {
-            ApplyJumpForce(ped, jumpForce);
-            if (!useRoll) return;
-            if (!(ped.HeightAboveGround <= rollHeight) || !ped.IsInAir) return;
-            ped.Task.ClearAll();
-            ped.Task.PlayAnimation("skydive@parachute@", "land_roll", 8.0f, -1.0f, 500, (AnimationFlags)37,
-                0.0f);
-        }
-
-        private static void ApplyJumpForce(Ped ped, float jumpForce)
-        {
-            if (!JumpFlag(ped)) return;
-            ped.CanRagdoll = false;
-            var direction = ped.UpVector + ped.ForwardVector;
-            var force = direction * jumpForce;
-            ped.ApplyForce(force);
-            ped.CanRagdoll = false;
-        }
-
-        private static bool JumpFlag(Ped ped)
-        {
-            return ped.IsJumping && !ped.IsInAir && ped.IsOnFoot && (ped.IsRunning || ped.IsSprinting || ped.IsWalking) && !ped.IsRagdoll &&
-                            !ped.IsGettingUp && !ped.IsGettingIntoAVehicle
-                            && !ped.IsInCover() && !ped.IsShooting && !ped.IsFalling && !ped.IsBeingJacked &&
-                            !ped.IsBeingStealthKilled && !ped.IsBeingStunned &&
-                            !ped.IsInVehicle() && !ped.IsSwimming;
-        }
-
         public static bool IsOnScreen(this Vector3 vector3)
         {
             Point worldToScreen = UI.WorldToScreen(vector3);
+
             if (worldToScreen.X == 0 && worldToScreen.Y == 0)
                 return false;
 
             return true;
         }
 
-        public static void SetGravityLevel(int level)
+        public static void SetGravityLevel(float level)
         {
-            Function.Call(Hash.SET_GRAVITY_LEVEL, level);
+            SpaceModCppLib.SetGravityLevel(level);
+        }
+
+        public static void RestartScript(string name)
+        {
+            Function.Call(Hash.REQUEST_SCRIPT, name);
+            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) {
+                Script.Yield();
+            }
+            Function.Call(Hash.START_NEW_SCRIPT, name, 1624);
+            Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
         }
 
         public static void Ragdoll(this Ped ped, int duration, RagdollType type)
@@ -475,10 +428,6 @@ namespace SpaceMod.Lib
         
         internal static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, Vector3 destination, CPlaneMission mission, float physicsSpeed, float p9, float heading, float maxAltitude, float minAltitude)
         {
-            /*void TASK_PLANE_MISSION(Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, float destinationX, 
-			 * float destinationY, float destinationZ, int missionType, float physicsSpeed, float p9, 
-			 * float heading, float maxAltitude, float minAltitude)*/
-
             Function.Call(Hash.TASK_PLANE_MISSION, pilot, plane, targetVehicle, targetPed, destination.X, destination.Y, destination.Z, (int)mission,
                 physicsSpeed, p9, heading, maxAltitude, minAltitude);
         }

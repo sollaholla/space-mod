@@ -21,6 +21,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -51,27 +52,27 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Missions\IntroMission.cs" />
-    <Compile Include="Lib\V3Parse.cs" />
-    <Compile Include="Missions\Objects\SatelliteDish.cs" />
-    <Compile Include="SpaceModDatabase.cs" />
-    <Compile Include="Lib\GTSLib.cs" />
-    <Compile Include="Scenario\CustomScenario.cs" />
-    <Compile Include="Scenes\CustomScene.cs" />
-    <Compile Include="Scenes\Interiors\Ipl.cs" />
+    <Compile Include="Extensions\VectorParse.cs" />
+    <Compile Include="Missions\Types\SatelliteDish.cs" />
+    <Compile Include="Database.cs" />
+    <Compile Include="Library\SpaceModCppLib.cs" />
+    <Compile Include="Scenario\Scenario.cs" />
+    <Compile Include="Scenes\Scene.cs" />
+    <Compile Include="Scenes\Interiors\Interior.cs" />
     <Compile Include="Scenes\Interiors\Map.cs" />
     <Compile Include="Scenes\Interiors\MapObject.cs" />
     <Compile Include="OrbitalSystems\OrbitalSystem.cs" />
     <Compile Include="OrbitalSystems\Orbital.cs" />
-    <Compile Include="Scenes\CustomXmlScene.cs" />
-    <Compile Include="OrbitalSystems\LockedOrbital.cs" />
+    <Compile Include="Scenes\SceneInfo.cs" />
+    <Compile Include="OrbitalSystems\AttachedOrbital.cs" />
     <Compile Include="Extensions\Debug.cs" />
     <Compile Include="Core.cs" />
-    <Compile Include="Extensions\MyXmlSerializer.cs" />
+    <Compile Include="Extensions\XmlSerializer.cs" />
     <Compile Include="Particles\PtfxLooped.cs" />
     <Compile Include="Particles\PtfxNonLooped.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StaticSettings.cs" />
-    <Compile Include="Lib\SpaceModLib.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="Library\SpaceModLib.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

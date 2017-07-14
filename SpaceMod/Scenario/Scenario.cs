@@ -1,23 +1,20 @@
 ﻿using System.Threading;
 using GTA;
 using SpaceMod.Scenes;
+using System.IO;
 
-namespace SpaceMod.Scenario
+namespace SpaceMod.Scenarios
 {
-    public abstract class CustomScenario
+    internal delegate void OnScenarioCompleted(Scenario scenario, bool success);
+
+    public abstract class Scenario
     {
-        private ScriptSettings _settings;
+        internal event OnScenarioCompleted completed;
+        private ScriptSettings settings;
+        private readonly object updateLock = new object();
 
-        public ScriptSettings Settings
-            => _settings ?? (_settings = ScriptSettings.Load(SpaceModDatabase.PathToScenarios + "/" + this + ".ini"));
-
-        internal delegate void OnCompletedEvent(CustomScenario scenario, bool success);
-
-        internal event OnCompletedEvent Completed;
-
-        private readonly object _updateLock = new object();
-
-        public CustomScene CurrentScene => Core.Instance.GetCurrentScene();
+        public ScriptSettings Settings => settings ?? (settings = ScriptSettings.Load(Path.ChangeExtension(Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
+        public Scene CurrentScene => Core.Instance.GetCurrentScene();
 
         internal bool IsScenarioComplete()
         {
@@ -38,7 +35,7 @@ namespace SpaceMod.Scenario
 
         internal void Update()
         {
-            if (!Monitor.TryEnter(_updateLock)) return;
+            if (!Monitor.TryEnter(updateLock)) return;
 
             try
             {
@@ -46,14 +43,14 @@ namespace SpaceMod.Scenario
             }
             finally
             {
-                Monitor.Exit(_updateLock);
+                Monitor.Exit(updateLock);
             }
         }
 
         /// <summary>
         /// This is where you spawn entities or setup variables.
         /// </summary>
-        public abstract void Start();
+        public abstract void OnStart();
 
         /// <summary>
         /// This is where your code will be updated.
@@ -76,7 +73,7 @@ namespace SpaceMod.Scenario
         /// Called whenever you enter the specified scene. It is called even if you have 
         /// completed the mission. 
         /// </summary>
-        public abstract void OnEnterScene();
+        public abstract void OnAwake();
 
         /// <summary>
         /// End's this scenario and discontinues running it.
@@ -84,14 +81,13 @@ namespace SpaceMod.Scenario
         /// <param name="success">True if we completed this scenario.</param>
         public void EndScenario(bool success)
         {
-            lock (_updateLock)
+            lock (updateLock)
             {
                 if (success)
                 {
                     SetScenarioComplete();
-                    GTA.Native.Function.Call(GTA.Native.Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                }                                                          // This can be "TREVOR_SMALL_01" or "DEAD" or "GENERIC_FAILED" too.
-                Completed?.Invoke(this, success);
+                }
+                completed?.Invoke(this, success);
                 OnEnded(success);
             }
         }

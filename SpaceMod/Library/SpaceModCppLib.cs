@@ -1,25 +1,23 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using GTA;
-using GTA.Math;
+﻿using System.Runtime.InteropServices;
 using GTA.Native;
 
 namespace SpaceMod.Lib
 {
-    internal static class GTSLib
+    internal static class SpaceModCppLib
     {
-        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_InitCredits")]
-        private static extern bool InitCredits();
-        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_EndCredits")]
-        private static extern void EndCredits();
         [DllImport("GTSLib.dll", EntryPoint = "GTSLib_Init")]
         private static extern bool Init();
 
+        static SpaceModCppLib()
+        {
+            Init();
+        }
+
+        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_InitCredits")]
+        private static extern bool InitCredits();
+
         public static void RollCredits()
         {
-            if (!Init())
-                return;
-
             if (InitCredits())
             {
                 Function.Call(Hash.CLEAR_PRINTS);
@@ -41,6 +39,9 @@ namespace SpaceMod.Lib
             }
         }
 
+        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_EndCredits")]
+        private static extern void EndCredits();
+
         public static void CutCredits()
         {
             Function.Call(Hash.PLAY_END_CREDITS_MUSIC, false);
@@ -55,6 +56,14 @@ namespace SpaceMod.Lib
             Function.Call(Hash.DISPLAY_RADAR, true);
             Function.Call(Hash.DISPLAY_HUD, true);
             EndCredits();
+        }
+
+        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_SetWorldGravity")]
+        private static extern bool GTSLib_SetWorldGravity(float gravity);
+
+        public static void SetGravityLevel(float gravity)
+        {
+            GTSLib_SetWorldGravity(gravity);
         }
     }
 }

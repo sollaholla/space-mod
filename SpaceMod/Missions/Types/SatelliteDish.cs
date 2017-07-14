@@ -1,7 +1,7 @@
 ﻿using GTA.Math;
 using GTA;
 
-namespace SpaceMod.Missions.Objects
+namespace SpaceMod.Missions.Types
 {
     public class SatelliteDish
     {

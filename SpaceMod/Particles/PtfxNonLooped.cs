@@ -49,6 +49,7 @@ namespace SpaceMod.Particles
 		public virtual void Remove()
 		{
 			Function.Call(Hash.REMOVE_PARTICLE_FX, Handle, 1);
+            Function.Call(Hash._REMOVE_NAMED_PTFX_ASSET, Asset);
 			Handle = -1;
 		}
 	}

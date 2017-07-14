@@ -5,14 +5,14 @@ using GTA.Native;
 using GTA.Math;
 using System.Drawing;
 using SpaceMod.Lib;
-using SpaceMod.Missions.Objects;
-using SpaceMod.Scenario;
+using SpaceMod.Missions.Types;
+using SpaceMod.Scenarios;
 using SpaceMod.Scenes.Interiors;
 using System;
 
 namespace SpaceMod.Missions
 {
-    public class IntroMission : CustomScenario
+    public class IntroMission : Scenarios.Scenario
     {
         private int missionStep = 0;
 
@@ -26,7 +26,7 @@ namespace SpaceMod.Missions
 
         private Blip humaneLabsBlip;
 
-        private Ipl humaneLabsIpl;
+        private Interior humaneLabsIpl;
 
         private Vector3 humaneLabsEnterance = new Vector3(3574.148f, 3736.34f, 36.64266f);
 
@@ -58,16 +58,18 @@ namespace SpaceMod.Missions
 
         private List<Vehicle> Vehicles { get; }
 
-        public override void OnEnterScene() { }
+        public override void OnAwake() { }
 
-        public override void Start()
+        public override void OnStart()
         {
             while (Game.IsLoading)
                 Script.Yield();
 
+            missionStep = 10;
+
             CreateColonel();
 
-            humaneLabsIpl = new Ipl("v_lab");
+            humaneLabsIpl = new Interior("v_lab");
         }
 
         private void CreateColonel()
@@ -345,7 +347,7 @@ namespace SpaceMod.Missions
                         PlayerPed.Position = humaneLabsEnterance - Vector3.WorldUp;
                         PlayerPed.Heading = -173.5802f;
                         humaneLabsBlip?.Remove();
-                        Peds.ForEach(p => p.Delete());
+                        Peds?.ForEach(p => p?.Delete());
                         Script.Wait(750);
                         Game.FadeScreenIn(1000);
                         SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_13");
@@ -397,7 +399,8 @@ namespace SpaceMod.Missions
                     break;
                 case 9:
 
-                    Vehicles.ForEach(v => {
+                    Vehicles.ForEach(v =>
+                    {
                         if (v == null || !v.Exists() || v.IsDead)
                             return;
 
@@ -411,8 +414,14 @@ namespace SpaceMod.Missions
                         }
                     });
 
-                    Peds.ForEach(p => {
-                        if (p == null || !p.Exists() || p.IsDead)
+                    Peds.ForEach(p =>
+                    {
+                        if (!Entity.Exists(p))
+                        {
+                            return;
+                        }
+
+                        if (p.IsDead)
                         {
                             if (Blip.Exists(p.CurrentBlip))
                                 p.CurrentBlip.Remove();
@@ -435,8 +444,8 @@ namespace SpaceMod.Missions
                             colonel.CurrentBlip.Alpha = 255;
                             colonel.CurrentBlip.ShowRoute = true;
                         }
-                        Peds.ForEach(p => p.CurrentBlip?.Remove());
-                        Vehicles.ForEach(v => v.CurrentBlip?.Remove());
+                        Peds.ForEach(p => p?.CurrentBlip?.Remove());
+                        Vehicles.ForEach(v => v?.CurrentBlip?.Remove());
 
                         missionStep++;
                     }
@@ -453,7 +462,31 @@ namespace SpaceMod.Missions
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
-                        // TODO: Get briefed.
+                        PlayerPed.Heading = (colonel.Position - PlayerPed.Position).ToHeading();
+                        PlayerPed.Task.ChatTo(colonel);
+                        PlayerPed.Task.StandStill(-1);
+                        colonel.Task.ChatTo(PlayerPed);
+
+                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_14");
+                        Script.Wait(7000);
+                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_15");
+                        Script.Wait(7000);
+                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_16");
+                        Script.Wait(7000);
+                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_17");
+                        Script.Wait(7000);
+                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_18");
+                        Script.Wait(2000);
+                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_19");
+                        Script.Wait(4000);
+
+                        Game.FadeScreenOut(1500);
+                        Script.Wait(1500);
+                        PlayerPed.Task.ClearAll();
+                        EndScenario(true);
+                        Game.FadeScreenIn(1500);
+
+                        ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE("~g~" + Game.GetGXTEntry("INTRO_LABEL_20"));
                     }
 
                     break;

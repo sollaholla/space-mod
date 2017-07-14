@@ -4,6 +4,7 @@ using System.IO;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using System.Diagnostics;
 
 namespace SpaceMod.Extensions
 {
@@ -43,14 +44,19 @@ namespace SpaceMod.Extensions
 
 		public static void Log(object message, DebugMessageType type = DebugMessageType.Debug)
 		{
-			var originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
-			File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
+			string originalText = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
+
+            Type t = new StackTrace().GetFrame(1).GetMethod().ReflectedType;
+            string nmspc = t.Namespace + "." + t.Name;
+
+
+            File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
 									$"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
-									$"[{DateTime.Now.Hour:00}:{DateTime.Now.Minute:00}:{DateTime.Now.Second:00}] {message}");
+									$"[{DateTime.Now.Hour:00}:{DateTime.Now.Minute:00}:{DateTime.Now.Second:00}] {nmspc} => {message}");
 
 			if (type == DebugMessageType.Error)
 			{
-				UI.Notify("An error has occured. You can find more information in SpaceMod.log");
+				UI.Notify(Database.NotifyHeader + "An error has occured. You can find more information in SpaceMod.log");
 			}
 		}
 
@@ -63,7 +69,7 @@ namespace SpaceMod.Extensions
 				$"\tQuaternion: {entity.Quaternion}{Environment.NewLine}" +
 				$"\tHash: {entity.Model.Hash}{Environment.NewLine}");
 
-			UI.Notify("Logged entity data.");
+			UI.Notify(Database.NotifyHeader + "Logged entity position rotation etc...");
 		}
 
 	}
