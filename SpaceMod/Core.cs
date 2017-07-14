@@ -350,17 +350,16 @@ namespace GTS
             List<dynamic> dynamicList;
 
             UIMenu vehicleSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Vehicles");
-            UIMenuListItem vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(), (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
+            UIMenuListItem vehicleSpeedList = new UIMenuListItem("Vehicle Speed", dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(), (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) => {
-                GTS.Settings.VehicleFlySpeed = index == -1 ? 0 : dynamicList[index];
+                GTS.Settings.VehicleFlySpeed = sender.IndexToItem(index);
             };
 
             int flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
             UIMenuListItem vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 dynamicList = Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) => {
-                GTS.Settings.MouseControlFlySensitivity = index == -1 ? GTS.Settings.MouseControlFlySensitivity : dynamicList[index];
+                GTS.Settings.MouseControlFlySensitivity = sender.IndexToItem(index);
             };
 
             vehicleSettingsMenu.AddItem(vehicleSpeedList);
@@ -392,7 +391,7 @@ namespace GTS
             saveSettingsItem.SetLeftBadge(UIMenuItem.BadgeStyle.Star);
             saveSettingsItem.Activated += (sender, item) => {
                 SaveSettings();
-                UI.Notify(Database.NotifyHeader + "Settings ~b~saved~s~.", true);
+                UI.Notify(Database.NotifyHeader + "Settings ~h~saved~s~!", true);
             };
             settingsMenu.AddItem(saveSettingsItem);
 
@@ -415,14 +414,7 @@ namespace GTS
 
             menuPool.Add(mainMenu);
             menuPool.RefreshIndex();
-            menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0, Color.Maroon));
-
-            //menuPool.Menus.Add(settingsMenu);
-            //menuPool.Menus.Add(userInterfaceMenu);
-            //menuPool.Menus.Add(vehicleSettingsMenu);
-            //menuPool.Menus.Add(sceneSettingsMenu);
-            //menuPool.Menus.Add(playerSettingsMenu);
-            //menuPool.Menus.Add(scenesMenu);
+            menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0, ColorTranslator.FromHtml("#8000ff")));
         }
 
         private void RequestModels()
@@ -467,6 +459,7 @@ namespace GTS
 
         private void DoSceneUpdate()
         {
+            Function.Call(Hash.SET_WIND_SPEED, 0.0f);
             Scenarios?.ForEach(scenario => scenario.Update());
             Function.Call(Hash._CLEAR_CLOUD_HAT);
             if (PlayerPed.CurrentVehicle != null)

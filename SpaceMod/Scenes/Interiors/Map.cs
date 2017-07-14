@@ -14,15 +14,13 @@ using GTA.Math;
 
 namespace GTS.Scenes.Interiors
 {
-    public class Map
+    internal class Map
     {
         public List<MapObject> Objects = new List<MapObject>();
         public List<MapObject> RemoveFromWorld = new List<MapObject>();
-        public List<Marker> Markers = new List<Marker>();
-        public MapMetadata Metadata;
     }
 
-    public class MapMetadata
+    internal class MapMetadata
     {
         public MapMetadata()
         {
@@ -43,22 +41,5 @@ namespace GTS.Scenes.Interiors
         {
             return false;
         }
-    }
-
-    public class Marker
-    {
-        public MarkerType Type;
-        public Vector3 Position;
-        public Vector3 Rotation;
-        public Vector3 Scale;
-        public Vector3? TeleportTarget;
-        public int Red;
-        public int Green;
-        public int Blue;
-        public int Alpha;
-        public bool BobUpAndDown;
-        public bool RotateToCamera;
-        public bool OnlyVisibleInEditor;
-        public int Id;
     }
 }

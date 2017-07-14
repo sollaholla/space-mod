@@ -10,4 +10,7 @@
 
         void Stop();
     }
+
+    public interface IEvent : ICutScene
+    { }
 }

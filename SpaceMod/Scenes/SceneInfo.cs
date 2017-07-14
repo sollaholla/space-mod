@@ -18,7 +18,7 @@ namespace GTS.Scenes
 
     [System.Serializable]
     [XmlRoot("CSceneInfoData")]
-    public class SceneInfo : NextSceneInfo
+    public sealed class SceneInfo : NextSceneInfo
     {
         public SceneInfo()
         {

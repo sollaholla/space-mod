@@ -62,8 +62,7 @@ namespace DefaultMissions
                     break;
                 case 1:
                     ProcessAliens();
-                    if (!AreAllAliensDead())
-                        return;
+                    if (!AreAllAliensDead()) return;
                     missionStep++;
                     break;
                 case 2:
@@ -262,5 +261,22 @@ namespace DefaultMissions
             return aliens.TrueForAll(x => x.IsDead) && ufo.IsDead;
         }
         #endregion
+
+        private class MarsGreenhouseEvent : IEvent
+        {
+            public bool Complete { get; set; }
+
+            public void Start()
+            {
+            }
+
+            public void Stop()
+            {
+            }
+
+            public void Update()
+            {
+            }
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace GTS.Scenes
     public delegate void OnMinedObjectEvent(Scene scene, Prop mineableObject);
     #endregion
 
-    public class Scene
+    public sealed class Scene
     {
         #region Fields
         public const BlipColor MarkerBlipColor = (BlipColor)27;
@@ -605,6 +605,11 @@ namespace GTS.Scenes
 
         private void DrawMarkers()
         {
+            if (!Settings.ShowCustomUi)
+            {
+                return;
+            }
+
             if (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, ReticleTextureDict))
             {
                 Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, ReticleTextureDict);

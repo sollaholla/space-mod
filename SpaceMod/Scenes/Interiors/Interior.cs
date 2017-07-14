@@ -9,7 +9,7 @@ using GTS.Library;
 
 namespace GTS.Scenes.Interiors
 {
-    public class Interior
+    public sealed class Interior
     {
         internal Dictionary<string, string> ScenarioDatabase = new Dictionary<string, string> {
             {"Drink Coffee",  "WORLD_HUMAN_AA_COFFEE"},
@@ -67,8 +67,6 @@ namespace GTS.Scenes.Interiors
 
         public List<Ped> Peds { get; }
 
-        public List<Marker> Markers { get; private set; }
-
         public string Name { get; }
 
         public InteriorType Type => type;
@@ -95,8 +93,6 @@ namespace GTS.Scenes.Interiors
                     map = XmlSerializer.Deserialize<Map>(Database.PathToInteriors + "/" + Name + ".xml");
                     if (map != null && map != default(Map))
                     {
-                        Markers = map.Markers ?? new List<Marker>();
-
                         map.Objects?.ForEach(InstantiateObject);
                         LogMapObjects();
                     }

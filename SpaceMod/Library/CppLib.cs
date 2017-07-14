@@ -6,21 +6,21 @@ namespace GTS.Library
 {
     internal static class GTSLib
     {
-        private static bool initialized = false;
+        //private static bool initialized = false;
 
-        [DllImport("GTSLib.dll")]
-        private static extern bool GTSLib_Init();
+        //[DllImport("GTSLib.dll")]
+        //private static extern bool GTSLib_Init();
         
-        [DllImport("GTSLib.dll")]
+        [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_InitCredits();
 
         public static void RollCredits()
         {
-            if (!initialized)
-            {
-                GTSLib_Init();
-                initialized = true;
-            }
+            //if (!initialized)
+            //{
+            //    GTSLib_Init();
+            //    initialized = true;
+            //}
 
             if (GTSLib_InitCredits())
             {
@@ -43,16 +43,16 @@ namespace GTS.Library
             }
         }
 
-        [DllImport("GTSLib.dll")]
+        [DllImport("GTSLib.asi")]
         private static extern void GTSLib_EndCredits();
 
         public static void CutCredits()
         {
-            if (!initialized)
-            {
-                GTSLib_Init();
-                initialized = true;
-            }
+            //if (!initialized)
+            //{
+            //    GTSLib_Init();
+            //    initialized = true;
+            //}
 
             Function.Call(Hash.PLAY_END_CREDITS_MUSIC, false);
             Function.Call(Hash.SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY, false);
@@ -68,16 +68,16 @@ namespace GTS.Library
             GTSLib_EndCredits();
         }
 
-        [DllImport("GTSLib.dll")]
+        [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_SetWorldGravity(Single gravity);
 
         public static void SetGravityLevel(Single gravity)
         {
-            if (!initialized)
-            {
-                GTSLib_Init();
-                initialized = true;
-            }
+            //if (!initialized)
+            //{
+            //    GTSLib_Init();
+            //    initialized = true;
+            //}
 
             GTSLib_SetWorldGravity(gravity);
         }
