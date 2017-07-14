@@ -14,13 +14,13 @@ using GTA.Math;
 
 namespace GTS.Scenes.Interiors
 {
-    internal class Map
+    public class Map
     {
         public List<MapObject> Objects = new List<MapObject>();
         public List<MapObject> RemoveFromWorld = new List<MapObject>();
     }
 
-    internal class MapMetadata
+    public class MapMetadata
     {
         public MapMetadata()
         {
