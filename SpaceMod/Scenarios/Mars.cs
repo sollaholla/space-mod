@@ -1,12 +1,12 @@
 ﻿using System;
-using SpaceMod.Scenarios;
+using GTS.Scenarios;
 using GTA.Native;
 using GTA;
 using System.Collections.Generic;
-using SpaceMod.Particles;
+using GTS.Particles;
 using GTA.Math;
 using System.Linq;
-using SpaceMod.Lib;
+using GTS.Library;
 
 namespace DefaultMissions
 {
@@ -135,7 +135,7 @@ namespace DefaultMissions
                 if (Entity.Exists(pilot))
                 {
                     pilot.SetDefaultClothes();
-                    pilot.RelationshipGroup = SpaceMod.Database.AlienRelationshipGroup;
+                    pilot.RelationshipGroup = GTS.Database.AlienRelationshipGroup;
 
                     Function.Call(Hash.TASK_PLANE_MISSION, pilot, vehicle, 0, Game.Player.Character, 0, 0, 0, 6, 0f, 0f, 0f, 0f, center.Z + 150f);
                     Function.Call(Hash._SET_PLANE_MIN_HEIGHT_ABOVE_TERRAIN, vehicle, center.Z + 150f);

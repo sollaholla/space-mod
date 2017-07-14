@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26206.0
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceMod", "SpaceMod\SpaceMod.csproj", "{9E7B4474-337E-4221-ABF3-4947E9C011AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS", "SpaceMod\GTS.csproj", "{9E7B4474-337E-4221-ABF3-4947E9C011AD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultMissions", "SpaceMod\Scenarios\DefaultMissions.csproj", "{5F9C71F3-CADB-4085-AC4E-97C770124771}"
 EndProject

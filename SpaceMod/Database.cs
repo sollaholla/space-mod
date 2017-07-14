@@ -1,13 +1,13 @@
 ﻿using GTA;
 using GTA.Math;
 
-namespace SpaceMod
+namespace GTS
 {
     public static class Database
 	{
-		internal const string PathToInteriors =   ".\\scripts\\SpaceMod\\Interiors";
-		internal const string PathToScenes =      ".\\scripts\\SpaceMod\\Scenes";
-		internal const string PathToScenarios =   ".\\scripts\\SpaceMod\\Scenarios";
+		internal const string PathToInteriors =   ".\\scripts\\Space\\Interiors";
+		internal const string PathToScenes =      ".\\scripts\\Space\\Scenes";
+		internal const string PathToScenarios =   ".\\scripts\\Space\\Scenarios";
         internal const string NotifyHeader =      "~p~~h~Grand Theft Space~h~~n~~s~";
 
         static Database()

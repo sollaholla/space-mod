@@ -6,7 +6,7 @@ using GTA.Math;
 using GTA.Native;
 using System.Diagnostics;
 
-namespace SpaceMod.Extensions
+namespace GTS.Extensions
 {
 	public enum DebugMessageType
 	{
@@ -32,7 +32,7 @@ namespace SpaceMod.Extensions
             Function.Call(Hash.DRAW_DEBUG_SPHERE, position.X, position.Y, position.Z, radius, color.R, color.G, color.B, color.A);
 		}
 
-        const string path = "./scripts/SpaceMod.log";
+        const string path = ".\\scripts\\GTS.log";
 
         public static void ClearLog()
         {
@@ -52,11 +52,11 @@ namespace SpaceMod.Extensions
 
             File.WriteAllText(path, $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
 									$"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
-									$"[{DateTime.Now.Hour:00}:{DateTime.Now.Minute:00}:{DateTime.Now.Second:00}] {nmspc} => {message}");
+									$"[{DateTime.Now.ToString("MM-dd-yyyy")}] [{DateTime.Now.ToString("hh:mm:ss")}] {nmspc} => {message}");
 
 			if (type == DebugMessageType.Error)
 			{
-				UI.Notify(Database.NotifyHeader + "An error has occured. You can find more information in SpaceMod.log");
+				UI.Notify(Database.NotifyHeader + "An error has occured. You can find more information in Space.log");
 			}
 		}
 

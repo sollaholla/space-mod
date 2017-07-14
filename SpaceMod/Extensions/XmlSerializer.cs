@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace SpaceMod.Extensions
+namespace GTS.Extensions
 {
     public static class XmlSerializer
     {
@@ -9,11 +9,11 @@ namespace SpaceMod.Extensions
         {
             T obj = default(T);
 
-            Debug.Log("Attempting to deserialize: " + path);
+            Debug.Log("Attempting to deserialize: " + Path.GetFileName(path));
 
 	        if (!File.Exists(path))
 	        {
-				Debug.Log($"Deserialize - File {path} does not exist!");
+				Debug.Log($"Deserialize - File {Path.GetFileName(path)} does not exist!");
 		        return obj;
 	        }
             try

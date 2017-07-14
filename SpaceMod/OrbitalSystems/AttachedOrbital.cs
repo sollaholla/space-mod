@@ -1,7 +1,7 @@
 ﻿using GTA;
 using GTA.Math;
 
-namespace SpaceMod.OrbitalSystems
+namespace GTS.OrbitalSystems
 {
     public class AttachedOrbital : Entity
     {

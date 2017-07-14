@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,15 +8,15 @@ using System.Windows.Forms;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using SpaceMod.Extensions;
-using SpaceMod.Lib;
-using SpaceMod.Scenarios;
-using SpaceMod.Scenes;
-using SpaceMod.Missions;
-using SolomanMenu;
-using Menu = SolomanMenu.Menu;
+using GTS.Extensions;
+using GTS.Library;
+using GTS.Scenarios;
+using GTS.Scenes;
+using GTS.Missions;
+using NativeUI;
+using System.Drawing;
 
-namespace SpaceMod
+namespace GTS
 {
     internal class Core : Script
     {
@@ -41,9 +40,9 @@ namespace SpaceMod
 
         #region Misc
         private Scene currentScene;
-        private MenuConnector menuController;
-        private Menu mainMenu;
-        private readonly object _tickLock;
+        private MenuPool menuPool;
+        private UIMenu mainMenu;
+        private readonly object tickLock;
         #endregion
 
         #region Settings
@@ -74,7 +73,7 @@ namespace SpaceMod
         /// </summary>
         public Core()
         {
-            _tickLock = new object();
+            tickLock = new object();
             Scenarios = new List<Scenario>();
 
             Instance = this;
@@ -133,6 +132,10 @@ namespace SpaceMod
         {
             Debug.ClearLog();
             Debug.Log("Thread disposed...");
+            if (dispose)
+            {
+                OnAborted(null, new EventArgs());
+            }
             base.Dispose(dispose);
         }
 
@@ -145,13 +148,13 @@ namespace SpaceMod
             PlayerPed.Task.ClearAll();
             PlayerPed.HasGravity = true;
             PlayerPed.FreezePosition = false;
-            PlayerPed.FreezePosition = false;
+            PlayerPed.CanRagdoll = false;
 
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
-            SpaceModLib.SetGravityLevel(9.81f);
-            SpaceModLib.RestartScript("blip_controller");
-            SpaceModCppLib.CutCredits();
+            Utils.SetGravityLevel(9.81f);
+            Utils.RestartScript("blip_controller");
+            GTSLib.CutCredits();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Game.MissionFlag = !didSetMissionFlag;
             Effects.Stop();
@@ -161,12 +164,8 @@ namespace SpaceMod
             if (currentScene != default(Scene))
             {
                 GiveRespawnControlToGame();
-
                 if (!PlayerPed.IsDead)
-                {
                     PlayerPosition = Database.TrevorAirport;
-                }
-
                 ResetWeather();
             }
             currentScene = null;
@@ -177,23 +176,31 @@ namespace SpaceMod
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (menuController?.AreMenusVisible() ?? false)
+            if (menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
             if (e.KeyCode != optionsMenuKey)
                 return;
 
-            mainMenu.Draw = true;
+            mainMenu.Visible = !mainMenu.Visible;
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            if (!Monitor.TryEnter(_tickLock)) return;
+            if (!Monitor.TryEnter(tickLock)) return;
             try
             {
                 try
                 {
-                    menuController?.UpdateMenus();
+                    if (menuPool != null)
+                    {
+                        menuPool.ProcessMenus();
+
+                        if (menuPool.IsAnyMenuOpen())
+                        {
+                            UI.HideHudComponentThisFrame(HudComponent.HelpText);
+                        }
+                    }
 
                     DisableWantedStars();
 
@@ -201,7 +208,7 @@ namespace SpaceMod
                     {
                         if (didRestartScripts)
                         {
-                            SpaceModLib.TerminateScriptByName("blip_controller");
+                            Utils.TerminateScriptByName("blip_controller");
                             didRestartScripts = false;
                         }
 
@@ -212,7 +219,7 @@ namespace SpaceMod
                     {
                         if (!didRestartScripts)
                         {
-                            SpaceModLib.RestartScript("blip_controller");
+                            Utils.RestartScript("blip_controller");
                             didRestartScripts = true;
                         }
 
@@ -226,14 +233,14 @@ namespace SpaceMod
                 // not finish we will wait until it does to exit this method.
                 finally
                 {
-                    Monitor.Exit(_tickLock);
+                    Monitor.Exit(tickLock);
                 }
             }
             // Catch any exception in our mod, since this is our only script.
             catch (Exception ex)
             {
                 Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
-                throw;
+                Abort();
             }
         }
         #endregion
@@ -249,13 +256,13 @@ namespace SpaceMod
             defaultSpaceOffset = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_offset"), defaultSpaceOffset);
             defaultSpaceRotation = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_rotation"), defaultSpaceRotation);
             missionStatus = Settings.GetValue("main_mission", "mission_status", missionStatus);
-            SpaceMod.Settings.UseSpaceWalk = Settings.GetValue("settings", "use_spacewalk", SpaceMod.Settings.UseSpaceWalk);
-            SpaceMod.Settings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", SpaceMod.Settings.ShowCustomUi);
-            SpaceMod.Settings.UseScenarios = Settings.GetValue("settings", "use_scenarios", SpaceMod.Settings.UseScenarios);
-            SpaceMod.Settings.MoonJump = Settings.GetValue("settings", "low_gravity_jumping", SpaceMod.Settings.MoonJump);
-            SpaceMod.Settings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", SpaceMod.Settings.MouseControlFlySensitivity);
-            SpaceMod.Settings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", SpaceMod.Settings.DefaultVehicleSpawn);
-            SpaceMod.Settings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", SpaceMod.Settings.VehicleFlySpeed);
+            GTS.Settings.UseSpaceWalk = Settings.GetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
+            GTS.Settings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", GTS.Settings.ShowCustomUi);
+            GTS.Settings.UseScenarios = Settings.GetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
+            GTS.Settings.MoonJump = Settings.GetValue("settings", "low_gravity_jumping", GTS.Settings.MoonJump);
+            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            GTS.Settings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
+            GTS.Settings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             endMissionCanStart = CanStartEndMission();
         }
 
@@ -269,13 +276,13 @@ namespace SpaceMod
             Settings.SetValue("mod", "default_orbit_offset", defaultSpaceOffset);
             Settings.SetValue("mod", "default_orbit_rotation", defaultSpaceRotation);
             Settings.SetValue("main_mission", "mission_status", missionStatus);
-            Settings.SetValue("settings", "use_spacewalk", SpaceMod.Settings.UseSpaceWalk);
-            Settings.SetValue("settings", "show_custom_ui", SpaceMod.Settings.ShowCustomUi);
-            Settings.SetValue("settings", "use_scenarios", SpaceMod.Settings.UseScenarios);
-            Settings.SetValue("settings", "low_gravity_jumping", SpaceMod.Settings.MoonJump);
-            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", SpaceMod.Settings.MouseControlFlySensitivity);
-            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", SpaceMod.Settings.DefaultVehicleSpawn);
-            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", SpaceMod.Settings.VehicleFlySpeed);
+            Settings.SetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
+            Settings.SetValue("settings", "show_custom_ui", GTS.Settings.ShowCustomUi);
+            Settings.SetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
+            Settings.SetValue("settings", "low_gravity_jumping", GTS.Settings.MoonJump);
+            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
+            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             Settings.Save();
         }
 
@@ -303,148 +310,119 @@ namespace SpaceMod
             if (!menuEnabled)
                 return;
 
-            menuController = new MenuConnector();
-            mainMenu = new Menu("Space Mod", Color.FromArgb(125, Color.Black), Color.Black,
-                Color.Purple)
-            { MenuItemHeight = 26 };
+            menuPool = new MenuPool();
+            mainMenu = new UIMenu("GTS Options", "Core");
 
-            #region scenes
-
-            var scenesMenu = mainMenu.AddParentMenu("Scenes", mainMenu);
-            scenesMenu.Width = mainMenu.Width;
-
+            #region Scenes
+            UIMenu scenesMenu = menuPool.AddSubMenu(mainMenu, "Scenes");
             var files = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
             for (var i = 0; i < files.Length; i++)
             {
                 var file = files[i];
                 var fileName = Path.GetFileName(file);
-                var menuItem = new SolomanMenu.MenuItem(fileName);
-                menuItem.ItemActivated += (sender, item) =>
+                var menuItem = new UIMenuItem(fileName);
+                menuItem.Activated += (sender, item) =>
                 {
                     SceneInfo newScene = DeserializeFileAsScene(fileName);
-
                     SetCurrentScene(newScene, fileName);
-
                     UI.Notify($"{Database.NotifyHeader}Loaded: {fileName}");
-
-                    menuController.Menus.ForEach(m => m.Draw = false);
+                    menuPool.CloseAllMenus();
                 };
-                scenesMenu.Add(menuItem);
+                scenesMenu.AddItem(menuItem);
             }
 
             #endregion
 
-            #region settings
+            #region Settings
+            UIMenu settingsMenu = menuPool.AddSubMenu(mainMenu, "Settings");
 
-            var settingsMenu = mainMenu.AddParentMenu("Settings", mainMenu);
-
-            #region ui settings
-
-            var userInterfaceMenu = settingsMenu.AddParentMenu("Interface", mainMenu);
-
-            var showCustomUiCheckbox = new CheckboxMenuItem("Show Custom UI", SpaceMod.Settings.ShowCustomUi);
-            showCustomUiCheckbox.Checked += (sender, check) =>
-            {
-                SpaceMod.Settings.ShowCustomUi = check;
+            #region User Interface Settings
+            UIMenu userInterfaceMenu = menuPool.AddSubMenu(settingsMenu, "Interface");
+            UIMenuCheckboxItem showCustomUiCheckbox = new UIMenuCheckboxItem("Show Custom UI", GTS.Settings.ShowCustomUi);
+            showCustomUiCheckbox.CheckboxEvent += (sender, check) => {
+                GTS.Settings.ShowCustomUi = check;
             };
-
-            userInterfaceMenu.Add(showCustomUiCheckbox);
-
+            userInterfaceMenu.AddItem(showCustomUiCheckbox);
             #endregion
 
-            #region vehicle settings
-
-            var vehicleSettingsMenu = settingsMenu.AddParentMenu("Vehicles", mainMenu);
-            vehicleSettingsMenu.Width = mainMenu.Width;
-
-            List<dynamic> lst;
+            #region Vehicles Settings
             int flyIndex;
-            var vehicleSpeedList = new ListMenuItem("Vehicle Speed",
-                lst = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(), (flyIndex = lst.IndexOf(SpaceMod.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
-            vehicleSpeedList.IndexChanged += (sender, index, item) =>
-            {
-                SpaceMod.Settings.VehicleFlySpeed = item;
+            List<dynamic> dynamicList;
+
+            UIMenu vehicleSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Vehicles");
+            UIMenuListItem vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(), (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
+            vehicleSpeedList.OnListChanged += (sender, index) => {
+                GTS.Settings.VehicleFlySpeed = index == -1 ? 0 : dynamicList[index];
             };
 
-            var flySensitivity = (int)SpaceMod.Settings.MouseControlFlySensitivity;
-            var vehicleSensitivityList = new ListMenuItem("Mouse Control Sensitivity",
-                Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(),
-                flySensitivity);
-            vehicleSensitivityList.IndexChanged += (sender, index, item) =>
-            {
-                SpaceMod.Settings.MouseControlFlySensitivity = item;
+            int flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
+            UIMenuListItem vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
+                dynamicList = Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(), flySensitivity);
+            vehicleSensitivityList.OnListChanged += (sender, index) => {
+                GTS.Settings.MouseControlFlySensitivity = index == -1 ? GTS.Settings.MouseControlFlySensitivity : dynamicList[index];
             };
 
-            vehicleSettingsMenu.Add(vehicleSpeedList);
-            vehicleSettingsMenu.Add(vehicleSensitivityList);
+            vehicleSettingsMenu.AddItem(vehicleSpeedList);
+            vehicleSettingsMenu.AddItem(vehicleSensitivityList);
 
             #endregion
 
-            #region scene settings
-
-            var sceneSettingsMenu = settingsMenu.AddParentMenu("Scenes", mainMenu);
-
-            var useScenariosCheckbox = new CheckboxMenuItem("Use Scenarios", SpaceMod.Settings.UseScenarios);
-            useScenariosCheckbox.Checked += (sender, check) =>
-            {
-                SpaceMod.Settings.UseScenarios = check;
+            #region Scene Settings
+            UIMenu sceneSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Scenes");
+            UIMenuCheckboxItem useScenariosCheckbox = new UIMenuCheckboxItem("Use Scenarios", GTS.Settings.UseScenarios);
+            useScenariosCheckbox.CheckboxEvent += (sender, check) => {
+                GTS.Settings.UseScenarios = check;
             };
 
-            sceneSettingsMenu.Add(useScenariosCheckbox);
-
+            sceneSettingsMenu.AddItem(useScenariosCheckbox);
             #endregion
 
-            #region player settings
-
-            var playerSettingsMenu = settingsMenu.AddParentMenu("Player", mainMenu);
-
-            var useFloatingCheckbox = new CheckboxMenuItem("Use SpaceWalk", SpaceMod.Settings.UseSpaceWalk);
-            useFloatingCheckbox.Checked += (sender, check) =>
-            {
-                SpaceMod.Settings.UseSpaceWalk = check;
+            #region Player Settings
+            UIMenu playerSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Player");
+            UIMenuCheckboxItem useFloatingCheckbox = new UIMenuCheckboxItem("Use SpaceWalk", GTS.Settings.UseSpaceWalk);
+            useFloatingCheckbox.CheckboxEvent += (sender, check) => {
+                GTS.Settings.UseSpaceWalk = check;
             };
 
-            playerSettingsMenu.Add(useFloatingCheckbox);
-
+            playerSettingsMenu.AddItem(useFloatingCheckbox);
             #endregion
 
-            var saveSettingsItem = new SolomanMenu.MenuItem("Save Settings");
-            saveSettingsItem.ItemActivated += (sender, item) =>
-            {
+            UIMenuItem saveSettingsItem = new UIMenuItem("Save Settings");
+            saveSettingsItem.SetLeftBadge(UIMenuItem.BadgeStyle.Star);
+            saveSettingsItem.Activated += (sender, item) => {
                 SaveSettings();
                 UI.Notify(Database.NotifyHeader + "Settings ~b~saved~s~.", true);
             };
+            settingsMenu.AddItem(saveSettingsItem);
 
-            settingsMenu.Add(saveSettingsItem);
-
-            var disableWantedLevelCheckbox = new CheckboxMenuItem("Disable Wanted Level", disableWantedStars);
-            disableWantedLevelCheckbox.Checked += (a, b) =>
-            {
+            UIMenuCheckboxItem disableWantedLevelCheckbox = new UIMenuCheckboxItem("Disable Wanted Level", disableWantedStars);
+            disableWantedLevelCheckbox.CheckboxEvent += (a, b) => {
                 disableWantedStars = b;
             };
-            settingsMenu.Add(disableWantedLevelCheckbox);
-
+            settingsMenu.AddItem(disableWantedLevelCheckbox);
             #endregion
 
-            #region debug
-
-            var debugButton = new SolomanMenu.MenuItem("Debug Player");
-            debugButton.ItemActivated += (sender, item) =>
-            {
+            #region Debug
+            UIMenuItem debugButton = new UIMenuItem("Debug Player", "Log the player's position rotation and heading.");
+            debugButton.SetLeftBadge(UIMenuItem.BadgeStyle.Alert);
+            debugButton.Activated += (sender, item) => {
                 Debug.LogEntityData(PlayerPed);
             };
 
-            mainMenu.Add(debugButton);
-
+            mainMenu.AddItem(debugButton);
             #endregion
 
-            menuController.Menus.Add(mainMenu);
-            menuController.Menus.Add(settingsMenu);
-            menuController.Menus.Add(userInterfaceMenu);
-            menuController.Menus.Add(vehicleSettingsMenu);
-            menuController.Menus.Add(sceneSettingsMenu);
-            menuController.Menus.Add(playerSettingsMenu);
-            menuController.Menus.Add(scenesMenu);
+            menuPool.Add(mainMenu);
+            menuPool.RefreshIndex();
+            menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0, Color.Maroon));
+
+            //menuPool.Menus.Add(settingsMenu);
+            //menuPool.Menus.Add(userInterfaceMenu);
+            //menuPool.Menus.Add(vehicleSettingsMenu);
+            //menuPool.Menus.Add(sceneSettingsMenu);
+            //menuPool.Menus.Add(playerSettingsMenu);
+            //menuPool.Menus.Add(scenesMenu);
         }
 
         private void RequestModels()
@@ -452,7 +430,7 @@ namespace SpaceMod
             if (!preloadModels)
                 return;
 
-            const string fileName = "./scripts/SpaceMod/RequestOnStart.txt";
+            const string fileName = "./scripts/Space/RequestOnStart.txt";
             if (!File.Exists(fileName))
                 return;
 
@@ -543,24 +521,24 @@ namespace SpaceMod
             {
                 if (!resetWantedLevel)
                 {
-                    SpaceModLib.RequestScript("re_prison");
-                    SpaceModLib.RequestScript("re_prisonlift");
-                    SpaceModLib.RequestScript("am_prison");
-                    SpaceModLib.RequestScript("re_lossantosintl");
-                    SpaceModLib.RequestScript("re_armybase");
-                    SpaceModLib.RequestScript("restrictedareas");
+                    Utils.RequestScript("re_prison");
+                    Utils.RequestScript("re_prisonlift");
+                    Utils.RequestScript("am_prison");
+                    Utils.RequestScript("re_lossantosintl");
+                    Utils.RequestScript("re_armybase");
+                    Utils.RequestScript("restrictedareas");
                     Game.MaxWantedLevel = 5;
                     resetWantedLevel = true;
                 }
                 return;
             }
             resetWantedLevel = false;
-            SpaceModLib.TerminateScriptByName("re_prison");
-            SpaceModLib.TerminateScriptByName("re_prisonlift");
-            SpaceModLib.TerminateScriptByName("am_prison");
-            SpaceModLib.TerminateScriptByName("re_lossantosintl");
-            SpaceModLib.TerminateScriptByName("re_armybase");
-            SpaceModLib.TerminateScriptByName("restrictedareas");
+            Utils.TerminateScriptByName("re_prison");
+            Utils.TerminateScriptByName("re_prisonlift");
+            Utils.TerminateScriptByName("am_prison");
+            Utils.TerminateScriptByName("re_lossantosintl");
+            Utils.TerminateScriptByName("re_armybase");
+            Utils.TerminateScriptByName("restrictedareas");
 
             Game.MaxWantedLevel = 0;
         }
@@ -601,7 +579,7 @@ namespace SpaceMod
 
         private void CreateScene(SceneInfo scene, string fileName = default(string))
         {
-            lock (_tickLock)
+            lock (tickLock)
             {
                 EndActiveScenarios();
                 ClearAllEntities();
@@ -624,7 +602,7 @@ namespace SpaceMod
                 if ((int)World.Weather != -1)
                     Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, _weatherNames[(int)World.Weather]);
 
-                if (SpaceMod.Settings.UseScenarios)
+                if (GTS.Settings.UseScenarios)
                 {
                     try
                     {
@@ -670,7 +648,7 @@ namespace SpaceMod
 
         private void ScenarioComplete(Scenario scenario, bool success)
         {
-            lock (_tickLock)
+            lock (tickLock)
             {
                 Scenarios.Remove(scenario);
             }
@@ -691,7 +669,7 @@ namespace SpaceMod
 
         private void CurrentSceneOnExited(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset)
         {
-            lock (_tickLock)
+            lock (tickLock)
             {
                 bool isActualScene = newSceneFile != "cmd_earth";
 
@@ -756,7 +734,7 @@ namespace SpaceMod
 
                     PlayerPed.HasGravity = true;
 
-                    SpaceModLib.SetGravityLevel(9.81f);
+                    Utils.SetGravityLevel(9.81f);
                 }
 
                 Wait(1000);

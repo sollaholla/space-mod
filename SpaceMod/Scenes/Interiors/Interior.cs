@@ -4,10 +4,10 @@ using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using SpaceMod.Extensions;
-using SpaceMod.Lib;
+using GTS.Extensions;
+using GTS.Library;
 
-namespace SpaceMod.Scenes.Interiors
+namespace GTS.Scenes.Interiors
 {
     public class Interior
     {

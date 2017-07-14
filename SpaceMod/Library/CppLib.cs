@@ -1,24 +1,28 @@
 ﻿using System.Runtime.InteropServices;
 using GTA.Native;
+using System;
 
-namespace SpaceMod.Lib
+namespace GTS.Library
 {
-    internal static class SpaceModCppLib
+    internal static class GTSLib
     {
-        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_Init")]
-        private static extern bool Init();
+        private static bool initialized = false;
 
-        static SpaceModCppLib()
-        {
-            Init();
-        }
-
-        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_InitCredits")]
-        private static extern bool InitCredits();
+        [DllImport("GTSLib.dll")]
+        private static extern bool GTSLib_Init();
+        
+        [DllImport("GTSLib.dll")]
+        private static extern bool GTSLib_InitCredits();
 
         public static void RollCredits()
         {
-            if (InitCredits())
+            if (!initialized)
+            {
+                GTSLib_Init();
+                initialized = true;
+            }
+
+            if (GTSLib_InitCredits())
             {
                 Function.Call(Hash.CLEAR_PRINTS);
                 Function.Call(Hash.CLEAR_BRIEF);
@@ -39,11 +43,17 @@ namespace SpaceMod.Lib
             }
         }
 
-        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_EndCredits")]
-        private static extern void EndCredits();
+        [DllImport("GTSLib.dll")]
+        private static extern void GTSLib_EndCredits();
 
         public static void CutCredits()
         {
+            if (!initialized)
+            {
+                GTSLib_Init();
+                initialized = true;
+            }
+
             Function.Call(Hash.PLAY_END_CREDITS_MUSIC, false);
             Function.Call(Hash.SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY, false);
             Function.Call(Hash.SET_MOBILE_PHONE_RADIO_STATE, false);
@@ -55,14 +65,20 @@ namespace SpaceMod.Lib
             Function.Call(Hash.SET_GAME_PAUSES_FOR_STREAMING, true);
             Function.Call(Hash.DISPLAY_RADAR, true);
             Function.Call(Hash.DISPLAY_HUD, true);
-            EndCredits();
+            GTSLib_EndCredits();
         }
 
-        [DllImport("GTSLib.dll", EntryPoint = "GTSLib_SetWorldGravity")]
-        private static extern bool GTSLib_SetWorldGravity(float gravity);
+        [DllImport("GTSLib.dll")]
+        private static extern bool GTSLib_SetWorldGravity(Single gravity);
 
-        public static void SetGravityLevel(float gravity)
+        public static void SetGravityLevel(Single gravity)
         {
+            if (!initialized)
+            {
+                GTSLib_Init();
+                initialized = true;
+            }
+
             GTSLib_SetWorldGravity(gravity);
         }
     }

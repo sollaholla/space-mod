@@ -7,7 +7,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 
-namespace SpaceMod.Lib
+namespace GTS.Library
 {
     public static class Mathf
     {
@@ -160,13 +160,13 @@ namespace SpaceMod.Lib
         CTaskVehicleCrash = 17
     }
 
-    public static class SpaceModLib
+    public static class Utils
     {
-        private const string AlienModelsTextFile = "./scripts/SpaceMod/Aliens.txt";
+        private const string AlienModelsTextFile = "./scripts/Space/Aliens.txt";
         private const string DefaultAlienModel = "S_M_M_MovAlien_01";
         private static string[] alienModels;
 
-        static SpaceModLib()
+        static Utils()
         {
             alienModels = new string[0];
 
@@ -408,7 +408,7 @@ namespace SpaceMod.Lib
 
         public static void SetGravityLevel(float level)
         {
-            SpaceModCppLib.SetGravityLevel(level);
+            GTSLib.SetGravityLevel(level);
         }
 
         public static void RestartScript(string name)

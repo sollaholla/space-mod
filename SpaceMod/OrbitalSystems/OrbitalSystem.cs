@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using GTA;
 using GTA.Math;
-using SpaceMod.Lib;
+using GTS.Library;
 
-namespace SpaceMod.OrbitalSystems
+namespace GTS.OrbitalSystems
 {
     public enum SkyboxRotationAxis
     {

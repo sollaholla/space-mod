@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace SpaceMod.Scenes
+namespace GTS.Scenes
 {
     public enum InteriorType
     {

@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using GTA;
-using SpaceMod.Scenes;
+using GTS.Scenes;
 using System.IO;
 
-namespace SpaceMod.Scenarios
+namespace GTS.Scenarios
 {
     internal delegate void OnScenarioCompleted(Scenario scenario, bool success);
 

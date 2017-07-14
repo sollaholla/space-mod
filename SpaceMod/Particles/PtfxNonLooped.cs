@@ -2,7 +2,7 @@
 using GTA.Math;
 using GTA.Native;
 
-namespace SpaceMod.Particles
+namespace GTS.Particles
 {
 	public class PtfxNonLooped
 	{

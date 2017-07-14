@@ -4,13 +4,13 @@ using GTA;
 using GTA.Native;
 using GTA.Math;
 using System.Drawing;
-using SpaceMod.Lib;
-using SpaceMod.Missions.Types;
-using SpaceMod.Scenarios;
-using SpaceMod.Scenes.Interiors;
+using GTS.Library;
+using GTS.Missions.Types;
+using GTS.Scenarios;
+using GTS.Scenes.Interiors;
 using System;
 
-namespace SpaceMod.Missions
+namespace GTS.Missions
 {
     public class IntroMission : Scenarios.Scenario
     {
@@ -106,7 +106,7 @@ namespace SpaceMod.Missions
                         return;
 
                     World.DrawMarker(MarkerType.UpsideDownCone, colonel.Position + Vector3.WorldUp * 1.5f, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
-                    SpaceModLib.DisplayHelpTextWithGXT("END_LABEL_1");
+                    Utils.DisplayHelpTextWithGXT("END_LABEL_1");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
@@ -116,16 +116,16 @@ namespace SpaceMod.Missions
                         PlayerPed.Heading = (colonel.Position - PlayerPed.Position).ToHeading();
                         PlayerPed.Task.StandStill(-1);
 
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_1", 5000);
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_1", 5000);
                         Script.Wait(5000);
 
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_2", 5000);
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_2", 5000);
                         Script.Wait(5000);
 
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_3", 6000);
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_3", 6000);
                         Script.Wait(6000);
 
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_4", 6000);
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_4", 6000);
                         Script.Wait(6000);
 
                         Game.FadeScreenOut(1000);
@@ -146,7 +146,7 @@ namespace SpaceMod.Missions
 
                     if (!isSatelliteMessageShown)
                     {
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_5", 5000);
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_5", 5000);
                         isSatelliteMessageShown = true;
                     }
 
@@ -166,7 +166,7 @@ namespace SpaceMod.Missions
                             if (dist > 1.75f)
                                 continue;
 
-                            SpaceModLib.DisplayHelpTextWithGXT("INTRO_LABEL_6");
+                            Utils.DisplayHelpTextWithGXT("INTRO_LABEL_6");
 
                             // Ayyee that's pretty good. -Solla
                             if (Game.IsControlJustPressed(2, Control.Context))
@@ -201,7 +201,7 @@ namespace SpaceMod.Missions
                     {
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_8"));
                         Script.Wait(2000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_7");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_7");
                         isHumaneLabsMessageShown = true;
                     }
 
@@ -223,7 +223,7 @@ namespace SpaceMod.Missions
                     float distance = Vector3.Distance(PlayerPed.Position, humaneLabsEnterance);
                     if (distance <= 1.5f)
                     {
-                        SpaceModLib.DisplayHelpTextWithGXT("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
+                        Utils.DisplayHelpTextWithGXT("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
 
                         if (Game.IsControlJustPressed(2, Control.Context))
                         {
@@ -300,7 +300,7 @@ namespace SpaceMod.Missions
                     if (distance > 1.3f)
                         return;
 
-                    SpaceModLib.DisplayHelpTextWithGXT("INTRO_LABEL_10"); // "Press INPUT_TALK to talk to the scientist".
+                    Utils.DisplayHelpTextWithGXT("INTRO_LABEL_10"); // "Press INPUT_TALK to talk to the scientist".
 
                     if (Game.IsControlJustPressed(2, Control.Talk))
                     {
@@ -311,7 +311,7 @@ namespace SpaceMod.Missions
                         Script.Wait(250);
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_11"));
                         Script.Wait(750);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_12");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_12");
                         mainScientist.CurrentBlip?.Remove();
                         missionStep++;
                     }
@@ -338,7 +338,7 @@ namespace SpaceMod.Missions
                     if (distance > 1.3f)
                         return;
 
-                    SpaceModLib.DisplayHelpTextWithGXT("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
+                    Utils.DisplayHelpTextWithGXT("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
@@ -350,7 +350,7 @@ namespace SpaceMod.Missions
                         Peds?.ForEach(p => p?.Delete());
                         Script.Wait(750);
                         Game.FadeScreenIn(1000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_13");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_13");
                         missionStep++;
                     }
 
@@ -458,7 +458,7 @@ namespace SpaceMod.Missions
                         return;
 
                     World.DrawMarker(MarkerType.UpsideDownCone, colonel.Position + Vector3.WorldUp * 1.5f, Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
-                    SpaceModLib.DisplayHelpTextWithGXT("END_LABEL_1");
+                    Utils.DisplayHelpTextWithGXT("END_LABEL_1");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
@@ -467,17 +467,17 @@ namespace SpaceMod.Missions
                         PlayerPed.Task.StandStill(-1);
                         colonel.Task.ChatTo(PlayerPed);
 
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_14");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_14");
                         Script.Wait(7000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_15");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_15");
                         Script.Wait(7000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_16");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_16");
                         Script.Wait(7000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_17");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_17");
                         Script.Wait(7000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_18");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_18");
                         Script.Wait(2000);
-                        SpaceModLib.ShowSubtitleWithGXT("INTRO_LABEL_19");
+                        Utils.ShowSubtitleWithGXT("INTRO_LABEL_19");
                         Script.Wait(4000);
 
                         Game.FadeScreenOut(1500);

@@ -1,7 +1,7 @@
 ﻿using System;
 using GTA.Math;
 
-namespace SpaceMod.Extensions
+namespace GTS.Extensions
 {
 	public static class ParseVector3
 	{

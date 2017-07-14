@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 
-namespace SpaceMod.Scenes.Interiors
+namespace GTS.Scenes.Interiors
 {
     public class Map
     {

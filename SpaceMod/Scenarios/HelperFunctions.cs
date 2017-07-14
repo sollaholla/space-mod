@@ -1,7 +1,7 @@
 ﻿using GTA;
 using GTA.Math;
 using GTA.Native;
-using SpaceMod.Lib;
+using GTS.Library;
 using System;
 
 namespace DefaultMissions
@@ -30,7 +30,7 @@ namespace DefaultMissions
             if (World.GetNearbyPeds(spawnPoint, checkRadius).Length > 0)
                 return new Ped(0);
 
-            Ped ped = SpaceModLib.CreateAlien(spawnPoint, weaponHash, model, accuracy, random.Next(0, 359));
+            Ped ped = Utils.CreateAlien(spawnPoint, weaponHash, model, accuracy, random.Next(0, 359));
 
             if (Entity.Exists(ped))
                 ped.Model.MarkAsNoLongerNeeded();

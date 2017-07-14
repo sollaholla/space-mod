@@ -1,6 +1,6 @@
 ﻿using GTA.Math;
 
-namespace SpaceMod
+namespace GTS
 {
     internal static class Settings
     {

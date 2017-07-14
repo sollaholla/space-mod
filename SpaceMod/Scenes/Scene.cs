@@ -7,12 +7,12 @@ using System.Threading;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using SpaceMod.Extensions;
-using SpaceMod.Lib;
-using SpaceMod.OrbitalSystems;
-using SpaceMod.Scenes.Interiors;
+using GTS.Extensions;
+using GTS.Library;
+using GTS.OrbitalSystems;
+using GTS.Scenes.Interiors;
 
-namespace SpaceMod.Scenes
+namespace GTS.Scenes
 {
     /// <summary>
     /// A player task type for zero G.
@@ -173,7 +173,7 @@ namespace SpaceMod.Scenes
                 lastPlayerPosition = PlayerPosition;
 
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
-                SpaceModLib.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
+                Utils.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
             }
         }
 
@@ -338,7 +338,7 @@ namespace SpaceMod.Scenes
 
             Debug.Log($"Successfully loaded model: {data.Model}");
 
-            Prop prop = SpaceModLib.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
+            Prop prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
 
             prop.FreezePosition = true;
 
@@ -675,7 +675,7 @@ namespace SpaceMod.Scenes
 
                 if (distanceStart < distance)
                 {
-                    SpaceModLib.DisplayHelpTextWithGXT("0x81EB34E5");
+                    Utils.DisplayHelpTextWithGXT("0x81EB34E5");
 
                     Game.DisableControlThisFrame(2, Control.Context);
 
@@ -695,7 +695,7 @@ namespace SpaceMod.Scenes
 
                 if (distanceEnd < distance)
                 {
-                    SpaceModLib.DisplayHelpTextWithGXT("0x5F43EF97");
+                    Utils.DisplayHelpTextWithGXT("0x5F43EF97");
 
                     Game.DisableControlThisFrame(2, Control.Context);
 
@@ -735,7 +735,7 @@ namespace SpaceMod.Scenes
 
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance && !PlayerPed.IsInVehicle())
             {
-                SpaceModLib.DisplayHelpTextWithGXT("RET_ORBIT");
+                Utils.DisplayHelpTextWithGXT("RET_ORBIT");
 
                 Game.DisableControlThisFrame(2, Control.Enter);
 
@@ -751,7 +751,7 @@ namespace SpaceMod.Scenes
             }
             else if (PlayerPed.IsInVehicle())
             {
-                SpaceModLib.DisplayHelpTextWithGXT("RET_ORBIT2");
+                Utils.DisplayHelpTextWithGXT("RET_ORBIT2");
 
                 Game.DisableControlThisFrame(2, Control.Context);
 
@@ -787,7 +787,7 @@ namespace SpaceMod.Scenes
                 return;
             }
 
-            SpaceModLib.TerminateScriptByName("respawn_controller");
+            Utils.TerminateScriptByName("respawn_controller");
             Game.Globals[4].SetInt(1);
             Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, true);
             Function.Call(Hash.SET_FADE_IN_AFTER_DEATH_ARREST, false);
@@ -869,7 +869,7 @@ namespace SpaceMod.Scenes
 
                     if (Game.IsControlJustPressed(2, Control.Enter))
                     {
-                        SpaceModLib.DisplayHelpTextWithGXT("GTS_LABEL_10");
+                        Utils.DisplayHelpTextWithGXT("GTS_LABEL_10");
                     }
                 }
                 else
@@ -966,7 +966,7 @@ namespace SpaceMod.Scenes
                                     spaceWalkDummy.HasGravity = false;
                                     PlayerPed.IsVisible = true;
                                     Function.Call(Hash.SET_VEHICLE_GRAVITY, spaceWalkDummy, false);
-                                    SpaceModLib.NotifyWithGXT("GTS_LABEL_26");
+                                    Utils.NotifyWithGXT("GTS_LABEL_26");
                                     Mined?.Invoke(this, minableObject);
                                     lastMinePos = Vector3.Zero;
                                     minableObject = null;
@@ -1154,7 +1154,7 @@ namespace SpaceMod.Scenes
             if (minableProps.Contains(entHit))
             {
                 // let's start mining!
-                SpaceModLib.DisplayHelpTextWithGXT("SW_MINE");
+                Utils.DisplayHelpTextWithGXT("SW_MINE");
                 Game.DisableControlThisFrame(2, Control.Context);
                 if (Game.IsDisabledControlJustPressed(2, Control.Context))
                 {
@@ -1179,7 +1179,7 @@ namespace SpaceMod.Scenes
             Vehicle entVeh = (Vehicle)entHit;
             if (entVeh != vehicle) return;
 
-            SpaceModLib.DisplayHelpTextWithGXT("SW_REPAIR");
+            Utils.DisplayHelpTextWithGXT("SW_REPAIR");
             Game.DisableControlThisFrame(2, Control.Context);
 
             if (Game.IsDisabledControlJustPressed(2, Control.Context))
@@ -1363,7 +1363,7 @@ namespace SpaceMod.Scenes
                 {
                     if (!didSpaceWalkTut)
                     {
-                        SpaceModLib.DisplayHelpTextThisFrame("~BLIP_INFO_ICON~ To rotate your character:~n~Use ~INPUT_VEH_FLY_YAW_LEFT~ ~INPUT_VEH_FLY_YAW_RIGHT~ for left and right.~n~Use ~INPUT_VEH_FLY_ROLL_LR~ for roll.~n~Use ~INPUT_VEH_FLY_PITCH_UD~ for up-down pitch.", "CELL_EMAIL_BCON");
+                        Utils.DisplayHelpTextThisFrame("~BLIP_INFO_ICON~ To rotate your character:~n~Use ~INPUT_VEH_FLY_YAW_LEFT~ ~INPUT_VEH_FLY_YAW_RIGHT~ for left and right.~n~Use ~INPUT_VEH_FLY_ROLL_LR~ for roll.~n~Use ~INPUT_VEH_FLY_PITCH_UD~ for up-down pitch.", "CELL_EMAIL_BCON");
                         Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", didSpaceWalkTut = true);
                         Core.Instance.Settings.Save();
                     }
@@ -1427,7 +1427,7 @@ namespace SpaceMod.Scenes
                         {
                             Vector3 direction = PlayerPosition - wormHolePosition;
                             direction.Normalize();
-                            Vector3 targetPos = SpaceModLib.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
+                            Vector3 targetPos = Utils.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
                                 new Vector3(0, 0, 2000 * Game.LastFrameTime));
                             Vector3 playerPos = PlayerPed.IsInVehicle()
                                 ? PlayerPed.CurrentVehicle.Position

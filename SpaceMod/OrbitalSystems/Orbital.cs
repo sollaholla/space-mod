@@ -1,9 +1,9 @@
 ﻿using GTA;
 using GTA.Math;
-using SpaceMod.Lib;
+using GTS.Library;
 using System.Collections.Generic;
 
-namespace SpaceMod.OrbitalSystems
+namespace GTS.OrbitalSystems
 {
     public class Orbital : AttachedOrbital
     {
@@ -110,15 +110,15 @@ namespace SpaceMod.OrbitalSystems
 
             IsVisible = false;
 
-            TerrainGrid[0, 0] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[0, 1] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[0, 2] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[1, 0] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[1, 1] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[1, 2] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[2, 0] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[2, 1] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[2, 2] = SpaceModLib.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 2] = Utils.CreatePropNoOffset(Model, Position, false);
 
             UpdateTilePositions();
         }

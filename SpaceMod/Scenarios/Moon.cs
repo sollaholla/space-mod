@@ -2,13 +2,13 @@
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using SpaceMod.Lib;
-using SpaceMod.Scenarios;
+using GTS.Library;
+using GTS.Scenarios;
 using System.Collections.Generic;
-using SpaceMod.Extensions;
+using GTS.Extensions;
 using System.Linq;
 using System.IO;
-using SpaceMod.Particles;
+using GTS.Particles;
 using System.Reflection;
 
 namespace DefaultMissions
@@ -92,7 +92,7 @@ namespace DefaultMissions
                     missionStep++;
                     break;
                 case 3:
-                    SpaceModLib.DisplayHelpTextWithGXT("PLANT_FLAG");
+                    Utils.DisplayHelpTextWithGXT("PLANT_FLAG");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
                     Vector3 spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector;
@@ -119,7 +119,7 @@ namespace DefaultMissions
                     float distance = Vector3.DistanceSquared2D(Game.Player.Character.Position, laptop.Position);
                     if (distance > 3)
                         return;
-                    SpaceModLib.DisplayHelpTextWithGXT("PRESS_E");
+                    Utils.DisplayHelpTextWithGXT("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
                     cutscene = new MoonSatelliteCutscene(cutscenePlanetModel);
@@ -300,7 +300,7 @@ namespace DefaultMissions
                     if (Entity.Exists(pilot))
                     {
                         pilot.SetDefaultClothes();
-                        pilot.RelationshipGroup = SpaceMod.Database.AlienRelationshipGroup;
+                        pilot.RelationshipGroup = GTS.Database.AlienRelationshipGroup;
 
                         Function.Call(Hash.TASK_PLANE_MISSION, pilot, vehicle, 0, Game.Player.Character, 0, 0, 0, 6, 0f, 0f, 0f, 0f, maxZ + 150f);
                         Function.Call(Hash._SET_PLANE_MIN_HEIGHT_ABOVE_TERRAIN, vehicle, maxZ + 150f);
