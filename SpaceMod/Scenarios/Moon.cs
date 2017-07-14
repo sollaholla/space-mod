@@ -501,7 +501,7 @@ namespace DefaultMissions
                     planetProp.Delete();
                 }
 
-                Function.Call(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, TextureDict);
+                Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, TextureDict);
             }
 
             public void Update()
