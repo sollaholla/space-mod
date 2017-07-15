@@ -32,7 +32,7 @@ namespace GTS.Scenes
     public sealed class Scene
     {
         #region Fields
-        public const BlipColor MarkerBlipColor = (BlipColor)27;
+        public const BlipColor MarkerBlipColor = (BlipColor)58;
         public const string ReticleTextureDict = "helicopterhud";
         public const string ReticleTexture = "hud_lock";
 
@@ -56,7 +56,6 @@ namespace GTS.Scenes
         private readonly List<Blip> blips;
         private readonly List<Prop> minableProps;
         private readonly List<Vehicle> vehicles;
-        private readonly List<Orbital> terrainTiles;
         private readonly List<Interior> interiors;
         #endregion
 
@@ -108,7 +107,7 @@ namespace GTS.Scenes
 
             vehicles = new List<Vehicle>();
             minableProps = new List<Prop>();
-            terrainTiles = new List<Orbital>();
+            Surfaces = new List<Surface>();
             interiors = new List<Interior>();
             blips = new List<Blip>();
 
@@ -128,6 +127,11 @@ namespace GTS.Scenes
         /// The wormholes in this scene.
         /// </summary>
         public List<Orbital> WormHoles  { get; private set; }
+
+        /// <summary>
+        /// The surfaces in this scene.
+        /// </summary>
+        public List<Surface> Surfaces   { get; private set; }
 
         /// <summary>
         /// The orbital system of this scene.
@@ -174,6 +178,7 @@ namespace GTS.Scenes
 
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
                 Utils.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
+                GameplayCamera.RelativeHeading = 0;
             }
         }
 
@@ -245,6 +250,11 @@ namespace GTS.Scenes
                     interior.Remove();
                 }
 
+                foreach(Surface s in Surfaces)
+                {
+                    s.Delete();
+                }
+                
                 GameplayCamera.ShakeAmplitude = 0;
 
                 Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
@@ -320,7 +330,7 @@ namespace GTS.Scenes
             return orbital;
         }
 
-        private Orbital CreateOrbital(OrbitalInfo data, bool surface)
+        private Orbital CreateOrbital(OrbitalInfo data)
         {
             if (string.IsNullOrEmpty(data.Model))
             {
@@ -346,16 +356,11 @@ namespace GTS.Scenes
             {
                 WormHole = data.WormHole
             };
-
-            if (surface && data.Tile)
-            {
-                terrainTiles.Add(orbital);
-            }
-
+            
             if (!string.IsNullOrEmpty(data.Name))
             {
                 Blip blip = orbital.AddBlip();
-                blip.Sprite = BlipSprite.Crosshair2;
+                blip.Sprite = (BlipSprite)288;
                 blip.Color = MarkerBlipColor;
                 blip.Name = orbital.Name;
             }
@@ -363,6 +368,37 @@ namespace GTS.Scenes
             model.MarkAsNoLongerNeeded();
 
             return orbital;
+        }
+
+        private Surface CreateSurface(SurfaceInfo data)
+        {
+            if (string.IsNullOrEmpty(data.Model))
+            {
+                Debug.Log("Entity model was not set in the xml.", DebugMessageType.Error);
+                return default(Surface);
+            }
+
+            Model model = RequestModel(data.Model);
+
+            if (!model.IsLoaded)
+            {
+                Debug.Log($"Failed to load model: {data.Model}", DebugMessageType.Error);
+                return default(Surface);
+            }
+
+            Debug.Log($"Successfully loaded model: {data.Model}");
+
+            Prop prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
+
+            prop.FreezePosition = true;
+
+            Surface surface = new Surface(prop, data.TileSize);
+
+            surface.GenerateTerrain();
+
+            model.MarkAsNoLongerNeeded();
+
+            return surface;
         }
 
         private Prop CreateProp(Vector3 position, string modelName)
@@ -428,9 +464,9 @@ namespace GTS.Scenes
         {
             if (Info.SurfaceScene)
             {
-                foreach (Orbital orbital in terrainTiles)
+                foreach (Surface surface in Surfaces)
                 {
-                    orbital.DoInfiniteTile(PlayerPosition, 1024);
+                    surface.DoInfiniteTile(PlayerPosition, surface.TileSize);
                 }
 
                 if (Entity.Exists(Galaxy))
@@ -447,9 +483,11 @@ namespace GTS.Scenes
         {
             Prop skybox = CreateProp(PlayerPed.Position, Info.SkyboxModel);
 
-            List<Orbital> orbitals = Info.Orbitals?.Select(x => CreateOrbital(x, Info.SurfaceScene)).Where(o => o != default(Orbital)).ToList();
+            List<Orbital> orbitals = Info.Orbitals?.Select(x => CreateOrbital(x)).Where(o => o != default(Orbital)).ToList();
 
             List<AttachedOrbital> attachedOrbitals = Info.AttachedOrbitals?.Select(CreateAttachedOrbital).Where(o => o != default(AttachedOrbital)).ToList();
+
+            Surfaces = Info.Surfaces?.Select(CreateSurface).Where(o => o != default(Surface)).ToList();
 
             WormHoles = orbitals?.Where(x => x.WormHole).ToList();
 
@@ -474,13 +512,16 @@ namespace GTS.Scenes
         {
             foreach (TeleportPoint point in Info.Teleports)
             {
-                Blip blipStart = World.CreateBlip(point.Start);
+                if (point.CreateBlip)
+                {
+                    Blip blipStart = World.CreateBlip(point.Start);
 
-                blipStart.Sprite = BlipSprite.Garage2;
+                    blipStart.Sprite = BlipSprite.Garage2;
 
-                blipStart.Name = "Teleport";
+                    blipStart.Name = "Teleport";
 
-                blips.Add(blipStart);
+                    blips.Add(blipStart);
+                }
             }
         }
 
@@ -490,7 +531,7 @@ namespace GTS.Scenes
             {
                 Blip blip = World.CreateBlip(Info.GalaxyCenter + sceneLink.Position);
 
-                blip.Sprite = BlipSprite.Crosshair2;
+                blip.Sprite = (BlipSprite)178;
 
                 blip.Color = MarkerBlipColor;
 
@@ -629,7 +670,7 @@ namespace GTS.Scenes
             }
         }
 
-        private void DrawMarkerAt(Vector3 position, string name)
+        public void DrawMarkerAt(Vector3 position, string name, Color? col = null)
         {
             if (string.IsNullOrEmpty(name))
                 return;
@@ -638,16 +679,19 @@ namespace GTS.Scenes
             const float Width = (1f / 1920) / (1f / Scale);
             const float Height = (1f / 1080) / (1f / Scale);
 
+            if (col == null)
+                col = ColorTranslator.FromHtml("#8000FF");
+
             Function.Call(Hash.SET_DRAW_ORIGIN, position.X, position.Y, position.Z, 0);
 
             /////////////////////////////////////////////////////////////
-            Function.Call(Hash.DRAW_SPRITE, ReticleTextureDict, ReticleTexture, 0, 0, Width, Height, 45f, 128, 0, 128, 200);
+            Function.Call(Hash.DRAW_SPRITE, ReticleTextureDict, ReticleTexture, 0, 0, Width, Height, 45f, col.Value.R, col.Value.G, col.Value.B, col.Value.A);
             /////////////////////////////////////////////////////////////
 
             /////////////////////////////////////////////////////////////
-            Function.Call(Hash.SET_TEXT_FONT, (int)GTA.Font.Monospace);
+            Function.Call(Hash.SET_TEXT_FONT, (int)GTA.Font.ChaletComprimeCologne);
             Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
-            Function.Call(Hash.SET_TEXT_COLOUR, 128, 0, 128, 200);
+            Function.Call(Hash.SET_TEXT_COLOUR, col.Value.R, col.Value.G, col.Value.B, col.Value.A);
             Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
             Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
             Function.Call(Hash.SET_TEXT_JUSTIFICATION, 0);
@@ -669,9 +713,15 @@ namespace GTS.Scenes
 
             foreach (TeleportPoint t in Info.Teleports)
             {
-                World.DrawMarker(MarkerType.VerticalCylinder, t.Start - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, scale, Color.Purple);
+                if (t.StartMarker)
+                {
+                    World.DrawMarker(MarkerType.VerticalCylinder, t.Start - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, scale, Color.Purple);
+                }
 
-                World.DrawMarker(MarkerType.VerticalCylinder, t.End - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, scale, Color.Purple);
+                if (t.EndMarker)
+                {
+                    World.DrawMarker(MarkerType.VerticalCylinder, t.End - Vector3.WorldUp, Vector3.RelativeRight, Vector3.Zero, scale, Color.Purple);
+                }
 
                 //////////////////////////////////////////////////
                 // NOTE: Using lengthSquared because it's faster.
@@ -680,17 +730,19 @@ namespace GTS.Scenes
 
                 if (distanceStart < distance)
                 {
-                    Utils.DisplayHelpTextWithGXT("0x81EB34E5");
+                    Utils.DisplayHelpTextWithGXT("PRESS_E");
 
-                    Game.DisableControlThisFrame(2, Control.Context);
-
-                    if (Game.IsDisabledControlJustReleased(2, Control.Context))
+                    if (Game.IsControlJustReleased(2, Control.Context))
                     {
                         Game.FadeScreenOut(750);
 
                         Script.Wait(750);
 
                         PlayerPosition = t.End - Vector3.WorldUp;
+
+                        PlayerPed.Heading = t.EndHeading;
+
+                        GameplayCamera.RelativeHeading = 0;
 
                         Game.FadeScreenIn(750);
                     }
@@ -700,17 +752,19 @@ namespace GTS.Scenes
 
                 if (distanceEnd < distance)
                 {
-                    Utils.DisplayHelpTextWithGXT("0x5F43EF97");
+                    Utils.DisplayHelpTextWithGXT("PRESS_E");
 
-                    Game.DisableControlThisFrame(2, Control.Context);
-
-                    if (Game.IsDisabledControlJustPressed(2, Control.Context))
+                    if (Game.IsControlJustPressed(2, Control.Context))
                     {
                         Game.FadeScreenOut(750);
 
                         Script.Wait(750);
 
                         PlayerPosition = t.Start - Vector3.WorldUp;
+
+                        PlayerPed.Heading = t.StartHeading;
+
+                        GameplayCamera.RelativeHeading = 0;
 
                         Game.FadeScreenIn(750);
                     }
@@ -885,7 +939,7 @@ namespace GTS.Scenes
                     }
                 }
 
-                PlayerPed.Task.ClearAnimation("swimming@base", "idle");
+                PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
                 enteringVehicle = false;
             }
             // here's where we're in space without a vehicle.
@@ -1347,14 +1401,12 @@ namespace GTS.Scenes
                 }
 
                 // we're not playing the swimming animation yet.
-                if (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                if (!PlayerPed.IsPlayingAnim("swimming@first_person", "idle"))
                 {
-                    PlayerPed.Task.PlayAnimation("swimming@base", "idle", 8.0f, -8.0f, -1,
-                        AnimationFlags.Loop,
-                        0.0f);
+                    PlayerPed.Task.PlayAnimation("swimming@first_person", "idle", 8.0f, -8.0f, -1, (AnimationFlags)15, 0.0f);
 
                     DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 2);
-                    while (!PlayerPed.IsPlayingAnim("swimming@base", "idle"))
+                    while (!PlayerPed.IsPlayingAnim("swimming@first_person", "idle"))
                     {
                         Script.Yield();
 
@@ -1362,7 +1414,7 @@ namespace GTS.Scenes
                             break;
                     }
 
-                    PlayerPed.SetAnimSpeed("swimming@base", "idle", 0.3f);
+                    PlayerPed.SetAnimSpeed("swimming@first_person", "idle", 0.1f);
                 }
                 else // now we're playing the swimming animation.
                 {

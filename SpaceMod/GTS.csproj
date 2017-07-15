@@ -35,8 +35,8 @@
     <Reference Include="NativeUI">
       <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet2">
+      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -55,6 +55,7 @@
     <Compile Include="Missions\Types\SatelliteDish.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="Library\CppLib.cs" />
+    <Compile Include="OrbitalSystems\Surface.cs" />
     <Compile Include="Scenario\Scenario.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="Scenes\Interiors\Interior.cs" />

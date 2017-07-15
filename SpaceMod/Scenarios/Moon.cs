@@ -117,6 +117,7 @@ namespace DefaultMissions
                     break;
                 case 5:
                     float distance = Vector3.DistanceSquared2D(Game.Player.Character.Position, laptop.Position);
+                    HelperFunctions.DrawWaypoint(CurrentScene, laptop.Position);
                     if (distance > 3)
                         return;
                     Utils.DisplayHelpTextWithGXT("PRESS_E");
@@ -202,6 +203,11 @@ namespace DefaultMissions
             cutscene?.Stop();
 
             Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
+            Function.Call(Hash.STOP_GAMEPLAY_HINT, 0);
+            Function.Call(Hash.REMOVE_ANIM_DICT, "move_avoidance@generic_m");
+            Function.Call(Hash.REMOVE_ANIM_DICT, "get_up@standard");
+            Game.Player.Character.Task.ClearAll();
+            Game.Player.CanControlCharacter = true;
 
             foreach (OnFootCombatPed alien in aliens)
             {
@@ -311,6 +317,7 @@ namespace DefaultMissions
 
                         vehicle.AddBlip().Scale = 0.8f;
                         vehicle.MarkAsNoLongerNeeded();
+                        vehicle.Heading = Vector3.RelativeLeft.ToHeading();
                         vehicles.Add(vehicle);
 
                         continue;
@@ -392,8 +399,51 @@ namespace DefaultMissions
             if (Entity.Exists(carrierShip))
             {
                 if (carrierSpawn.Z > CurrentScene.Info.GalaxyCenter.Z + 75)
+                {
                     carrierSpawn += Vector3.RelativeRight * Game.LastFrameTime * 500;
-                else carrierSpawn += Vector3.WorldUp * Game.LastFrameTime * 10;
+
+                    if (Function.Call<bool>(Hash.IS_GAMEPLAY_HINT_ACTIVE))
+                    {
+                        Function.Call(Hash.STOP_GAMEPLAY_HINT, 0);
+
+                        if (!Game.Player.CanControlCharacter)
+                        {
+                            World.AddExplosion(carrierSpawn, ExplosionType.Grenade, 1000f, 1.5f, true, true);
+                            Game.Player.CanControlCharacter = true;
+                            Game.Player.Character.Task.ClearAllImmediately();
+                            TaskSequence seq = new TaskSequence();
+                            seq.AddTask.PlayAnimation("move_avoidance@generic_m", "react_front_dive_right", 11.0f, -4.0f, -1, AnimationFlags.AllowRotation, 0.0f);
+                            seq.AddTask.PlayAnimation("get_up@standard", "right", 8.0f, -4.0f, -1, AnimationFlags.AllowRotation, 0.0f);
+                            seq.Close(false);
+                            Game.Player.Character.Task.PerformSequence(seq);
+                            seq.Dispose();
+                            Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "GENERIC_FRIGHTENED_HIGH", "SPEECH_PARAMS_FORCE_SHOUTED_CRITICAL");
+                        }
+                    }
+                }
+                else
+                {
+                    carrierSpawn += Vector3.WorldUp * Game.LastFrameTime * 10;
+                    
+                    if (!Function.Call<bool>(Hash.IS_GAMEPLAY_HINT_ACTIVE))
+                    {
+
+                        Game.Player.Character.Task.StandStill(-1);
+                        Game.Player.Character.Task.LookAt(carrierShip);
+                        Game.Player.Character.Heading = (carrierShip.Position - Game.Player.Character.Position).ToHeading();
+                        Game.Player.CanControlCharacter = false;
+                        GameplayCamera.RelativeHeading = 0;
+                        Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_Med", "Speech_Params_Force");
+                        Function.Call(Hash.SET_GAMEPLAY_ENTITY_HINT, carrierShip, 0, 0, 0, 1, 5000, 5000, 5000, 0);
+
+                        Function.Call(Hash.REQUEST_ANIM_DICT, "move_avoidance@generic_m");
+                        while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, "move_avoidance@generic_m"))
+                            Script.Yield();
+                        Function.Call(Hash.REQUEST_ANIM_DICT, "get_up@standard");
+                        while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, "get_up@standard"))
+                            Script.Yield();
+                    }
+                }
 
                 carrierShip.Position = carrierSpawn;
                 carrierShip.EngineRunning = true;
@@ -572,7 +622,7 @@ namespace DefaultMissions
                     Function.Call(Hash.SET_DRAW_ORIGIN, planetProp.Position.X, planetProp.Position.Y, planetProp.Position.Z, 0);
 
                     /////////////////////////////////////////////////////////////
-                    Function.Call(Hash.SET_TEXT_FONT, (int)Font.Pricedown);
+                    Function.Call(Hash.SET_TEXT_FONT, (int)Font.ChaletComprimeCologne);
                     Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
                     Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
                     Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);

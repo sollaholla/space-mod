@@ -2,6 +2,7 @@
 using GTA.Math;
 using GTA.Native;
 using GTS.Library;
+using GTS.Scenes;
 using System;
 
 namespace DefaultMissions
@@ -60,6 +61,13 @@ namespace DefaultMissions
             }
 
             return vehicle;
+        }
+
+        public static void DrawWaypoint(Scene scene, Vector3 position)
+        {
+            float distance = Vector3.Distance(position, Game.Player.Character.Position);
+
+            scene.DrawMarkerAt(position, $"{distance:N0}M", System.Drawing.Color.White);
         }
     }
 }

@@ -42,6 +42,7 @@ namespace GTS
         private Scene currentScene;
         private MenuPool menuPool;
         private UIMenu mainMenu;
+        private bool didAbort;
         private readonly object tickLock;
         #endregion
 
@@ -132,16 +133,14 @@ namespace GTS
         {
             Debug.ClearLog();
             Debug.Log("Thread disposed...");
-            if (dispose)
-            {
-                OnAborted(null, new EventArgs());
-            }
+            if (!didAbort) OnAborted(null, new EventArgs());
             base.Dispose(dispose);
         }
 
         #region Events
         private void OnAborted(object sender, EventArgs eventArgs)
         {
+            didAbort = true;
             if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
                 Game.FadeScreenIn(0);
 
@@ -149,7 +148,6 @@ namespace GTS
             PlayerPed.HasGravity = true;
             PlayerPed.FreezePosition = false;
             PlayerPed.CanRagdoll = false;
-
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
             Utils.SetGravityLevel(9.81f);
@@ -201,6 +199,7 @@ namespace GTS
                             UI.HideHudComponentThisFrame(HudComponent.HelpText);
                         }
                     }
+
 
                     DisableWantedStars();
 
@@ -315,12 +314,12 @@ namespace GTS
 
             #region Scenes
             UIMenu scenesMenu = menuPool.AddSubMenu(mainMenu, "Scenes");
-            var files = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
-            for (var i = 0; i < files.Length; i++)
+            string[] filePaths = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
+            for (var i = 0; i < filePaths.Length; i++)
             {
-                var file = files[i];
-                var fileName = Path.GetFileName(file);
-                var menuItem = new UIMenuItem(fileName);
+                string path = filePaths[i];
+                string fileName = Path.GetFileName(path);
+                UIMenuItem menuItem = new UIMenuItem(fileName);
                 menuItem.Activated += (sender, item) =>
                 {
                     SceneInfo newScene = DeserializeFileAsScene(fileName);
@@ -671,6 +670,7 @@ namespace GTS
                 if (isActualScene && newScene == null)
                 {
                     OnAborted(this, new EventArgs());
+                    didAbort = false;
                     return;
                 }
 
@@ -698,16 +698,10 @@ namespace GTS
 
                     // AFTER creating the scene we set our offsets/rotations so that
                     // values set within the start of the scene are overriden.
+                    PlayerPosition = newScene.GalaxyCenter + exitOffset;
                     if (PlayerPed.IsInVehicle())
-                    {
                         PlayerPed.CurrentVehicle.Rotation = exitRotation;
-                        PlayerPed.CurrentVehicle.Position += exitOffset;
-                    }
-                    else
-                    {
-                        PlayerPed.Rotation = exitRotation;
-                        PlayerPed.Position += exitOffset;
-                    }
+                    else PlayerPed.Rotation = exitRotation;
                 }
                 else
                 {
