@@ -85,7 +85,6 @@ namespace DefaultMissions
             }
         }
 
-
         #region Fields
 
         #region Settings
@@ -113,6 +112,14 @@ namespace DefaultMissions
         private Ped _engineer;
         private Vehicle _engineerShuttle;
 
+        private readonly Model[] _requestModels =
+        {
+            "shuttle",
+            PedHash.MovAlien01,
+            PedHash.Movspace01SMM,
+            "lunar"
+        };
+
         #endregion
 
         #region Functions
@@ -127,8 +134,8 @@ namespace DefaultMissions
 
         public override void OnStart()
         {
-            Game.Player.Character.CanRagdoll = false;
-            Function.Call(Hash.SET_AI_WEAPON_DAMAGE_MODIFIER, _aiWeaponDamage);
+            Start_SetGameVariables();
+            RequestAssets();
 
             if (_missionStep <= 1)
                 SpawnAliens();
@@ -148,7 +155,7 @@ namespace DefaultMissions
                     SaveSettings();
                     break;
                 case 1:
-                    ProcessAliens();
+                    ProcessEntities();
                     if (!AreAllAliensDead()) return;
                     _missionStep++;
                     break;
@@ -168,7 +175,7 @@ namespace DefaultMissions
                 case 4:
                     if (!Game.IsScreenFadedIn || Game.IsLoading)
                         return;
-                    DoScientistDialogue();
+                    MarsBase_DoScientistDialogue();
                     break;
                 case 5:
                     if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
@@ -191,32 +198,7 @@ namespace DefaultMissions
                     }
                     break;
                 case 8:
-                    if (!Entity.Exists(_rover))
-                    {
-                        var vehicleSpawn = _marsEngineerRoverSpawn.MoveToGroundArtificial();
-                        if (vehicleSpawn != Vector3.Zero)
-                        {
-                            _rover = World.CreateVehicle("lunar", vehicleSpawn);
-                            if (Entity.Exists(_rover))
-                            {
-                                _rover.Model.MarkAsNoLongerNeeded();
-                                _rover.RadioStation = RadioStation.RadioOff;
-                                _rover.Heading = _marsEngineerRoverHeading;
-                            }
-                        }
-                    }
-
-                    if (!Game.IsScreenFadedIn || Game.IsLoading)
-                        return;
-
-                    if (_engineerScene == null)
-                    {
-                        _engineerScene = new MarsEngineerExplosionScene(_marsEngineerSpawn);
-                        _engineerScene.Start();
-                        return;
-                    }
-                    _engineerScene.Update();
-                    if (_engineerScene.Complete) _missionStep++;
+                    DoExpCutscene();
                     break;
                 case 9:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsEngineerSpawn);
@@ -226,12 +208,11 @@ namespace DefaultMissions
                     break;
                 case 10:
                     CreateEngineerFireFight();
+                    _missionStep++;
                     break;
                 case 11:
-                    t = new Trigger(_marsEngineerSpawn, 200);
-                    if (!t.IsInTrigger(Game.Player.Character.Position))
-                        HelperFunctions.DrawWaypoint(CurrentScene, _marsEngineerSpawn);
-                    ProcessAliens();
+                    HelperFunctions.DrawWaypoint(CurrentScene, _engineer.Position);
+                    ProcessEntities();
                     if (!AreAllAliensDead()) return;
                     _missionStep++;
                     break;
@@ -248,14 +229,8 @@ namespace DefaultMissions
                     Utils.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
-                    var m = new Model(PedHash.MovAlien01);
-                    m.Request();
-                    while (!m.IsLoaded)
-                        Script.Yield();
-
-                    var newAlien = HelperFunctions.SpawnAlien(_engineer.Position - Vector3.WorldUp, checkRadius: 0,
-                        weaponHash: WeaponHash.AdvancedRifle);
-                    PlaySmokeEffect(newAlien.Position);
+                    var newAlien = HelperFunctions.SpawnAlien(_engineer.Position - Vector3.WorldUp, checkRadius: 0, weaponHash: WeaponHash.AdvancedRifle, markModelAsNoLongerNeeded: false);
+                    ShapeShift_PlaySmokeEffect(newAlien.Position);
                     newAlien.Heading = _engineer.Heading;
                     _engineer.Delete();
                     _engineer = new Ped(newAlien.Handle);
@@ -272,7 +247,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 15:
-                    WakeUpUnderground();
+                    Kidnap_WakeUpUnderground();
                     _missionStep++;
                     break;
                 case 16:
@@ -293,19 +268,40 @@ namespace DefaultMissions
         {
             if (success)
             {
-                DeleteAliens(false);
+                CleanUp(false);
                 return;
             }
 
-            DeleteAliens(true);
+            CleanUp(true);
         }
 
         public override void OnAborted()
         {
-            DeleteAliens(true);
+            CleanUp(true);
         }
 
         #endregion
+
+        private void Start_SetGameVariables()
+        {
+            Game.Player.Character.CanRagdoll = false;
+            SetAiWeaponDamage();
+        }
+
+        private void RequestAssets()
+        {
+            RequestModels();
+        }
+
+        private void RequestModels()
+        {
+            foreach (var m in _requestModels)
+            {
+                m.Request();
+                while (!m.IsLoaded)
+                    Script.Yield();
+            }
+        }
 
         private void ReadSettings()
         {
@@ -348,31 +344,82 @@ namespace DefaultMissions
 
         private void SpawnAliens()
         {
-            Function.Call(Hash.SET_AI_WEAPON_DAMAGE_MODIFIER, _aiWeaponDamage);
-
             var center = CurrentScene.Info.GalaxyCenter;
             var spawn = center + Vector3.RelativeFront * 100;
 
+            CreateAliens(spawn);
+            CreateUfo(center, spawn);
+        }
+
+        private void SetAiWeaponDamage()
+        {
+            Function.Call(Hash.SET_AI_WEAPON_DAMAGE_MODIFIER, _aiWeaponDamage);
+        }
+
+        private void DoExpCutscene()
+        {
+            ExpCutScene_SpawnRover();
+
+            ////////////////////////////////////////////
+            // NOTE: Since we just left the mars base, 
+            // it's possible the game may be loading.
+            ////////////////////////////////////////////
+            if (!Game.IsScreenFadedIn || Game.IsLoading)
+                return;
+
+            if (_engineerScene == null)
+            {
+                _engineerScene = new MarsEngineerExplosionScene(_marsEngineerSpawn);
+                _engineerScene.Start();
+                return;
+            }
+            _engineerScene.Update();
+            if (_engineerScene.Complete)
+                _missionStep++;
+        }
+
+        private void ExpCutScene_SpawnRover()
+        {
+            if (Entity.Exists(_rover))
+                return;
+
+            var vehicleSpawn = _marsEngineerRoverSpawn.MoveToGroundArtificial();
+            if (vehicleSpawn != Vector3.Zero)
+            {
+                _rover = World.CreateVehicle(_requestModels[3], vehicleSpawn);
+                if (Entity.Exists(_rover))
+                {
+                    _rover.RadioStation = RadioStation.RadioOff;
+                    _rover.Heading = _marsEngineerRoverHeading;
+                }
+            }
+        }
+
+        private void CreateAliens(Vector3 spawn)
+        {
             for (var i = 0; i < _enemyCount; i++)
             {
                 var alien =
                     HelperFunctions.SpawnAlien(spawn.Around(_random.Next(25, 35)),
-                        ShapeShiftModel, 5, WeaponHash.AdvancedRifle, moveToGround: false);
+                        ShapeShiftModel, 5, WeaponHash.AdvancedRifle, moveToGround: false, markModelAsNoLongerNeeded: false);
 
                 if (Entity.Exists(alien))
                 {
                     alien.AddBlip().Scale = 0.5f;
-                    _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
+                    _aliens.Add(new OnFootCombatPed(alien) { Target = Game.Player.Character });
                 }
             }
+        }
 
+        private void CreateUfo(Vector3 center, Vector3 spawn)
+        {
             var randomDistance = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 25, 50);
             var spawnPoint = (spawn + Vector3.RelativeFront * 100).Around(randomDistance);
             var vehicle = HelperFunctions.SpawnUfo(spawnPoint);
 
             if (Entity.Exists(vehicle))
             {
-                var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+                var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, _requestModels[1]);
 
                 if (Entity.Exists(pilot))
                 {
@@ -396,7 +443,7 @@ namespace DefaultMissions
             }
         }
 
-        private void ProcessAliens()
+        private void ProcessEntities()
         {
             var pedCopy = _aliens.ToList();
 
@@ -409,24 +456,15 @@ namespace DefaultMissions
 
                     if (ped.Model == ShapeShiftModel)
                     {
-                        if (!_noSlowMoFlag) Game.TimeScale = 0.1f;
-                        var newAlien =
-                            HelperFunctions.SpawnAlien(ped.Position - Vector3.WorldUp,
-                                checkRadius: 0, weaponHash: WeaponHash.AdvancedRifle);
+                        if (!_noSlowMoFlag)
+                            Game.TimeScale = 0.1f;
 
-                        if (!Entity.Exists(newAlien))
-                        {
-                            Game.TimeScale = 1.0f;
-                            continue;
-                        }
-                        PlaySmokeEffect(newAlien.Position);
-                        newAlien.Heading = ped.Heading;
-                        ped.Delete();
-                        newAlien.Kill();
-                        FinishSlomoKill(newAlien);
+                        var newAlien = ShapeShift_ReplacePed(ped);
+
+                        ShapeShift_FinishSlomoKill(newAlien);
+
                         _aliens[_aliens.IndexOf(ped)] = new OnFootCombatPed(newAlien);
                     }
-
                     continue;
                 }
 
@@ -439,7 +477,20 @@ namespace DefaultMissions
                         _ufo.CurrentBlip.Remove();
         }
 
-        private void DoScientistDialogue()
+        private Ped ShapeShift_ReplacePed(OnFootCombatPed ped)
+        {
+            var newAlien =
+                HelperFunctions.SpawnAlien(ped.Position - Vector3.WorldUp,
+                    checkRadius: 0, weaponHash: WeaponHash.AdvancedRifle, markModelAsNoLongerNeeded: false);
+
+            ShapeShift_PlaySmokeEffect(newAlien.Position);
+            newAlien.Heading = ped.Heading;
+            ped.Delete();
+            newAlien.Kill();
+            return newAlien;
+        }
+
+        private void MarsBase_DoScientistDialogue()
         {
             var interior = CurrentScene.GetInterior("MarsBaseInterior");
             if (interior == null)
@@ -503,7 +554,7 @@ namespace DefaultMissions
             _missionStep++;
         }
 
-        private void WakeUpUnderground()
+        private void Kidnap_WakeUpUnderground()
         {
             Game.FadeScreenOut(1500);
             Script.Wait(1500);
@@ -534,54 +585,52 @@ namespace DefaultMissions
 
         private void CreateEngineerFireFight()
         {
-            Vector3 spawn;
-            while ((spawn = _marsEngineerSpawn.MoveToGroundArtificial()) == Vector3.Zero)
-                Script.Yield();
+            EngineerFight_CreateEngineer();
+            EngineerFight_CreateEngineerShuttle();
+            EngineerFight_CreateDecoyAlien();
+        }
 
-            var m = new Model(PedHash.Movspace01SMM);
-            m.Request();
-            while (!m.IsLoaded)
+        private void EngineerFight_CreateEngineer()
+        {
+            while (_marsEngineerSpawn.MoveToGroundArtificial() == Vector3.Zero)
                 Script.Yield();
+            var spawn = _marsEngineerSpawn.MoveToGroundArtificial();
 
-            _engineer = World.CreatePed(m, spawn);
+            _engineer = World.CreatePed(_requestModels[2], spawn);
             _engineer.Weapons.Give(WeaponHash.AssaultSMG, 1000, true, true);
             _engineer.RelationshipGroup = Game.Player.Character.RelationshipGroup;
             _engineer.IsInvincible = true;
+        }
 
-            m = new Model("shuttle");
-            m.Request();
-            while (!m.IsLoaded)
+        private void EngineerFight_CreateDecoyAlien()
+        {
+            Vector3 spawn = _engineer.Position + _engineer.ForwardVector * 15;
+            while (spawn.MoveToGroundArtificial() == Vector3.Zero)
                 Script.Yield();
-
-            while ((spawn = (_engineer.Position + _engineer.RightVector * 25).MoveToGroundArtificial()) == Vector3.Zero)
-                Script.Yield();
-
-            _engineerShuttle = World.CreateVehicle(m, spawn - Vector3.WorldUp);
-            _engineerShuttle.LandingGear = VehicleLandingGear.Retracted;
-            _engineerShuttle.IsInvincible = true;
-            _engineerShuttle.LockStatus = VehicleLockStatus.CannotBeTriedToEnter;
-            _engineerShuttle.Model.MarkAsNoLongerNeeded();
-            Function.Call(Hash.SET_ENTITY_RENDER_SCORCHED, _engineerShuttle, true);
-            Function.Call(Hash.SET_VEHICLE_LOD_MULTIPLIER, _engineerShuttle, 0.1f);
-            Function.Call(Hash.SET_ENTITY_LOD_DIST, _engineerShuttle, (ushort) 140);
-
-            while ((spawn = (_engineer.Position + _engineer.ForwardVector * 15).MoveToGroundArtificial()) == Vector3.Zero)
-                Script.Yield();
-
-            m = new Model(PedHash.MovAlien01);
-            m.Request();
-            while (!m.IsLoaded)
-                Script.Yield();
-
-            var alien = HelperFunctions.SpawnAlien(spawn);
+            spawn = spawn.MoveToGroundArtificial();
+            var alien = HelperFunctions.SpawnAlien(spawn, markModelAsNoLongerNeeded: false);
             alien.AddBlip().Scale = 0.5f;
             alien.IsOnlyDamagedByPlayer = true;
             alien.Heading = (_engineer.Position - alien.Position).ToHeading();
-            _aliens.Add(new OnFootCombatPed(alien) {Target = _engineer});
-            _missionStep++;
+            _aliens.Add(new OnFootCombatPed(alien) { Target = _engineer });
         }
 
-        private void FinishSlomoKill(Ped pedKilled)
+        private void EngineerFight_CreateEngineerShuttle()
+        {
+            Vector3 spawn = _engineer.Position + _engineer.RightVector * 25;
+            while (spawn.MoveToGroundArtificial() == Vector3.Zero)
+                Script.Yield();
+            spawn = spawn.MoveToGroundArtificial();
+            _engineerShuttle = World.CreateVehicle(_requestModels[0], spawn - Vector3.WorldUp);
+            _engineerShuttle.LandingGear = VehicleLandingGear.Retracted;
+            _engineerShuttle.IsInvincible = true;
+            _engineerShuttle.LockStatus = VehicleLockStatus.CannotBeTriedToEnter;
+            Function.Call(Hash.SET_ENTITY_RENDER_SCORCHED, _engineerShuttle, true);
+            Function.Call(Hash.SET_VEHICLE_LOD_MULTIPLIER, _engineerShuttle, 0.1f);
+            Function.Call(Hash.SET_ENTITY_LOD_DIST, _engineerShuttle, (ushort)140);
+        }
+
+        private void ShapeShift_FinishSlomoKill(Ped pedKilled)
         {
             if (!_noSlowMoFlag)
             {
@@ -604,7 +653,7 @@ namespace DefaultMissions
             }
         }
 
-        private void PlaySmokeEffect(Vector3 pos)
+        private void ShapeShift_PlaySmokeEffect(Vector3 pos)
         {
             var ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
 
@@ -617,28 +666,25 @@ namespace DefaultMissions
             ptfx.Remove();
         }
 
-        private void DeleteAliens(bool delete)
+        private void CleanUp(bool delete)
         {
-            _engineerScene?.Stop();
-
-            Effects.Stop();
-
-            Game.Player.Character.CanRagdoll = true;
-
-            Function.Call(Hash.RESET_PED_MOVEMENT_CLIPSET, Game.Player.Character, 0.25f);
-
-            Game.Player.Character.Task.ClearAll();
-
-            Game.TimeScale = 1.0f;
-
-            Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
-
-            Function.Call(Hash.REMOVE_IPL, "imp_impexp_interior_placement_interior_3_impexp_int_02_milo_");
-
-            DeleteEntities(delete);
+            CleanUp_ResetGameChanges();
+            CleanUpEntities(delete);
         }
 
-        private void DeleteEntities(bool delete)
+        private void CleanUp_ResetGameChanges()
+        {
+            _engineerScene?.Stop();
+            Effects.Stop();
+            Game.Player.Character.CanRagdoll = true;
+            Function.Call(Hash.RESET_PED_MOVEMENT_CLIPSET, Game.Player.Character, 0.25f);
+            Game.Player.Character.Task.ClearAll();
+            Game.TimeScale = 1.0f;
+            Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
+            Function.Call(Hash.REMOVE_IPL, "imp_impexp_interior_placement_interior_3_impexp_int_02_milo_");
+        }
+
+        private void CleanUpEntities(bool delete)
         {
             foreach (var alien in _aliens)
             {
@@ -677,6 +723,22 @@ namespace DefaultMissions
                 if (delete && !Game.Player.Character.IsInVehicle(_rover))
                     _rover.Delete();
                 else _rover.MarkAsNoLongerNeeded();
+
+            RemoveGameAssets();
+        }
+
+        private void RemoveGameAssets()
+        {
+            RemoveModels();
+        }
+
+        private void RemoveModels()
+        {
+            foreach (var model in _requestModels)
+            {
+                if (model.IsLoaded)
+                    model.MarkAsNoLongerNeeded();
+            }
         }
 
         private bool AreAllAliensDead()

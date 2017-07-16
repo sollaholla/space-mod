@@ -19,7 +19,8 @@ namespace DefaultMissions
 
         public static Ped SpawnAlien(
             Vector3 spawn, PedHash? model = null, float checkRadius = 5f,
-            WeaponHash weaponHash = WeaponHash.Railgun, int accuracy = 50, bool moveToGround = true)
+            WeaponHash weaponHash = WeaponHash.Railgun, int accuracy = 50, bool moveToGround = true,
+            bool markModelAsNoLongerNeeded = true)
         {
             var spawnPoint = spawn;
 
@@ -34,7 +35,7 @@ namespace DefaultMissions
 
             var ped = Utils.CreateAlien(spawnPoint, weaponHash, model, accuracy, Random.Next(0, 359));
 
-            if (Entity.Exists(ped))
+            if (Entity.Exists(ped) && markModelAsNoLongerNeeded)
                 ped.Model.MarkAsNoLongerNeeded();
 
             return ped;
