@@ -67,6 +67,8 @@ namespace GTS.Scenes
         private float interior_vehicleAccelerationMult = 10.0f;
         private float interior_vehicleMaxSpeed = 1000.0f;
         private string timeCycleMod = string.Empty;
+        private float vehicleEnginePowerMult = 100;
+        private float vehicleTorqueMult = 2;
         #endregion
 
         #region Physics
@@ -503,6 +505,12 @@ namespace GTS.Scenes
                 Interior interior = new Interior(interiorInfo.Name, interiorInfo.Type);
 
                 interior.Request();
+
+                foreach (Vehicle v in interior.Vehicles)
+                {
+                    v.EnginePowerMultiplier = 500f;
+                    v.EngineTorqueMultiplier = 2.0f;
+                }
 
                 interiors.Add(interior);
             }

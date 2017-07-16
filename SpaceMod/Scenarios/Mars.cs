@@ -182,11 +182,11 @@ namespace DefaultMissions
                         Script.Yield();
 
                     Ped newAlien = HelperFunctions.SpawnAlien(engineer.Position - Vector3.WorldUp, checkRadius: 0, weaponHash: WeaponHash.AdvancedRifle);
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, engineer, "Generic_Insult_Med", "Speech_Params_Force");
                     PlaySmokeEffect(newAlien.Position);
                     newAlien.Heading = engineer.Heading;
                     engineer.Delete();
                     engineer = new Ped(newAlien.Handle);
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, engineer, "Generic_Insult_Med", "Speech_Params_Force");
                     engineer.BlockPermanentEvents = true;
                     missionStep++;
                     break;
@@ -199,6 +199,7 @@ namespace DefaultMissions
                     break;
                 case 15:
                     WakeUpUnderground();
+                    missionStep++;
                     break;
                 case 16:
                     Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
@@ -450,7 +451,6 @@ namespace DefaultMissions
             Effects.Start(ScreenEffect.DrugsMichaelAliensFight, looped: true);
             Game.FadeScreenIn(1500);
             Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_Med", "Speech_Params_Force_Shouted_Critical");
-            missionStep++;
         }
 
         private void CreateEngineerFireFight()
@@ -484,7 +484,7 @@ namespace DefaultMissions
             engineerShuttle.Model.MarkAsNoLongerNeeded();
             Function.Call(Hash.SET_ENTITY_RENDER_SCORCHED, engineerShuttle, true);
             Function.Call(Hash.SET_VEHICLE_LOD_MULTIPLIER, engineerShuttle, 0.1f);
-            Function.Call(Hash.SET_ENTITY_LOD_DIST, engineerShuttle, (UInt16)125);
+            Function.Call(Hash.SET_ENTITY_LOD_DIST, engineerShuttle, (UInt16)140);
 
             while ((spawn = (engineer.Position + engineer.ForwardVector * 15).MoveToGroundArtificial()) == Vector3.Zero)
                 Script.Yield();
@@ -562,6 +562,17 @@ namespace DefaultMissions
 
         private void DeleteEntities(bool delete)
         {
+            foreach (OnFootCombatPed alien in aliens)
+            {
+                if (delete)
+                {
+                    alien.Delete();
+                    continue;
+                }
+
+                alien.MarkAsNoLongerNeeded();
+            }
+
             if (Entity.Exists(engineerShuttle))
             {
                 if (delete) engineerShuttle.Delete();
@@ -572,17 +583,6 @@ namespace DefaultMissions
             {
                 if (delete) engineer.Delete();
                 else engineer.MarkAsNoLongerNeeded();
-            }
-
-            foreach (OnFootCombatPed alien in aliens)
-            {
-                if (delete)
-                {
-                    alien.Delete();
-                    continue;
-                }
-
-                alien.MarkAsNoLongerNeeded();
             }
 
             if (Entity.Exists(ufo))
@@ -606,10 +606,8 @@ namespace DefaultMissions
                 if (delete && !Game.Player.Character.IsInVehicle(rover))
                 {
                     rover.Delete();
-                    return;
                 }
-
-                rover.MarkAsNoLongerNeeded();
+                else rover.MarkAsNoLongerNeeded();
             }
         }
 
