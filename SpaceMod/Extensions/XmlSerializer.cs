@@ -7,20 +7,20 @@ namespace GTS.Extensions
     {
         public static T Deserialize<T>(string path)
         {
-            T obj = default(T);
+            var obj = default(T);
 
             Debug.Log("Attempting to deserialize: " + Path.GetFileName(path));
 
-	        if (!File.Exists(path))
-	        {
-				Debug.Log($"Deserialize - File {Path.GetFileName(path)} does not exist!");
-		        return obj;
-	        }
+            if (!File.Exists(path))
+            {
+                Debug.Log($"Deserialize - File {Path.GetFileName(path)} does not exist!");
+                return obj;
+            }
             try
             {
                 var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
                 var reader = new StreamReader(path);
-                obj = (T)serializer.Deserialize(reader);
+                obj = (T) serializer.Deserialize(reader);
                 reader.Close();
             }
             catch (Exception ex)

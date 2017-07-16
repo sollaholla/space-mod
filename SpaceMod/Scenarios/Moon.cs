@@ -1,45 +1,212 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTS;
+using GTS.Extensions;
 using GTS.Library;
 using GTS.Scenarios;
-using System.Collections.Generic;
-using GTS.Extensions;
-using System.Linq;
-using System.IO;
-using GTS.Particles;
-using System.Reflection;
 
 namespace DefaultMissions
 {
     public class Moon : Scenario
     {
+        private class MoonSatelliteCutscene : ICutScene
+        {
+            private const string TextureDict = "securitycam";
+            private const string TextureName = "securitycam_box";
+            private Camera _camera;
+            private readonly string _planetModel;
+            private Prop _planetProp;
+            private Vector3 _pos;
+            private readonly Random _random = new Random();
+            private float _seconds;
+            private int _step;
+            private Vehicle _ufo;
+
+            public MoonSatelliteCutscene(string planetModel)
+            {
+                _planetModel = planetModel;
+            }
+
+            public bool Complete { get; set; }
+
+            public void Start()
+            {
+                var spawn = new Vector3(10000, 10000, 10000);
+                _camera = World.CreateCamera(spawn, new Vector3(270, 0, 0), 60);
+                World.RenderingCamera = _camera;
+                Game.FadeScreenOut(0);
+                Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, TextureDict, 0);
+                while (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, TextureDict))
+                    Script.Yield();
+                Game.FadeScreenIn(1000);
+
+                var planet = World.CreateProp(_planetModel,
+                    spawn + Vector3.RelativeFront * 5000 + Vector3.WorldDown * 100, false, false);
+
+                if (Entity.Exists(planet))
+                {
+                    planet.FreezePosition = true;
+                    _planetProp = planet;
+                }
+
+                var v = World.CreateVehicle("zanufo", spawn + Vector3.WorldDown * 100, 0);
+                if (Entity.Exists(v))
+                {
+                    v.FreezePosition = true;
+                    _ufo = v;
+                    _pos = v.Position;
+                }
+            }
+
+            public void Stop()
+            {
+                if (World.RenderingCamera == _camera)
+                    World.RenderingCamera = null;
+
+                _camera.Destroy();
+
+                if (Entity.Exists(_ufo))
+                    _ufo.Delete();
+
+                if (Entity.Exists(_planetProp))
+                    _planetProp.Delete();
+
+                Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, TextureDict);
+            }
+
+            public void Update()
+            {
+                Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
+
+                if (_ufo == null)
+                {
+                    Complete = true;
+                    return;
+                }
+
+                switch (_step)
+                {
+                    case 0:
+                        TimeCycleModifier.Set("CAMERA_secuirity", 1.0f);
+                        _camera.PointAt(_ufo);
+                        _step++;
+                        break;
+                    case 1:
+                        _pos += Vector3.RelativeFront * 100 * Game.LastFrameTime;
+                        _ufo.PositionNoOffset = _pos;
+                        _seconds += Game.LastFrameTime;
+                        DrawUi();
+                        if (_seconds < 7f) return;
+                        Complete = true;
+                        break;
+                }
+            }
+
+            private void DrawUi()
+            {
+                const float imgWidth = 1536f;
+                const float imgHeight = 1024f;
+                const float width = 1f / 1920 / (1f / imgWidth);
+                const float height = 1f / 1080 / (1f / imgHeight);
+
+                Function.Call(Hash.DRAW_SPRITE, TextureDict, TextureName, 0.5f, 0.5f, width, height, 0f, 255, 255, 255,
+                    255);
+
+                /////////////////////////////////////////////////////////////
+                Function.Call(Hash.SET_TEXT_FONT, (int) Font.Monospace);
+                Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
+                Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
+                Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
+                Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
+                Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
+                Function.Call(Hash.SET_TEXT_WRAP, 0, width);
+                Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
+                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "UAC~n~VEHICLE IDENTIFICATION " + RandomString(5));
+                Function.Call(Hash._DRAW_TEXT, 0.5f, 0.5f);
+                /////////////////////////////////////////////////////////////
+
+                /////////////////////////////////////////////////////////////
+                Function.Call(Hash.SET_TEXT_FONT, (int) Font.ChaletComprimeCologne);
+                Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
+                Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
+                Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
+                Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
+                Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
+                Function.Call(Hash.SET_TEXT_WRAP, 0, width);
+                Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
+                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
+                    "MARS SAT CAM 11~n~" + World.CurrentDate.ToShortDateString());
+                Function.Call(Hash._DRAW_TEXT, 0.15f, 0.075f);
+                /////////////////////////////////////////////////////////////
+
+                if (Entity.Exists(_planetProp))
+                {
+                    Function.Call(Hash.SET_DRAW_ORIGIN, _planetProp.Position.X, _planetProp.Position.Y,
+                        _planetProp.Position.Z, 0);
+
+                    /////////////////////////////////////////////////////////////
+                    Function.Call(Hash.SET_TEXT_FONT, (int) Font.ChaletComprimeCologne);
+                    Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
+                    Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
+                    Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
+                    Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
+                    Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
+                    Function.Call(Hash.SET_TEXT_WRAP, 0, width);
+                    Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
+                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
+                        $"ORBITAL ID: MARS~n~AVG TEMP: 125c~n~CUR ORBITAL VEL: 24.{_random.Next(0, 10)} km/s");
+                    Function.Call(Hash._DRAW_TEXT, 0f, 0f);
+                    /////////////////////////////////////////////////////////////
+
+                    Function.Call(Hash.CLEAR_DRAW_ORIGIN);
+                }
+            }
+
+            private string RandomString(int length)
+            {
+                const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                return new string(Enumerable.Repeat(chars, length)
+                    .Select(s => s[_random.Next(s.Length)]).ToArray());
+            }
+        }
+
         #region Fields
-        private List<OnFootCombatPed> aliens = new List<OnFootCombatPed>();
-        private List<Ped> pilots = new List<Ped>();
-        private List<Vehicle> vehicles = new List<Vehicle>();
-        private Vehicle carrierShip;
-        private Vector3 carrierSpawn;
-        private Prop laptop;
-        private ICutScene cutscene;
-        private Random random = new Random();
-        private Vector3 laptopSpawnPosition = new Vector3(-10002.10f, -10004.52f, 10001.463f);
-        private Vector3 laptopSpawnRotation = new Vector3(0, 0, 0.2404f);
+
+        private readonly List<OnFootCombatPed> _aliens = new List<OnFootCombatPed>();
+        private readonly List<Ped> _pilots = new List<Ped>();
+        private readonly List<Vehicle> _vehicles = new List<Vehicle>();
+        private Vehicle _carrierShip;
+        private Vector3 _carrierSpawn;
+        private Prop _laptop;
+        private ICutScene _cutscene;
+        private readonly Random _random = new Random();
+        private Vector3 _laptopSpawnPosition = new Vector3(-10002.10f, -10004.52f, 10001.463f);
+        private Vector3 _laptopSpawnRotation = new Vector3(0, 0, 0.2404f);
 
         #region Settings
-        private int missionStep = 0;
-        private int enemyCount = 15;
-        private int pilotCount = 3;
-        private float aiWeaponDamage = 0.01f;
-        private string flagModel = "ind_prop_dlc_flag_02";
-        private string cutscenePlanetModel = "mars_large";
-        private Vector3 lastFlagPos = Vector3.Zero;
+
+        private int _missionStep;
+        private int _enemyCount = 15;
+        private int _pilotCount = 3;
+        private float _aiWeaponDamage = 0.01f;
+        private string _flagModel = "ind_prop_dlc_flag_02";
+        private string _cutscenePlanetModel = "mars_large";
+        private Vector3 _lastFlagPos = Vector3.Zero;
+
         #endregion
+
         #endregion
 
         #region Functions
+
         #region Implemented
+
         public override void OnAwake()
         {
             ReadSettings();
@@ -54,11 +221,11 @@ namespace DefaultMissions
 
         public override void OnStart()
         {
-            if (missionStep == 0)
+            if (_missionStep == 0)
             {
                 SpawnAliens();
 
-                Function.Call(Hash.SET_AI_WEAPON_DAMAGE_MODIFIER, aiWeaponDamage);
+                Function.Call(Hash.SET_AI_WEAPON_DAMAGE_MODIFIER, _aiWeaponDamage);
             }
 
             SpawnLaptop();
@@ -68,20 +235,21 @@ namespace DefaultMissions
 
         public override void OnUpdate()
         {
-            switch (missionStep)
+            switch (_missionStep)
             {
                 case 0:
                     ProcessAliens();
                     UpdateCarierShip();
                     if (!AreAllAliensDead()) return;
-                    missionStep++;
+                    _missionStep++;
                     break;
                 case 1:
-                    if (Entity.Exists(carrierShip))
-                        carrierShip.Delete();
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Insult_Med", "Speech_Params_Force");
+                    if (Entity.Exists(_carrierShip))
+                        _carrierShip.Delete();
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Insult_Med",
+                        "Speech_Params_Force");
                     Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                    missionStep++;
+                    _missionStep++;
                     break;
                 case 2:
                     if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
@@ -89,59 +257,60 @@ namespace DefaultMissions
                     Effects.Start(ScreenEffect.SuccessNeutral, 5000);
                     ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("ENEMIES_ELIM"));
                     Script.Wait(4000);
-                    missionStep++;
+                    _missionStep++;
                     break;
                 case 3:
-                    Utils.DisplayHelpTextWithGXT("PLANT_FLAG");
+                    Utils.DisplayHelpTextWithGxt("PLANT_FLAG");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
-                    Vector3 spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector;
-                    Vector3 ground = spawn.MoveToGroundArtificial(Game.Player.Character);
+                    var spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector;
+                    var ground = spawn.MoveToGroundArtificial(Game.Player.Character);
                     if (ground != Vector3.Zero) spawn = ground;
                     Game.Player.Character.Task.PlayAnimation("pickup_object", "pickup_low");
-                    lastFlagPos = spawn;
+                    _lastFlagPos = spawn;
                     SpawnFlag();
                     CheckMarsMission();
                     break;
                 case 4:
                     Script.Wait(1000);
-                    if (!Entity.Exists(laptop))
+                    if (!Entity.Exists(_laptop))
                     {
                         SpawnLaptop();
                         return;
                     }
                     UI.ShowSubtitle(Game.GetGXTEntry("SAT_CHECK"), 7500);
-                    laptop.AddBlip().Scale = 0.6f;
-                    laptop.CurrentBlip.Color = BlipColor.Yellow;
-                    missionStep++;
+                    _laptop.AddBlip().Scale = 0.6f;
+                    _laptop.CurrentBlip.Color = BlipColor.Yellow;
+                    _missionStep++;
                     break;
                 case 5:
-                    float distance = Vector3.DistanceSquared2D(Game.Player.Character.Position, laptop.Position);
-                    HelperFunctions.DrawWaypoint(CurrentScene, laptop.Position);
+                    var distance = Vector3.DistanceSquared2D(Game.Player.Character.Position, _laptop.Position);
+                    HelperFunctions.DrawWaypoint(CurrentScene, _laptop.Position);
                     if (distance > 3)
                         return;
-                    Utils.DisplayHelpTextWithGXT("PRESS_E");
+                    Utils.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
-                    cutscene = new MoonSatelliteCutscene(cutscenePlanetModel);
-                    cutscene.Start();
-                    laptop.CurrentBlip.Remove();
-                    missionStep++;
+                    _cutscene = new MoonSatelliteCutscene(_cutscenePlanetModel);
+                    _cutscene.Start();
+                    _laptop.CurrentBlip.Remove();
+                    _missionStep++;
                     break;
                 case 6:
-                    if (!cutscene.Complete)
+                    if (!_cutscene.Complete)
                     {
-                        cutscene.Update();
+                        _cutscene.Update();
                         return;
                     }
-                    cutscene.Stop();
+                    _cutscene.Stop();
                     Effects.Start(ScreenEffect.FocusOut);
-                    missionStep++;
+                    _missionStep++;
                     break;
                 case 7:
                     Script.Wait(500);
                     Game.Player.Character.Task.PlayAnimation("gestures@f@standing@casual", "gesture_no_way");
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_High", "Speech_Params_Force");
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_High",
+                        "Speech_Params_Force");
                     Script.Wait(1000);
                     UI.ShowSubtitle(Game.GetGXTEntry("GO_TO") + " ~p~Mars~s~.", 7500);
                     EndScenario(true);
@@ -169,38 +338,41 @@ namespace DefaultMissions
         {
             DeleteAliens(true);
         }
+
         #endregion
 
         private void ReadSettings()
         {
-            missionStep = Settings.GetValue("general", "mission_step", missionStep);
-            enemyCount = Settings.GetValue("general", "enemy_count", enemyCount);
-            pilotCount = Settings.GetValue("general", "pilot_count", pilotCount);
-            flagModel = Settings.GetValue("general", "flag_model", flagModel);
-            aiWeaponDamage = Settings.GetValue("general", "ai_weapon_damage", aiWeaponDamage);
-            lastFlagPos = ParseVector3.Read(Settings.GetValue("general", "last_flag_pos"), Vector3.Zero);
-            cutscenePlanetModel = Settings.GetValue("cutscene", "cutscene_planet_model", cutscenePlanetModel);
-            laptopSpawnPosition = ParseVector3.Read(Settings.GetValue("cutscene", "laptop_spawn_position"), laptopSpawnPosition);
-            laptopSpawnRotation = ParseVector3.Read(Settings.GetValue("cutscene", "laptop_spawn_rotation"), laptopSpawnRotation);
+            _missionStep = Settings.GetValue("general", "mission_step", _missionStep);
+            _enemyCount = Settings.GetValue("general", "enemy_count", _enemyCount);
+            _pilotCount = Settings.GetValue("general", "pilot_count", _pilotCount);
+            _flagModel = Settings.GetValue("general", "flag_model", _flagModel);
+            _aiWeaponDamage = Settings.GetValue("general", "ai_weapon_damage", _aiWeaponDamage);
+            _lastFlagPos = ParseVector3.Read(Settings.GetValue("general", "last_flag_pos"), Vector3.Zero);
+            _cutscenePlanetModel = Settings.GetValue("cutscene", "cutscene_planet_model", _cutscenePlanetModel);
+            _laptopSpawnPosition = ParseVector3.Read(Settings.GetValue("cutscene", "laptop_spawn_position"),
+                _laptopSpawnPosition);
+            _laptopSpawnRotation = ParseVector3.Read(Settings.GetValue("cutscene", "laptop_spawn_rotation"),
+                _laptopSpawnRotation);
         }
 
         private void SaveSettings()
         {
-            Settings.SetValue("general", "mission_step", missionStep);
-            Settings.SetValue("general", "enemy_count", enemyCount);
-            Settings.SetValue("general", "pilot_count", pilotCount);
-            Settings.SetValue("general", "ai_weapon_damage", aiWeaponDamage);
-            Settings.SetValue("general", "last_flag_pos", lastFlagPos);
-            Settings.SetValue("general", "flag_model", flagModel);
-            Settings.SetValue("cutscene", "cutscene_planet_model", cutscenePlanetModel);
-            Settings.SetValue("cutscene", "laptop_spawn_position", laptopSpawnPosition);
-            Settings.SetValue("cutscene", "laptop_spawn_rotation", laptopSpawnRotation);
+            Settings.SetValue("general", "mission_step", _missionStep);
+            Settings.SetValue("general", "enemy_count", _enemyCount);
+            Settings.SetValue("general", "pilot_count", _pilotCount);
+            Settings.SetValue("general", "ai_weapon_damage", _aiWeaponDamage);
+            Settings.SetValue("general", "last_flag_pos", _lastFlagPos);
+            Settings.SetValue("general", "flag_model", _flagModel);
+            Settings.SetValue("cutscene", "cutscene_planet_model", _cutscenePlanetModel);
+            Settings.SetValue("cutscene", "laptop_spawn_position", _laptopSpawnPosition);
+            Settings.SetValue("cutscene", "laptop_spawn_rotation", _laptopSpawnRotation);
             Settings.Save();
         }
 
         private void DeleteAliens(bool delete)
         {
-            cutscene?.Stop();
+            _cutscene?.Stop();
 
             Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
             Function.Call(Hash.STOP_GAMEPLAY_HINT, 0);
@@ -209,7 +381,7 @@ namespace DefaultMissions
             Game.Player.Character.Task.ClearAll();
             Game.Player.CanControlCharacter = true;
 
-            foreach (OnFootCombatPed alien in aliens)
+            foreach (var alien in _aliens)
             {
                 if (delete)
                 {
@@ -220,7 +392,7 @@ namespace DefaultMissions
                 alien.MarkAsNoLongerNeeded();
             }
 
-            foreach (Ped pilot in pilots)
+            foreach (var pilot in _pilots)
             {
                 if (delete)
                 {
@@ -231,7 +403,7 @@ namespace DefaultMissions
                 pilot.MarkAsNoLongerNeeded();
             }
 
-            foreach (Vehicle vehicle in vehicles)
+            foreach (var vehicle in _vehicles)
             {
                 if (delete)
                 {
@@ -242,83 +414,82 @@ namespace DefaultMissions
                 vehicle.MarkAsNoLongerNeeded();
             }
 
-            if (Entity.Exists(laptop))
-            {
+            if (Entity.Exists(_laptop))
                 if (delete)
-                    laptop.Delete();
+                {
+                    _laptop.Delete();
+                }
                 else
                 {
-                    laptop.MarkAsNoLongerNeeded();
-                    laptop.CurrentBlip.Remove();
+                    _laptop.MarkAsNoLongerNeeded();
+                    _laptop.CurrentBlip.Remove();
                 }
-            }
 
-            if (Entity.Exists(carrierShip))
-            {
-                carrierShip.Delete();
-            }
+            if (Entity.Exists(_carrierShip))
+                _carrierShip.Delete();
         }
 
         private void SpawnAliens()
         {
-            Vector3 pedSpawn = CurrentScene.Info.GalaxyCenter + (Vector3.RelativeLeft * 150);
+            var pedSpawn = CurrentScene.Info.GalaxyCenter + Vector3.RelativeLeft * 150;
 
             if (!DidGoToMars())
             {
-                carrierShip = World.CreateVehicle("zanufo", pedSpawn + Vector3.WorldUp * 15);
+                _carrierShip = World.CreateVehicle("zanufo", pedSpawn + Vector3.WorldUp * 15);
 
-                if (Entity.Exists(carrierShip))
+                if (Entity.Exists(_carrierShip))
                 {
-                    carrierSpawn = carrierShip.Position;
-                    carrierShip.FreezePosition = true;
-                    carrierShip.IsInvincible = true;
-                    carrierShip.HasCollision = false;
+                    _carrierSpawn = _carrierShip.Position;
+                    _carrierShip.FreezePosition = true;
+                    _carrierShip.IsInvincible = true;
+                    _carrierShip.HasCollision = false;
                 }
             }
 
-            for (int i = 0; i < enemyCount; i++)
+            for (var i = 0; i < _enemyCount; i++)
             {
-                Ped alien = HelperFunctions.SpawnAlien(pedSpawn.Around(random.Next(5, 40)));
+                var alien = HelperFunctions.SpawnAlien(pedSpawn.Around(_random.Next(5, 40)));
 
                 if (Entity.Exists(alien))
                 {
                     alien.AddBlip().Scale = 0.5f;
 
-                    aliens.Add(new OnFootCombatPed(alien) { Target = Game.Player.Character });
+                    _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
                 }
             }
 
-            Vector3 vehicleSpawnArea = CurrentScene.Info.GalaxyCenter + Vector3.RelativeLeft * 250f;
-            float maxZ = CurrentScene.Info.GalaxyCenter.Z;
+            var vehicleSpawnArea = CurrentScene.Info.GalaxyCenter + Vector3.RelativeLeft * 250f;
+            var maxZ = CurrentScene.Info.GalaxyCenter.Z;
 
-            for (int i = 0; i < pilotCount; i++)
+            for (var i = 0; i < _pilotCount; i++)
             {
-                float randomDistance = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 25, 50);
+                var randomDistance = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 25, 50);
 
-                Vector3 spawnPoint = vehicleSpawnArea.Around(randomDistance);
+                var spawnPoint = vehicleSpawnArea.Around(randomDistance);
 
-                Vehicle vehicle = HelperFunctions.SpawnUfo(spawnPoint);
+                var vehicle = HelperFunctions.SpawnUfo(spawnPoint);
 
                 if (Entity.Exists(vehicle))
                 {
-                    Ped pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+                    var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
 
                     if (Entity.Exists(pilot))
                     {
                         pilot.SetDefaultClothes();
-                        pilot.RelationshipGroup = GTS.Database.AlienRelationshipGroup;
+                        pilot.RelationshipGroup = Database.AlienRelationshipGroup;
 
-                        Function.Call(Hash.TASK_PLANE_MISSION, pilot, vehicle, 0, Game.Player.Character, 0, 0, 0, 6, 0f, 0f, 0f, 0f, maxZ + 150f);
+                        Function.Call(Hash.TASK_PLANE_MISSION, pilot, vehicle, 0, Game.Player.Character, 0, 0, 0, 6, 0f,
+                            0f, 0f, 0f, maxZ + 150f);
                         Function.Call(Hash._SET_PLANE_MIN_HEIGHT_ABOVE_TERRAIN, vehicle, maxZ + 150f);
 
                         pilot.AlwaysKeepTask = true;
                         pilot.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
-                        pilots.Add(pilot);
+                        _pilots.Add(pilot);
 
                         vehicle.AddBlip().Scale = 0.8f;
                         vehicle.MarkAsNoLongerNeeded();
                         vehicle.Heading = Vector3.RelativeLeft.ToHeading();
-                        vehicles.Add(vehicle);
+                        _vehicles.Add(vehicle);
 
                         continue;
                     }
@@ -330,22 +501,23 @@ namespace DefaultMissions
 
         private void SpawnLaptop()
         {
-            Prop prop = World.CreateProp("bkr_prop_clubhouse_laptop_01a", laptopSpawnPosition, laptopSpawnRotation, false, false);
+            var prop = World.CreateProp("bkr_prop_clubhouse_laptop_01a", _laptopSpawnPosition, _laptopSpawnRotation,
+                false, false);
 
             if (!Entity.Exists(prop))
                 return;
 
             prop.FreezePosition = true;
             prop.IsInvincible = true;
-            laptop = prop;
+            _laptop = prop;
         }
 
         private void SpawnFlag()
         {
-            if (string.IsNullOrEmpty(flagModel) && lastFlagPos != Vector3.Zero)
+            if (string.IsNullOrEmpty(_flagModel) && _lastFlagPos != Vector3.Zero)
                 return;
 
-            Prop flag = World.CreateProp(flagModel, lastFlagPos, false, false);
+            var flag = World.CreateProp(_flagModel, _lastFlagPos, false, false);
 
             if (!Entity.Exists(flag))
                 return;
@@ -356,51 +528,45 @@ namespace DefaultMissions
             // NOTE: Just in case the 
             // flag moved.
             ///////////////////////////
-            flag.Position = lastFlagPos;
+            flag.Position = _lastFlagPos;
         }
 
         private void ProcessAliens()
         {
-            Vector3 playerPosition = Game.Player.Character.Position;
+            var playerPosition = Game.Player.Character.Position;
 
-            foreach (OnFootCombatPed alien in aliens)
-            {
+            foreach (var alien in _aliens)
                 alien.Update();
-            }
 
-            foreach (Vehicle vehicle in vehicles)
+            foreach (var vehicle in _vehicles)
             {
-                if ((vehicle.IsDead || (Entity.Exists(vehicle.Driver) && vehicle.Driver.IsDead)))
+                if (vehicle.IsDead || Entity.Exists(vehicle.Driver) && vehicle.Driver.IsDead)
                 {
                     if (Blip.Exists(vehicle.CurrentBlip))
-                    {
                         vehicle.CurrentBlip.Remove();
-                    }
 
                     continue;
                 }
 
                 if (vehicle.IsPersistent)
                 {
-                    float dist = Vector3.DistanceSquared2D(playerPosition, vehicle.Position);
+                    var dist = Vector3.DistanceSquared2D(playerPosition, vehicle.Position);
 
                     const float maxDist = 1024 * 1024;
 
                     if (dist > maxDist)
-                    {
                         vehicle.MarkAsNoLongerNeeded();
-                    }
                 }
             }
         }
 
         private void UpdateCarierShip()
         {
-            if (Entity.Exists(carrierShip))
+            if (Entity.Exists(_carrierShip))
             {
-                if (carrierSpawn.Z > CurrentScene.Info.GalaxyCenter.Z + 75)
+                if (_carrierSpawn.Z > CurrentScene.Info.GalaxyCenter.Z + 75)
                 {
-                    carrierSpawn += Vector3.RelativeRight * Game.LastFrameTime * 500;
+                    _carrierSpawn += Vector3.RelativeRight * Game.LastFrameTime * 500;
 
                     if (Function.Call<bool>(Hash.IS_GAMEPLAY_HINT_ACTIVE))
                     {
@@ -408,32 +574,37 @@ namespace DefaultMissions
 
                         if (!Game.Player.CanControlCharacter)
                         {
-                            World.AddExplosion(carrierSpawn, ExplosionType.Grenade, 1000f, 1.5f, true, true);
+                            World.AddExplosion(_carrierSpawn, ExplosionType.Grenade, 1000f, 1.5f, true, true);
                             Game.Player.CanControlCharacter = true;
                             Game.Player.Character.Task.ClearAllImmediately();
-                            TaskSequence seq = new TaskSequence();
-                            seq.AddTask.PlayAnimation("move_avoidance@generic_m", "react_front_dive_right", 11.0f, -4.0f, -1, AnimationFlags.AllowRotation, 0.0f);
-                            seq.AddTask.PlayAnimation("get_up@standard", "right", 8.0f, -4.0f, -1, AnimationFlags.AllowRotation, 0.0f);
+                            var seq = new TaskSequence();
+                            seq.AddTask.PlayAnimation("move_avoidance@generic_m", "react_front_dive_right", 11.0f,
+                                -4.0f, -1, AnimationFlags.AllowRotation, 0.0f);
+                            seq.AddTask.PlayAnimation("get_up@standard", "right", 8.0f, -4.0f, -1,
+                                AnimationFlags.AllowRotation, 0.0f);
                             seq.Close(false);
                             Game.Player.Character.Task.PerformSequence(seq);
                             seq.Dispose();
-                            Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "GENERIC_FRIGHTENED_HIGH", "SPEECH_PARAMS_FORCE_SHOUTED_CRITICAL");
+                            Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "GENERIC_FRIGHTENED_HIGH",
+                                "SPEECH_PARAMS_FORCE_SHOUTED_CRITICAL");
                         }
                     }
                 }
                 else
                 {
-                    carrierSpawn += Vector3.WorldUp * Game.LastFrameTime * 10;
-                    
+                    _carrierSpawn += Vector3.WorldUp * Game.LastFrameTime * 10;
+
                     if (!Function.Call<bool>(Hash.IS_GAMEPLAY_HINT_ACTIVE))
                     {
                         Game.Player.Character.Task.StandStill(-1);
-                        Game.Player.Character.Task.LookAt(carrierShip);
-                        Game.Player.Character.Heading = (carrierShip.Position - Game.Player.Character.Position).ToHeading();
+                        Game.Player.Character.Task.LookAt(_carrierShip);
+                        Game.Player.Character.Heading = (_carrierShip.Position - Game.Player.Character.Position)
+                            .ToHeading();
                         Game.Player.CanControlCharacter = false;
                         GameplayCamera.RelativeHeading = 0;
-                        Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_Med", "Speech_Params_Force");
-                        Function.Call(Hash.SET_GAMEPLAY_ENTITY_HINT, carrierShip, 0, 0, 0, 1, 5000, 5000, 5000, 0);
+                        Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_Med",
+                            "Speech_Params_Force");
+                        Function.Call(Hash.SET_GAMEPLAY_ENTITY_HINT, _carrierShip, 0, 0, 0, 1, 5000, 5000, 5000, 0);
 
                         Function.Call(Hash.REQUEST_ANIM_DICT, "move_avoidance@generic_m");
                         while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, "move_avoidance@generic_m"))
@@ -444,28 +615,27 @@ namespace DefaultMissions
                     }
                 }
 
-                carrierShip.Position = carrierSpawn;
-                carrierShip.EngineRunning = true;
-                carrierShip.LightsOn = true;
-                carrierShip.InteriorLightOn = true;
-                carrierShip.BrakeLightsOn = true;
+                _carrierShip.Position = _carrierSpawn;
+                _carrierShip.EngineRunning = true;
+                _carrierShip.LightsOn = true;
+                _carrierShip.InteriorLightOn = true;
+                _carrierShip.BrakeLightsOn = true;
 
                 const int maxDist = 100000;
-                float d = Vector3.DistanceSquared(Game.Player.Character.Position, carrierSpawn);
+                var d = Vector3.DistanceSquared(Game.Player.Character.Position, _carrierSpawn);
 
                 if (d > maxDist)
-                {
-                    carrierShip.Delete();
-                }
+                    _carrierShip.Delete();
             }
         }
 
         private bool DidGoToMars()
         {
-            string currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath).FullName;
-            string path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(Mars).Name, "ini"));
-            ScriptSettings settings = ScriptSettings.Load(path);
-            int currentStep = settings.GetValue(Mars.settings_GeneralSectionString, Mars.settings_MissionStepString, 0);
+            var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
+                .FullName;
+            var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(Mars).Name, "ini"));
+            var settings = ScriptSettings.Load(path);
+            var currentStep = settings.GetValue(Mars.SettingsGeneralSectionString, Mars.SettingsMissionStepString, 0);
             return currentStep > 0;
         }
 
@@ -476,173 +646,14 @@ namespace DefaultMissions
                 EndScenario(true);
                 return;
             }
-            missionStep++;
+            _missionStep++;
         }
 
         private bool AreAllAliensDead()
         {
-            return aliens.TrueForAll(alien => alien.IsDead) && vehicles.TrueForAll(vehicle => vehicle.IsDead);
+            return _aliens.TrueForAll(alien => alien.IsDead) && _vehicles.TrueForAll(vehicle => vehicle.IsDead);
         }
+
         #endregion
-
-        private class MoonSatelliteCutscene : ICutScene
-        {
-            private const string TextureDict = "securitycam";
-            private const string TextureName = "securitycam_box";
-            private Camera camera;
-            private Vehicle ufo;
-            private Prop planetProp;
-            private int step = 0;
-            private Vector3 pos;
-            private string planetModel;
-            private float seconds;
-            private Random random = new Random();
-
-            public MoonSatelliteCutscene(string planetModel)
-            {
-                this.planetModel = planetModel;
-            }
-
-            public bool Complete { get; set; }
-
-            public void Start()
-            {
-                Vector3 spawn = new Vector3(10000, 10000, 10000);
-                camera = World.CreateCamera(spawn, new Vector3(270, 0, 0), 60);
-                World.RenderingCamera = camera;
-                Game.FadeScreenOut(0);
-                Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, TextureDict, 0);
-                while (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, TextureDict))
-                    Script.Yield();
-                Game.FadeScreenIn(1000);
-
-                Prop planet = World.CreateProp(planetModel, spawn + (Vector3.RelativeFront * 5000) + (Vector3.WorldDown * 100), false, false);
-
-                if (Entity.Exists(planet))
-                {
-                    planet.FreezePosition = true;
-                    planetProp = planet;
-                }
-
-                Vehicle v = World.CreateVehicle("zanufo", spawn + Vector3.WorldDown * 100, 0);
-                if (Entity.Exists(v))
-                {
-                    v.FreezePosition = true;
-                    ufo = v;
-                    pos = v.Position;
-                }
-            }
-
-            public void Stop()
-            {
-                if (World.RenderingCamera == camera)
-                    World.RenderingCamera = null;
-
-                camera.Destroy();
-
-                if (Entity.Exists(ufo))
-                {
-                    ufo.Delete();
-                }
-
-                if (Entity.Exists(planetProp))
-                {
-                    planetProp.Delete();
-                }
-
-                Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, TextureDict);
-            }
-
-            public void Update()
-            {
-                Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-
-                if (ufo == null)
-                {
-                    Complete = true;
-                    return;
-                }
-
-                switch (step)
-                {
-                    case 0:
-                        TimeCycleModifier.Set("CAMERA_secuirity", 1.0f);
-                        camera.PointAt(ufo);
-                        step++;
-                        break;
-                    case 1:
-                        pos += Vector3.RelativeFront * 100 * Game.LastFrameTime;
-                        ufo.PositionNoOffset = pos;
-                        seconds += Game.LastFrameTime;
-                        DrawUI();
-                        if (seconds < 7f) return;
-                        Complete = true;
-                        break;
-                }
-            }
-
-            private void DrawUI()
-            {
-                const float ImgWidth = 1536f;
-                const float ImgHeight = 1024f;
-                const float Width = (1f / 1920) / (1f / ImgWidth);
-                const float Height = (1f / 1080) / (1f / ImgHeight);
-
-                Function.Call(Hash.DRAW_SPRITE, TextureDict, TextureName, 0.5f, 0.5f, Width, Height, 0f, 255, 255, 255, 255);
-
-                /////////////////////////////////////////////////////////////
-                Function.Call(Hash.SET_TEXT_FONT, (int)Font.Monospace);
-                Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
-                Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
-                Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
-                Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
-                Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
-                Function.Call(Hash.SET_TEXT_WRAP, 0, Width);
-                Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "UAC~n~VEHICLE IDENTIFICATION " + RandomString(5));
-                Function.Call(Hash._DRAW_TEXT, 0.5f, 0.5f);
-                /////////////////////////////////////////////////////////////
-
-                /////////////////////////////////////////////////////////////
-                Function.Call(Hash.SET_TEXT_FONT, (int)Font.ChaletComprimeCologne);
-                Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
-                Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
-                Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
-                Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
-                Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
-                Function.Call(Hash.SET_TEXT_WRAP, 0, Width);
-                Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "MARS SAT CAM 11~n~" + World.CurrentDate.ToShortDateString());
-                Function.Call(Hash._DRAW_TEXT, 0.15f, 0.075f);
-                /////////////////////////////////////////////////////////////
-
-                if (Entity.Exists(planetProp))
-                {
-                    Function.Call(Hash.SET_DRAW_ORIGIN, planetProp.Position.X, planetProp.Position.Y, planetProp.Position.Z, 0);
-
-                    /////////////////////////////////////////////////////////////
-                    Function.Call(Hash.SET_TEXT_FONT, (int)Font.ChaletComprimeCologne);
-                    Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
-                    Function.Call(Hash.SET_TEXT_COLOUR, 255, 255, 255, 255);
-                    Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
-                    Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
-                    Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
-                    Function.Call(Hash.SET_TEXT_WRAP, 0, Width);
-                    Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
-                    Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, $"ORBITAL ID: MARS~n~AVG TEMP: 125c~n~CUR ORBITAL VEL: 24.{random.Next(0, 10)} km/s");
-                    Function.Call(Hash._DRAW_TEXT, 0f, 0f);
-                    /////////////////////////////////////////////////////////////
-
-                    Function.Call(Hash.CLEAR_DRAW_ORIGIN);
-                }
-            }
-
-            private string RandomString(int length)
-            {
-                const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-                return new string(Enumerable.Repeat(chars, length)
-                  .Select(s => s[random.Next(s.Length)]).ToArray());
-            }
-        }
     }
 }

@@ -1,7 +1,7 @@
-﻿using System.Threading;
+﻿using System.IO;
+using System.Threading;
 using GTA;
 using GTS.Scenes;
-using System.IO;
 
 namespace GTS.Scenarios
 {
@@ -9,12 +9,15 @@ namespace GTS.Scenarios
 
     public abstract class Scenario
     {
-        internal event OnScenarioCompleted completed;
-        private ScriptSettings settings;
-        private readonly object updateLock = new object();
+        private readonly object _updateLock = new object();
+        private ScriptSettings _settings;
 
-        public ScriptSettings Settings => settings ?? (settings = ScriptSettings.Load(Path.ChangeExtension(Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
+        public ScriptSettings Settings => _settings ?? (_settings =
+                                              ScriptSettings.Load(Path.ChangeExtension(
+                                                  Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
+
         public Scene CurrentScene => Core.Instance.GetCurrentScene();
+        internal event OnScenarioCompleted Completed;
 
         internal bool IsScenarioComplete()
         {
@@ -35,7 +38,7 @@ namespace GTS.Scenarios
 
         internal void Update()
         {
-            if (!Monitor.TryEnter(updateLock)) return;
+            if (!Monitor.TryEnter(_updateLock)) return;
 
             try
             {
@@ -43,51 +46,49 @@ namespace GTS.Scenarios
             }
             finally
             {
-                Monitor.Exit(updateLock);
+                Monitor.Exit(_updateLock);
             }
         }
 
         /// <summary>
-        /// This is where you spawn entities or setup variables.
+        ///     This is where you spawn entities or setup variables.
         /// </summary>
         public abstract void OnStart();
 
         /// <summary>
-        /// This is where your code will be updated.
+        ///     This is where your code will be updated.
         /// </summary>
         public abstract void OnUpdate();
 
         /// <summary>
-        /// This is where you can clean up some excess entities, and / or objects.
+        ///     This is where you can clean up some excess entities, and / or objects.
         /// </summary>
         public abstract void OnEnded(bool success);
 
         /// <summary>
-        /// This is executed when the space mod scripts are aborted or reloaded.
-        /// This function can be used to like the OnEnded function to clean up 
-        /// any remaining objects / entities.
+        ///     This is executed when the space mod scripts are aborted or reloaded.
+        ///     This function can be used to like the OnEnded function to clean up
+        ///     any remaining objects / entities.
         /// </summary>
         public abstract void OnAborted();
 
         /// <summary>
-        /// Called whenever you enter the specified scene. It is called even if you have 
-        /// completed the mission. 
+        ///     Called whenever you enter the specified scene. It is called even if you have
+        ///     completed the mission.
         /// </summary>
         public abstract void OnAwake();
 
         /// <summary>
-        /// End's this scenario and discontinues running it.
+        ///     End's this scenario and discontinues running it.
         /// </summary>
         /// <param name="success">True if we completed this scenario.</param>
         public void EndScenario(bool success)
         {
-            lock (updateLock)
+            lock (_updateLock)
             {
                 if (success)
-                {
                     SetScenarioComplete();
-                }
-                completed?.Invoke(this, success);
+                Completed?.Invoke(this, success);
                 OnEnded(success);
             }
         }

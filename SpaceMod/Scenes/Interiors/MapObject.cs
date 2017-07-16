@@ -20,33 +20,34 @@ namespace GTS.Scenes.Interiors
 {
     public class MapObject
     {
-        public ObjectTypes Type;
-        public Vector3 Position;
-        public Vector3 Rotation;
-        public int Hash;
-        public bool Dynamic;
-        public Quaternion Quaternion;
+        // Ped stuff
+        public string Action;
+
+        // Pickup stuff
+        public int Amount;
 
         // Prop stuff
         public bool Door;
 
-        // Ped stuff
-        public string Action;
+        public bool Dynamic;
+        public int Flag;
+        public int Hash;
+
+        [XmlAttribute("Id")] public string Id;
+
+        public Vector3 Position;
+        public int PrimaryColor;
+        public Quaternion Quaternion;
         public string Relationship;
-        public WeaponHash? Weapon;
+        public int RespawnTimer;
+        public Vector3 Rotation;
+        public int SecondaryColor;
 
         // Vehicle stuff
         public bool SirensActive;
-        public int PrimaryColor;
-        public int SecondaryColor;
 
-        // Pickup stuff
-        public int Amount;
-        public int RespawnTimer;
-        public int Flag;
-
-        [XmlAttribute("Id")]
-        public string Id;
+        public ObjectTypes Type;
+        public WeaponHash? Weapon;
 
         // XML Stuff
         public bool ShouldSerializeDoor()
@@ -102,19 +103,21 @@ namespace GTS.Scenes.Interiors
 
     public class DynamicPickup
     {
+        private bool _dynamic = true;
+
         public DynamicPickup(int handle)
         {
             PickupHandle = handle;
             IsInRange = handle != -1;
         }
 
-        private bool _dynamic = true;
-
         public bool IsInRange { get; set; }
 
-        public bool Dynamic {
-            get { return _dynamic; }
-            set {
+        public bool Dynamic
+        {
+            get => _dynamic;
+            set
+            {
                 _dynamic = value;
                 new Prop(ObjectHandle).FreezePosition = !value;
             }
@@ -122,7 +125,7 @@ namespace GTS.Scenes.Interiors
 
         public string PickupName => "";
 
-        public int UID { get; set; }
+        public int Uid { get; set; }
         public int PickupHash { get; set; }
         public int PickupHandle { get; set; }
         public int Amount { get; set; }
@@ -131,21 +134,29 @@ namespace GTS.Scenes.Interiors
         public bool PickedUp { get; set; }
         public DateTime LastPickup { get; set; }
 
-        public int ObjectHandle => Function.Call<int>((Hash)0x5099BC55630B25AE, PickupHandle);
+        public int ObjectHandle => Function.Call<int>((Hash) 0x5099BC55630B25AE, PickupHandle);
+
+        public Vector3 RealPosition { get; set; }
+
+        public Vector3 Position
+        {
+            get => new Prop(ObjectHandle).Position;
+            set
+            {
+                new Prop(ObjectHandle).Position = value;
+                RealPosition = value;
+            }
+        }
+
+        public int Timeout { get; set; } = -1;
+
+        public bool PickupObjectExists => Function.Call<bool>(Hash.DOES_PICKUP_OBJECT_EXIST, PickupHandle);
+
+        public bool PickupExists => Function.Call<bool>(Hash.DOES_PICKUP_EXIST, PickupHandle);
 
         public void UpdatePos()
         {
             RealPosition = Position;
-        }
-
-        public Vector3 RealPosition { get; set; }
-
-        public Vector3 Position {
-            get { return new Prop(ObjectHandle).Position; }
-            set {
-                new Prop(ObjectHandle).Position = value;
-                RealPosition = value;
-            }
         }
 
         public void SetPickupHash(int newHash)
@@ -168,7 +179,8 @@ namespace GTS.Scenes.Interiors
 
         private void ReloadPickup()
         {
-            var newPickup = Function.Call<int>(Hash.CREATE_PICKUP_ROTATE, PickupHash, RealPosition.X, RealPosition.Y, RealPosition.Z, 0, 0, 0, Flag, Amount, 0, false, 0);
+            var newPickup = Function.Call<int>(Hash.CREATE_PICKUP_ROTATE, PickupHash, RealPosition.X, RealPosition.Y,
+                RealPosition.Z, 0, 0, 0, Flag, Amount, 0, false, 0);
 
             var tmpDyn = new DynamicPickup(newPickup);
 
@@ -191,12 +203,6 @@ namespace GTS.Scenes.Interiors
             PickupHandle = newPickup;
         }
 
-        public int Timeout { get; set; } = -1;
-
-        public bool PickupObjectExists => Function.Call<bool>(Hash.DOES_PICKUP_OBJECT_EXIST, PickupHandle);
-
-        public bool PickupExists => Function.Call<bool>(Hash.DOES_PICKUP_EXIST, PickupHandle);
-
         public void Remove()
         {
             Function.Call(Hash.REMOVE_PICKUP, PickupHandle);
@@ -207,9 +213,7 @@ namespace GTS.Scenes.Interiors
             var inRange = Game.Player.Character.IsInRangeOf(RealPosition, 20f);
 
             if (inRange && PickupHandle == -1)
-            {
                 ReloadPickup();
-            }
 
             if (PickupHandle == -1) return;
             Position = RealPosition;
@@ -235,6 +239,6 @@ namespace GTS.Scenes.Interiors
         Vehicle,
         Ped,
         Marker,
-        Pickup,
+        Pickup
     }
 }

@@ -12,7 +12,7 @@ namespace GTS.Library
     public static class Mathf
     {
         /// <summary>
-        /// Clamp the value "value" between min, and max.
+        ///     Clamp the value "value" between min, and max.
         /// </summary>
         /// <param name="value">The value we wish to clamp.</param>
         /// <param name="min">The minimum value.</param>
@@ -21,13 +21,9 @@ namespace GTS.Library
         public static float Clamp(float value, float min, float max)
         {
             if (value < min)
-            {
                 value = min;
-            }
             else if (value > max)
-            {
                 value = max;
-            }
             return value;
         }
 
@@ -127,7 +123,7 @@ namespace GTS.Library
         SniperOverlay,
         RampageOut,
         Rampage,
-        DontTazemeBro,
+        DontTazemeBro
     }
 
     public enum CombatAttributes
@@ -164,37 +160,36 @@ namespace GTS.Library
     {
         private const string AlienModelsTextFile = "./scripts/Space/Aliens.txt";
         private const string DefaultAlienModel = "S_M_M_MovAlien_01";
-        private static string[] alienModels;
+        private static readonly string[] AlienModels;
 
         static Utils()
         {
-            alienModels = new string[0];
+            AlienModels = new string[0];
 
             if (File.Exists(AlienModelsTextFile))
             {
-                string[] text = File.ReadAllLines(AlienModelsTextFile).Select(x => x.Trim()).ToArray();
-                alienModels = text;
+                var text = File.ReadAllLines(AlienModelsTextFile).Select(x => x.Trim()).ToArray();
+                AlienModels = text;
             }
         }
 
         public static string GetAlienModel()
         {
-            Random rand = new Random();
-            return alienModels.Length > 0 ? alienModels[rand.Next(alienModels.Length)] : DefaultAlienModel;
+            var rand = new Random();
+            return AlienModels.Length > 0 ? AlienModels[rand.Next(AlienModels.Length)] : DefaultAlienModel;
         }
-        
+
         public static Quaternion LookRotation(Vector3 forward)
         {
-            Vector3 up = Vector3.WorldUp;
+            var up = Vector3.WorldUp;
             return INTERNAL_CALL_LookRotation(ref forward, ref up);
         }
 
         // from http://answers.unity3d.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html
         private static Quaternion INTERNAL_CALL_LookRotation(ref Vector3 forward, ref Vector3 up)
         {
-
             forward = Vector3.Normalize(forward);
-            Vector3 right = Vector3.Normalize(Vector3.Cross(up, forward));
+            var right = Vector3.Normalize(Vector3.Cross(up, forward));
             up = Vector3.Cross(forward, right);
             var m00 = right.X;
             var m01 = right.Y;
@@ -207,11 +202,11 @@ namespace GTS.Library
             var m22 = forward.Z;
 
 
-            float num8 = (m00 + m11) + m22;
+            var num8 = m00 + m11 + m22;
             var quaternion = new Quaternion();
             if (num8 > 0f)
             {
-                var num = (float)Math.Sqrt(num8 + 1f);
+                var num = (float) Math.Sqrt(num8 + 1f);
                 quaternion.W = num * 0.5f;
                 num = 0.5f / num;
                 quaternion.X = (m12 - m21) * num;
@@ -219,9 +214,9 @@ namespace GTS.Library
                 quaternion.Z = (m01 - m10) * num;
                 return quaternion;
             }
-            if ((m00 >= m11) && (m00 >= m22))
+            if (m00 >= m11 && m00 >= m22)
             {
-                var num7 = (float)Math.Sqrt(((1f + m00) - m11) - m22);
+                var num7 = (float) Math.Sqrt(1f + m00 - m11 - m22);
                 var num4 = 0.5f / num7;
                 quaternion.X = 0.5f * num7;
                 quaternion.Y = (m01 + m10) * num4;
@@ -231,7 +226,7 @@ namespace GTS.Library
             }
             if (m11 > m22)
             {
-                var num6 = (float)Math.Sqrt(((1f + m11) - m00) - m22);
+                var num6 = (float) Math.Sqrt(1f + m11 - m00 - m22);
                 var num3 = 0.5f / num6;
                 quaternion.X = (m10 + m01) * num3;
                 quaternion.Y = 0.5f * num6;
@@ -239,7 +234,7 @@ namespace GTS.Library
                 quaternion.W = (m20 - m02) * num3;
                 return quaternion;
             }
-            var num5 = (float)Math.Sqrt(((1f + m22) - m00) - m11);
+            var num5 = (float) Math.Sqrt(1f + m22 - m00 - m11);
             var num2 = 0.5f / num5;
             quaternion.X = (m20 + m02) * num2;
             quaternion.Y = (m21 + m12) * num2;
@@ -255,7 +250,7 @@ namespace GTS.Library
             if (impCoords == Vector3.Zero) return;
             var distanceTo = impCoords.DistanceTo(target.Position);
             if (distanceTo < damageDistance)
-                target.ApplyDamage((int)(1 / distanceTo * damageMultiplier));
+                target.ApplyDamage((int) (1 / distanceTo * damageMultiplier));
         }
 
         public static bool IsCloseToAnyEntity(Vector3 position, IReadOnlyCollection<Entity> collection, float distance)
@@ -268,9 +263,12 @@ namespace GTS.Library
                     .Any(entity1 => entity1.Position.DistanceTo(position) < distance);
         }
 
-        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, PedHash? model = null, int accuracy = 50, float heading = 0)
+        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, PedHash? model = null, int accuracy = 50,
+            float heading = 0)
         {
-            var ped = model != null ? World.CreatePed(model.Value, position, heading) : World.CreatePed(GetAlienModel(), position, heading);
+            var ped = model != null
+                ? World.CreatePed(model.Value, position, heading)
+                : World.CreatePed(GetAlienModel(), position, heading);
             if (ped == null) return new Ped(0);
             ped.Accuracy = 50;
             ped.Weapons.Give(weaponHash, 15, true, true);
@@ -312,7 +310,7 @@ namespace GTS.Library
 
             var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
 
-            while(DateTime.UtcNow < timeout)
+            while (DateTime.UtcNow < timeout)
             {
                 if (Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
                     break;
@@ -336,9 +334,11 @@ namespace GTS.Library
             return Function.Call<float>(Hash.VDIST, a.X, a.Y, a.Z, b.X, b.Y, b.Z);
         }
 
-        public static void AttachTo(this Entity entity1, Entity entity2, Vector3 position = default(Vector3), Vector3 rotation = default(Vector3))
+        public static void AttachTo(this Entity entity1, Entity entity2, Vector3 position = default(Vector3),
+            Vector3 rotation = default(Vector3))
         {
-            Function.Call(Hash.ATTACH_ENTITY_TO_ENTITY, entity1.Handle, entity2.Handle, 0, position.X, position.Y, position.Z, rotation.X, rotation.Y, rotation.Z, 0, 0, 0, 0, 2, 1);
+            Function.Call(Hash.ATTACH_ENTITY_TO_ENTITY, entity1.Handle, entity2.Handle, 0, position.X, position.Y,
+                position.Z, rotation.X, rotation.Y, rotation.Z, 0, 0, 0, 0, 2, 1);
         }
 
         public static bool IsHelpMessageBeingDisplayed()
@@ -350,12 +350,10 @@ namespace GTS.Library
         {
             Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, format);
 
-            const int MaxLen = 99;
+            const int maxLen = 99;
 
-            for (int i = 0; i < helpText.Length; i += MaxLen)
-            {
-                Function.Call(Hash._0x6C188BE134E074AA, helpText.Substring(i, Math.Min(MaxLen, helpText.Length - i)));
-            }
+            for (var i = 0; i < helpText.Length; i += maxLen)
+                Function.Call(Hash._0x6C188BE134E074AA, helpText.Substring(i, Math.Min(maxLen, helpText.Length - i)));
 
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
         }
@@ -387,7 +385,8 @@ namespace GTS.Library
 
         public static Prop CreatePropNoOffset(Model model, Vector3 position, bool dynamic)
         {
-            var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, position.X, position.Y, position.Z, true, true, dynamic));
+            var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, position.X, position.Y,
+                position.Z, true, true, dynamic));
             return prop;
         }
 
@@ -398,7 +397,7 @@ namespace GTS.Library
 
         public static bool IsOnScreen(this Vector3 vector3)
         {
-            Point worldToScreen = UI.WorldToScreen(vector3);
+            var worldToScreen = UI.WorldToScreen(vector3);
 
             if (worldToScreen.X == 0 && worldToScreen.Y == 0)
                 return false;
@@ -408,48 +407,49 @@ namespace GTS.Library
 
         public static void SetGravityLevel(float level)
         {
-            GTSLib.SetGravityLevel(level);
+            GtsLib.SetGravityLevel(level);
         }
 
         public static void RestartScript(string name)
         {
             Function.Call(Hash.REQUEST_SCRIPT, name);
-            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) {
-                Script.Yield();
-            }
+            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) Script.Yield();
             Function.Call(Hash.START_NEW_SCRIPT, name, 1624);
             Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
         }
 
         public static void Ragdoll(this Ped ped, int duration, RagdollType type)
         {
-            Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int)type, false, false, false);
+            Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int) type, false, false, false);
         }
-        
-        internal static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed, Vector3 destination, CPlaneMission mission, float physicsSpeed, float p9, float heading, float maxAltitude, float minAltitude)
+
+        internal static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed,
+            Vector3 destination, CPlaneMission mission, float physicsSpeed, float p9, float heading, float maxAltitude,
+            float minAltitude)
         {
-            Function.Call(Hash.TASK_PLANE_MISSION, pilot, plane, targetVehicle, targetPed, destination.X, destination.Y, destination.Z, (int)mission,
+            Function.Call(Hash.TASK_PLANE_MISSION, pilot, plane, targetVehicle, targetPed, destination.X, destination.Y,
+                destination.Z, (int) mission,
                 physicsSpeed, p9, heading, maxAltitude, minAltitude);
         }
 
         public static void SetCombatAttributes(this Ped ped, CombatAttributes attribute, bool enabled)
         {
-            Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, (int)attribute, enabled);
+            Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, (int) attribute, enabled);
         }
 
-        public static void NotifyWithGXT(string text, bool blinking = false)
+        public static void NotifyWithGxt(string text, bool blinking = false)
         {
-            string gxt = Game.GetGXTEntry(text);
+            var gxt = Game.GetGXTEntry(text);
             UI.Notify(gxt, blinking);
         }
 
-        public static void ShowSubtitleWithGXT(string text, int time = 7000)
+        public static void ShowSubtitleWithGxt(string text, int time = 7000)
         {
             Function.Call(Hash._SET_TEXT_ENTRY_2, text);
             Function.Call(Hash._DRAW_SUBTITLE_TIMED, time, true);
         }
 
-        public static void DisplayHelpTextWithGXT(string gxtEntry)
+        public static void DisplayHelpTextWithGxt(string gxtEntry)
         {
             Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, gxtEntry);
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
@@ -459,7 +459,7 @@ namespace GTS.Library
     public class LoopedPtfx
     {
         /// <summary>
-        /// Initialize the class
+        ///     Initialize the class
         /// </summary>
         /// <param name="assetName"></param>
         /// <param name="fxName"></param>
@@ -467,33 +467,36 @@ namespace GTS.Library
         {
             Handle = -1;
             AssetName = assetName;
-            FXName = fxName;
+            FxName = fxName;
         }
 
         public int Handle { get; private set; }
         public string AssetName { get; }
-        public string FXName { get; }
-        public Color Color {
-            set {
-                Function.Call(Hash.SET_PARTICLE_FX_LOOPED_COLOUR, Handle, value.R / 255, value.G / 255, value.B / 255, false);
-            }
+        public string FxName { get; }
+
+        public Color Color
+        {
+            set => Function.Call(Hash.SET_PARTICLE_FX_LOOPED_COLOUR, Handle, value.R / 255, value.G / 255,
+                value.B / 255, false);
         }
-        public int Alpha {
-            set { Function.Call(Hash.SET_PARTICLE_FX_LOOPED_ALPHA, Handle, value / 255); }
+
+        public int Alpha
+        {
+            set => Function.Call(Hash.SET_PARTICLE_FX_LOOPED_ALPHA, Handle, value / 255);
         }
 
         /// <summary>
-        /// If the particle FX is spawned.
+        ///     If the particle FX is spawned.
         /// </summary>
         public bool Exists => Handle != -1 && Function.Call<bool>(Hash.DOES_PARTICLE_FX_LOOPED_EXIST, Handle);
 
         /// <summary>
-        /// If the particle FX asset is loaded.
+        ///     If the particle FX asset is loaded.
         /// </summary>
         public bool IsLoaded => Function.Call<bool>(Hash.HAS_NAMED_PTFX_ASSET_LOADED, AssetName);
 
         /// <summary>
-        /// Load the particle FX asset
+        ///     Load the particle FX asset
         /// </summary>
         public void Load()
         {
@@ -503,7 +506,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Start particle FX on the specified entity.
+        ///     Start particle FX on the specified entity.
         /// </summary>
         /// <param name="entity">Entity to attach to.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -516,15 +519,16 @@ namespace GTS.Library
 
             Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, AssetName);
 
-            Handle = bone == null ?
-                Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_ON_ENTITY, FXName,
-                entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, scale, 0, 0, 1) :
-                Function.Call<int>(Hash._START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE, FXName,
-                entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, (int)bone, scale, 0, 0, 0);
+            Handle = bone == null
+                ? Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_ON_ENTITY, FxName,
+                    entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, scale, 0, 0, 1)
+                : Function.Call<int>(Hash._START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE, FxName,
+                    entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, (int) bone, scale, 0, 0,
+                    0);
         }
 
         /// <summary>
-        /// Start particle FX on the specified entity.
+        ///     Start particle FX on the specified entity.
         /// </summary>
         /// <param name="entity">Entity to attach to.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -534,7 +538,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Start particle FX at the specified position.
+        ///     Start particle FX at the specified position.
         /// </summary>
         /// <param name="position">Position in world space.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -545,12 +549,12 @@ namespace GTS.Library
 
             Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, AssetName);
 
-            Handle = Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_AT_COORD, FXName,
-             position.X, position.Y, position.Z, rotation.X, rotation.Y, rotation.Z, scale, 0, 0, 0, 0);
+            Handle = Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_AT_COORD, FxName,
+                position.X, position.Y, position.Z, rotation.X, rotation.Y, rotation.Z, scale, 0, 0, 0, 0);
         }
 
         /// <summary>
-        /// Start particle FX at the specified position.
+        ///     Start particle FX at the specified position.
         /// </summary>
         /// <param name="position">Position in world space.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -560,7 +564,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Remove the particle FX
+        ///     Remove the particle FX
         /// </summary>
         public void Remove()
         {
@@ -571,7 +575,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Remove the particle FX in range
+        ///     Remove the particle FX in range
         /// </summary>
         public void Remove(Vector3 position, float radius)
         {
@@ -582,12 +586,12 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Unload the loaded particle FX asset
+        ///     Unload the loaded particle FX asset
         /// </summary>
         public void Unload()
         {
             if (IsLoaded)
-                Function.Call((Hash)0x5F61EBBE1A00F96D, AssetName);
+                Function.Call((Hash) 0x5F61EBBE1A00F96D, AssetName);
         }
     }
 
@@ -601,19 +605,22 @@ namespace GTS.Library
 
     public static class FollowCam
     {
-        public static FollowCamViewMode ViewMode {
-            get {
+        public static FollowCamViewMode ViewMode
+        {
+            get
+            {
                 if (IsFollowingVehicle)
-                    return (FollowCamViewMode)Function.Call<int>(Hash.GET_FOLLOW_VEHICLE_CAM_VIEW_MODE);
-                return (FollowCamViewMode)Function.Call<int>(Hash.GET_FOLLOW_PED_CAM_VIEW_MODE);
+                    return (FollowCamViewMode) Function.Call<int>(Hash.GET_FOLLOW_VEHICLE_CAM_VIEW_MODE);
+                return (FollowCamViewMode) Function.Call<int>(Hash.GET_FOLLOW_PED_CAM_VIEW_MODE);
             }
-            set {
+            set
+            {
                 if (IsFollowingVehicle)
                 {
-                    Function.Call(Hash.SET_FOLLOW_VEHICLE_CAM_VIEW_MODE, (int)value);
+                    Function.Call(Hash.SET_FOLLOW_VEHICLE_CAM_VIEW_MODE, (int) value);
                     return;
                 }
-                Function.Call(Hash.SET_FOLLOW_PED_CAM_VIEW_MODE, (int)value);
+                Function.Call(Hash.SET_FOLLOW_PED_CAM_VIEW_MODE, (int) value);
             }
         }
 
@@ -643,7 +650,7 @@ namespace GTS.Library
     }
 
     /// <summary>
-    /// Original source: Guad Maz
+    ///     Original source: Guad Maz
     /// </summary>
     public class ScaleFormMessage
     {
@@ -651,18 +658,14 @@ namespace GTS.Library
         private int _start;
         private int _timer;
 
-        public ScaleFormMessage()
-        {
-
-        }
-
         internal void Load()
         {
             if (_sc != null) return;
             _sc = new Scaleform("MP_BIG_MESSAGE_FREEMODE");
             var timeout = 1000;
             var start = DateTime.Now;
-            while (!Function.Call<bool>(Hash.HAS_SCALEFORM_MOVIE_LOADED, _sc.Handle) && DateTime.Now.Subtract(start).TotalMilliseconds < timeout) Script.Yield();
+            while (!Function.Call<bool>(Hash.HAS_SCALEFORM_MOVIE_LOADED, _sc.Handle) &&
+                   DateTime.Now.Subtract(start).TotalMilliseconds < timeout) Script.Yield();
         }
 
         internal void Dispose()
@@ -679,11 +682,12 @@ namespace GTS.Library
             _timer = time;
         }
 
-        public void SHOW_SHARD_CENTERED_MP_MESSAGE(string msg, string desc, HudColor textColor, HudColor bgColor, int time = 5000)
+        public void SHOW_SHARD_CENTERED_MP_MESSAGE(string msg, string desc, HudColor textColor, HudColor bgColor,
+            int time = 5000)
         {
             Load();
             _start = Game.GameTime;
-            _sc.CallFunction("SHOW_SHARD_CENTERED_MP_MESSAGE", msg, desc, (int)bgColor, (int)textColor);
+            _sc.CallFunction("SHOW_SHARD_CENTERED_MP_MESSAGE", msg, desc, (int) bgColor, (int) textColor);
             _timer = time;
         }
 
@@ -707,7 +711,7 @@ namespace GTS.Library
         {
             Load();
             _start = Game.GameTime;
-            _sc.CallFunction("SHOW_WEAPON_PURCHASED", msg, weaponName, unchecked((int)weapon), "", 100);
+            _sc.CallFunction("SHOW_WEAPON_PURCHASED", msg, weaponName, unchecked((int) weapon), "", 100);
             _timer = time;
         }
 
@@ -736,22 +740,19 @@ namespace GTS.Library
                 _start = 0;
                 Dispose();
             }
-
         }
     }
 
     public class ScaleFormMessages : Script
     {
-        public static ScaleFormMessage Message { get; set; }
         public ScaleFormMessages()
         {
             Message = new ScaleFormMessage();
 
-            Tick += (sender, args) =>
-            {
-                Message.DoTransition();
-            };
+            Tick += (sender, args) => { Message.DoTransition(); };
         }
+
+        public static ScaleFormMessage Message { get; set; }
     }
 
     public enum HudColor
@@ -935,12 +936,13 @@ namespace GTS.Library
         HudColourVideoEditorAudio = 176,
         HudColourVideoEditorText = 177,
         HudColourHbBlue = 178,
-        HudColourHbYellow = 179,
+        HudColourHbYellow = 179
     }
 
     public static class Effects
     {
-        private static readonly string[] _effects = {
+        private static readonly string[] _effects =
+        {
             "SwitchHUDIn",
             "SwitchHUDOut",
             "FocusIn",
@@ -1026,10 +1028,8 @@ namespace GTS.Library
 
         private static string EffectToString(ScreenEffect screenEffect)
         {
-            if (screenEffect >= 0 && (int)screenEffect <= _effects.Length)
-            {
-                return _effects[(int)screenEffect];
-            }
+            if (screenEffect >= 0 && (int) screenEffect <= _effects.Length)
+                return _effects[(int) screenEffect];
             return "INVALID";
         }
 

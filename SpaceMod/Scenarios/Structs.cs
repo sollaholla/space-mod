@@ -16,12 +16,10 @@ namespace DefaultMissions
 
         public bool IsInTrigger(Vector3 position)
         {
-            float distance = Vector3.DistanceSquared(Position, position);
+            var distance = Vector3.DistanceSquared(Position, position);
 
             if (distance <= Radius * Radius)
-            {
                 return true;
-            }
 
             return false;
         }

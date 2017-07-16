@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,18 +11,43 @@ using GTA.Math;
 using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
+using GTS.Missions;
 using GTS.Scenarios;
 using GTS.Scenes;
-using GTS.Missions;
 using NativeUI;
-using System.Drawing;
 
 namespace GTS
 {
     internal class Core : Script
     {
+        /// <summary>
+        ///     Our standard constructor.
+        /// </summary>
+        public Core()
+        {
+            _tickLock = new object();
+            Scenarios = new List<Scenario>();
+
+            Instance = this;
+            KeyUp += OnKeyUp;
+            Tick += OnTick;
+            Aborted += OnAborted;
+
+            ReadSettings();
+            SaveSettings();
+            CreateCustomMenu();
+            RequestModels();
+
+            if (Game.IsLoading)
+                Function.Call((Hash) 0x0888C3502DBBEEF5);
+
+            Debug.Log("Initialized!");
+        }
+
         #region Variables
-        internal static readonly string[] _weatherNames = {
+
+        internal static readonly string[] WeatherNames =
+        {
             "EXTRASUNNY",
             "CLEAR",
             "CLOUDS",
@@ -39,111 +65,100 @@ namespace GTS
         };
 
         #region Misc
-        private Scene currentScene;
-        private MenuPool menuPool;
-        private UIMenu mainMenu;
-        private bool didAbort;
-        private readonly object tickLock;
+
+        private Scene _currentScene;
+        private MenuPool _menuPool;
+        private UIMenu _mainMenu;
+        private bool _didAbort;
+        private readonly object _tickLock;
+
         #endregion
 
         #region Settings
-        private string defaultSpaceScene = "EarthOrbit.space";
-        private Vector3 defaultSpaceOffset = new Vector3(0, 2500, 0);
-        private Vector3 defaultSpaceRotation = new Vector3(0, 0, 180);
-        private bool menuEnabled = true;
-        private bool preloadModels = false;
-        private bool disableWantedStars = true;
-        private bool resetWantedLevel = false;
-        private float enterOrbitHeight = 5000;
-        private Keys optionsMenuKey = Keys.NumPad9;
-        private int missionStatus = 2;
-        private bool didSetMissionFlag;
-        private bool didRestartScripts;
+
+        private string _defaultSpaceScene = "EarthOrbit.space";
+        private Vector3 _defaultSpaceOffset = new Vector3(0, 2500, 0);
+        private Vector3 _defaultSpaceRotation = new Vector3(0, 0, 180);
+        private bool _menuEnabled = true;
+        private bool _preloadModels;
+        private bool _disableWantedStars = true;
+        private bool _resetWantedLevel;
+        private float _enterOrbitHeight = 5000;
+        private Keys _optionsMenuKey = Keys.NumPad9;
+        private int _missionStatus = 2;
+        private bool _didSetMissionFlag;
+        private bool _didRestartScripts;
+
         #endregion
 
         #region Internal Missions
-        private IntroMission introMission = null;
+
+        private IntroMission _introMission;
+
         // private EndMission endMission = null;
-        private bool endMissionCanStart;
-        #endregion
+        private bool _endMissionCanStart;
 
         #endregion
 
-        /// <summary>
-        /// Our standard constructor.
-        /// </summary>
-        public Core()
-        {
-            tickLock = new object();
-            Scenarios = new List<Scenario>();
-
-            Instance = this;
-            KeyUp += OnKeyUp;
-            Tick += OnTick;
-            Aborted += OnAborted;
-
-            ReadSettings();
-            SaveSettings();
-            CreateCustomMenu();
-            RequestModels();
-
-            if (Game.IsLoading)
-                Function.Call((Hash)0x0888C3502DBBEEF5);
-
-            Debug.Log("Initialized!", DebugMessageType.Debug);
-        }
+        #endregion
 
         #region Properties
+
         /// <summary>
-        /// The instance of the Core.cs script.
+        ///     The instance of the Core.cs script.
         /// </summary>
         internal static Core Instance { get; private set; }
 
         /// <summary>
-        /// The players character/ped.
+        ///     The players character/ped.
         /// </summary>
         public Ped PlayerPed => Game.Player.Character;
 
         /// <summary>
-        /// The position of the player in the game.
+        ///     The position of the player in the game.
         /// </summary>
-        public Vector3 PlayerPosition {
-            get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
-            set {
+        public Vector3 PlayerPosition
+        {
+            get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
+            set
+            {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
         }
 
         /// <summary>
-        /// The scenarios loaded for the current scene. These are internal so that the integrity of 
-        /// another persons custom scenario cannot be redacted.
+        ///     The scenarios loaded for the current scene. These are internal so that the integrity of
+        ///     another persons custom scenario cannot be redacted.
         /// </summary>
-        public List<Scenario> Scenarios { get; private set; }
+        public List<Scenario> Scenarios { get; }
+
         #endregion
 
         #region Methods
+
         /// <summary>
-        /// Get the currently active scene. Will return <see cref="default"/> if not assigned.
+        ///     Get the currently active scene..
         /// </summary>
         /// <returns></returns>
         internal Scene GetCurrentScene()
         {
-            return currentScene ?? default(Scene);
+            return _currentScene;
         }
 
         protected override void Dispose(bool dispose)
         {
             Debug.ClearLog();
             Debug.Log("Thread disposed...");
-            if (!didAbort) OnAborted(null, new EventArgs());
+            if (!_didAbort) OnAborted(null, new EventArgs());
             base.Dispose(dispose);
         }
 
         #region Events
+
         private void OnAborted(object sender, EventArgs eventArgs)
         {
-            didAbort = true;
+            _didAbort = true;
             if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
                 Game.FadeScreenIn(0);
 
@@ -155,79 +170,77 @@ namespace GTS
             World.RenderingCamera = null;
             Utils.SetGravityLevel(9.81f);
             Utils.RestartScript("blip_controller");
-            GTSLib.CutCredits();
+            GtsLib.CutCredits();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-            Game.MissionFlag = !didSetMissionFlag;
+            Game.MissionFlag = !_didSetMissionFlag;
             Effects.Stop();
 
-            currentScene?.Delete();
+            _currentScene?.Delete();
             AbortActiveScenarios();
-            if (currentScene != default(Scene))
+            if (_currentScene != default(Scene))
             {
                 GiveRespawnControlToGame();
                 if (!PlayerPed.IsDead)
                     PlayerPosition = Database.TrevorAirport;
                 ResetWeather();
             }
-            currentScene = null;
+            _currentScene = null;
 
-            introMission?.OnAborted();
+            _introMission?.OnAborted();
             // endMission?.OnAborted();
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (menuPool?.IsAnyMenuOpen() ?? false)
+            if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
-            if (e.KeyCode != optionsMenuKey)
+            if (e.KeyCode != _optionsMenuKey)
                 return;
 
-            mainMenu.Visible = !mainMenu.Visible;
+            _mainMenu.Visible = !_mainMenu.Visible;
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            if (!Monitor.TryEnter(tickLock)) return;
+            if (!Monitor.TryEnter(_tickLock)) return;
             try
             {
                 try
                 {
-                    if (menuPool != null)
+                    if (_menuPool != null)
                     {
-                        menuPool.ProcessMenus();
+                        _menuPool.ProcessMenus();
 
-                        if (menuPool.IsAnyMenuOpen())
-                        {
+                        if (_menuPool.IsAnyMenuOpen())
                             UI.HideHudComponentThisFrame(HudComponent.HelpText);
-                        }
                     }
 
 
                     DisableWantedStars();
 
-                    if (currentScene != null)
+                    if (_currentScene != null)
                     {
-                        if (didRestartScripts)
+                        if (_didRestartScripts)
                         {
                             Utils.TerminateScriptByName("blip_controller");
-                            didRestartScripts = false;
+                            _didRestartScripts = false;
                         }
 
-                        Game.MissionFlag = didSetMissionFlag = true;
+                        Game.MissionFlag = _didSetMissionFlag = true;
 
-                        if (currentScene.Info != null)
+                        if (_currentScene.Info != null)
                             DoSceneUpdate();
                     }
                     else
                     {
-                        if (!didRestartScripts)
+                        if (!_didRestartScripts)
                         {
                             Utils.RestartScript("blip_controller");
-                            didRestartScripts = true;
+                            _didRestartScripts = true;
                         }
 
-                        Game.MissionFlag = didSetMissionFlag = false;
+                        Game.MissionFlag = _didSetMissionFlag = false;
                         DoEarthUpdate();
                     }
 
@@ -237,7 +250,7 @@ namespace GTS
                 // not finish we will wait until it does to exit this method.
                 finally
                 {
-                    Monitor.Exit(tickLock);
+                    Monitor.Exit(_tickLock);
                 }
             }
             // Catch any exception in our mod, since this is our only script.
@@ -247,44 +260,52 @@ namespace GTS
                 Abort();
             }
         }
+
         #endregion
 
         #region Initialize
+
         private void ReadSettings()
         {
-            enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", enterOrbitHeight);
-            optionsMenuKey = Settings.GetValue("mod", "options_menu_key", optionsMenuKey);
-            menuEnabled = Settings.GetValue("mod", "menu_enabled", menuEnabled);
-            preloadModels = Settings.GetValue("mod", "pre_load_models", preloadModels);
-            defaultSpaceScene = Settings.GetValue("mod", "default_orbit_scene", defaultSpaceScene);
-            defaultSpaceOffset = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_offset"), defaultSpaceOffset);
-            defaultSpaceRotation = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_rotation"), defaultSpaceRotation);
-            missionStatus = Settings.GetValue("main_mission", "mission_status", missionStatus);
+            _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
+            _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
+            _menuEnabled = Settings.GetValue("mod", "menu_enabled", _menuEnabled);
+            _preloadModels = Settings.GetValue("mod", "pre_load_models", _preloadModels);
+            _defaultSpaceScene = Settings.GetValue("mod", "default_orbit_scene", _defaultSpaceScene);
+            _defaultSpaceOffset = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_offset"),
+                _defaultSpaceOffset);
+            _defaultSpaceRotation = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_rotation"),
+                _defaultSpaceRotation);
+            _missionStatus = Settings.GetValue("main_mission", "mission_status", _missionStatus);
             GTS.Settings.UseSpaceWalk = Settings.GetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
             GTS.Settings.ShowCustomUi = Settings.GetValue("settings", "show_custom_ui", GTS.Settings.ShowCustomUi);
             GTS.Settings.UseScenarios = Settings.GetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
             GTS.Settings.MoonJump = Settings.GetValue("settings", "low_gravity_jumping", GTS.Settings.MoonJump);
-            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
-            GTS.Settings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
-            GTS.Settings.VehicleFlySpeed = Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            endMissionCanStart = CanStartEndMission();
+            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
+                "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            GTS.Settings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
+                GTS.Settings.DefaultVehicleSpawn);
+            GTS.Settings.VehicleFlySpeed =
+                Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
+            _endMissionCanStart = CanStartEndMission();
         }
 
         private void SaveSettings()
         {
-            Settings.SetValue("mod", "enter_orbit_height", enterOrbitHeight);
-            Settings.SetValue("mod", "options_menu_key", optionsMenuKey);
-            Settings.SetValue("mod", "menu_enabled", menuEnabled);
-            Settings.SetValue("mod", "pre_load_models", preloadModels);
-            Settings.SetValue("mod", "default_orbit_scene", defaultSpaceScene);
-            Settings.SetValue("mod", "default_orbit_offset", defaultSpaceOffset);
-            Settings.SetValue("mod", "default_orbit_rotation", defaultSpaceRotation);
-            Settings.SetValue("main_mission", "mission_status", missionStatus);
+            Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
+            Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
+            Settings.SetValue("mod", "menu_enabled", _menuEnabled);
+            Settings.SetValue("mod", "pre_load_models", _preloadModels);
+            Settings.SetValue("mod", "default_orbit_scene", _defaultSpaceScene);
+            Settings.SetValue("mod", "default_orbit_offset", _defaultSpaceOffset);
+            Settings.SetValue("mod", "default_orbit_rotation", _defaultSpaceRotation);
+            Settings.SetValue("main_mission", "mission_status", _missionStatus);
             Settings.SetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
             Settings.SetValue("settings", "show_custom_ui", GTS.Settings.ShowCustomUi);
             Settings.SetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
             Settings.SetValue("settings", "low_gravity_jumping", GTS.Settings.MoonJump);
-            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity",
+                GTS.Settings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             Settings.Save();
@@ -311,26 +332,27 @@ namespace GTS
 
         private void CreateCustomMenu()
         {
-            if (!menuEnabled)
+            if (!_menuEnabled)
                 return;
 
-            menuPool = new MenuPool();
-            mainMenu = new UIMenu("GTS Options", "Core");
+            _menuPool = new MenuPool();
+            _mainMenu = new UIMenu("GTS Options", "Core");
 
             #region Scenes
-            UIMenu scenesMenu = menuPool.AddSubMenu(mainMenu, "Scenes");
-            string[] filePaths = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
+
+            var scenesMenu = _menuPool.AddSubMenu(_mainMenu, "Scenes");
+            var filePaths = Directory.GetFiles(Database.PathToScenes).Where(file => file.EndsWith(".space")).ToArray();
             for (var i = 0; i < filePaths.Length; i++)
             {
-                string path = filePaths[i];
-                string fileName = Path.GetFileName(path);
-                UIMenuItem menuItem = new UIMenuItem(fileName);
+                var path = filePaths[i];
+                var fileName = Path.GetFileName(path);
+                var menuItem = new UIMenuItem(fileName);
                 menuItem.Activated += (sender, item) =>
                 {
-                    SceneInfo newScene = DeserializeFileAsScene(fileName);
+                    var newScene = DeserializeFileAsScene(fileName);
                     SetCurrentScene(newScene, fileName);
                     UI.Notify($"{Database.NotifyHeader}Loaded: {fileName}");
-                    menuPool.CloseAllMenus();
+                    _menuPool.CloseAllMenus();
                 };
                 scenesMenu.AddItem(menuItem);
             }
@@ -338,31 +360,38 @@ namespace GTS
             #endregion
 
             #region Settings
-            UIMenu settingsMenu = menuPool.AddSubMenu(mainMenu, "Settings");
+
+            var settingsMenu = _menuPool.AddSubMenu(_mainMenu, "Settings");
 
             #region User Interface Settings
-            UIMenu userInterfaceMenu = menuPool.AddSubMenu(settingsMenu, "Interface");
-            UIMenuCheckboxItem showCustomUiCheckbox = new UIMenuCheckboxItem("Show Custom UI", GTS.Settings.ShowCustomUi);
-            showCustomUiCheckbox.CheckboxEvent += (sender, check) => {
-                GTS.Settings.ShowCustomUi = check;
-            };
+
+            var userInterfaceMenu = _menuPool.AddSubMenu(settingsMenu, "Interface");
+            var showCustomUiCheckbox = new UIMenuCheckboxItem("Show Custom UI", GTS.Settings.ShowCustomUi);
+            showCustomUiCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.ShowCustomUi = check; };
             userInterfaceMenu.AddItem(showCustomUiCheckbox);
+
             #endregion
 
             #region Vehicles Settings
+
             int flyIndex;
             List<dynamic> dynamicList;
 
-            UIMenu vehicleSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Vehicles");
-            UIMenuListItem vehicleSpeedList = new UIMenuListItem("Vehicle Speed", dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(), (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
-            vehicleSpeedList.OnListChanged += (sender, index) => {
+            var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
+            var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
+                (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
+            vehicleSpeedList.OnListChanged += (sender, index) =>
+            {
                 GTS.Settings.VehicleFlySpeed = sender.IndexToItem(index);
             };
 
-            int flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
-            UIMenuListItem vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
-                dynamicList = Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15).Select(i => (dynamic)i).ToList(), flySensitivity);
-            vehicleSensitivityList.OnListChanged += (sender, index) => {
+            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
+            var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
+                Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
+                    .Select(i => (dynamic) i).ToList(), flySensitivity);
+            vehicleSensitivityList.OnListChanged += (sender, index) =>
+            {
                 GTS.Settings.MouseControlFlySensitivity = sender.IndexToItem(index);
             };
 
@@ -372,92 +401,95 @@ namespace GTS
             #endregion
 
             #region Scene Settings
-            UIMenu sceneSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Scenes");
-            UIMenuCheckboxItem useScenariosCheckbox = new UIMenuCheckboxItem("Use Scenarios", GTS.Settings.UseScenarios);
-            useScenariosCheckbox.CheckboxEvent += (sender, check) => {
-                GTS.Settings.UseScenarios = check;
-            };
+
+            var sceneSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Scenes");
+            var useScenariosCheckbox = new UIMenuCheckboxItem("Use Scenarios", GTS.Settings.UseScenarios);
+            useScenariosCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.UseScenarios = check; };
 
             sceneSettingsMenu.AddItem(useScenariosCheckbox);
+
             #endregion
 
             #region Player Settings
-            UIMenu playerSettingsMenu = menuPool.AddSubMenu(settingsMenu, "Player");
-            UIMenuCheckboxItem useFloatingCheckbox = new UIMenuCheckboxItem("Use SpaceWalk", GTS.Settings.UseSpaceWalk);
-            useFloatingCheckbox.CheckboxEvent += (sender, check) => {
-                GTS.Settings.UseSpaceWalk = check;
-            };
+
+            var playerSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Player");
+            var useFloatingCheckbox = new UIMenuCheckboxItem("Use SpaceWalk", GTS.Settings.UseSpaceWalk);
+            useFloatingCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.UseSpaceWalk = check; };
 
             playerSettingsMenu.AddItem(useFloatingCheckbox);
+
             #endregion
 
-            UIMenuItem saveSettingsItem = new UIMenuItem("Save Settings");
+            var saveSettingsItem = new UIMenuItem("Save Settings");
             saveSettingsItem.SetLeftBadge(UIMenuItem.BadgeStyle.Star);
-            saveSettingsItem.Activated += (sender, item) => {
+            saveSettingsItem.Activated += (sender, item) =>
+            {
                 SaveSettings();
                 UI.Notify(Database.NotifyHeader + "Settings ~h~saved~s~!", true);
             };
             settingsMenu.AddItem(saveSettingsItem);
 
-            UIMenuCheckboxItem disableWantedLevelCheckbox = new UIMenuCheckboxItem("Disable Wanted Level", disableWantedStars);
-            disableWantedLevelCheckbox.CheckboxEvent += (a, b) => {
-                disableWantedStars = b;
-            };
+            var disableWantedLevelCheckbox = new UIMenuCheckboxItem("Disable Wanted Level", _disableWantedStars);
+            disableWantedLevelCheckbox.CheckboxEvent += (a, b) => { _disableWantedStars = b; };
             settingsMenu.AddItem(disableWantedLevelCheckbox);
+
             #endregion
 
             #region Debug
-            UIMenuItem debugButton = new UIMenuItem("Debug Player", "Log the player's position rotation and heading.");
-            debugButton.SetLeftBadge(UIMenuItem.BadgeStyle.Alert);
-            debugButton.Activated += (sender, item) => {
-                Debug.LogEntityData(PlayerPed);
-            };
 
-            mainMenu.AddItem(debugButton);
+            var debugButton = new UIMenuItem("Debug Player", "Log the player's position rotation and heading.");
+            debugButton.SetLeftBadge(UIMenuItem.BadgeStyle.Alert);
+            debugButton.Activated += (sender, item) => { Debug.LogEntityData(PlayerPed); };
+
+            _mainMenu.AddItem(debugButton);
+
             #endregion
 
-            menuPool.Add(mainMenu);
-            menuPool.RefreshIndex();
-            menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0, ColorTranslator.FromHtml("#8000ff")));
+            _menuPool.Add(_mainMenu);
+            _menuPool.RefreshIndex();
+            _menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0, ColorTranslator.FromHtml("#8000ff")));
         }
 
         private void RequestModels()
         {
-            if (!preloadModels)
+            if (!_preloadModels)
                 return;
 
             const string fileName = "./scripts/Space/RequestOnStart.txt";
             if (!File.Exists(fileName))
                 return;
 
-            using (StreamReader sr = File.OpenText(fileName))
+            using (var sr = File.OpenText(fileName))
             {
-                string s = String.Empty;
+                string s;
 
                 while ((s = sr.ReadLine()) != null)
                 {
                     s = s.Trim();
-                    Model m = new Model(s);
+                    var m = new Model(s);
                     if (!m.IsLoaded)
                         m.Request();
                 }
             }
         }
+
         #endregion
 
         #region Runtime Scene Updates
+
         private void DoEarthUpdate()
         {
-            float height = PlayerPed.HeightAboveGround;
+            var height = PlayerPed.HeightAboveGround;
 
-            if (height > enterOrbitHeight)
+            if (height > _enterOrbitHeight)
             {
-                SceneInfo scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes, defaultSpaceScene));
-                SetCurrentScene(scene, defaultSpaceScene);
+                var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes,
+                    _defaultSpaceScene));
+                SetCurrentScene(scene, _defaultSpaceScene);
 
-                PlayerPosition += defaultSpaceOffset;
-                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = defaultSpaceRotation;
-                else PlayerPed.Rotation = defaultSpaceRotation;
+                PlayerPosition += _defaultSpaceOffset;
+                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
+                else PlayerPed.Rotation = _defaultSpaceRotation;
             }
         }
 
@@ -467,38 +499,38 @@ namespace GTS
             Scenarios?.ForEach(scenario => scenario.Update());
             Function.Call(Hash._CLEAR_CLOUD_HAT);
             if (PlayerPed.CurrentVehicle != null)
-                PlayerPed.CurrentVehicle.HasGravity = currentScene.Info.UseGravity;
-            else PlayerPed.HasGravity = currentScene.Info.UseGravity;
-            currentScene.Update();
+                PlayerPed.CurrentVehicle.HasGravity = _currentScene.Info.UseGravity;
+            else PlayerPed.HasGravity = _currentScene.Info.UseGravity;
+            _currentScene.Update();
         }
 
         private void RunInternalMissions()
         {
-            if (currentScene != null)
+            if (_currentScene != null)
             {
-                introMission?.OnAborted();
+                _introMission?.OnAborted();
                 // endMission?.OnAborted();
                 return;
             }
-            if (!endMissionCanStart && missionStatus == 0)
+            if (!_endMissionCanStart && _missionStatus == 0)
             {
-                if (introMission != null)
+                if (_introMission != null)
                 {
-                    introMission.Update();
+                    _introMission.Update();
                 }
                 else
                 {
-                    introMission = new IntroMission();
-                    introMission.OnStart();
+                    _introMission = new IntroMission();
+                    _introMission.OnStart();
 
-                    introMission.completed += (scenario, success) =>
+                    _introMission.Completed += (scenario, success) =>
                     {
                         SetMissionStatus(1);
-                        introMission = null;
+                        _introMission = null;
                     };
                 }
             }
-            else if (endMissionCanStart && missionStatus == 1)
+            else if (_endMissionCanStart && _missionStatus == 1)
             {
                 // TODO: Make end mission start.
             }
@@ -506,16 +538,16 @@ namespace GTS
 
         private void SetMissionStatus(int value)
         {
-            missionStatus = value;
-            Settings.SetValue("main_mission", "mission_status", missionStatus);
+            _missionStatus = value;
+            Settings.SetValue("main_mission", "mission_status", _missionStatus);
             Settings.Save();
         }
 
         private void DisableWantedStars()
         {
-            if (!disableWantedStars)
+            if (!_disableWantedStars)
             {
-                if (!resetWantedLevel)
+                if (!_resetWantedLevel)
                 {
                     Utils.RequestScript("re_prison");
                     Utils.RequestScript("re_prisonlift");
@@ -524,11 +556,11 @@ namespace GTS
                     Utils.RequestScript("re_armybase");
                     Utils.RequestScript("restrictedareas");
                     Game.MaxWantedLevel = 5;
-                    resetWantedLevel = true;
+                    _resetWantedLevel = true;
                 }
                 return;
             }
-            resetWantedLevel = false;
+            _resetWantedLevel = false;
             Utils.TerminateScriptByName("re_prison");
             Utils.TerminateScriptByName("re_prisonlift");
             Utils.TerminateScriptByName("am_prison");
@@ -544,15 +576,17 @@ namespace GTS
             World.Weather = Weather.ExtraSunny;
             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
         }
+
         #endregion
 
         #region Scene Management
+
         private SceneInfo DeserializeFileAsScene(string fileName)
         {
             if (fileName == "cmd_earth")
                 return null;
 
-            SceneInfo newScene = XmlSerializer.Deserialize<SceneInfo>(Database.PathToScenes + "\\" + fileName);
+            var newScene = XmlSerializer.Deserialize<SceneInfo>(Database.PathToScenes + "\\" + fileName);
 
             if (newScene == default(SceneInfo))
             {
@@ -575,48 +609,47 @@ namespace GTS
 
         private void CreateScene(SceneInfo scene, string fileName = default(string))
         {
-            lock (tickLock)
+            lock (_tickLock)
             {
                 EndActiveScenarios();
                 ClearAllEntities();
 
-                if (currentScene != null && currentScene != default(Scene))
-                    currentScene.Delete();
+                if (_currentScene != null && _currentScene != default(Scene))
+                    _currentScene.Delete();
 
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
 
-                currentScene = new Scene(scene) { FileName = fileName };
-                currentScene.Start();
+                _currentScene = new Scene(scene) {FileName = fileName};
+                _currentScene.Start();
 
-                Function.Call(Hash.SET_CLOCK_TIME, currentScene.Info.Time);
+                Function.Call(Hash.SET_CLOCK_TIME, _currentScene.Info.Time);
                 Function.Call(Hash.PAUSE_CLOCK, true);
 
-                if (currentScene.Weather == (Weather)14) Function.Call(Hash.SET_WEATHER_TYPE_NOW, "HALLOWEEN");
-                else World.Weather = currentScene.Weather;
+                if (_currentScene.Weather == (Weather) 14) Function.Call(Hash.SET_WEATHER_TYPE_NOW, "HALLOWEEN");
+                else World.Weather = _currentScene.Weather;
 
-                if ((int)World.Weather != -1)
-                    Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, _weatherNames[(int)World.Weather]);
+                if ((int) World.Weather != -1)
+                    Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, WeatherNames[(int) World.Weather]);
 
                 if (GTS.Settings.UseScenarios)
-                {
                     try
                     {
-                        foreach (ScenarioInfo scenarioInfo in scene.Scenarios)
+                        foreach (var scenarioInfo in scene.Scenarios)
                         {
-                            Assembly assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
+                            var assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
 
                             if (assembly == null)
                                 continue;
 
-                            Type type = assembly.GetType(scenarioInfo.Namespace);
+                            var type = assembly.GetType(scenarioInfo.Namespace);
 
                             if (type == null || type.BaseType != typeof(Scenario))
                                 continue;
 
                             Debug.Log("Creating Scenario: " + type.Name);
 
-                            Scenario instance = (Scenario)Activator.CreateInstance(type);
+                            var instance = (Scenario) Activator.CreateInstance(type);
 
                             instance.OnAwake();
 
@@ -626,55 +659,55 @@ namespace GTS
                             Scenarios.Add(instance);
                         }
 
-                        foreach (Scenario scenario in Scenarios)
+                        foreach (var scenario in Scenarios)
                         {
                             scenario.OnStart();
 
-                            scenario.completed += ScenarioComplete;
+                            scenario.Completed += ScenarioComplete;
                         }
                     }
                     catch (Exception ex)
                     {
                         Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
                     }
-                }
-                currentScene.Exited += CurrentSceneOnExited;
+                _currentScene.Exited += CurrentSceneOnExited;
             }
         }
 
         private void ScenarioComplete(Scenario scenario, bool success)
         {
-            lock (tickLock)
+            lock (_tickLock)
             {
                 Scenarios.Remove(scenario);
             }
         }
 
-        private void ClearAllEntities(Vector3 pos = default(Vector3), float distance = int.MaxValue)
+        private void ClearAllEntities()
         {
-            Entity[] entities = World.GetAllEntities();
+            var entities = World.GetAllEntities();
 
-            foreach (Entity e in entities)
+            foreach (var e in entities)
             {
-                if (!e.IsDead && (e.GetType() == typeof(Ped) || (e.GetType() == typeof(Vehicle) && PlayerPed.CurrentVehicle == ((Vehicle)e))))
+                if (!e.IsDead && (e is Ped ||
+                                  e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
                     continue;
 
-                e?.Delete();
+                e.Delete();
             }
         }
 
         private void CurrentSceneOnExited(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset)
         {
-            lock (tickLock)
+            lock (_tickLock)
             {
-                bool isActualScene = newSceneFile != "cmd_earth";
+                var isActualScene = newSceneFile != "cmd_earth";
 
-                SceneInfo newScene = DeserializeFileAsScene(newSceneFile);
+                var newScene = DeserializeFileAsScene(newSceneFile);
 
                 if (isActualScene && newScene == null)
                 {
                     OnAborted(this, new EventArgs());
-                    didAbort = false;
+                    _didAbort = false;
                     return;
                 }
 
@@ -684,13 +717,13 @@ namespace GTS
 
                 else if (!isActualScene)
                     // if this ISNT an actual scene check if we can start the end mission.
-                    endMissionCanStart = CanStartEndMission();
+                    _endMissionCanStart = CanStartEndMission();
 
                 Game.FadeScreenOut(1000);
                 Wait(1000);
 
-                currentScene?.Delete();
-                currentScene = null;
+                _currentScene?.Delete();
+                _currentScene = null;
 
                 ResetWeather();
                 EndActiveScenarios();
@@ -715,13 +748,16 @@ namespace GTS
 
                     if (PlayerPed.IsInVehicle())
                     {
-                        Vehicle playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
+                        var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
                         playerPedCurrentVehicle.Position = Database.EarthAtmosphereEnterPosition;
                         playerPedCurrentVehicle.Rotation = Vector3.Zero;
                         playerPedCurrentVehicle.Heading = 243;
                         playerPedCurrentVehicle.HasGravity = true;
                     }
-                    else PlayerPosition = Database.TrevorAirport;
+                    else
+                    {
+                        PlayerPosition = Database.TrevorAirport;
+                    }
 
                     PlayerPed.HasGravity = true;
 
@@ -736,38 +772,36 @@ namespace GTS
         private void EndActiveScenarios()
         {
             if (Scenarios != null)
-            {
                 while (Scenarios.Count > 0)
                 {
                     var scen = Scenarios[0];
                     scen.OnEnded(false);
                     Scenarios.RemoveAt(0);
                 }
-            }
         }
 
         private void AbortActiveScenarios()
         {
             if (Scenarios != null)
-            {
                 while (Scenarios.Count > 0)
                 {
                     var scenario = Scenarios[0];
                     scenario.OnAborted();
                     Scenarios.RemoveAt(0);
                 }
-            }
         }
+
         #endregion
 
         #region Utility
+
         private void RaiseLandingGear()
         {
-            Vehicle vehicle = PlayerPed.CurrentVehicle;
+            var vehicle = PlayerPed.CurrentVehicle;
             if (PlayerPed.IsInVehicle() && Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle))
             {
                 Function.Call(Hash._0xCFC8BE9A5E1FE575, vehicle.Handle, 0);
-                DateTime landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
+                var landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
                 while (Function.Call<int>(Hash._0x9B0F3DCA3DB0F4CD, vehicle.Handle) != 0)
                 {
                     if (DateTime.UtcNow > landingGrearTimeout)
@@ -786,7 +820,9 @@ namespace GTS
             Function.Call(Hash.SET_FADE_OUT_AFTER_DEATH, true);
             Function.Call(Hash.IGNORE_NEXT_RESTART, false);
         }
+
         #endregion
+
         #endregion
     }
 }
@@ -853,4 +889,3 @@ namespace GTS
 //        }
 //    }
 //}
-

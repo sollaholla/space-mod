@@ -1,7 +1,5 @@
 ﻿using GTA;
 using GTA.Math;
-using GTS.Library;
-using System.Collections.Generic;
 
 namespace GTS.OrbitalSystems
 {
@@ -22,7 +20,7 @@ namespace GTS.OrbitalSystems
 
         public void Rotate()
         {
-            Vector3 rotation = Rotation;
+            var rotation = Rotation;
             rotation.Z += Game.LastFrameTime * RotationSpeed;
             Rotation = rotation;
         }

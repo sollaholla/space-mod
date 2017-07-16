@@ -1,87 +1,86 @@
-﻿using GTA;
+﻿using System;
+using GTA;
 using GTA.Math;
 using GTA.Native;
-using System;
 
 namespace DefaultMissions
 {
     public class OnFootCombatPed : Entity
     {
-        private enum TaskState
-        {
-            Idle,
-            Chase,
-            Attack
-        }
+        private static readonly Random Random;
+        private readonly Ped _me;
 
-        private static Random random;
-
-        private TaskState state;
-        private Ped me;
+        private TaskState _state;
 
         static OnFootCombatPed()
         {
-            random = new Random();
+            Random = new Random();
         }
 
         public OnFootCombatPed(Ped ped) : base(ped.Handle)
         {
-            me = ped;
+            _me = ped;
         }
 
         /// <summary>
-        /// The target ped we want to attack.
+        ///     The target ped we want to attack.
         /// </summary>
         public Ped Target { get; set; }
 
         /// <summary>
-        /// The attack range of this ped.
+        ///     The attack range of this ped.
         /// </summary>
-        public float AttackRange { get; set; } = random.Next(30 * 30, 50 * 50);
+        public float AttackRange { get; set; } = Random.Next(30 * 30, 50 * 50);
 
         /// <summary>
-        /// A multiplier to the attack range, that tells the AI when he/she can start chasing the Target again.
+        ///     A multiplier to the attack range, that tells the AI when he/she can start chasing the Target again.
         /// </summary>
-        public float ChaseAfterAttackRangeMultiplier { get; set; } = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 1.25f, 2.5f);
+        public float ChaseAfterAttackRangeMultiplier { get; set; } =
+            Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 1.25f, 2.5f);
 
         /// <summary>
-        /// The <see cref="Ped.Task"/>.
+        ///     The <see cref="Ped.Task" />.
         /// </summary>
-        public Tasks Task { get { return me.Task; } }
+        public Tasks Task => _me.Task;
 
         /// <summary>
-        /// Update this peds combat behaviour.
+        ///     Update this peds combat behaviour.
         /// </summary>
         public void Update()
         {
             if (IsDead)
             {
                 if (Blip.Exists(CurrentBlip))
-                {
                     CurrentBlip.Remove();
-                }
                 return;
             }
 
-            switch (state)
+            switch (_state)
             {
                 case TaskState.Idle:
                     if (Target != null)
-                        state = TaskState.Chase;
+                        _state = TaskState.Chase;
                     break;
                 case TaskState.Chase:
-                    float distance = Vector3.DistanceSquared(Target.Position, Position);
+                    var distance = Vector3.DistanceSquared(Target.Position, Position);
                     if (distance < AttackRange)
-                        state = TaskState.Attack;
+                        _state = TaskState.Attack;
                     else Task.RunTo(Target.Position, true);
                     break;
                 case TaskState.Attack:
                     distance = Vector3.DistanceSquared(Target.Position, Position);
                     if (distance > AttackRange * ChaseAfterAttackRangeMultiplier)
-                        state = TaskState.Chase;
+                        _state = TaskState.Chase;
                     else Task.FightAgainst(Game.Player.Character);
                     break;
             }
+        }
+
+        private enum TaskState
+        {
+            Idle,
+            Chase,
+            Attack
         }
     }
 }

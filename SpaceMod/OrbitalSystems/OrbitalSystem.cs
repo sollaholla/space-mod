@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using GTA;
-using GTA.Math;
 using GTS.Library;
 
 namespace GTS.OrbitalSystems
@@ -14,15 +13,16 @@ namespace GTS.OrbitalSystems
 
     public class OrbitalSystem : Entity
     {
-        private readonly SkyboxRotationAxis rotationAxis;
-        
-        public OrbitalSystem(Prop prop, List<Orbital> orbitals, List<AttachedOrbital> attachedOrbitals, float rotationSpeed = 0, SkyboxRotationAxis rotationAxis = SkyboxRotationAxis.Z) : base(prop.Handle)
+        private readonly SkyboxRotationAxis _rotationAxis;
+
+        public OrbitalSystem(Prop prop, List<Orbital> orbitals, List<AttachedOrbital> attachedOrbitals,
+            float rotationSpeed = 0, SkyboxRotationAxis rotationAxis = SkyboxRotationAxis.Z) : base(prop.Handle)
         {
             Orbitals = orbitals;
             AttachedOrbitals = attachedOrbitals;
             SkyboxRotationSpeed = rotationSpeed;
 
-            this.rotationAxis = rotationAxis;
+            _rotationAxis = rotationAxis;
         }
 
         public float SkyboxRotationSpeed { get; }
@@ -40,17 +40,17 @@ namespace GTS.OrbitalSystems
             Position = Database.GetGalaxPosition();
 
             // Update locked orbitals.
-            AttachedOrbitals  ?.ForEach(AttachOrbital);
+            AttachedOrbitals?.ForEach(AttachOrbital);
 
             // Update orbitals.
-            Orbitals        ?.ForEach(orbital => orbital?.Rotate());
+            Orbitals?.ForEach(orbital => orbital?.Rotate());
         }
 
         private void Rotate()
         {
-            Vector3 rotation = Rotation;
+            var rotation = Rotation;
 
-            switch (rotationAxis)
+            switch (_rotationAxis)
             {
                 case SkyboxRotationAxis.Z:
                     rotation.Z += Game.LastFrameTime * SkyboxRotationSpeed;
@@ -69,33 +69,27 @@ namespace GTS.OrbitalSystems
         private void AttachOrbital(AttachedOrbital attachedOrbital)
         {
             if (!attachedOrbital.IsAttachedTo(this))
-            {
                 attachedOrbital.AttachTo(this, attachedOrbital.AttachOffset);
-            }
         }
 
         public new void Delete()
         {
-            foreach(AttachedOrbital o in AttachedOrbitals)
-            {
+            foreach (var o in AttachedOrbitals)
                 o.Delete();
-            }
 
-            foreach (Orbital o in Orbitals)
-            {
+            foreach (var o in Orbitals)
                 o.Delete();
-            }
 
             base.Delete();
         }
 
         /// <summary>
-        /// Returns all planets positions and rotations in the array order 0 to length.
+        ///     Returns all planets positions and rotations in the array order 0 to length.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            string ret = string.Empty;
+            var ret = string.Empty;
             Orbitals.ForEach(o => ret += $"{o.Name}: position = {o.Position} | rotation = {o.Rotation}\n");
             return ret;
         }

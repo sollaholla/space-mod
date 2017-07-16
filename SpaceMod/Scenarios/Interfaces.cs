@@ -12,5 +12,6 @@
     }
 
     public interface IEvent : ICutScene
-    { }
+    {
+    }
 }

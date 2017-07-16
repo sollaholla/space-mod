@@ -1,16 +1,15 @@
 ﻿using System.Runtime.InteropServices;
 using GTA.Native;
-using System;
 
 namespace GTS.Library
 {
-    internal static class GTSLib
+    internal static class GtsLib
     {
         //private static bool initialized = false;
 
         //[DllImport("GTSLib.dll")]
         //private static extern bool GTSLib_Init();
-        
+
         [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_InitCredits();
 
@@ -31,7 +30,8 @@ namespace GTS.Library
                 Function.Call(Hash.SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY, true);
                 Function.Call(Hash.SET_MOBILE_PHONE_RADIO_STATE, true);
                 Function.Call(Hash.SET_RADIO_TO_STATION_NAME, "RADIO_01_CLASS_ROCK");
-                Function.Call(Hash._0x4E404A9361F75BB2, "RADIO_01_CLASS_ROCK", "END_CREDITS_SAVE_MICHAEL_TREVOR", true); // or END_CREDITS_KILL_TREVOR or END_CREDITS_KILL_MICHAEL
+                Function.Call(Hash._0x4E404A9361F75BB2, "RADIO_01_CLASS_ROCK", "END_CREDITS_SAVE_MICHAEL_TREVOR",
+                    true); // or END_CREDITS_KILL_TREVOR or END_CREDITS_KILL_MICHAEL
                 if (!Function.Call<bool>(Hash.IS_AUDIO_SCENE_ACTIVE, "END_CREDITS_SCENE"))
                     Function.Call(Hash.START_AUDIO_SCENE, "END_CREDITS_SCENE");
                 Function.Call(Hash.SET_CREDITS_ACTIVE, true);
@@ -69,9 +69,9 @@ namespace GTS.Library
         }
 
         [DllImport("GTSLib.asi")]
-        private static extern bool GTSLib_SetWorldGravity(Single gravity);
+        private static extern bool GTSLib_SetWorldGravity(float gravity);
 
-        public static void SetGravityLevel(Single gravity)
+        public static void SetGravityLevel(float gravity)
         {
             //if (!initialized)
             //{
