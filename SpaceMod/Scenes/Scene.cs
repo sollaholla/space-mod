@@ -147,7 +147,7 @@ namespace GTS.Scenes
         internal Vehicle PlayerVehicle  { get; private set; }
         internal int IplCount           { get; private set; }
 
-        internal Ped PlayerPed => Game.Player.Character;
+        internal Ped PlayerPed => Game.Player.Character ?? new Ped(0);
         internal Vector3 PlayerPosition {
             get { return PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position; }
             set {

@@ -87,6 +87,9 @@ namespace GTS
             CreateCustomMenu();
             RequestModels();
 
+            if (Game.IsLoading)
+                Function.Call((Hash)0x0888C3502DBBEEF5);
+
             Debug.Log("Initialized!", DebugMessageType.Debug);
         }
 
@@ -212,7 +215,9 @@ namespace GTS
                         }
 
                         Game.MissionFlag = didSetMissionFlag = true;
-                        DoSceneUpdate();
+
+                        if (currentScene.Info != null)
+                            DoSceneUpdate();
                     }
                     else
                     {
@@ -464,7 +469,6 @@ namespace GTS
             if (PlayerPed.CurrentVehicle != null)
                 PlayerPed.CurrentVehicle.HasGravity = currentScene.Info.UseGravity;
             else PlayerPed.HasGravity = currentScene.Info.UseGravity;
-
             currentScene.Update();
         }
 

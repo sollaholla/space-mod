@@ -427,7 +427,6 @@ namespace DefaultMissions
                     
                     if (!Function.Call<bool>(Hash.IS_GAMEPLAY_HINT_ACTIVE))
                     {
-
                         Game.Player.Character.Task.StandStill(-1);
                         Game.Player.Character.Task.LookAt(carrierShip);
                         Game.Player.Character.Heading = (carrierShip.Position - Game.Player.Character.Position).ToHeading();

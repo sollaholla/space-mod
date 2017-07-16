@@ -295,28 +295,16 @@ namespace GTS.Scenes.Interiors
 
         private void RemoveMap()
         {
-            while (Props.Count > 0) {
-                var prop = Props[0];
-                prop?.Delete();
-                Props.RemoveAt(0);
-            }
+            foreach (Prop p in Props)
+                p.Delete();
 
-            while (Vehicles.Count > 0) {
-                var vehicle = Vehicles[0];
-                if (Entity.Exists(vehicle) && !Game.Player.Character.IsInVehicle(vehicle))
-                    vehicle.Delete();
-                Vehicles.RemoveAt(0);
-            }
+            foreach (Vehicle v in Vehicles)
+                if (Game.Player.Character.CurrentVehicle != v)
+                    v.Delete();
 
-            while (Peds.Count > 0) {
-                var ped = Peds[0];
-                ped?.Delete();
-                Peds.RemoveAt(0);
-            }
+            foreach (Ped p in Peds)
+                p.Delete();
 
-            while (map.Objects.Count > 0) {
-                map.Objects.RemoveAt(0);
-            }
         }
 
         public void Hide()
