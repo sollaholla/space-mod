@@ -7,7 +7,7 @@ namespace GTS.Library
     {
         private static bool initialized = false;
 
-        [DllImport("GTSLib.dll")]
+        [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_IsLibraryInitialized();
 
         [DllImport("GTSLib.asi")]

@@ -28,12 +28,12 @@ namespace DefaultMissions
         public Ped Target { get; set; }
 
         /// <summary>
-        ///     The attack range of this ped.
+        ///     The attack range of <c>this</c> ped.
         /// </summary>
         public float AttackRange { get; set; } = Random.Next(30 * 30, 50 * 50);
 
         /// <summary>
-        ///     A multiplier to the attack range, that tells the AI when he/she can start chasing the Target again.
+        ///     A multiplier to the attack range, that tells the AI when he/she can start chasing the <see cref="Target"/> again.
         /// </summary>
         public float ChaseAfterAttackRangeMultiplier { get; set; } =
             Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 1.25f, 2.5f);
@@ -44,7 +44,7 @@ namespace DefaultMissions
         public Tasks Task => _me.Task;
 
         /// <summary>
-        ///     Update this peds combat behaviour.
+        ///     Update <c>this</c> <see cref="Ped"/>'s combat behavior.
         /// </summary>
         public void Update()
         {
