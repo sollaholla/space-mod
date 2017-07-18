@@ -91,7 +91,7 @@ namespace GTS
         private Keys _optionsMenuKey = Keys.NumPad9;
         private int _missionStatus = 2;
         private bool _didSetMissionFlag;
-        private bool _didRestartScripts;
+        private bool _didRestartEarthUpdate;
 
         #endregion
 
@@ -320,10 +320,11 @@ namespace GTS
 
         private void SceneNull()
         {
-            if (!_didRestartScripts)
+            if (!_didRestartEarthUpdate)
             {
                 Utils.RestartScript("blip_controller");
-                _didRestartScripts = true;
+                GtsLib.RestoreWater();
+                _didRestartEarthUpdate = true;
             }
 
             Game.MissionFlag = _didSetMissionFlag = false;
@@ -332,10 +333,11 @@ namespace GTS
 
         private void SceneNotNull()
         {
-            if (_didRestartScripts)
+            if (_didRestartEarthUpdate)
             {
                 Utils.TerminateScriptByName("blip_controller");
-                _didRestartScripts = false;
+                GtsLib.RemoveWater();
+                _didRestartEarthUpdate = false;
             }
 
             Game.MissionFlag = _didSetMissionFlag = true;

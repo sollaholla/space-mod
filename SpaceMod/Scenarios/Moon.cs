@@ -93,7 +93,7 @@ namespace DefaultMissions
                 switch (_step)
                 {
                     case 0:
-                        TimeCycleModifier.Set("CAMERA_secuirity", 1.0f);
+                        TimeCycleModifier.Set("heliGunCam", 1.0f);
                         _camera.PointAt(_ufo);
                         _step++;
                         break;

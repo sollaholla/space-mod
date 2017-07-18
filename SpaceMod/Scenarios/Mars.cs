@@ -206,11 +206,11 @@ namespace DefaultMissions
                 case 9:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsEngineerSpawn);
                     var t = new Trigger(_marsEngineerSpawn, 500);
-                    if (t.IsInTrigger(playerCharacter.Position))
+                    if (t.IsInTrigger(playerCharacter.Position) && CreateEngineerFireFight())
                         _missionStep++;
                     break;
                 case 10:
-                    CreateEngineerFireFight();
+                    // NOTE: There used to be something here...
                     _missionStep++;
                     break;
                 case 11:
@@ -220,8 +220,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 12:
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _engineer, "GENERIC_THANKS",
-                        "Speech_Params_Force_Shouted_Critical");
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _engineer, "GENERIC_THANKS", "Speech_Params_Force_Shouted_Critical");
                     _engineer.Task.TurnTo(playerCharacter, -1);
                     _missionStep++;
                     break;
@@ -552,43 +551,45 @@ namespace DefaultMissions
             _missionStep++;
         }
 
-        private void CreateEngineerFireFight()
+        private bool CreateEngineerFireFight()
         {
-            EngineerFight_CreateEngineer();
-            EngineerFight_CreateEngineerShuttle();
-            EngineerFight_CreateDecoyAlien();
+            return EngineerFight_CreateEngineer() && EngineerFight_CreateEngineerShuttle() && EngineerFight_CreateDecoyAlien();
+            //EngineerFight_CreateEngineerShuttle();
+            //EngineerFight_CreateDecoyAlien();
         }
 
-        private void EngineerFight_CreateEngineer()
+        private bool EngineerFight_CreateEngineer()
         {
-            while (_marsEngineerSpawn.MoveToGroundArtificial() == Vector3.Zero)
-                Script.Yield();
+            if (_marsEngineerSpawn.MoveToGroundArtificial() == Vector3.Zero)
+                return false;
             var spawn = _marsEngineerSpawn.MoveToGroundArtificial();
 
             _engineer = World.CreatePed(_requestModels[2], spawn);
             _engineer.Weapons.Give(WeaponHash.AssaultSMG, 1000, true, true);
             _engineer.RelationshipGroup = Game.Player.Character.RelationshipGroup;
             _engineer.IsInvincible = true;
+            return true;
         }
 
-        private void EngineerFight_CreateDecoyAlien()
+        private bool EngineerFight_CreateDecoyAlien()
         {
             Vector3 spawn = _engineer.Position + _engineer.ForwardVector * 15;
-            while (spawn.MoveToGroundArtificial() == Vector3.Zero)
-                Script.Yield();
+            if (spawn.MoveToGroundArtificial() == Vector3.Zero)
+                return false;
             spawn = spawn.MoveToGroundArtificial();
             var alien = HelperFunctions.SpawnAlien(spawn, markModelAsNoLongerNeeded: false);
             alien.AddBlip().Scale = 0.5f;
             alien.IsOnlyDamagedByPlayer = true;
             alien.Heading = (_engineer.Position - alien.Position).ToHeading();
             _aliens.Add(new OnFootCombatPed(alien) { Target = _engineer });
+            return true;
         }
 
-        private void EngineerFight_CreateEngineerShuttle()
+        private bool EngineerFight_CreateEngineerShuttle()
         {
             Vector3 spawn = _engineer.Position + _engineer.RightVector * 25;
-            while (spawn.MoveToGroundArtificial() == Vector3.Zero)
-                Script.Yield();
+            if (spawn.MoveToGroundArtificial() == Vector3.Zero)
+                return false;
             spawn = spawn.MoveToGroundArtificial();
             _engineerShuttle = World.CreateVehicle(_requestModels[0], spawn - Vector3.WorldUp);
             _engineerShuttle.LandingGear = VehicleLandingGear.Retracted;
@@ -597,6 +598,7 @@ namespace DefaultMissions
             Function.Call(Hash.SET_ENTITY_RENDER_SCORCHED, _engineerShuttle, true);
             Function.Call(Hash.SET_VEHICLE_LOD_MULTIPLIER, _engineerShuttle, 0.1f);
             Function.Call(Hash.SET_ENTITY_LOD_DIST, _engineerShuttle, (ushort)140);
+            return true;
         }
 
         private void EnginnerConvo_HaveConversation()

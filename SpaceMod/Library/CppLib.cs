@@ -5,21 +5,18 @@ namespace GTS.Library
 {
     internal static class GtsLib
     {
-        //private static bool initialized = false;
+        private static bool initialized = false;
 
-        //[DllImport("GTSLib.dll")]
-        //private static extern bool GTSLib_Init();
+        [DllImport("GTSLib.dll")]
+        private static extern bool GTSLib_IsLibraryInitialized();
 
         [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_InitCredits();
 
         public static void RollCredits()
         {
-            //if (!initialized)
-            //{
-            //    GTSLib_Init();
-            //    initialized = true;
-            //}
+            if (!GTSLib_IsLibraryInitialized())
+                return;
 
             if (GTSLib_InitCredits())
             {
@@ -48,11 +45,8 @@ namespace GTS.Library
 
         public static void CutCredits()
         {
-            //if (!initialized)
-            //{
-            //    GTSLib_Init();
-            //    initialized = true;
-            //}
+            if (!GTSLib_IsLibraryInitialized())
+                return;
 
             Function.Call(Hash.PLAY_END_CREDITS_MUSIC, false);
             Function.Call(Hash.SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY, false);
@@ -69,17 +63,36 @@ namespace GTS.Library
         }
 
         [DllImport("GTSLib.asi")]
-        private static extern bool GTSLib_SetWorldGravity(float gravity);
+        private static extern void GTSLib_SetWorldGravity(float gravity);
 
         public static void SetGravityLevel(float gravity)
         {
-            //if (!initialized)
-            //{
-            //    GTSLib_Init();
-            //    initialized = true;
-            //}
+            if (!GTSLib_IsLibraryInitialized())
+                return;
 
             GTSLib_SetWorldGravity(gravity);
+        }
+
+        [DllImport("GTSLib.asi")]
+        private static extern bool GTSLib_RemoveWater();
+
+        [DllImport("GTSLib.asi")]
+        private static extern bool GTSLib_RestoreWater();
+
+        public static void RemoveWater()
+        {
+            if (!GTSLib_IsLibraryInitialized())
+                return;
+
+            GTSLib_RemoveWater();
+        }
+
+        public static void RestoreWater()
+        {
+            if (!GTSLib_IsLibraryInitialized())
+                return;
+
+            GTSLib_RestoreWater();
         }
     }
 }
