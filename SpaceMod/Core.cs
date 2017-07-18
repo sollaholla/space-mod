@@ -91,7 +91,7 @@ namespace GTS
         private Keys _optionsMenuKey = Keys.NumPad9;
         private int _missionStatus = 2;
         private bool _didSetMissionFlag;
-        private bool _didRestartEarthUpdate;
+        private bool _didRestartEarthUpdate = true;
 
         #endregion
 
@@ -237,8 +237,8 @@ namespace GTS
                             UI.HideHudComponentThisFrame(HudComponent.HelpText);
                     }
 
-                    DisableWantedStars();
                     SetVarsDependantOnSceneNull();
+                    DisableWantedStars();
                     RunInternalMissions();
                 }
                 // Locks our tick method so that if the last tick did 
@@ -320,30 +320,30 @@ namespace GTS
 
         private void SceneNull()
         {
-            if (!_didRestartEarthUpdate)
-            {
-                Utils.RestartScript("blip_controller");
-                GtsLib.RestoreWater();
-                _didRestartEarthUpdate = true;
-            }
-
             Game.MissionFlag = _didSetMissionFlag = false;
             DoEarthUpdate();
+
+            if (!_didRestartEarthUpdate)
+            {
+                _didRestartEarthUpdate = true;
+                GtsLib.RestoreWater();
+                Utils.RestartScript("blip_controller"); // Beware of this function, it may delay the mod.
+            }
         }
 
         private void SceneNotNull()
         {
-            if (_didRestartEarthUpdate)
-            {
-                Utils.TerminateScriptByName("blip_controller");
-                GtsLib.RemoveWater();
-                _didRestartEarthUpdate = false;
-            }
-
             Game.MissionFlag = _didSetMissionFlag = true;
 
             if (_currentScene.Info != null)
                 DoSceneUpdate();
+
+            if (_didRestartEarthUpdate)
+            {
+                _didRestartEarthUpdate = false;
+                GtsLib.RemoveWater();
+                Utils.TerminateScriptByName("blip_controller");
+            }
         }
 
         private bool CanStartEndMission()

@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using GTA.Native;
+using GTS.Extensions;
 
 namespace GTS.Library
 {
@@ -74,10 +75,10 @@ namespace GTS.Library
         }
 
         [DllImport("GTSLib.asi")]
-        private static extern bool GTSLib_RemoveWater();
+        private static extern void GTSLib_RemoveWater();
 
         [DllImport("GTSLib.asi")]
-        private static extern bool GTSLib_RestoreWater();
+        private static extern void GTSLib_RestoreWater();
 
         public static void RemoveWater()
         {
@@ -85,6 +86,8 @@ namespace GTS.Library
                 return;
 
             GTSLib_RemoveWater();
+
+            Debug.Log("Removing game water.");
         }
 
         public static void RestoreWater()
@@ -93,6 +96,8 @@ namespace GTS.Library
                 return;
 
             GTSLib_RestoreWater();
+
+            Debug.Log("Restoring game water.");
         }
     }
 }

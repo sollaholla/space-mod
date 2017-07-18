@@ -413,7 +413,8 @@ namespace GTS.Library
         public static void RestartScript(string name)
         {
             Function.Call(Hash.REQUEST_SCRIPT, name);
-            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) Script.Yield();
+            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name) && DateTime.UtcNow < timout) Script.Yield();
             Function.Call(Hash.START_NEW_SCRIPT, name, 1624);
             Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
         }
