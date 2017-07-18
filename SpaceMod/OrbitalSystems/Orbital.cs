@@ -5,10 +5,9 @@ namespace GTS.OrbitalSystems
 {
     public class Orbital : AttachedOrbital
     {
-        public Orbital(Prop prop, string name, float rotationSpeed) : base(prop, Vector3.Zero)
+        public Orbital(Prop prop, string name, float rotationSpeed) : base(prop, Vector3.Zero, Vector3.Zero)
         {
             Name = name;
-
             RotationSpeed = rotationSpeed;
         }
 

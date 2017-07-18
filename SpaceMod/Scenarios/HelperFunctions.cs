@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
+using System.Reflection;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -70,6 +72,20 @@ namespace DefaultMissions
             var distance = Vector3.Distance(position, Game.Player.Character.Position);
 
             scene.DrawMarkerAt(position, $"{distance:N0}M", Color.White);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if we went to mars.
+        /// </summary>
+        /// <returns></returns>
+        public static bool DidGoToMars()
+        {
+            var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
+                .FullName;
+            var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(Mars).Name, "ini"));
+            var settings = ScriptSettings.Load(path);
+            var currentStep = settings.GetValue(Mars.SettingsGeneralSectionString, Mars.SettingsMissionStepString, 0);
+            return currentStep > 0;
         }
     }
 }

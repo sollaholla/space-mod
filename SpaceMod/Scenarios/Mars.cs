@@ -98,6 +98,8 @@ namespace DefaultMissions
         private Vector3 _marsBasePos = new Vector3(-1993.502f, 3206.331f, 32.81033f);
         private Vector3 _marsEngineerSpawn = new Vector3(-10047.26f, -8959.026f, 10000.87f);
         private Vector3 _marsEngineerRoverSpawn = new Vector3(-10000.36f, -9985.202f, 10001f);
+        private Vector3 _marsEngineerConvoPosition = new Vector3(-2015.388f, 3196.188f, 32.82997f);
+        private float _marsEngineerConvoHeading = 358.7166f;
         private float _marsEngineerRoverHeading = 73.19151f;
         private float _marsBaseRadius = 50f;
 
@@ -143,6 +145,7 @@ namespace DefaultMissions
 
         public override void OnUpdate()
         {
+            var playerCharacter = Game.Player.Character;
             switch (_missionStep)
             {
                 case 0:
@@ -166,7 +169,7 @@ namespace DefaultMissions
                     break;
                 case 3:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsBaseEnterPos);
-                    if (new Trigger(_marsBasePos, _marsBaseRadius).IsInTrigger(Game.Player.Character.Position))
+                    if (new Trigger(_marsBasePos, _marsBaseRadius).IsInTrigger(playerCharacter.Position))
                     {
                         Utils.ShowSubtitleWithGxt("CHECK_SCI");
                         _missionStep++;
@@ -181,7 +184,7 @@ namespace DefaultMissions
                     if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
                         return;
                     Effects.Start(ScreenEffect.SuccessNeutral, 5000);
-                    ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("MARS_MISSION_PT1_PASS"));
+                    ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("MARS_MISSION_PT1_PASSED"));
                     Script.Wait(4000);
                     _missionStep++;
                     break;
@@ -191,7 +194,7 @@ namespace DefaultMissions
                     break;
                 case 7:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsBaseExitPos);
-                    if (!new Trigger(_marsBasePos, _marsBaseRadius).IsInTrigger(Game.Player.Character.Position))
+                    if (!new Trigger(_marsBasePos, _marsBaseRadius).IsInTrigger(playerCharacter.Position))
                     {
                         _missionStep++;
                         SaveSettings();
@@ -203,7 +206,7 @@ namespace DefaultMissions
                 case 9:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsEngineerSpawn);
                     var t = new Trigger(_marsEngineerSpawn, 500);
-                    if (t.IsInTrigger(Game.Player.Character.Position))
+                    if (t.IsInTrigger(playerCharacter.Position))
                         _missionStep++;
                     break;
                 case 10:
@@ -219,47 +222,46 @@ namespace DefaultMissions
                 case 12:
                     Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _engineer, "GENERIC_THANKS",
                         "Speech_Params_Force_Shouted_Critical");
-                    _engineer.Task.TurnTo(Game.Player.Character, -1);
+                    _engineer.Task.TurnTo(playerCharacter, -1);
                     _missionStep++;
                     break;
                 case 13:
                     t = new Trigger(_engineer.Position, 2.5f);
-                    if (!t.IsInTrigger(Game.Player.Character.Position))
+                    if (!t.IsInTrigger(playerCharacter.Position))
                         return;
                     Utils.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
-                    var newAlien = HelperFunctions.SpawnAlien(_engineer.Position - Vector3.WorldUp, checkRadius: 0, weaponHash: WeaponHash.AdvancedRifle, markModelAsNoLongerNeeded: false);
-                    ShapeShift_PlaySmokeEffect(newAlien.Position);
-                    newAlien.Heading = _engineer.Heading;
-                    _engineer.Delete();
-                    _engineer = new Ped(newAlien.Handle);
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _engineer, "Generic_Insult_Med", "Speech_Params_Force");
-                    _engineer.BlockPermanentEvents = true;
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, playerCharacter, "Generic_Hi", "Speech_Params_Force");
+                    playerCharacter.Task.TurnTo(_engineer);
                     _missionStep++;
                     break;
                 case 14:
-                    _engineer.Task.AimAt(Game.Player.Character, -1);
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_High",
-                        "Speech_Params_Force");
-                    Game.Player.Character.Task.HandsUp(-1);
-                    Script.Wait(2500);
+                    Game.FadeScreenOut(1000);
+                    Script.Wait(1000);
+                    playerCharacter.PositionNoOffset = _marsEngineerConvoPosition;
+                    playerCharacter.Heading = _marsEngineerConvoHeading;
+                    GameplayCamera.RelativeHeading = 0;
+                    _engineer.PositionNoOffset = playerCharacter.Position + playerCharacter.ForwardVector * 2;
                     _missionStep++;
+                    Game.FadeScreenIn(1000);
                     break;
                 case 15:
-                    Kidnap_WakeUpUnderground();
+                    EnginnerConvo_HaveConversation();
+                    Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
                     _missionStep++;
                     break;
                 case 16:
-                    Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-                    ////////////////////////////////////////////////////
-                    // TODO: Add shootout with aliens.
-                    ////////////////////////////////////////////////////
-
-                    //DEBUG
+                    if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
+                        return;
+                    Effects.Start(ScreenEffect.SuccessNeutral, 5000);
+                    ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("MARS_MISSION_PT2_PASSED"));
                     _missionStep++;
-                    UI.Notify("Still need something to put here... If you wanna go back to mars, use the menu.");
-                    SaveSettings();
+                    break;
+                case 17:
+                    Script.Wait(4500);
+                    UI.ShowSubtitle(Game.GetGXTEntry("GO_TO") + " ~p~Europa~s~.", 7000);
+                    EndScenario(true);
                     break;
             }
         }
@@ -307,21 +309,15 @@ namespace DefaultMissions
         {
             _missionStep = Settings.GetValue(SettingsGeneralSectionString, SettingsMissionStepString, _missionStep);
             _enemyCount = Settings.GetValue(SettingsGeneralSectionString, "enemy_count", _enemyCount);
-            _marsBaseEnterPos =
-                ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_enter_pos"),
-                    _marsBaseEnterPos);
-            _marsBaseExitPos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_exit_pos"),
-                _marsBaseExitPos);
-            _marsBasePos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_pos"),
-                _marsBasePos);
+            _marsBaseEnterPos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_enter_pos"), _marsBaseEnterPos);
+            _marsBaseExitPos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_exit_pos"), _marsBaseExitPos);
+            _marsBasePos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_pos"), _marsBasePos);
             _marsBaseRadius = Settings.GetValue(SettingsGeneralSectionString, "mars_base_radius", _marsBaseRadius);
-            _marsEngineerSpawn = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_spawn"),
-                _marsEngineerSpawn);
-            _marsEngineerRoverSpawn =
-                ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_rover_spawn"),
-                    _marsEngineerRoverSpawn);
-            _marsEngineerRoverHeading = Settings.GetValue("engineer_recover", "mars_engineer_rover_heading",
-                _marsEngineerRoverHeading);
+            _marsEngineerSpawn = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_spawn"), _marsEngineerSpawn);
+            _marsEngineerRoverSpawn = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_rover_spawn"), _marsEngineerRoverSpawn);
+            _marsEngineerRoverHeading = Settings.GetValue("engineer_recover", "mars_engineer_rover_heading", _marsEngineerRoverHeading);
+            _marsEngineerConvoPosition = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_convo_position"), _marsEngineerConvoPosition);
+            _marsEngineerConvoHeading = Settings.GetValue("engineer_recover", "mars_engineer_convo_heading", _marsEngineerConvoHeading);
             _aiWeaponDamage = Settings.GetValue(SettingsGeneralSectionString, "ai_weapon_damage", _aiWeaponDamage);
             _noSlowMoFlag = Settings.GetValue("flags", "no_slow_mo_flag", _noSlowMoFlag);
         }
@@ -338,6 +334,8 @@ namespace DefaultMissions
             Settings.SetValue("engineer_recover", "mars_engineer_spawn", _marsEngineerSpawn);
             Settings.SetValue("engineer_recover", "mars_engineer_rover_spawn", _marsEngineerRoverSpawn);
             Settings.SetValue("engineer_recover", "mars_engineer_rover_heading", _marsEngineerRoverHeading);
+            Settings.SetValue("engineer_recover", "mars_engineer_convo_position", _marsEngineerConvoPosition);
+            Settings.SetValue("engineer_recover", "mars_engineer_convo_heading", _marsEngineerConvoHeading);
             Settings.SetValue("flags", "no_slow_mo_flag", _noSlowMoFlag);
             Settings.Save();
         }
@@ -554,35 +552,6 @@ namespace DefaultMissions
             _missionStep++;
         }
 
-        private void Kidnap_WakeUpUnderground()
-        {
-            Game.FadeScreenOut(1500);
-            Script.Wait(1500);
-            Function.Call(Hash.REQUEST_IPL, "imp_impexp_interior_placement_interior_3_impexp_int_02_milo_");
-            while (!Function.Call<bool>(Hash.IS_IPL_ACTIVE,
-                "imp_impexp_interior_placement_interior_3_impexp_int_02_milo_"))
-                Script.Yield();
-            Game.Player.Character.Position = new Vector3(929.5417f, -3006.569f, -48.8378f);
-            const string animDict = "safe@trevor@ig_8";
-            const string clipSet = "move_m@drunk@verydrunk";
-            Function.Call(Hash.REQUEST_ANIM_DICT, animDict);
-            while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, animDict))
-                Script.Yield();
-            Function.Call(Hash.REQUEST_CLIP_SET, clipSet);
-            while (!Function.Call<bool>(Hash.HAS_CLIP_SET_LOADED, clipSet))
-                Script.Yield();
-            Function.Call(Hash.SET_PED_MOVEMENT_CLIPSET, Game.Player.Character, clipSet, 0.25f);
-            Script.Wait(1500);
-            Game.Player.Character.Task.PlayAnimation(animDict, "ig_8_wake_up_right_player", 8.0f, -4.0f, -1,
-                AnimationFlags.None, 0.0f);
-            Game.Player.Character.Weapons.Select(WeaponHash.Unarmed);
-            Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
-            Effects.Start(ScreenEffect.DrugsMichaelAliensFight, looped: true);
-            Game.FadeScreenIn(1500);
-            Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "Generic_Shocked_Med",
-                "Speech_Params_Force_Shouted_Critical");
-        }
-
         private void CreateEngineerFireFight()
         {
             EngineerFight_CreateEngineer();
@@ -628,6 +597,35 @@ namespace DefaultMissions
             Function.Call(Hash.SET_ENTITY_RENDER_SCORCHED, _engineerShuttle, true);
             Function.Call(Hash.SET_VEHICLE_LOD_MULTIPLIER, _engineerShuttle, 0.1f);
             Function.Call(Hash.SET_ENTITY_LOD_DIST, _engineerShuttle, (ushort)140);
+        }
+
+        private void EnginnerConvo_HaveConversation()
+        {
+            const string animDict = "gestures@f@standing@casual";
+            Script.Wait(750);
+            _engineer.Task.ChatTo(Game.Player.Character);
+            Game.Player.Character.Task.LookAt(_engineer);
+            Game.Player.Character.Task.StandStill(-1);
+
+            Utils.ShowSubtitleWithGxt("MARS_LABEL_5");
+            Script.Wait(5000);
+            _engineer.Task.PlayAnimation(animDict, "gesture_no_way");
+            Utils.ShowSubtitleWithGxt("MARS_LABEL_6");
+            Script.Wait(5000);
+            _engineer.Task.PlayAnimation(animDict, "gesture_shrug_soft");
+            Utils.ShowSubtitleWithGxt("MARS_LABEL_7");
+            Script.Wait(5000);
+            _engineer.Task.PlayAnimation(animDict, "gesture_point");
+            Utils.ShowSubtitleWithGxt("MARS_LABEL_8");
+            Script.Wait(5000);
+            Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
+
+            Game.FadeScreenOut(1000);
+            Script.Wait(1000);
+            _engineer.Delete();
+            Game.Player.Character.Task.ClearAll();
+            Script.Wait(500);
+            Game.FadeScreenIn(1000);
         }
 
         private void ShapeShift_FinishSlomoKill(Ped pedKilled)

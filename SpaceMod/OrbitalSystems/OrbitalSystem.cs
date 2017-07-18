@@ -36,8 +36,8 @@ namespace GTS.OrbitalSystems
             // Set our rotation.
             //Rotate();
 
-            // Stay at the galaxy center. Cause' you ain't leavin boi.
-            Position = Database.GetGalaxPosition();
+            // Stay with the camera.
+            Position = Database.GetGalaxyPosition();
 
             // Update locked orbitals.
             AttachedOrbitals?.ForEach(AttachOrbital);
@@ -69,7 +69,7 @@ namespace GTS.OrbitalSystems
         private void AttachOrbital(AttachedOrbital attachedOrbital)
         {
             if (!attachedOrbital.IsAttachedTo(this))
-                attachedOrbital.AttachTo(this, attachedOrbital.AttachOffset);
+                attachedOrbital.AttachTo(this, attachedOrbital.AttachOffset, attachedOrbital.AttachRotation);
         }
 
         public new void Delete()

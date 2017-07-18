@@ -310,9 +310,9 @@ namespace GTS.Library
 
             var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
 
-            while (DateTime.UtcNow < timeout)
+            while (Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
             {
-                if (Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
+                if (DateTime.UtcNow > timeout)
                     break;
 
                 Script.Yield();

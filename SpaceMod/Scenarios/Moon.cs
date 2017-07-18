@@ -433,7 +433,7 @@ namespace DefaultMissions
         {
             var pedSpawn = CurrentScene.Info.GalaxyCenter + Vector3.RelativeLeft * 150;
 
-            if (!DidGoToMars())
+            if (!HelperFunctions.DidGoToMars())
             {
                 _carrierShip = World.CreateVehicle("zanufo", pedSpawn + Vector3.WorldUp * 15);
 
@@ -629,19 +629,9 @@ namespace DefaultMissions
             }
         }
 
-        private bool DidGoToMars()
-        {
-            var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
-                .FullName;
-            var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(Mars).Name, "ini"));
-            var settings = ScriptSettings.Load(path);
-            var currentStep = settings.GetValue(Mars.SettingsGeneralSectionString, Mars.SettingsMissionStepString, 0);
-            return currentStep > 0;
-        }
-
         private void CheckMarsMission()
         {
-            if (DidGoToMars())
+            if (HelperFunctions.DidGoToMars())
             {
                 EndScenario(true);
                 return;

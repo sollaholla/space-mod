@@ -36,7 +36,6 @@ namespace GTS.Particles
             Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, Asset);
             return Handle = Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_AT_COORD, FxName, position.X, position.Y,
                 position.Z, rotation.X, rotation.Y, rotation.Z, scale, false, false, false, false);
-            ;
         }
 
         public int Play(Entity entity, int boneIndex, Vector3 offset, Vector3 rotation, float scale)

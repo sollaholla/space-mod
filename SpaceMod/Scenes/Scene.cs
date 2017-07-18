@@ -27,18 +27,34 @@ namespace GTS.Scenes
 
     #region Delegates
 
-    public delegate void OnExitEvent(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset);
+    /// <summary>
+    /// Called when a <see cref="Scene"/> is exited.
+    /// </summary>
+    /// <param name="scene"></param>
+    /// <param name="newSceneFile"></param>
+    /// <param name="exitRotation"></param>
+    /// <param name="exitOffset"></param>
+    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset);
 
+    /// <summary>
+    /// Called when an <see langword="object"/> within the scene is "mined".
+    /// </summary>
+    /// <param name="scene"></param>
+    /// <param name="mineableObject"></param>
     public delegate void OnMinedObjectEvent(Scene scene, Prop mineableObject);
 
     #endregion
 
+    /// <summary>
+    /// A Scene controls in-game logic for player movement, and referential game variables pertaining to 
+    /// physics. It also adds props to the game based on it's <see cref="SceneInfo"/> data.
+    /// </summary>
     public sealed class Scene
     {
         /// <summary>
         ///     Our standard constructor.
         /// </summary>
-        /// <param name="sceneData">The data this scene is based off of.</param>
+        /// <param name="sceneData">The data <see langword="this"/> scene is based off of.</param>
         public Scene(SceneInfo sceneData)
         {
             Info = sceneData;
@@ -57,8 +73,19 @@ namespace GTS.Scenes
 
         #region Fields
 
+        /// <summary>
+        /// The blip color of the mini map marker for planets.
+        /// </summary>
         public const BlipColor MarkerBlipColor = (BlipColor) 58;
+
+        /// <summary>
+        /// The texture dictionary used for the reticle.
+        /// </summary>
         public const string ReticleTextureDict = "helicopterhud";
+
+        /// <summary>
+        /// The texture used for the reticle.
+        /// </summary>
         public const string ReticleTexture = "hud_lock";
 
         #region Misc/Flags
@@ -73,7 +100,12 @@ namespace GTS.Scenes
 
         #region Events
 
-        public event OnExitEvent Exited;
+        /// <summary>
+        /// </summary>
+        public event OnSceneExitEvent Exited;
+
+        /// <summary>
+        /// </summary>
         public event OnMinedObjectEvent Mined;
 
         #endregion
@@ -99,8 +131,6 @@ namespace GTS.Scenes
         private float _interiorVehicleAccelerationMult = 10.0f;
         private float _interiorVehicleMaxSpeed = 1000.0f;
         private string _timeCycleMod = string.Empty;
-        private float _vehicleEnginePowerMult = 100;
-        private float _vehicleTorqueMult = 2;
 
         #endregion
 
@@ -139,7 +169,7 @@ namespace GTS.Scenes
         #region Properties
 
         /// <summary>
-        ///     The <see cref="Scenes.SceneInfo" /> file that was deserialized.
+        ///     The <see cref="SceneInfo" /> file that was deserialized.
         /// </summary>
         public SceneInfo Info { get; }
 
@@ -163,12 +193,20 @@ namespace GTS.Scenes
         /// </summary>
         public string FileName { get; internal set; }
 
+        /// <summary>
+        /// </summary>
         internal Weather Weather { get; private set; }
-        internal Vehicle PlayerVehicle { get; private set; }
-        internal int IplCount { get; private set; }
 
+        /// <summary>
+        /// </summary>
+        internal Vehicle PlayerVehicle { get; private set; }
+
+        /// <summary>
+        /// </summary>
         internal Ped PlayerPed => Game.Player.Character ?? new Ped(0);
 
+        /// <summary>
+        /// </summary>
         internal Vector3 PlayerPosition
         {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
@@ -186,6 +224,8 @@ namespace GTS.Scenes
 
         #region Internal
 
+        /// <summary>
+        /// </summary>
         internal void Start()
         {
             lock (_startLock)
@@ -207,6 +247,8 @@ namespace GTS.Scenes
             }
         }
 
+        /// <summary>
+        /// </summary>
         internal void Update()
         {
             if (!Monitor.TryEnter(_updateLock))
@@ -232,6 +274,8 @@ namespace GTS.Scenes
             }
         }
 
+        /// <summary>
+        /// </summary>
         internal void Delete()
         {
             lock (_updateLock)
@@ -282,6 +326,10 @@ namespace GTS.Scenes
 
         #region Public
 
+        /// <summary>
+        /// Give the <see cref="Prop"/> specified the ability to be mined by the player.
+        /// </summary>
+        /// <param name="prop"></param>
         public void AddMinableProp(Prop prop)
         {
             if (_minableProps.Contains(prop))
@@ -289,11 +337,18 @@ namespace GTS.Scenes
             _minableProps.Add(prop);
         }
 
+        /// <summary>
+        /// Remove a <see cref="Prop"/>'s ability to be mined by the player.
+        /// </summary>
+        /// <param name="prop"></param>
         public void RemoveMinableProp(Prop prop)
         {
             _minableProps.Remove(prop);
         }
 
+        /// <summary>
+        /// Refresh the timecycle that <see langword="this"/> scene uses.
+        /// </summary>
         public void RefreshTimecycle()
         {
             if (!string.IsNullOrEmpty(_timeCycleMod) && _timeCycleStrength > 0)
@@ -302,9 +357,55 @@ namespace GTS.Scenes
                 TimeCycleModifier.Clear();
         }
 
+        /// <summary>
+        /// Get an interior from our <see langword="private"/> list by <paramref name="name"/>.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public Interior GetInterior(string name)
         {
             return _interiors.Find(x => x.Name == name);
+        }
+
+        /// <summary>
+        /// Draw a marker at the given <paramref name="position"/> with the name: name, and color: col.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="name"></param>
+        /// <param name="col"></param>
+        public void DrawMarkerAt(Vector3 position, string name, Color? col = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                return;
+
+            const float scale = 64f;
+            const float width = 1f / 1920 / (1f / scale);
+            const float height = 1f / 1080 / (1f / scale);
+
+            if (col == null)
+                col = ColorTranslator.FromHtml("#8000FF");
+
+            Function.Call(Hash.SET_DRAW_ORIGIN, position.X, position.Y, position.Z, 0);
+
+            /////////////////////////////////////////////////////////////
+            Function.Call(Hash.DRAW_SPRITE, ReticleTextureDict, ReticleTexture, 0, 0, width, height, 45f, col.Value.R,
+                col.Value.G, col.Value.B, col.Value.A);
+            /////////////////////////////////////////////////////////////
+
+            /////////////////////////////////////////////////////////////
+            Function.Call(Hash.SET_TEXT_FONT, (int)Font.ChaletComprimeCologne);
+            Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
+            Function.Call(Hash.SET_TEXT_COLOUR, col.Value.R, col.Value.G, col.Value.B, col.Value.A);
+            Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
+            Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
+            Function.Call(Hash.SET_TEXT_JUSTIFICATION, 0);
+            Function.Call(Hash.SET_TEXT_WRAP, 0, width);
+            Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
+            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, name);
+            Function.Call(Hash._DRAW_TEXT, 0f, -0.01f);
+            /////////////////////////////////////////////////////////////
+
+            Function.Call(Hash.CLEAR_DRAW_ORIGIN);
         }
 
         #endregion
@@ -336,7 +437,7 @@ namespace GTS.Scenes
 
             prop.FreezePosition = true;
 
-            var orbital = new AttachedOrbital(prop, data.Position);
+            var orbital = new AttachedOrbital(prop, data.Position, data.Rotation);
 
             model.MarkAsNoLongerNeeded();
 
@@ -362,6 +463,7 @@ namespace GTS.Scenes
             Debug.Log($"Successfully loaded model: {data.Model}");
 
             var prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
+            prop.Rotation = data.Rotation;
 
             prop.FreezePosition = true;
 
@@ -496,7 +598,7 @@ namespace GTS.Scenes
         {
             var skybox = CreateProp(PlayerPed.Position, Info.SkyboxModel);
 
-            var orbitals = Info.Orbitals?.Select(x => CreateOrbital(x)).Where(o => o != default(Orbital)).ToList();
+            var orbitals = Info.Orbitals?.Select(CreateOrbital).Where(o => o != default(Orbital)).ToList();
 
             var attachedOrbitals = Info.AttachedOrbitals?.Select(CreateAttachedOrbital)
                 .Where(o => o != default(AttachedOrbital)).ToList();
@@ -657,7 +759,7 @@ namespace GTS.Scenes
                     {
                         if (DateTime.UtcNow > groundPlacementTimeout)
                         {
-                            Debug.Log("Couldn't place vehicle on ground properly.", DebugMessageType.Debug);
+                            Debug.Log("Couldn't place vehicle on ground properly.");
                             break;
                         }
                         Script.Yield();
@@ -673,7 +775,7 @@ namespace GTS.Scenes
 
         private void DrawMarkers()
         {
-            if (!Settings.ShowCustomUi)
+            if (!Settings.ShowCustomGui)
                 return;
 
             if (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, ReticleTextureDict))
@@ -689,41 +791,6 @@ namespace GTS.Scenes
 
             foreach (var l in Info.SceneLinks)
                 DrawMarkerAt(Info.GalaxyCenter + l.Position, l.Name);
-        }
-
-        public void DrawMarkerAt(Vector3 position, string name, Color? col = null)
-        {
-            if (string.IsNullOrEmpty(name))
-                return;
-
-            const float scale = 64f;
-            const float width = 1f / 1920 / (1f / scale);
-            const float height = 1f / 1080 / (1f / scale);
-
-            if (col == null)
-                col = ColorTranslator.FromHtml("#8000FF");
-
-            Function.Call(Hash.SET_DRAW_ORIGIN, position.X, position.Y, position.Z, 0);
-
-            /////////////////////////////////////////////////////////////
-            Function.Call(Hash.DRAW_SPRITE, ReticleTextureDict, ReticleTexture, 0, 0, width, height, 45f, col.Value.R,
-                col.Value.G, col.Value.B, col.Value.A);
-            /////////////////////////////////////////////////////////////
-
-            /////////////////////////////////////////////////////////////
-            Function.Call(Hash.SET_TEXT_FONT, (int) Font.ChaletComprimeCologne);
-            Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
-            Function.Call(Hash.SET_TEXT_COLOUR, col.Value.R, col.Value.G, col.Value.B, col.Value.A);
-            Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
-            Function.Call(Hash.SET_TEXT_EDGE, 1, 1, 1, 1, 205);
-            Function.Call(Hash.SET_TEXT_JUSTIFICATION, 0);
-            Function.Call(Hash.SET_TEXT_WRAP, 0, width);
-            Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
-            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, name);
-            Function.Call(Hash._DRAW_TEXT, 0f, -0.01f);
-            /////////////////////////////////////////////////////////////
-
-            Function.Call(Hash.CLEAR_DRAW_ORIGIN);
         }
 
         #endregion
@@ -1126,8 +1193,7 @@ namespace GTS.Scenes
                     }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(
-                            "The player state specified is out of range, and does not exist.");
+                        throw new ArgumentOutOfRangeException(nameof(_playerTask), "The player state specified is out of range, and does not exist.");
                 }
             }
         }

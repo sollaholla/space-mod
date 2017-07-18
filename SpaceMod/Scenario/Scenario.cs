@@ -5,20 +5,38 @@ using GTS.Scenes;
 
 namespace GTS.Scenarios
 {
+    /// <summary>
+    /// Called when the <paramref name="scenario"/> is completed.
+    /// </summary>
+    /// <param name="scenario"></param>
+    /// <param name="success"></param>
     internal delegate void OnScenarioCompleted(Scenario scenario, bool success);
 
+    /// <summary>
+    /// A class that represents an event, or series of events.
+    /// </summary>
     public abstract class Scenario
     {
         private readonly object _updateLock = new object();
         private ScriptSettings _settings;
 
+        /// <summary>
+        /// </summary>
         public ScriptSettings Settings => _settings ?? (_settings =
                                               ScriptSettings.Load(Path.ChangeExtension(
                                                   Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
 
+        /// <summary>
+        /// </summary>
         public Scene CurrentScene => Core.Instance.GetCurrentScene();
+
+        /// <summary>
+        /// </summary>
         internal event OnScenarioCompleted Completed;
 
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
         internal bool IsScenarioComplete()
         {
             if (Settings.GetValue("scenario_config", "complete", false))
@@ -30,12 +48,16 @@ namespace GTS.Scenarios
             return false;
         }
 
+        /// <summary>
+        /// </summary>
         internal void SetScenarioComplete()
         {
             Settings.SetValue("scenario_config", "complete", true);
             Settings.Save();
         }
 
+        /// <summary>
+        /// </summary>
         internal void Update()
         {
             if (!Monitor.TryEnter(_updateLock)) return;
@@ -67,7 +89,7 @@ namespace GTS.Scenarios
 
         /// <summary>
         ///     This is executed when the space mod scripts are aborted or reloaded.
-        ///     This function can be used to like the OnEnded function to clean up
+        ///     This function can be used like the <see cref="OnEnded"/> function to clean up
         ///     any remaining objects / entities.
         /// </summary>
         public abstract void OnAborted();
@@ -79,7 +101,7 @@ namespace GTS.Scenarios
         public abstract void OnAwake();
 
         /// <summary>
-        ///     End's this scenario and discontinues running it.
+        ///     End's this scenario.
         /// </summary>
         /// <param name="success">True if we completed this scenario.</param>
         public void EndScenario(bool success)

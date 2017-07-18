@@ -49,6 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities.cs" />
+    <Compile Include="Europa.cs" />
+    <Compile Include="Fire.cs" />
     <Compile Include="HelperFunctions.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Mars.cs" />

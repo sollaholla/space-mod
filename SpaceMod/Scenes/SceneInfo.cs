@@ -147,6 +147,11 @@ public class AttachedOrbitalInfo : IDrawable
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public Vector3 Position { get; set; }
+
+    [Category("Other")]
+    [Description("The starting rotation of the object.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public Vector3 Rotation { get; set; }
 }
 
 [Serializable]
@@ -178,6 +183,11 @@ public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public Vector3 Position { get; set; }
+
+    [Category("Other")]
+    [Description("The starting rotation of the object.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public Vector3 Rotation { get; set; }
 
     [Category("Next Scene Info")]
     [Description("This is the distance that will trigger the next scene to load.")]
