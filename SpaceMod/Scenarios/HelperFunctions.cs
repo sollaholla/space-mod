@@ -27,7 +27,7 @@ namespace DefaultMissions
             var spawnPoint = spawn;
 
             if (moveToGround)
-                spawn = spawn.MoveToGroundArtificial();
+                spawnPoint = spawn.MoveToGroundArtificial();
 
             if (spawnPoint == Vector3.Zero)
                 return new Ped(0);

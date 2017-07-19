@@ -12,7 +12,7 @@ using GTS.Scenes.Interiors;
 
 namespace GTS.Missions
 {
-    public class IntroMission : Scenario
+    internal class IntroMission : Scenario
     {
         private Ped _colonel;
 

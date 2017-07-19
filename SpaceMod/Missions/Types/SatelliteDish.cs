@@ -4,7 +4,7 @@ using GTA.Math;
 
 namespace GTS.Missions.Types
 {
-    public class SatelliteDish
+    internal class SatelliteDish
     {
         private Blip _blip;
         private Prop _laptop;

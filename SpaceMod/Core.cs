@@ -180,6 +180,7 @@ namespace GTS
             World.RenderingCamera = null;
             Utils.SetGravityLevel(9.81f);
             GtsLib.CutCredits();
+            GtsLib.RestoreWater();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Game.MissionFlag = !_didSetMissionFlag;
             Effects.Stop();

@@ -29,5 +29,10 @@ namespace DefaultMissions
             Function.Call(Hash.REMOVE_SCRIPT_FIRE, Handle);
             Handle = -1;
         }
+
+        public bool IsFireNear()
+        {
+            return Function.Call<int>(Hash.GET_NUMBER_OF_FIRES_IN_RANGE, Position.X, Position.Y, Position.Z) > 0;
+        }
     }
 }
