@@ -220,7 +220,8 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 12:
-                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _engineer, "GENERIC_THANKS", "Speech_Params_Force_Shouted_Critical");
+                    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _engineer, "GENERIC_THANKS",
+                        "Speech_Params_Force_Shouted_Critical");
                     _engineer.Task.TurnTo(playerCharacter, -1);
                     _missionStep++;
                     break;
@@ -308,15 +309,26 @@ namespace DefaultMissions
         {
             _missionStep = Settings.GetValue(SettingsGeneralSectionString, SettingsMissionStepString, _missionStep);
             _enemyCount = Settings.GetValue(SettingsGeneralSectionString, "enemy_count", _enemyCount);
-            _marsBaseEnterPos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_enter_pos"), _marsBaseEnterPos);
-            _marsBaseExitPos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_exit_pos"), _marsBaseExitPos);
-            _marsBasePos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_pos"), _marsBasePos);
+            _marsBaseEnterPos =
+                ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_enter_pos"),
+                    _marsBaseEnterPos);
+            _marsBaseExitPos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_exit_pos"),
+                _marsBaseExitPos);
+            _marsBasePos = ParseVector3.Read(Settings.GetValue(SettingsGeneralSectionString, "mars_base_pos"),
+                _marsBasePos);
             _marsBaseRadius = Settings.GetValue(SettingsGeneralSectionString, "mars_base_radius", _marsBaseRadius);
-            _marsEngineerSpawn = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_spawn"), _marsEngineerSpawn);
-            _marsEngineerRoverSpawn = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_rover_spawn"), _marsEngineerRoverSpawn);
-            _marsEngineerRoverHeading = Settings.GetValue("engineer_recover", "mars_engineer_rover_heading", _marsEngineerRoverHeading);
-            _marsEngineerConvoPosition = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_convo_position"), _marsEngineerConvoPosition);
-            _marsEngineerConvoHeading = Settings.GetValue("engineer_recover", "mars_engineer_convo_heading", _marsEngineerConvoHeading);
+            _marsEngineerSpawn = ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_spawn"),
+                _marsEngineerSpawn);
+            _marsEngineerRoverSpawn =
+                ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_rover_spawn"),
+                    _marsEngineerRoverSpawn);
+            _marsEngineerRoverHeading = Settings.GetValue("engineer_recover", "mars_engineer_rover_heading",
+                _marsEngineerRoverHeading);
+            _marsEngineerConvoPosition =
+                ParseVector3.Read(Settings.GetValue("engineer_recover", "mars_engineer_convo_position"),
+                    _marsEngineerConvoPosition);
+            _marsEngineerConvoHeading = Settings.GetValue("engineer_recover", "mars_engineer_convo_heading",
+                _marsEngineerConvoHeading);
             _aiWeaponDamage = Settings.GetValue(SettingsGeneralSectionString, "ai_weapon_damage", _aiWeaponDamage);
             _noSlowMoFlag = Settings.GetValue("flags", "no_slow_mo_flag", _noSlowMoFlag);
         }
@@ -380,7 +392,7 @@ namespace DefaultMissions
             if (Entity.Exists(_rover))
                 return;
 
-            var vehicleSpawn = _marsEngineerRoverSpawn.MoveToGroundArtificial();
+            var vehicleSpawn = Utils.GetGroundHeightRay(_marsEngineerRoverSpawn);
             if (vehicleSpawn != Vector3.Zero)
             {
                 _rover = World.CreateVehicle(_requestModels[3], vehicleSpawn);
@@ -396,15 +408,11 @@ namespace DefaultMissions
         {
             for (var i = 0; i < _enemyCount; i++)
             {
-                var alien =
-                    HelperFunctions.SpawnAlien(spawn.Around(_random.Next(25, 35)),
-                        ShapeShiftModel, 5, WeaponHash.AdvancedRifle, moveToGround: false, markModelAsNoLongerNeeded: false);
-
-                if (Entity.Exists(alien))
-                {
-                    alien.AddBlip().Scale = 0.5f;
-                    _aliens.Add(new OnFootCombatPed(alien) { Target = Game.Player.Character });
-                }
+                var position = spawn.Around(_random.Next(25, 35));
+                var alien = Utils.CreateAlien(PedHash.Scientist01SMM, position, 0, WeaponHash.CombatPDW);
+                if (!Entity.Exists(alien)) continue;
+                alien.AddBlip().Scale = 0.5f;
+                _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
             }
         }
 
@@ -476,10 +484,7 @@ namespace DefaultMissions
 
         private Ped ShapeShift_ReplacePed(OnFootCombatPed ped)
         {
-            var newAlien =
-                HelperFunctions.SpawnAlien(ped.Position - Vector3.WorldUp,
-                    checkRadius: 0, weaponHash: WeaponHash.AdvancedRifle, markModelAsNoLongerNeeded: false);
-
+            var newAlien = Utils.CreateAlien(null, ped.Position, ped.Heading, WeaponHash.CombatPDW);
             ShapeShift_PlaySmokeEffect(newAlien.Position);
             newAlien.Heading = ped.Heading;
             ped.Delete();
@@ -553,16 +558,17 @@ namespace DefaultMissions
 
         private bool CreateEngineerFireFight()
         {
-            return EngineerFight_CreateEngineer() && EngineerFight_CreateEngineerShuttle() && EngineerFight_CreateDecoyAlien();
+            return EngineerFight_CreateEngineer() && EngineerFight_CreateEngineerShuttle() &&
+                   EngineerFight_CreateDecoyAlien();
             //EngineerFight_CreateEngineerShuttle();
             //EngineerFight_CreateDecoyAlien();
         }
 
         private bool EngineerFight_CreateEngineer()
         {
-            if (_marsEngineerSpawn.MoveToGroundArtificial() == Vector3.Zero)
+            if (Utils.GetGroundHeightRay(_marsEngineerSpawn) == Vector3.Zero)
                 return false;
-            var spawn = _marsEngineerSpawn.MoveToGroundArtificial();
+            var spawn = Utils.GetGroundHeightRay(_marsEngineerSpawn);
 
             _engineer = World.CreatePed(_requestModels[2], spawn);
             _engineer.Weapons.Give(WeaponHash.AssaultSMG, 1000, true, true);
@@ -573,31 +579,31 @@ namespace DefaultMissions
 
         private bool EngineerFight_CreateDecoyAlien()
         {
-            Vector3 spawn = _engineer.Position + _engineer.ForwardVector * 15;
-            if (spawn.MoveToGroundArtificial() == Vector3.Zero)
+            var spawn = _engineer.Position + _engineer.ForwardVector * 15;
+            if (Utils.GetGroundHeightRay(spawn) == Vector3.Zero)
                 return false;
-            spawn = spawn.MoveToGroundArtificial();
-            var alien = HelperFunctions.SpawnAlien(spawn, markModelAsNoLongerNeeded: false);
+            spawn = Utils.GetGroundHeightRay(spawn);
+            var alien = Utils.CreateAlien(null, spawn, -_engineer.Heading, WeaponHash.Railgun);
             alien.AddBlip().Scale = 0.5f;
             alien.IsOnlyDamagedByPlayer = true;
             alien.Heading = (_engineer.Position - alien.Position).ToHeading();
-            _aliens.Add(new OnFootCombatPed(alien) { Target = _engineer });
+            _aliens.Add(new OnFootCombatPed(alien) {Target = _engineer});
             return true;
         }
 
         private bool EngineerFight_CreateEngineerShuttle()
         {
-            Vector3 spawn = _engineer.Position + _engineer.RightVector * 25;
-            if (spawn.MoveToGroundArtificial() == Vector3.Zero)
+            var spawn = _engineer.Position + _engineer.RightVector * 25;
+            if (Utils.GetGroundHeightRay(spawn) == Vector3.Zero)
                 return false;
-            spawn = spawn.MoveToGroundArtificial();
+            spawn = Utils.GetGroundHeightRay(spawn);
             _engineerShuttle = World.CreateVehicle(_requestModels[0], spawn - Vector3.WorldUp);
             _engineerShuttle.LandingGear = VehicleLandingGear.Retracted;
             _engineerShuttle.IsInvincible = true;
             _engineerShuttle.LockStatus = VehicleLockStatus.CannotBeTriedToEnter;
             Function.Call(Hash.SET_ENTITY_RENDER_SCORCHED, _engineerShuttle, true);
             Function.Call(Hash.SET_VEHICLE_LOD_MULTIPLIER, _engineerShuttle, 0.1f);
-            Function.Call(Hash.SET_ENTITY_LOD_DIST, _engineerShuttle, (ushort)140);
+            Function.Call(Hash.SET_ENTITY_LOD_DIST, _engineerShuttle, (ushort) 140);
             return true;
         }
 
@@ -735,10 +741,8 @@ namespace DefaultMissions
         private void RemoveModels()
         {
             foreach (var model in _requestModels)
-            {
                 if (model.IsLoaded)
                     model.MarkAsNoLongerNeeded();
-            }
         }
 
         private bool AreAllAliensDead()

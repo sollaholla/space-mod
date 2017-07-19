@@ -3,7 +3,8 @@
 namespace GTS
 {
     /// <summary>
-    /// Holds setting variables used in certain parts of the mod that need to be accessed.
+    ///     Holds setting variables used in certain parts of the mod that need to be
+    ///     accessed.
     /// </summary>
     internal static class Settings
     {

@@ -12,7 +12,6 @@ using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
 using GTS.Missions;
-using GTS.Particles;
 using GTS.Scenarios;
 using GTS.Scenes;
 using NativeUI;
@@ -20,7 +19,7 @@ using NativeUI;
 namespace GTS
 {
     /// <summary>
-    /// This is the controller of all script threads.
+    ///     This is the controller of all script threads.
     /// </summary>
     internal class Core : Script
     {
@@ -109,7 +108,7 @@ namespace GTS
         #region Properties
 
         /// <summary>
-        ///     The instance of the <see cref="Core"/>.cs script.
+        ///     The instance of the <see cref="Core" /> .cs script.
         /// </summary>
         internal static Core Instance { get; private set; }
 
@@ -132,8 +131,9 @@ namespace GTS
         }
 
         /// <summary>
-        ///     The scenarios loaded for the current scene. These are <see langword="internal"/> so that the integrity of
-        ///     another persons custom scenario cannot be redacted.
+        ///     The scenarios loaded for the current scene. These are
+        ///     <see langword="internal" /> so that the integrity of another persons
+        ///     custom scenario cannot be redacted.
         /// </summary>
         public List<Scenario> Scenarios { get; }
 
@@ -144,7 +144,8 @@ namespace GTS
         /// <summary>
         ///     Get the currently active scene..
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         internal Scene GetCurrentScene()
         {
             return _currentScene;
@@ -310,13 +311,9 @@ namespace GTS
         private void SetVarsDependantOnSceneNull()
         {
             if (_currentScene != null)
-            {
                 SceneNotNull();
-            }
             else
-            {
                 SceneNull();
-            }
         }
 
         private void SceneNull()
@@ -482,7 +479,8 @@ namespace GTS
 
             _menuPool.Add(_mainMenu);
             _menuPool.RefreshIndex();
-            _menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0, ColorTranslator.FromHtml("#8000ff")));
+            _menuPool.SetBannerType(new Sprite("", "", new Point(), new Size(), 0,
+                ColorTranslator.FromHtml("#8000ff")));
         }
 
         private void RequestModels()
@@ -700,7 +698,7 @@ namespace GTS
 
                 Debug.Log("Creating Scenario: " + type.Name);
 
-                var instance = (Scenario)Activator.CreateInstance(type);
+                var instance = (Scenario) Activator.CreateInstance(type);
 
                 instance.OnAwake();
 

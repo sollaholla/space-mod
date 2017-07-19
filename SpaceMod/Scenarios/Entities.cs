@@ -33,18 +33,21 @@ namespace DefaultMissions
         public float AttackRange { get; set; } = Random.Next(30 * 30, 50 * 50);
 
         /// <summary>
-        ///     A multiplier to the attack range, that tells the AI when he/she can start chasing the <see cref="Target"/> again.
+        ///     A multiplier to the attack range, that tells the AI when he/she can
+        ///     start chasing the
+        ///     <see cref="DefaultMissions.OnFootCombatPed.Target" /> again.
         /// </summary>
         public float ChaseAfterAttackRangeMultiplier { get; set; } =
             Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 1.25f, 2.5f);
 
         /// <summary>
-        ///     The <see cref="Ped.Task" />.
+        ///     The <see cref="GTA.Ped.Task" /> .
         /// </summary>
         public Tasks Task => _me.Task;
 
         /// <summary>
-        ///     Update <c>this</c> <see cref="Ped"/>'s combat behavior.
+        ///     <see cref="Update" /> <c>this</c> <see cref="Ped" /> 's combat
+        ///     behavior.
         /// </summary>
         public void Update()
         {

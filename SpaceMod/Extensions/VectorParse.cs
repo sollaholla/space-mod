@@ -6,13 +6,15 @@ namespace GTS.Extensions
     public static class ParseVector3
     {
         /// <summary>
-        ///     Read a <see cref="Vector3" /> from a <see cref="string" /> representation. Format should be "X:1 Y:2 Z:3". If any
-        ///     number fails to be parsed,
-        ///     or an error occurs, this will return <see cref="Vector3.Zero" />.
+        ///     <see cref="Read" /> a <see cref="Vector3" /> from a
+        ///     <see cref="string" /> representation. Format should be "X:1 Y:2
+        ///     Z:3". If any number fails to be parsed, or an error occurs, this
+        ///     will return <see cref="GTA.Math.Vector3.Zero" /> .
         /// </summary>
         /// <param name="str"></param>
         /// <param name="defaultValue"></param>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         public static Vector3 Read(string str, Vector3 defaultValue)
         {
             try

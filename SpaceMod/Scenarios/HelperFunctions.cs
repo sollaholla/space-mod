@@ -4,7 +4,6 @@ using System.IO;
 using System.Reflection;
 using GTA;
 using GTA.Math;
-using GTA.Native;
 using GTS.Library;
 using GTS.Scenes;
 
@@ -19,33 +18,9 @@ namespace DefaultMissions
             Random = new Random();
         }
 
-        public static Ped SpawnAlien(
-            Vector3 spawn, PedHash? model = null, float checkRadius = 5f,
-            WeaponHash weaponHash = WeaponHash.Railgun, int accuracy = 50, bool moveToGround = true,
-            bool markModelAsNoLongerNeeded = true)
-        {
-            var spawnPoint = spawn;
-
-            if (moveToGround)
-                spawnPoint = spawn.MoveToGroundArtificial();
-
-            if (spawnPoint == Vector3.Zero)
-                return new Ped(0);
-
-            if (World.GetNearbyPeds(spawnPoint, checkRadius).Length > 0)
-                return new Ped(0);
-
-            var ped = Utils.CreateAlien(spawnPoint, weaponHash, model, accuracy, Random.Next(0, 359));
-
-            if (Entity.Exists(ped) && markModelAsNoLongerNeeded)
-                ped.Model.MarkAsNoLongerNeeded();
-
-            return ped;
-        }
-
         public static Vehicle SpawnUfo(Vector3 spawn, float checkRadius = 50, string model = "zanufo")
         {
-            var spawnPoint = spawn.MoveToGroundArtificial();
+            var spawnPoint = Utils.GetGroundHeightRay(spawn);
 
             if (spawnPoint == Vector3.Zero)
                 return new Vehicle(0);
@@ -75,9 +50,10 @@ namespace DefaultMissions
         }
 
         /// <summary>
-        /// Returns <see langword="true"/> if we went to mars.
+        ///     Returns <see langword="true" /> if we went to mars.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         public static bool DidGoToMars()
         {
             var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)

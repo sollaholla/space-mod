@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -19,11 +17,11 @@ namespace DefaultMissions
         {
             private const string TextureDict = "securitycam";
             private const string TextureName = "securitycam_box";
-            private Camera _camera;
             private readonly string _planetModel;
+            private readonly Random _random = new Random();
+            private Camera _camera;
             private Prop _planetProp;
             private Vector3 _pos;
-            private readonly Random _random = new Random();
             private float _seconds;
             private int _step;
             private Vehicle _ufo;
@@ -264,7 +262,7 @@ namespace DefaultMissions
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
                     var spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector;
-                    var ground = spawn.MoveToGroundArtificial(Game.Player.Character);
+                    var ground = Utils.GetGroundHeightRay(Game.Player.Character.Position, Game.Player.Character);
                     if (ground != Vector3.Zero) spawn = ground;
                     Game.Player.Character.Task.PlayAnimation("pickup_object", "pickup_low");
                     _lastFlagPos = spawn;
@@ -436,7 +434,6 @@ namespace DefaultMissions
             if (!HelperFunctions.DidGoToMars())
             {
                 _carrierShip = World.CreateVehicle("zanufo", pedSpawn + Vector3.WorldUp * 15);
-
                 if (Entity.Exists(_carrierShip))
                 {
                     _carrierSpawn = _carrierShip.Position;
@@ -448,14 +445,11 @@ namespace DefaultMissions
 
             for (var i = 0; i < _enemyCount; i++)
             {
-                var alien = HelperFunctions.SpawnAlien(pedSpawn.Around(_random.Next(5, 40)));
-
-                if (Entity.Exists(alien))
-                {
-                    alien.AddBlip().Scale = 0.5f;
-
-                    _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
-                }
+                var spawn = pedSpawn.Around(_random.Next(5, 15));
+                var alien = Utils.CreateAlien(null, spawn, 90, WeaponHash.Railgun);
+                if (!Entity.Exists(alien)) continue;
+                alien.AddBlip().Scale = 0.5f;
+                _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
             }
 
             var vehicleSpawnArea = CurrentScene.Info.GalaxyCenter + Vector3.RelativeLeft * 250f;

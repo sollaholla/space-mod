@@ -138,6 +138,11 @@ public class Link : NextSceneInfo, ITrigger
 [Serializable]
 public class AttachedOrbitalInfo : IDrawable
 {
+    [Category("Other")]
+    [Description("The starting rotation of the object.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public Vector3 Rotation { get; set; }
+
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
     [RefreshProperties(RefreshProperties.All)]
@@ -147,11 +152,6 @@ public class AttachedOrbitalInfo : IDrawable
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public Vector3 Position { get; set; }
-
-    [Category("Other")]
-    [Description("The starting rotation of the object.")]
-    [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Rotation { get; set; }
 }
 
 [Serializable]
@@ -174,6 +174,11 @@ public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
     [RefreshProperties(RefreshProperties.All)]
     public bool WormHole { get; set; }
 
+    [Category("Other")]
+    [Description("The starting rotation of the object.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public Vector3 Rotation { get; set; }
+
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
     [RefreshProperties(RefreshProperties.All)]
@@ -183,11 +188,6 @@ public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public Vector3 Position { get; set; }
-
-    [Category("Other")]
-    [Description("The starting rotation of the object.")]
-    [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Rotation { get; set; }
 
     [Category("Next Scene Info")]
     [Description("This is the distance that will trigger the next scene to load.")]

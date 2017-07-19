@@ -6,14 +6,14 @@ using GTS.Scenes;
 namespace GTS.Scenarios
 {
     /// <summary>
-    /// Called when the <paramref name="scenario"/> is completed.
+    ///     Called when the <paramref name="scenario" /> is completed.
     /// </summary>
     /// <param name="scenario"></param>
     /// <param name="success"></param>
     internal delegate void OnScenarioCompleted(Scenario scenario, bool success);
 
     /// <summary>
-    /// A class that represents an event, or series of events.
+    ///     A class that represents an event, or series of events.
     /// </summary>
     public abstract class Scenario
     {
@@ -36,7 +36,8 @@ namespace GTS.Scenarios
 
         /// <summary>
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         internal bool IsScenarioComplete()
         {
             if (Settings.GetValue("scenario_config", "complete", false))
@@ -83,20 +84,21 @@ namespace GTS.Scenarios
         public abstract void OnUpdate();
 
         /// <summary>
-        ///     This is where you can clean up some excess entities, and / or objects.
+        ///     This is where you can clean up some excess entities, and / or
+        ///     objects.
         /// </summary>
         public abstract void OnEnded(bool success);
 
         /// <summary>
         ///     This is executed when the space mod scripts are aborted or reloaded.
-        ///     This function can be used like the <see cref="OnEnded"/> function to clean up
-        ///     any remaining objects / entities.
+        ///     This function can be used like the <see cref="Scenario.OnEnded" />
+        ///     function to clean up any remaining objects / entities.
         /// </summary>
         public abstract void OnAborted();
 
         /// <summary>
-        ///     Called whenever you enter the specified scene. It is called even if you have
-        ///     completed the mission.
+        ///     Called whenever you enter the specified scene. It is called even if
+        ///     you have completed the mission.
         /// </summary>
         public abstract void OnAwake();
 

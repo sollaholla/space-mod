@@ -28,7 +28,7 @@ namespace GTS.Scenes
     #region Delegates
 
     /// <summary>
-    /// Called when a <see cref="Scene"/> is exited.
+    ///     Called when a <see cref="Scene" /> is exited.
     /// </summary>
     /// <param name="scene"></param>
     /// <param name="newSceneFile"></param>
@@ -37,7 +37,7 @@ namespace GTS.Scenes
     public delegate void OnSceneExitEvent(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset);
 
     /// <summary>
-    /// Called when an <see langword="object"/> within the scene is "mined".
+    ///     Called when an <see langword="object" /> within the scene is "mined".
     /// </summary>
     /// <param name="scene"></param>
     /// <param name="mineableObject"></param>
@@ -46,15 +46,15 @@ namespace GTS.Scenes
     #endregion
 
     /// <summary>
-    /// A Scene controls in-game logic for player movement, and referential game variables pertaining to 
-    /// physics. It also adds props to the game based on it's <see cref="SceneInfo"/> data.
+    ///     A Scene controls in-game logic for player movement, and referential game variables pertaining to
+    ///     physics. It also adds props to the game based on it's <see cref="SceneInfo" /> data.
     /// </summary>
     public sealed class Scene
     {
         /// <summary>
         ///     Our standard constructor.
         /// </summary>
-        /// <param name="sceneData">The data <see langword="this"/> scene is based off of.</param>
+        /// <param name="sceneData">The data <see langword="this" /> scene is based off of.</param>
         public Scene(SceneInfo sceneData)
         {
             Info = sceneData;
@@ -74,17 +74,17 @@ namespace GTS.Scenes
         #region Fields
 
         /// <summary>
-        /// The blip color of the mini map marker for planets.
+        ///     The blip color of the mini map marker for planets.
         /// </summary>
         public const BlipColor MarkerBlipColor = (BlipColor) 58;
 
         /// <summary>
-        /// The texture dictionary used for the reticle.
+        ///     The texture dictionary used for the reticle.
         /// </summary>
         public const string ReticleTextureDict = "helicopterhud";
 
         /// <summary>
-        /// The texture used for the reticle.
+        ///     The texture used for the reticle.
         /// </summary>
         public const string ReticleTexture = "hud_lock";
 
@@ -327,7 +327,7 @@ namespace GTS.Scenes
         #region Public
 
         /// <summary>
-        /// Give the <see cref="Prop"/> specified the ability to be mined by the player.
+        ///     Give the <see cref="Prop" /> specified the ability to be mined by the player.
         /// </summary>
         /// <param name="prop"></param>
         public void AddMinableProp(Prop prop)
@@ -338,7 +338,7 @@ namespace GTS.Scenes
         }
 
         /// <summary>
-        /// Remove a <see cref="Prop"/>'s ability to be mined by the player.
+        ///     Remove a <see cref="Prop" />'s ability to be mined by the player.
         /// </summary>
         /// <param name="prop"></param>
         public void RemoveMinableProp(Prop prop)
@@ -347,7 +347,7 @@ namespace GTS.Scenes
         }
 
         /// <summary>
-        /// Refresh the timecycle that <see langword="this"/> scene uses.
+        ///     Refresh the timecycle that <see langword="this" /> scene uses.
         /// </summary>
         public void RefreshTimecycle()
         {
@@ -358,7 +358,7 @@ namespace GTS.Scenes
         }
 
         /// <summary>
-        /// Get an interior from our <see langword="private"/> list by <paramref name="name"/>.
+        ///     Get an interior from our <see langword="private" /> list by <paramref name="name" />.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -368,7 +368,7 @@ namespace GTS.Scenes
         }
 
         /// <summary>
-        /// Draw a marker at the given <paramref name="position"/> with the name: name, and color: col.
+        ///     Draw a marker at the given <paramref name="position" /> with the name: name, and color: col.
         /// </summary>
         /// <param name="position"></param>
         /// <param name="name"></param>
@@ -393,7 +393,7 @@ namespace GTS.Scenes
             /////////////////////////////////////////////////////////////
 
             /////////////////////////////////////////////////////////////
-            Function.Call(Hash.SET_TEXT_FONT, (int)Font.ChaletComprimeCologne);
+            Function.Call(Hash.SET_TEXT_FONT, (int) Font.ChaletComprimeCologne);
             Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
             Function.Call(Hash.SET_TEXT_COLOUR, col.Value.R, col.Value.G, col.Value.B, col.Value.A);
             Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
@@ -562,7 +562,7 @@ namespace GTS.Scenes
 
             if (Info.SurfaceScene)
             {
-                var newPosition = position.MoveToGroundArtificial(PlayerPed);
+                var newPosition = Utils.GetGroundHeightRay(position, PlayerPed);
 
                 if (newPosition != Vector3.Zero)
                     position = newPosition;
@@ -1072,7 +1072,7 @@ namespace GTS.Scenes
                             var dir = _lastMinePos - _spaceWalkDummy.Position;
                             dir.Normalize();
                             _spaceWalkDummy.Quaternion = Quaternion.FromToRotation(_spaceWalkDummy.ForwardVector, dir) *
-                                                        _spaceWalkDummy.Quaternion;
+                                                         _spaceWalkDummy.Quaternion;
                             _mineTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
                             _spaceWalkDummy.Position = _lastMinePos - dir;
                             _startedMining = true;
@@ -1193,7 +1193,8 @@ namespace GTS.Scenes
                     }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(_playerTask), "The player state specified is out of range, and does not exist.");
+                        throw new ArgumentOutOfRangeException(nameof(_playerTask),
+                            "The player state specified is out of range, and does not exist.");
                 }
             }
         }

@@ -14,8 +14,6 @@ namespace GTS.Missions
 {
     internal class IntroMission : Scenario
     {
-        private Ped _colonel;
-
         private readonly float _colonelHeading = 313.5386f;
 
         private readonly Vector3 _colonelSpawn = new Vector3(-2356.895f, 3248.412f, 101.4508f);
@@ -36,13 +34,14 @@ namespace GTS.Missions
                 new Vector3(2136.4319f, 2899.8953f, 57.4265f), new Vector3(0, 0, 145.059f), 140.3007f)
         };
 
-        private bool _dishesInitialized;
-
-        private Blip _humaneLabsBlip;
-
         private readonly Vector3 _humaneLabsEnterance = new Vector3(3574.148f, 3736.34f, 36.64266f);
 
         private readonly Vector3 _humaneLabsExit = new Vector3(3540.65f, 3675.77f, 28.12f);
+        private Ped _colonel;
+
+        private bool _dishesInitialized;
+
+        private Blip _humaneLabsBlip;
 
         private Interior _humaneLabsIpl;
 

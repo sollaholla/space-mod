@@ -12,7 +12,9 @@ namespace GTS.Missions.Types
         /// <summary>
         ///     Our standard constuctor.
         /// </summary>
-        /// <param name="position">The position of the player while checking the laptop.</param>
+        /// <param name="position">
+        ///     The position of the player while checking the laptop.
+        /// </param>
         public SatelliteDish(Vector3 position)
         {
             Position = position;
@@ -22,10 +24,16 @@ namespace GTS.Missions.Types
         /// <summary>
         ///     Our secondary constuctor.
         /// </summary>
-        /// <param name="position">The position of the player while checking the laptop.</param>
-        /// <param name="laptopPosition">The position that our laptop will be placed.</param>
+        /// <param name="position">
+        ///     The position of the player while checking the laptop.
+        /// </param>
+        /// <param name="laptopPosition">
+        ///     The <paramref name="position" /> that our laptop will be placed.
+        /// </param>
         /// <param name="laptopRotation">The rotation of the laptop.</param>
-        /// <param name="heading">The heading of the player while checking the laptop.</param>
+        /// <param name="heading">
+        ///     The heading of the player while checking the laptop.
+        /// </param>
         public SatelliteDish(Vector3 position, Vector3 laptopPosition, Vector3 laptopRotation, float heading)
         {
             LaptopPosition = laptopPosition;
@@ -41,7 +49,7 @@ namespace GTS.Missions.Types
         public Vector3 Position { get; set; }
 
         /// <summary>
-        ///     True if we've checked the laptop for data.
+        ///     True if we've <see langword="checked" /> the laptop for data.
         /// </summary>
         public bool CheckedForData { get; set; }
 
@@ -88,7 +96,8 @@ namespace GTS.Missions.Types
         }
 
         /// <summary>
-        ///     Draw a marker and remove our blip if we've checked for data.
+        ///     Draw a marker and remove our blip if we've <see langword="checked" />
+        ///     for data.
         /// </summary>
         public void Update()
         {

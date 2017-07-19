@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,12 +11,14 @@ namespace GTS.Library
     public static class Mathf
     {
         /// <summary>
-        ///     Clamp the value "value" between min, and max.
+        ///     <see cref="Clamp" /> the <paramref name="value" /> "value" between
+        ///     min, and max.
         /// </summary>
         /// <param name="value">The value we wish to clamp.</param>
         /// <param name="min">The minimum value.</param>
         /// <param name="max">The maximum value.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         public static float Clamp(float value, float min, float max)
         {
             if (value < min)
@@ -138,24 +139,6 @@ namespace GTS.Library
         IgnoreTrafficWhenDriving = 52
     }
 
-    public enum CPlaneMission
-    {
-        None = 0,
-        Unk = 1,
-        CTaskVehicleRam = 2,
-        CTaskVehicleBlock = 3,
-        CTaskVehicleGoToPlane = 4,
-        CTaskVehicleStop = 5,
-        CTaskVehicleAttack = 6,
-        CTaskVehicleFollow = 7,
-        CTaskVehicleFleeAirborne = 8,
-        CTaskVehicleCircle = 9,
-        CTaskVehicleEscort = 10,
-        CTaskVehicleFollowRecording = 15,
-        CTaskVehiclePoliceBehaviour = 16,
-        CTaskVehicleCrash = 17
-    }
-
     public static class Utils
     {
         private const string AlienModelsTextFile = "./scripts/Space/Aliens.txt";
@@ -179,118 +162,34 @@ namespace GTS.Library
             return AlienModels.Length > 0 ? AlienModels[rand.Next(AlienModels.Length)] : DefaultAlienModel;
         }
 
-        public static Quaternion LookRotation(Vector3 forward)
+        /// <summary>
+        ///     Create a ped with alien presets.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="position"></param>
+        /// <param name="heading"></param>
+        /// <param name="weapon"></param>
+        /// <returns>
+        /// </returns>
+        public static Ped CreateAlien(Model model, Vector3 position, float heading, WeaponHash weapon)
         {
-            var up = Vector3.WorldUp;
-            return INTERNAL_CALL_LookRotation(ref forward, ref up);
-        }
+            if (model == null)
+                model = new Model(GetAlienModel());
 
-        // from http://answers.unity3d.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html
-        private static Quaternion INTERNAL_CALL_LookRotation(ref Vector3 forward, ref Vector3 up)
-        {
-            forward = Vector3.Normalize(forward);
-            var right = Vector3.Normalize(Vector3.Cross(up, forward));
-            up = Vector3.Cross(forward, right);
-            var m00 = right.X;
-            var m01 = right.Y;
-            var m02 = right.Z;
-            var m10 = up.X;
-            var m11 = up.Y;
-            var m12 = up.Z;
-            var m20 = forward.X;
-            var m21 = forward.Y;
-            var m22 = forward.Z;
+            if (!model.IsPed || !model.Request(5000))
+                return new Ped(0);
 
-
-            var num8 = m00 + m11 + m22;
-            var quaternion = new Quaternion();
-            if (num8 > 0f)
+            var p = new Ped(Function.Call<int>(Hash.CREATE_PED, 26, model.Hash, position.X, position.Y, position.Z,
+                heading, false, false))
             {
-                var num = (float) Math.Sqrt(num8 + 1f);
-                quaternion.W = num * 0.5f;
-                num = 0.5f / num;
-                quaternion.X = (m12 - m21) * num;
-                quaternion.Y = (m20 - m02) * num;
-                quaternion.Z = (m01 - m10) * num;
-                return quaternion;
-            }
-            if (m00 >= m11 && m00 >= m22)
-            {
-                var num7 = (float) Math.Sqrt(1f + m00 - m11 - m22);
-                var num4 = 0.5f / num7;
-                quaternion.X = 0.5f * num7;
-                quaternion.Y = (m01 + m10) * num4;
-                quaternion.Z = (m02 + m20) * num4;
-                quaternion.W = (m12 - m21) * num4;
-                return quaternion;
-            }
-            if (m11 > m22)
-            {
-                var num6 = (float) Math.Sqrt(1f + m11 - m00 - m22);
-                var num3 = 0.5f / num6;
-                quaternion.X = (m10 + m01) * num3;
-                quaternion.Y = 0.5f * num6;
-                quaternion.Z = (m21 + m12) * num3;
-                quaternion.W = (m20 - m02) * num3;
-                return quaternion;
-            }
-            var num5 = (float) Math.Sqrt(1f + m22 - m00 - m11);
-            var num2 = 0.5f / num5;
-            quaternion.X = (m20 + m02) * num2;
-            quaternion.Y = (m21 + m12) * num2;
-            quaternion.Z = 0.5f * num5;
-            quaternion.W = (m01 - m10) * num2;
-            return quaternion;
-        }
-
-        public static void ArtificialDamage(Ped ped, Ped target, float damageDistance, float damageMultiplier)
-        {
-            if (target.IsInvincible) return;
-            var impCoords = ped.GetLastWeaponImpactCoords();
-            if (impCoords == Vector3.Zero) return;
-            var distanceTo = impCoords.DistanceTo(target.Position);
-            if (distanceTo < damageDistance)
-                target.ApplyDamage((int) (1 / distanceTo * damageMultiplier));
-        }
-
-        public static bool IsCloseToAnyEntity(Vector3 position, IReadOnlyCollection<Entity> collection, float distance)
-        {
-            if (collection == null) return false;
-            if (collection.Count <= 0) return false;
-
-            return
-                collection.Where(entity1 => entity1 != null)
-                    .Any(entity1 => entity1.Position.DistanceTo(position) < distance);
-        }
-
-        public static Ped CreateAlien(Vector3 position, WeaponHash weaponHash, PedHash? model = null, int accuracy = 50,
-            float heading = 0)
-        {
-            var ped = model != null
-                ? World.CreatePed(model.Value, position, heading)
-                : World.CreatePed(GetAlienModel(), position, heading);
-            if (ped == null) return new Ped(0);
-            ped.Accuracy = 50;
-            ped.Weapons.Give(weaponHash, 15, true, true);
-            ped.IsPersistent = true;
-            ped.Voice = "ALIENS";
-            ped.Accuracy = 15;
-            ped.SetDefaultClothes();
-            ped.RelationshipGroup = Database.AlienRelationshipGroup;
-            Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 46, true);
-            Function.Call(Hash.SET_PED_COMBAT_RANGE, ped.Handle, 2);
-            ped.IsFireProof = true;
-            ped.IsEnemy = true;
-            ped.Money = 0;
-            return ped;
-        }
-
-        public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angle)
-        {
-            var dir = point - pivot;
-            dir = Quaternion.Euler(angle) * dir;
-            point = dir + pivot;
-            return point;
+                Accuracy = 50,
+                Voice = "ALIENS",
+                RelationshipGroup = Database.AlienRelationshipGroup
+            };
+            p.SetDefaultClothes();
+            p.Weapons.Give(weapon, 50, true, true);
+            Function.Call(Hash.DISABLE_PED_PAIN_AUDIO, p, true);
+            return p;
         }
 
         public static void TerminateScriptByName(string name)
@@ -329,11 +228,6 @@ namespace GTS.Library
             Function.Call(Hash.SET_ENTITY_ANIM_SPEED, entity, animDict, animName, multiplier);
         }
 
-        public static float VDist(this Vector3 a, Vector3 b)
-        {
-            return Function.Call<float>(Hash.VDIST, a.X, a.Y, a.Z, b.X, b.Y, b.Z);
-        }
-
         public static void AttachTo(this Entity entity1, Entity entity2, Vector3 position = default(Vector3),
             Vector3 rotation = default(Vector3))
         {
@@ -358,9 +252,9 @@ namespace GTS.Library
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
         }
 
-        public static Vector3 MoveToGroundArtificial(this Vector3 v3, Entity ignorEntity = null)
+        public static Vector3 GetGroundHeightRay(Vector3 position, Entity ignorEntity = null)
         {
-            var origin = new Vector3(v3.X, v3.Y, v3.Z + 1000);
+            var origin = new Vector3(position.X, position.Y, position.Z + 1000);
             var direction = Vector3.WorldDown;
             var ray = World.Raycast(origin, direction, 10000, IntersectOptions.Everything, ignorEntity);
             return ray.HitCoords;
@@ -390,19 +284,9 @@ namespace GTS.Library
             return prop;
         }
 
-        public static float GetHeightArtificial(this Entity entity)
+        public static float GetGroundHeight(this Entity entity)
         {
-            return Vector3.Distance(entity.Position - entity.UpVector, entity.Position.MoveToGroundArtificial(entity));
-        }
-
-        public static bool IsOnScreen(this Vector3 vector3)
-        {
-            var worldToScreen = UI.WorldToScreen(vector3);
-
-            if (worldToScreen.X == 0 && worldToScreen.Y == 0)
-                return false;
-
-            return true;
+            return Vector3.Distance(entity.Position - entity.UpVector, GetGroundHeightRay(entity.Position, entity));
         }
 
         public static void SetGravityLevel(float level)
@@ -413,7 +297,7 @@ namespace GTS.Library
         public static void RestartScript(string name)
         {
             Function.Call(Hash.REQUEST_SCRIPT, name);
-            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+            var timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
             while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name) && DateTime.UtcNow < timout) Script.Yield();
             Function.Call(Hash.START_NEW_SCRIPT, name, 1624);
             Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
@@ -424,13 +308,22 @@ namespace GTS.Library
             Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int) type, false, false, false);
         }
 
-        internal static void PlaneMission(this Ped pilot, Vehicle plane, Vehicle targetVehicle, Ped targetPed,
-            Vector3 destination, CPlaneMission mission, float physicsSpeed, float p9, float heading, float maxAltitude,
-            float minAltitude)
+        public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angle)
         {
-            Function.Call(Hash.TASK_PLANE_MISSION, pilot, plane, targetVehicle, targetPed, destination.X, destination.Y,
-                destination.Z, (int) mission,
-                physicsSpeed, p9, heading, maxAltitude, minAltitude);
+            var dir = point - pivot;
+            dir = Quaternion.Euler(angle) * dir;
+            point = dir + pivot;
+            return point;
+        }
+
+        public static bool IsOnScreen(this Vector3 vector3)
+        {
+            var worldToScreen = UI.WorldToScreen(vector3);
+
+            if (worldToScreen.X == 0 && worldToScreen.Y == 0)
+                return false;
+
+            return true;
         }
 
         public static void SetCombatAttributes(this Ped ped, CombatAttributes attribute, bool enabled)
@@ -497,7 +390,7 @@ namespace GTS.Library
         public bool IsLoaded => Function.Call<bool>(Hash.HAS_NAMED_PTFX_ASSET_LOADED, AssetName);
 
         /// <summary>
-        ///     Load the particle FX asset
+        ///     <see cref="Load" /> the particle FX asset
         /// </summary>
         public void Load()
         {
@@ -507,13 +400,13 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Start particle FX on the specified entity.
+        ///     <see cref="Start" /> particle FX on the specified entity.
         /// </summary>
-        /// <param name="entity">Entity to attach to.</param>
+        /// <param name="entity"><see cref="Entity" /> to attach to.</param>
         /// <param name="scale">Scale of the fx.</param>
         /// <param name="offset">Optional offset.</param>
         /// <param name="rotation">Optional rotation.</param>
-        /// <param name="bone">Entity bone.</param>
+        /// <param name="bone"><see cref="Entity" /> bone.</param>
         public void Start(Entity entity, float scale, Vector3 offset, Vector3 rotation, Bone? bone)
         {
             if (Handle != -1) return;
@@ -529,9 +422,9 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Start particle FX on the specified entity.
+        ///     <see cref="Start" /> particle FX on the specified entity.
         /// </summary>
-        /// <param name="entity">Entity to attach to.</param>
+        /// <param name="entity"><see cref="Entity" /> to attach to.</param>
         /// <param name="scale">Scale of the fx.</param>
         public void Start(Entity entity, float scale)
         {
@@ -539,7 +432,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Start particle FX at the specified position.
+        ///     <see cref="Start" /> particle FX at the specified position.
         /// </summary>
         /// <param name="position">Position in world space.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -555,7 +448,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Start particle FX at the specified position.
+        ///     <see cref="Start" /> particle FX at the specified position.
         /// </summary>
         /// <param name="position">Position in world space.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -565,7 +458,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Remove the particle FX
+        ///     <see cref="Remove" /> the particle FX
         /// </summary>
         public void Remove()
         {
@@ -576,7 +469,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Remove the particle FX in range
+        ///     <see cref="Remove" /> the particle FX in range
         /// </summary>
         public void Remove(Vector3 position, float radius)
         {
@@ -587,7 +480,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     Unload the loaded particle FX asset
+        ///     <see cref="Unload" /> the loaded particle FX asset
         /// </summary>
         public void Unload()
         {

@@ -4,7 +4,7 @@ using GTA.Math;
 namespace GTS
 {
     /// <summary>
-    /// Holds data information about the mod.
+    ///     Holds data information about the mod.
     /// </summary>
     public static class Database
     {
@@ -37,25 +37,27 @@ namespace GTS
         }
 
         /// <summary>
-        /// The location of the airfield owned by Trevor.
+        ///     The location of the airfield owned by Trevor.
         /// </summary>
         public static Vector3 TrevorAirport { get; }
 
         /// <summary>
-        /// The relationship group for aliens.
+        ///     The relationship group for aliens.
         /// </summary>
         public static int AlienRelationshipGroup { get; }
 
         /// <summary>
-        /// The location we teleport once we enter earths atmosphere.
+        ///     The location we teleport once we enter earths atmosphere.
         /// </summary>
         public static Vector3 EarthAtmosphereEnterPosition { get; }
 
         /// <summary>
-        ///     Return the <c>Gameplay</c> cameras current position if rendering, if the camera is not rendering (e.g. he's in a vehicle
-        ///     with first person cam) then it will return the player position.
+        ///     Return the <c>Gameplay</c> cameras current position if rendering, if
+        ///     the camera is not rendering (e.g. he's in a vehicle with first
+        ///     person cam) then it will return the player position.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         internal static Vector3 GetGalaxyPosition()
         {
             return

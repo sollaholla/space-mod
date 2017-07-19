@@ -84,9 +84,11 @@ namespace GTS.OrbitalSystems
         }
 
         /// <summary>
-        ///     Returns all planets positions and rotations in the array order 0 to length.
+        ///     Returns all planets positions and rotations in the array order 0 to
+        ///     length.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// </returns>
         public override string ToString()
         {
             var ret = string.Empty;
