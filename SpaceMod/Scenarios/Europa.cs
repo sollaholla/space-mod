@@ -24,12 +24,14 @@ namespace DefaultMissions
             private Vector3 _firePos;
             private Vector3 _spawn;
             private int _step;
+            private readonly Random _rand;
 
             public EuropaMissileCutScene(Vector3 spawn, Vector3 firePos)
             {
                 _spawn = spawn;
                 _firePos = firePos;
                 Entities = new List<Entity>();
+                _rand = new Random();
             }
 
             public List<Entity> Entities { get; }
@@ -86,8 +88,11 @@ namespace DefaultMissions
                         var spawnPoint = _spawn + Vector3.RelativeRight * 70;
                         for (var i = 0; i < 15; i++)
                         {
-                            var ped = Utils.CreateAlien(PedHash.MovAlien01, spawnPoint, 0, WeaponHash.CombatPDW);
+                            var randDist = _rand.Next(5, 20);
+                            var spawn = spawnPoint.Around(randDist);
+                            var ped = Utils.CreateAlien(PedHash.MovAlien01, spawn, 0, WeaponHash.CombatPDW);
                             if (!Entity.Exists(ped)) continue;
+                            ped.Task.FightAgainst(Game.Player.Character);
                             PlaySmoke(ped.Position - Vector3.WorldUp, 1.0f);
                             ped.AddBlip().Scale = 0.5f;
                             Entities.Add(ped);

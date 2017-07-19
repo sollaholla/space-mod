@@ -113,15 +113,7 @@ namespace DefaultMissions
         private Vehicle _rover;
         private Ped _engineer;
         private Vehicle _engineerShuttle;
-
-        private readonly Model[] _requestModels =
-        {
-            "shuttle",
-            PedHash.MovAlien01,
-            PedHash.Movspace01SMM,
-            "lunar"
-        };
-
+        
         #endregion
 
         #region Functions
@@ -137,8 +129,6 @@ namespace DefaultMissions
         public override void OnStart()
         {
             Start_SetGameVariables();
-            RequestAssets();
-
             if (_missionStep <= 1)
                 SpawnAliens();
         }
@@ -289,22 +279,7 @@ namespace DefaultMissions
             Game.Player.Character.CanRagdoll = false;
             SetAiWeaponDamage();
         }
-
-        private void RequestAssets()
-        {
-            RequestModels();
-        }
-
-        private void RequestModels()
-        {
-            foreach (var m in _requestModels)
-            {
-                m.Request();
-                while (!m.IsLoaded)
-                    Script.Yield();
-            }
-        }
-
+        
         private void ReadSettings()
         {
             _missionStep = Settings.GetValue(SettingsGeneralSectionString, SettingsMissionStepString, _missionStep);
@@ -395,11 +370,14 @@ namespace DefaultMissions
             var vehicleSpawn = Utils.GetGroundHeightRay(_marsEngineerRoverSpawn);
             if (vehicleSpawn != Vector3.Zero)
             {
-                _rover = World.CreateVehicle(_requestModels[3], vehicleSpawn);
+                Model roverModel = new Model("lunar");
+                roverModel.Request(5000);
+                _rover = World.CreateVehicle(roverModel, vehicleSpawn);
                 if (Entity.Exists(_rover))
                 {
                     _rover.RadioStation = RadioStation.RadioOff;
                     _rover.Heading = _marsEngineerRoverHeading;
+                    roverModel.MarkAsNoLongerNeeded();
                 }
             }
         }
@@ -424,10 +402,13 @@ namespace DefaultMissions
 
             if (Entity.Exists(vehicle))
             {
-                var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, _requestModels[1]);
+                Model pilotModel = new Model(Utils.GetAlienModel());
+                pilotModel.Request(5000);
+                var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, pilotModel);
 
                 if (Entity.Exists(pilot))
                 {
+                    pilotModel.MarkAsNoLongerNeeded();
                     pilot.SetDefaultClothes();
                     pilot.RelationshipGroup = Database.AlienRelationshipGroup;
 
@@ -569,8 +550,9 @@ namespace DefaultMissions
             if (Utils.GetGroundHeightRay(_marsEngineerSpawn) == Vector3.Zero)
                 return false;
             var spawn = Utils.GetGroundHeightRay(_marsEngineerSpawn);
-
-            _engineer = World.CreatePed(_requestModels[2], spawn);
+            Model model = new Model(PedHash.Movspace01SMM);
+            model.Request(5000);
+            _engineer = World.CreatePed(model, spawn);
             _engineer.Weapons.Give(WeaponHash.AssaultSMG, 1000, true, true);
             _engineer.RelationshipGroup = Game.Player.Character.RelationshipGroup;
             _engineer.IsInvincible = true;
@@ -597,7 +579,11 @@ namespace DefaultMissions
             if (Utils.GetGroundHeightRay(spawn) == Vector3.Zero)
                 return false;
             spawn = Utils.GetGroundHeightRay(spawn);
-            _engineerShuttle = World.CreateVehicle(_requestModels[0], spawn - Vector3.WorldUp);
+            Model model = new Model("shuttle");
+            model.Request(5000);
+            _engineerShuttle = World.CreateVehicle(model, spawn - Vector3.WorldUp);
+            if (!Entity.Exists(_engineerShuttle)) return false;
+            model.MarkAsNoLongerNeeded();
             _engineerShuttle.LandingGear = VehicleLandingGear.Retracted;
             _engineerShuttle.IsInvincible = true;
             _engineerShuttle.LockStatus = VehicleLockStatus.CannotBeTriedToEnter;
@@ -729,22 +715,8 @@ namespace DefaultMissions
                 if (delete && !Game.Player.Character.IsInVehicle(_rover))
                     _rover.Delete();
                 else _rover.MarkAsNoLongerNeeded();
-
-            RemoveGameAssets();
         }
-
-        private void RemoveGameAssets()
-        {
-            RemoveModels();
-        }
-
-        private void RemoveModels()
-        {
-            foreach (var model in _requestModels)
-                if (model.IsLoaded)
-                    model.MarkAsNoLongerNeeded();
-        }
-
+        
         private bool AreAllAliensDead()
         {
             return _aliens.TrueForAll(x => x.IsDead) && (_ufo?.IsDead ?? true);
