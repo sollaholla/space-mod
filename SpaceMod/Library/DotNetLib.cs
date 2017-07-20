@@ -188,6 +188,9 @@ namespace GTS.Library
             };
             p.SetDefaultClothes();
             p.Weapons.Give(weapon, 50, true, true);
+            p.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
+            p.SetCombatAttributes(CombatAttributes.CanLeaveVehicle, false);
+            p.SetCombatAttributes(CombatAttributes.CanFightArmedPedsWhenNotArmed, true);
             Function.Call(Hash.DISABLE_PED_PAIN_AUDIO, p, true);
             return p;
         }

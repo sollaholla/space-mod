@@ -261,8 +261,8 @@ namespace DefaultMissions
                     Utils.DisplayHelpTextWithGxt("PLANT_FLAG");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
-                    var spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector;
-                    var ground = Utils.GetGroundHeightRay(Game.Player.Character.Position, Game.Player.Character);
+                    var spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector * 2;
+                    var ground = Utils.GetGroundHeightRay(spawn, Game.Player.Character);
                     if (ground != Vector3.Zero) spawn = ground;
                     Game.Player.Character.Task.PlayAnimation("pickup_object", "pickup_low");
                     _lastFlagPos = spawn;

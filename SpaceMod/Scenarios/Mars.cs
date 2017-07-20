@@ -698,18 +698,13 @@ namespace DefaultMissions
                 else _engineer.MarkAsNoLongerNeeded();
 
             if (Entity.Exists(_ufo))
-                if (delete)
-                {
-                    _ufo.Delete();
-                    if (Entity.Exists(_ufo.Driver))
-                        _ufo.Driver.Delete();
-                }
-                else
-                {
-                    if (Entity.Exists(_ufo.Driver))
-                        _ufo.Driver.MarkAsNoLongerNeeded();
-                    _ufo.MarkAsNoLongerNeeded();
-                }
+            {
+                if (delete) _ufo.Delete();
+                else _ufo.MarkAsNoLongerNeeded();
+
+                if (Entity.Exists(_ufo.Driver))
+                    _ufo.Driver.Delete();
+            }
 
             if (Entity.Exists(_rover))
                 if (delete && !Game.Player.Character.IsInVehicle(_rover))

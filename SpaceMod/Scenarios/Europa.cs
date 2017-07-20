@@ -177,9 +177,9 @@ namespace DefaultMissions
 
         public override void OnUpdate()
         {
-            // NOTE: Make sure we didn't already go to mars, 
+            // NOTE: Make sure we already finished the mission on mars, 
             // so we don't mess up the story sequence.
-            if (!HelperFunctions.DidGoToMars())
+            if (!HelperFunctions.DidCompleteScenario<Mars>())
             {
                 EndScenario(false);
                 return;
