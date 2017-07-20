@@ -41,9 +41,6 @@ namespace GTS
             CreateCustomMenu();
             RequestModels();
 
-            if (Game.IsLoading)
-                Function.Call((Hash) 0x0888C3502DBBEEF5);
-
             Debug.Log("Initialized!");
         }
 
