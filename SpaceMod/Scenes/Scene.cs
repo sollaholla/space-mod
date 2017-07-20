@@ -435,6 +435,9 @@ namespace GTS.Scenes
 
             var prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
 
+            if (Settings.LowConfigMode)
+                prop.LodDistance = -1;
+
             prop.FreezePosition = true;
 
             var orbital = new AttachedOrbital(prop, data.Position, data.Rotation);
@@ -464,6 +467,9 @@ namespace GTS.Scenes
 
             var prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
             prop.Rotation = data.Rotation;
+
+            if (Settings.LowConfigMode)
+                RenderForLowConfig(prop);
 
             prop.FreezePosition = true;
 
@@ -507,6 +513,9 @@ namespace GTS.Scenes
 
             prop.FreezePosition = true;
 
+            if (Settings.LowConfigMode)
+                RenderForLowConfig(prop);
+
             var surface = new Surface(prop, data.TileSize);
 
             surface.GenerateTerrain();
@@ -537,9 +546,17 @@ namespace GTS.Scenes
 
             prop.FreezePosition = true;
 
+            if (Settings.LowConfigMode)
+                RenderForLowConfig(prop);
+
             model.MarkAsNoLongerNeeded();
 
             return prop;
+        }
+
+        private static void RenderForLowConfig(Prop prop)
+        {
+            prop.LodDistance *= 2;
         }
 
         private Model RequestModel(string modelName, int time = 5)
