@@ -223,8 +223,6 @@ namespace GTS
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            World.DrawLightWithRange(Database.TrevorAirport, Color.White, 500, 1.0f);
-
             if (!Monitor.TryEnter(_tickLock)) return;
             try
             {
