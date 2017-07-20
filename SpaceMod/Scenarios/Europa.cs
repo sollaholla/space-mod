@@ -45,7 +45,7 @@ namespace DefaultMissions
                 alien.SetIntoVehicle(ufo, VehicleSeat.Driver);
                 alien.Task.Wait(-1);
                 ufo.Heading = (Game.Player.Character.Position - ufo.Position).ToHeading();
-                Entities.AddRange(new Entity[] {ufo.Driver, ufo});
+                Entities.AddRange(new Entity[] { ufo.Driver, ufo });
                 PlaySmoke(ufo.Position - Vector3.WorldUp, 70f);
                 ufo.AddBlip().Scale = 0.8f;
             }
@@ -72,7 +72,7 @@ namespace DefaultMissions
                         break;
                     case 1:
                         Game.DisableControlThisFrame(2, Control.Aim);
-                        if (Function.Call<bool>(Hash.IS_EXPLOSION_IN_SPHERE, (int) ExplosionType.PlaneRocket,
+                        if (Function.Call<bool>(Hash.IS_EXPLOSION_IN_SPHERE, (int)ExplosionType.PlaneRocket,
                             _firePos.X, _firePos.Y, _firePos.Z, 500f))
                         {
                             Script.Wait(1500);
@@ -207,6 +207,10 @@ namespace DefaultMissions
                     break;
                 case 4:
                     ProcessEntities();
+                    if (!_entities.TrueForAll(x => !Entity.Exists(x) || x.IsDead))
+                        return;
+                    UI.Notify("Mission incomplete! TO DO: Make more stuff.");
+                    EndScenario(true);
                     break;
             }
         }
@@ -269,7 +273,7 @@ namespace DefaultMissions
             {
                 // Request the model first, since sometimes the props fail to load.
                 var extinguisherModel =
-                    new Model(Function.Call<int>(Hash.GET_WEAPONTYPE_MODEL, (int) WeaponHash.FireExtinguisher));
+                    new Model(Function.Call<int>(Hash.GET_WEAPONTYPE_MODEL, (int)WeaponHash.FireExtinguisher));
 
                 if (!extinguisherModel.IsLoaded)
                 {
