@@ -609,7 +609,9 @@ namespace GTS
         private void ResetWeather()
         {
             // Basically happens when we abort.
-            World.Weather = Weather.ExtraSunny;
+            Function.Call(Hash.CLEAR_WEATHER_TYPE_PERSIST);
+            Function.Call(Hash.CLEAR_OVERRIDE_WEATHER);
+            World.Weather = Weather.Clear;
             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
         }
 
