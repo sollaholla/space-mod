@@ -5,6 +5,7 @@ using System.Reflection;
 using GTA;
 using GTA.Math;
 using GTS.Library;
+using GTS.Scenarios;
 using GTS.Scenes;
 
 namespace DefaultMissions
@@ -45,7 +46,6 @@ namespace DefaultMissions
         public static void DrawWaypoint(Scene scene, Vector3 position)
         {
             var distance = Vector3.Distance(position, Game.Player.Character.Position);
-
             scene.DrawMarkerAt(position, $"{distance:N0}M", Color.White);
         }
 
@@ -56,10 +56,7 @@ namespace DefaultMissions
         /// </returns>
         public static bool DidGoToMars()
         {
-            var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
-                .FullName;
-            var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(Mars).Name, "ini"));
-            var settings = ScriptSettings.Load(path);
+            var settings = GetSettingsForScenario<Mars>();
             var currentStep = settings.GetValue(Mars.SettingsGeneralSectionString, Mars.SettingsMissionStepString, 0);
             return currentStep > 0;
         }
@@ -70,13 +67,21 @@ namespace DefaultMissions
         /// <returns>
         /// </returns>
         public static bool DidCompleteScenario<T>()
+            where T : Scenario
         {
-            var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
-                .FullName;
-            var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(T).Name, "ini"));
-            var settings = ScriptSettings.Load(path);
+            ScriptSettings settings = GetSettingsForScenario<T>();
             var currentStep = settings.GetValue("SCENARIO_CONFIG", "COMPLETE", false);
             return currentStep;
+        }
+
+        private static ScriptSettings GetSettingsForScenario<T>()
+            where T : Scenario
+        {
+            var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
+                            .FullName;
+            var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(T).Name, "ini"));
+            var settings = ScriptSettings.Load(path);
+            return settings;
         }
     }
 }

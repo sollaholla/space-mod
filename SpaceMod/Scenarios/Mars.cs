@@ -136,6 +136,8 @@ namespace DefaultMissions
         public override void OnUpdate()
         {
             var playerCharacter = Game.Player.Character;
+            Trigger t;
+
             switch (_missionStep)
             {
                 case 0:
@@ -144,7 +146,7 @@ namespace DefaultMissions
                     // mission knows if we've been to mars already.
                     /////////////////////////////////////////////////////
                     _missionStep++;
-                    Utils.ShowSubtitleWithGxt("DEFEND");
+                    Utils.ShowSubtitleWithGxt("DEFEND_AREA");
                     SaveSettings();
                     break;
                 case 1:
@@ -159,7 +161,8 @@ namespace DefaultMissions
                     break;
                 case 3:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsBaseEnterPos);
-                    if (new Trigger(_marsBasePos, _marsBaseRadius).IsInTrigger(playerCharacter.Position))
+                    t = new Trigger(_marsBasePos, _marsBaseRadius);
+                    if (t.IsInTrigger(playerCharacter.Position))
                     {
                         Utils.ShowSubtitleWithGxt("CHECK_SCI");
                         _missionStep++;
@@ -184,7 +187,8 @@ namespace DefaultMissions
                     break;
                 case 7:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsBaseExitPos);
-                    if (!new Trigger(_marsBasePos, _marsBaseRadius).IsInTrigger(playerCharacter.Position))
+                    t = new Trigger(_marsBasePos, _marsBaseRadius);
+                    if (!t.IsInTrigger(playerCharacter.Position))
                     {
                         _missionStep++;
                         SaveSettings();
@@ -195,7 +199,7 @@ namespace DefaultMissions
                     break;
                 case 9:
                     HelperFunctions.DrawWaypoint(CurrentScene, _marsEngineerSpawn);
-                    var t = new Trigger(_marsEngineerSpawn, 500);
+                    t = new Trigger(_marsEngineerSpawn, 500);
                     if (t.IsInTrigger(playerCharacter.Position) && CreateEngineerFireFight())
                         _missionStep++;
                     break;
@@ -483,23 +487,22 @@ namespace DefaultMissions
                 return;
             }
 
-            var peds = interior.Peds.ToArray();
-            if (peds.Length <= 0)
+            if (!Entity.Exists(_scientist))
             {
-                Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                _missionStep++;
+                var peds = interior.Peds.ToArray();
+                if (peds.Length <= 0)
+                {
+                    Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
+                    _missionStep++;
+                    return;
+                }
+
+                _scientist = _scientist ?? peds[0];
+                _scientist.AddBlip().Color = BlipColor.Yellow;
                 return;
             }
 
-            _scientist = _scientist ?? peds[0];
-
-            if (!Entity.Exists(_scientist))
-                return;
-
             HelperFunctions.DrawWaypoint(CurrentScene, _scientist.Position);
-
-            if (!Blip.Exists(_scientist.CurrentBlip))
-                _scientist.AddBlip().Color = BlipColor.Yellow;
 
             var t = new Trigger(_scientist.Position, 2.5f);
             if (!t.IsInTrigger(Game.Player.Character.Position))
