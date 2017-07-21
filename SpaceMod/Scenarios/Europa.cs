@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -21,10 +22,10 @@ namespace DefaultMissions
 
         private class EuropaMissileCutScene : ICutScene
         {
+            private readonly Random _rand;
             private Vector3 _firePos;
             private Vector3 _spawn;
             private int _step;
-            private readonly Random _rand;
 
             public EuropaMissileCutScene(Vector3 spawn, Vector3 firePos)
             {
@@ -45,7 +46,7 @@ namespace DefaultMissions
                 alien.SetIntoVehicle(ufo, VehicleSeat.Driver);
                 alien.Task.Wait(-1);
                 ufo.Heading = (Game.Player.Character.Position - ufo.Position).ToHeading();
-                Entities.AddRange(new Entity[] { ufo.Driver, ufo });
+                Entities.AddRange(new Entity[] {ufo.Driver, ufo});
                 PlaySmoke(ufo.Position - Vector3.WorldUp, 70f);
                 ufo.AddBlip().Scale = 0.8f;
             }
@@ -72,7 +73,7 @@ namespace DefaultMissions
                         break;
                     case 1:
                         Game.DisableControlThisFrame(2, Control.Aim);
-                        if (Function.Call<bool>(Hash.IS_EXPLOSION_IN_SPHERE, (int)ExplosionType.PlaneRocket,
+                        if (Function.Call<bool>(Hash.IS_EXPLOSION_IN_SPHERE, (int) ExplosionType.PlaneRocket,
                             _firePos.X, _firePos.Y, _firePos.Z, 500f))
                         {
                             Script.Wait(1500);
@@ -125,6 +126,171 @@ namespace DefaultMissions
             }
         }
 
+        private class EuropaAbductionCutScene : ICutScene
+        {
+            private readonly List<Ped> _otherAliens = new List<Ped>();
+            private Camera _camera;
+            private readonly Vector3 _generatorPos;
+            private readonly float _playerTargetHeading;
+            private Ped _researchAlien;
+            private int _step;
+            private Prop _ufoInt;
+            private DateTime _endTimer;
+
+            public EuropaAbductionCutScene(Vector3 generatorPos, float playerTargetHeading)
+            {
+                _generatorPos = generatorPos;
+                _playerTargetHeading = playerTargetHeading;
+            }
+
+            public bool Complete { get; set; }
+
+            public void Start()
+            {
+                Game.Player.Character.Heading = _playerTargetHeading;
+                Game.Player.Character.Position = _generatorPos;
+                Game.Player.Character.Task.PlayAnimation("mini@repair", "fixing_a_ped", 4.0f, -4.0f, -1,
+                    AnimationFlags.Loop, 0.0f);
+                Game.Player.CanControlCharacter = false;
+
+                _camera = World.CreateCamera(Game.Player.Character.Position - Game.Player.Character.ForwardVector * 2,
+                    Vector3.Zero, 60);
+                _camera.PointAt(Game.Player.Character);
+
+                World.RenderingCamera = _camera;
+            }
+
+            public void Update()
+            {
+                var playerCharacter = Game.Player.Character;
+                switch (_step)
+                {
+                    case 0:
+                        Script.Wait(2000);
+                        playerCharacter.Task.ClearAll();
+                        playerCharacter.CanRagdoll = true;
+                        playerCharacter.Ragdoll(-1, RagdollType.Normal);
+                        _step++;
+                        break;
+                    case 1:
+                        var timer = DateTime.UtcNow + new TimeSpan(0, 0, 0, 3);
+                        var m = new Model("dt1_tc_UFOcore");
+                        m.Request(5000);
+                        var abductionPos = playerCharacter.Position + playerCharacter.UpVector * 20;
+                        var p = World.CreateProp(m, abductionPos, Vector3.Zero, false, false);
+                        while (DateTime.UtcNow < timer)
+                        {
+                            World.DrawSpotLight(
+                                abductionPos, Vector3.WorldDown,
+                                Color.MediumPurple, 25, 150, 15, 15, 100);
+                            playerCharacter.Velocity = Vector3.WorldUp * 5;
+                            Script.Yield();
+                        }
+                        Game.FadeScreenOut(1000);
+                        Script.Wait(1000);
+                        p.Delete();
+                        _step++;
+                        break;
+                    case 2:
+                        playerCharacter.Task.ClearAllImmediately();
+
+                        var interiorPos = _generatorPos + new Vector3(0, 0, 1000);
+                        m = new Model("hw1_22_shipint");
+                        m.Request(5000);
+                        _ufoInt = World.CreateProp(m, interiorPos, Vector3.Zero, false, false);
+
+                        playerCharacter.Position = new Vector3(-9884.021f, -10006.42f, 11016.31f);
+                        playerCharacter.Heading = 213.0546f;
+                        playerCharacter.FreezePosition = true;
+                        playerCharacter.Task.PlayAnimation("mp_sleep", "sleep_loop", 8.0f, -8.0f, -1,
+                            AnimationFlags.Loop, 0.0f);
+
+                        m = new Model(PedHash.MovAlien01);
+                        if (!m.IsLoaded)
+                            m.Request(5000);
+                        _researchAlien = World.CreatePed(m,
+                            playerCharacter.Position + playerCharacter.ForwardVector * 2 - Vector3.WorldUp,
+                            0);
+                        _researchAlien.TaskStartScenarioInPlace("WORLD_HUMAN_CLIPBOARD");
+                        _researchAlien.Heading = (playerCharacter.Position - _researchAlien.Position).ToHeading();
+                        _researchAlien.BlockPermanentEvents = true;
+                        _researchAlien.FreezePosition = true;
+                        _researchAlien.SetDefaultClothes();
+
+                        var ped = World.CreatePed(m,
+                            playerCharacter.Position + playerCharacter.RightVector * 1.5f - Vector3.WorldUp,
+                            Game.Player.Character.Heading + 90);
+                        SetupOtherAlien(ped);
+
+                        ped = World.CreatePed(m,
+                            playerCharacter.Position - playerCharacter.RightVector * 1.5f - Vector3.WorldUp,
+                            Game.Player.Character.Heading - 90);
+                        SetupOtherAlien(ped);
+
+                        _camera = World.CreateCamera(
+                            playerCharacter.Position + playerCharacter.ForwardVector * 7.5f + Vector3.WorldUp * 3,
+                            Vector3.Zero,
+                            30);
+                        _camera.PointAt(playerCharacter);
+                        World.RenderingCamera = _camera;
+                        TimeCycleModifier.Set("heliGunCam", 1.0f);
+                        Script.Wait(500);
+                        Game.FadeScreenIn(1000);
+                        _endTimer = DateTime.UtcNow + new TimeSpan(0, 0, 0, 7);
+                        _step++;
+                        break;
+                    case 3:
+                        if (DateTime.UtcNow > _endTimer)
+                        {
+                            Game.FadeScreenOut(1);
+                            Script.Wait(1000);
+                            Complete = true;
+                            return;
+                        }
+                        Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
+                        _camera.FieldOfView -= Game.LastFrameTime * 2;
+                        break;
+                }
+            }
+
+            public void Stop()
+            {
+                ResetPlayer();
+                if (Entity.Exists(_ufoInt))
+                    _ufoInt.Delete();
+                if (Entity.Exists(_researchAlien))
+                    _researchAlien.Delete();
+                foreach (var ped in _otherAliens)
+                    if (Entity.Exists(ped))
+                        ped.Delete();
+            }
+
+            private void SetupOtherAlien(Ped ped)
+            {
+                ped.Task.PlayAnimation("rcmbarry", "bar_1_attack_idle_aln", 8.0f, -8.0f, -1, AnimationFlags.Loop, 0.0f);
+                ped.BlockPermanentEvents = true;
+                ped.FreezePosition = true;
+                ped.SetDefaultClothes();
+                _otherAliens.Add(ped);
+            }
+
+            private static void ResetPlayer()
+            {
+                if (!Game.Player.CanControlCharacter)
+                    Game.Player.CanControlCharacter = true;
+
+                if (!Game.Player.Character.CanRagdoll)
+                    Game.Player.Character.CanRagdoll = true;
+
+                if (Game.Player.Character.FreezePosition)
+                    Game.Player.Character.FreezePosition = false;
+
+                Game.Player.Character.Task.ClearAllImmediately();
+
+                World.RenderingCamera = null;
+            }
+        }
+
         #region Fields
 
         #region Readonly
@@ -140,6 +306,7 @@ namespace DefaultMissions
         private Fire _fire;
         private Prop _extinguisher;
         private EuropaMissileCutScene _europaMissileCutScene;
+        private EuropaAbductionCutScene _abductionCutScene;
 
         #endregion
 
@@ -149,7 +316,15 @@ namespace DefaultMissions
         private Vector3 _fireCoord = new Vector3(-9879.087f, -10014.16f, 10001.34f);
         private Vector3 _extinguisherPickupCoord = new Vector3(-9881.714f, -10016.63f, 9998.117f);
         private Vector3 _alienSpawn = new Vector3(-9979.049f, -10014.52f, 9998.44f);
+        private Vector3 _generatorPosition = new Vector3(-9881.372f, -10013.74f, 9998.136f);
+        private float _generatorHeading = 283.4291f;
         private float _aiWeaponDamage = 0.04f;
+
+        #region Settings Misc
+
+        private bool _didCheckMarsMission;
+
+        #endregion
 
         #endregion
 
@@ -179,9 +354,10 @@ namespace DefaultMissions
         {
             // NOTE: Make sure we already finished the mission on mars, 
             // so we don't mess up the story sequence.
-            if (!HelperFunctions.DidCompleteScenario<Mars>())
+            if (!_didCheckMarsMission && !HelperFunctions.DidCompleteScenario<Mars>())
             {
                 EndScenario(false);
+                _didCheckMarsMission = true;
                 return;
             }
 
@@ -209,8 +385,48 @@ namespace DefaultMissions
                     ProcessEntities();
                     if (!_entities.TrueForAll(x => !Entity.Exists(x) || x.IsDead))
                         return;
-                    UI.Notify("Mission incomplete! TO DO: Make more stuff.");
-                    EndScenario(true);
+                    Script.Wait(1500);
+                    Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
+                    _missionStep++;
+                    break;
+                case 5:
+                    if (Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
+                    {
+                        Effects.Start(ScreenEffect.SuccessNeutral, 5000);
+                        ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("ENEMIES_ELIM"));
+                        Script.Wait(4500);
+                        Utils.ShowSubtitleWithGxt("FIX_GENERATOR");
+                        _missionStep++;
+                        SaveSettings();
+                    }
+                    break;
+                case 6:
+                    HelperFunctions.DrawWaypoint(CurrentScene, _generatorPosition);
+                    var distance = Game.Player.Character.Position.DistanceToSquared2D(_generatorPosition);
+                    if (distance > 4) return;
+                    Utils.DisplayHelpTextWithGxt("PRESS_E");
+                    if (!Game.IsControlJustPressed(2, Control.Context)) return;
+                    _missionStep++;
+                    break;
+                case 7:
+                    if (_abductionCutScene == null)
+                    {
+                        _abductionCutScene = new EuropaAbductionCutScene(_generatorPosition, _generatorHeading);
+                        _abductionCutScene.Start();
+                    }
+                    _abductionCutScene.Update();
+                    if (_abductionCutScene.Complete)
+                    {
+                        _abductionCutScene.Stop();
+                        _missionStep++;
+                    }
+                    break;
+                case 8:
+                    Game.Player.Character.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
+                    Game.Player.Character.Heading = 90;
+                    Game.Player.Character.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
+                    Script.Wait(250);
+                    Game.FadeScreenIn(1000);
                     break;
             }
         }
@@ -247,6 +463,9 @@ namespace DefaultMissions
                 _extinguisherPickupCoord);
             _alienSpawn = ParseVector3.Read(Settings.GetValue("general", "alien_spawn"), _alienSpawn);
             _aiWeaponDamage = Settings.GetValue("general", "ai_weapon_damage", _aiWeaponDamage);
+            _generatorPosition = ParseVector3.Read(Settings.GetValue("general", "generator_position"),
+                _generatorPosition);
+            _generatorHeading = Settings.GetValue("general", "generator_heading", _generatorHeading);
         }
 
         private void SaveSettings()
@@ -257,6 +476,8 @@ namespace DefaultMissions
             Settings.SetValue("general", "extinguisher_pickup_coord", _extinguisherPickupCoord);
             Settings.SetValue("general", "alien_spawn", _alienSpawn);
             Settings.SetValue("general", "ai_weapon_damage", _aiWeaponDamage);
+            Settings.SetValue("general", "generator_position", _generatorPosition);
+            Settings.SetValue("general", "generator_heading", _generatorHeading);
             Settings.Save();
         }
 
@@ -273,7 +494,7 @@ namespace DefaultMissions
             {
                 // Request the model first, since sometimes the props fail to load.
                 var extinguisherModel =
-                    new Model(Function.Call<int>(Hash.GET_WEAPONTYPE_MODEL, (int)WeaponHash.FireExtinguisher));
+                    new Model(Function.Call<int>(Hash.GET_WEAPONTYPE_MODEL, (int) WeaponHash.FireExtinguisher));
 
                 if (!extinguisherModel.IsLoaded)
                 {
@@ -389,6 +610,7 @@ namespace DefaultMissions
             RemoveModels();
             CleanUpEntities(delete);
             _europaMissileCutScene?.Stop();
+            _abductionCutScene?.Stop();
             Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
         }
 

@@ -113,7 +113,7 @@ namespace DefaultMissions
         private Vehicle _rover;
         private Ped _engineer;
         private Vehicle _engineerShuttle;
-        
+
         #endregion
 
         #region Functions
@@ -169,8 +169,6 @@ namespace DefaultMissions
                     }
                     break;
                 case 4:
-                    if (!Game.IsScreenFadedIn || Game.IsLoading)
-                        return;
                     MarsBase_DoScientistDialogue();
                     break;
                 case 5:
@@ -283,7 +281,7 @@ namespace DefaultMissions
             Game.Player.Character.CanRagdoll = false;
             SetAiWeaponDamage();
         }
-        
+
         private void ReadSettings()
         {
             _missionStep = Settings.GetValue(SettingsGeneralSectionString, SettingsMissionStepString, _missionStep);
@@ -374,7 +372,7 @@ namespace DefaultMissions
             var vehicleSpawn = Utils.GetGroundHeightRay(_marsEngineerRoverSpawn);
             if (vehicleSpawn != Vector3.Zero)
             {
-                Model roverModel = new Model("lunar");
+                var roverModel = new Model("lunar");
                 roverModel.Request(5000);
                 _rover = World.CreateVehicle(roverModel, vehicleSpawn);
                 if (Entity.Exists(_rover))
@@ -406,7 +404,7 @@ namespace DefaultMissions
 
             if (Entity.Exists(vehicle))
             {
-                Model pilotModel = new Model(Utils.GetAlienModel());
+                var pilotModel = new Model(Utils.GetAlienModel());
                 pilotModel.Request(5000);
                 var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, pilotModel);
 
@@ -496,17 +494,15 @@ namespace DefaultMissions
                     _missionStep++;
                     return;
                 }
-
-                _scientist = _scientist ?? peds[0];
-                _scientist.AddBlip().Color = BlipColor.Yellow;
+                _scientist = peds[0];
+                //_scientist.AddBlip().Color = BlipColor.Yellow;
                 return;
             }
 
             HelperFunctions.DrawWaypoint(CurrentScene, _scientist.Position);
 
-            var t = new Trigger(_scientist.Position, 2.5f);
-            if (!t.IsInTrigger(Game.Player.Character.Position))
-                return;
+            var distance = Game.Player.Character.Position.DistanceToSquared(_scientist.Position);
+            if (distance > 4) return;
 
             Utils.DisplayHelpTextWithGxt("PRESS_E");
             if (!Game.IsControlJustPressed(2, Control.Context))
@@ -521,7 +517,7 @@ namespace DefaultMissions
                 Script.Yield();
 
             _scientist.Task.ClearAllImmediately();
-            _scientist.Task.ChatTo(Game.Player.Character);
+            _scientist.Task.LookAt(Game.Player.Character);
             Game.Player.Character.Task.LookAt(_scientist);
 
             Utils.ShowSubtitleWithGxt("MARS_LABEL_1");
@@ -537,6 +533,7 @@ namespace DefaultMissions
             Script.Wait(1500);
             Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
             Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
+            Game.Player.Character.Task.ClearLookAt();
             _missionStep++;
         }
 
@@ -553,7 +550,7 @@ namespace DefaultMissions
             if (Utils.GetGroundHeightRay(_marsEngineerSpawn) == Vector3.Zero)
                 return false;
             var spawn = Utils.GetGroundHeightRay(_marsEngineerSpawn);
-            Model model = new Model(PedHash.Movspace01SMM);
+            var model = new Model(PedHash.Movspace01SMM);
             model.Request(5000);
             _engineer = World.CreatePed(model, spawn);
             _engineer.Weapons.Give(WeaponHash.AssaultSMG, 1000, true, true);
@@ -582,7 +579,7 @@ namespace DefaultMissions
             if (Utils.GetGroundHeightRay(spawn) == Vector3.Zero)
                 return false;
             spawn = Utils.GetGroundHeightRay(spawn);
-            Model model = new Model("shuttle");
+            var model = new Model("shuttle");
             model.Request(5000);
             _engineerShuttle = World.CreateVehicle(model, spawn - Vector3.WorldUp);
             if (!Entity.Exists(_engineerShuttle)) return false;
@@ -714,7 +711,7 @@ namespace DefaultMissions
                     _rover.Delete();
                 else _rover.MarkAsNoLongerNeeded();
         }
-        
+
         private bool AreAllAliensDead()
         {
             return _aliens.TrueForAll(x => x.IsDead) && (_ufo?.IsDead ?? true);

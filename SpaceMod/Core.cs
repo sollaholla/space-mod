@@ -775,7 +775,7 @@ namespace GTS
                     CreateScene(newScene, newSceneFile);
 
                     // AFTER creating the scene we set our offsets/rotations so that
-                    // values set within the start of the scene are overriden.
+                    // values set within the start of the scene are overridden.
                     PlayerPosition = newScene.GalaxyCenter + exitOffset;
                     if (PlayerPed.IsInVehicle())
                         PlayerPed.CurrentVehicle.Rotation = exitRotation;

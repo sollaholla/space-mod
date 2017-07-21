@@ -60,7 +60,7 @@ namespace DefaultMissions
             var currentStep = settings.GetValue(Mars.SettingsGeneralSectionString, Mars.SettingsMissionStepString, 0);
             return currentStep > 0;
         }
-        
+
         /// <summary>
         ///     Returns <see langword="true" /> if we went to mars.
         /// </summary>
@@ -69,7 +69,7 @@ namespace DefaultMissions
         public static bool DidCompleteScenario<T>()
             where T : Scenario
         {
-            ScriptSettings settings = GetSettingsForScenario<T>();
+            var settings = GetSettingsForScenario<T>();
             var currentStep = settings.GetValue("SCENARIO_CONFIG", "COMPLETE", false);
             return currentStep;
         }
@@ -78,7 +78,7 @@ namespace DefaultMissions
             where T : Scenario
         {
             var currentDirectory = Directory.GetParent(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
-                            .FullName;
+                .FullName;
             var path = Path.Combine(currentDirectory, Path.ChangeExtension(typeof(T).Name, "ini"));
             var settings = ScriptSettings.Load(path);
             return settings;
