@@ -603,6 +603,7 @@ namespace GTS
             Utils.TerminateScriptByName("re_lossantosintl");
             Utils.TerminateScriptByName("re_armybase");
             Utils.TerminateScriptByName("restrictedareas");
+            Game.Player.WantedLevel = 0;
             Game.MaxWantedLevel = 0;
         }
 
