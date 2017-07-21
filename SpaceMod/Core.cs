@@ -41,9 +41,6 @@ namespace GTS
             CreateCustomMenu();
             RequestModels();
 
-            if (Game.IsLoading)
-                Function.Call((Hash) 0x0888C3502DBBEEF5);
-
             Debug.Log("Initialized!");
         }
 
@@ -285,6 +282,7 @@ namespace GTS
             GTS.Settings.VehicleFlySpeed =
                 Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             _endMissionCanStart = CanStartEndMission();
+            GTS.Settings.LowConfigMode = Settings.GetValue("game", "low_config", false);
         }
 
         private void SaveSettings()
@@ -305,6 +303,7 @@ namespace GTS
                 GTS.Settings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
+            Settings.SetValue("game", "low_config", GTS.Settings.LowConfigMode);
             Settings.Save();
         }
 

@@ -35,5 +35,9 @@ namespace GTS
         /// <summary>
         /// </summary>
         public static Vector3 DefaultVehicleSpawn = new Vector3(-10015f, -10015f, 10001f);
+
+        /// <summary>
+        /// </summary>
+        public static bool LowConfigMode = false;
     }
 }

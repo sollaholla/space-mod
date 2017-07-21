@@ -284,6 +284,10 @@ namespace GTS.Library
         {
             var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, position.X, position.Y,
                 position.Z, true, true, dynamic));
+
+            if (Settings.LowConfigMode)
+                prop.LodDistance *= 2;
+
             return prop;
         }
 
