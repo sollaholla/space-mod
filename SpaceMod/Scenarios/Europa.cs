@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -110,19 +111,6 @@ namespace DefaultMissions
             {
                 Game.TimeScale = 1;
                 Game.Player.CanControlCharacter = true;
-            }
-
-            private void PlaySmoke(Vector3 pos, float scale)
-            {
-                var ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
-
-                ptfx.Request();
-
-                while (!ptfx.IsLoaded)
-                    Script.Yield();
-
-                ptfx.Play(pos, Vector3.Zero, scale);
-                ptfx.Remove();
             }
         }
 
@@ -298,6 +286,7 @@ namespace DefaultMissions
 
         private readonly Model[] _models = { };
         private readonly List<Entity> _entities;
+        private readonly Random _random = new Random();
 
         #endregion
 
@@ -362,6 +351,7 @@ namespace DefaultMissions
                 return;
             }
 
+            var playerCharacter = Game.Player.Character;
             switch (_missionStep)
             {
                 case 0:
@@ -403,7 +393,7 @@ namespace DefaultMissions
                     break;
                 case 6:
                     HelperFunctions.DrawWaypoint(CurrentScene, _generatorPosition);
-                    var distance = Game.Player.Character.Position.DistanceToSquared2D(_generatorPosition);
+                    var distance = playerCharacter.Position.DistanceToSquared2D(_generatorPosition);
                     if (distance > 4) return;
                     Utils.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context)) return;
@@ -423,16 +413,97 @@ namespace DefaultMissions
                     }
                     break;
                 case 8:
-                    Game.Player.Character.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
-                    Game.Player.Character.Heading = 90;
-                    Game.Player.Character.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
-                    Game.Player.Character.Weapons.Select(WeaponHash.Unarmed);
+                    playerCharacter.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
+                    playerCharacter.Heading = 90;
+                    playerCharacter.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
+                    playerCharacter.Weapons.Select(WeaponHash.Unarmed);
                     Script.Wait(250);
                     Game.FadeScreenIn(1000);
                     _missionStep++;
                     break;
                 case 9:
-                    TimeCycleModifier.Set("Drug_deadmen", 1.0f);
+                    _entities.Clear();
+                    for (int i = 0; i < 45; i++)
+                    {
+                        Vector3 spawn = playerCharacter.Position.Around(_random.Next(75, 150));
+                        spawn = Utils.GetGroundHeightRay(spawn);
+                        if (spawn == Vector3.Zero) continue;
+                        Model m = new Model(PedHash.MovAlien01);
+                        m.Request(5000);
+                        var ped = Utils.CreateAlien(m, spawn, 0, WeaponHash.CombatPDW);
+                        if (!Entity.Exists(ped)) continue;
+                        ped.Task.FightAgainst(playerCharacter);
+                        ped.AddBlip().Scale = 0.5f;
+                        _entities.Add(ped);
+                    }
+                    while (true)
+                    {
+                        TimeCycleModifier.Set("Drug_deadman", 1.0f);
+                        var position = playerCharacter.Position;
+                        Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, 500, true, false, false, false);
+                        if (playerCharacter.IsDead)
+                            break;
+                        foreach (var attachedOrbital in CurrentScene.Galaxy.AttachedOrbitals)
+                            attachedOrbital.IsVisible = false;
+                        foreach (var entity in _entities)
+                            if (entity.IsDead && entity.CurrentBlip.Exists())
+                                entity.CurrentBlip.Remove();
+                        if (_entities.Count(x => x.IsDead) >= 15)
+                            break;
+                        Script.Yield();
+                    }
+                    if (playerCharacter.IsDead)
+                    {
+                        EndScenario(false);
+                        return;
+                    }
+                    foreach (var attachedOrbital in CurrentScene.Galaxy.AttachedOrbitals)
+                        attachedOrbital.IsVisible = false;
+                    _missionStep++;
+                    break;
+                case 10:
+                    foreach (var entity in _entities)
+                    {
+                        PlaySmoke(entity.Position, 1.0f);
+                        entity.Delete();
+                    }
+                    _entities.Clear();
+                    _missionStep++;
+                    break;
+                case 11:
+                    Effects.Start(ScreenEffect.DrugsMichaelAliensFightOut, looped:true);
+                    playerCharacter.Weapons.Select(WeaponHash.Unarmed);
+                    Game.Player.CanControlCharacter = false;
+                    playerCharacter.Task.PlayAnimation("rcmbarry", "bar_1_teleport_mic", 1.0f, -4.0f, -1, AnimationFlags.Loop, 0.0f);
+                    Game.FadeScreenOut(4000);
+                    Script.Wait(4000);
+                    _missionStep++;
+                    break;
+                case 12:
+                    playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20; playerCharacter.Task.ClearAllImmediately();
+                    playerCharacter.Task.Skydive();
+                    playerCharacter.CanRagdoll = false;
+                    playerCharacter.IsInvincible = true;
+                    Game.Player.CanControlCharacter = true;
+                    Effects.Stop();
+                    CurrentScene.RefreshTimecycle();
+                    Game.FadeScreenIn(1000);
+                    Effects.Start(ScreenEffect.MinigameTransitionOut, 4000);
+                    _missionStep++;
+                    break;
+                case 13:
+                    if (!playerCharacter.IsInAir)
+                    {
+                        playerCharacter.IsInvincible = false;
+                        Script.Wait(1000);
+                        Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
+                        if (Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
+                        {
+                            Effects.Start(ScreenEffect.SuccessNeutral, 5000);
+                            ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("SEC_EUROPA"));
+                            EndScenario(true);
+                        }
+                    }
                     break;
             }
         }
@@ -648,6 +719,19 @@ namespace DefaultMissions
 
                     entity.MarkAsNoLongerNeeded();
                 }
+        }
+
+        public static void PlaySmoke(Vector3 pos, float scale)
+        {
+            var ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
+
+            ptfx.Request();
+
+            while (!ptfx.IsLoaded)
+                Script.Yield();
+
+            ptfx.Play(pos, Vector3.Zero, scale);
+            ptfx.Remove();
         }
 
         #endregion
