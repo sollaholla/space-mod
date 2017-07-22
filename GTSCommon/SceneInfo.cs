@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
 using GTA.Math;
 
@@ -16,9 +17,96 @@ public enum InteriorType
     MapEditor
 }
 
+[TypeConverter(typeof(Vector3Converter))]
+public struct XVector3
+{
+    public XVector3(float x, float y, float z) : this()
+    {
+        X = x;
+        Y = y;
+        Z = z;
+    }
+
+    public float X { get; set; }
+
+    public float Y { get; set; }
+
+    public float Z { get; set; }
+
+    public override string ToString()
+    {
+        return "(" + X + ", " + Y + ", " + Z + ")";
+    }
+
+    public static implicit operator Vector3(XVector3 l)
+    {
+        return new Vector3(l.X, l.Y, l.Z);
+    }
+
+    public static bool operator ==(Vector3 l, XVector3 r)
+    {
+        return l == new Vector3(r.X, r.Y, r.Z);
+    }
+
+    public static bool operator !=(Vector3 l, XVector3 r)
+    {
+        return !(l == new Vector3(r.X, r.Y, r.Z));
+    }
+    
+    public static Vector3 operator +(XVector3 r, Vector3 l)
+    {
+        return l + new Vector3(r.X, r.Y, r.Z);
+    }
+
+    public static Vector3 operator -(XVector3 r, Vector3 l)
+    {
+        return l - new Vector3(r.X, r.Y, r.Z);
+    }
+
+    public static XVector3 operator +(XVector3 l, XVector3 r)
+    {
+        Vector3 result = new Vector3(l.X, l.Y, l.Z) + new Vector3(r.X, r.Y, r.Z);
+        return new XVector3(result.X, result.Y, result.Z);
+    }
+
+    public static implicit operator XVector3(Vector3 v)
+    {
+        return new XVector3(v.X, v.Y, v.Z);
+    }
+}
+
+public class Vector3Converter : ExpandableObjectConverter
+{
+    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+    {
+        return sourceType == typeof(string);
+    }
+
+    public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+    {
+        try
+        {
+            string[] tokens = ((string)value).Split(';');
+
+            return new XVector3(float.Parse(tokens[0]), float.Parse(tokens[1]), float.Parse(tokens[2]));
+        }
+        catch
+        {
+            return context.PropertyDescriptor.GetValue(context.Instance);
+        }
+    }
+
+    public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+    {
+        XVector3 p = (XVector3)value;
+
+        return "(" + p.X + ", " + p.Y + ", " + p.Z + ")";
+    }
+}
+
 [Serializable]
 [XmlRoot("CSceneInfoData")]
-public sealed class SceneInfo : NextSceneInfo
+public class SceneInfo : NextSceneInfo
 {
     public SceneInfo()
     {
@@ -85,7 +173,7 @@ public sealed class SceneInfo : NextSceneInfo
     [Description("The origin of the skybox, and all props.")]
     [Category("Core Settings")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 GalaxyCenter { get; set; } = new Vector3(-10000, -10000, 10000);
+    public XVector3 GalaxyCenter { get; set; } = new XVector3(-10000, -10000, 10000);
 
     [Category("Surface Settings")]
     [Description(
@@ -100,12 +188,12 @@ public sealed class SceneInfo : NextSceneInfo
     [Category("Surface Settings")]
     [Description("The rotation of our player when the next scene loads.")]
     [RefreshProperties(RefreshProperties.All)]
-    public override Vector3 NextSceneRotation { get; set; }
+    public override XVector3 NextSceneRotation { get; set; }
 
     [Category("Surface Settings")]
     [Description("The position of the player, offsetted from the center of space, when the next scene loads.")]
     [RefreshProperties(RefreshProperties.All)]
-    public override Vector3 NextScenePosition { get; set; }
+    public override XVector3 NextScenePosition { get; set; }
 
     [XmlIgnore]
     public bool SurfaceScene => Surfaces.Any();
@@ -127,7 +215,7 @@ public class Link : NextSceneInfo, ITrigger
     [Category("Required")]
     [Description("The position of this trigger offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Position { get; set; }
+    public XVector3 Position { get; set; }
 
     [Category("Next Scene Info")]
     [Description("This is the distance that will trigger the next scene to load.")]
@@ -141,7 +229,7 @@ public class AttachedOrbitalInfo : IDrawable
     [Category("Other")]
     [Description("The starting rotation of the object.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Rotation { get; set; }
+    public XVector3 Rotation { get; set; }
 
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
@@ -151,7 +239,7 @@ public class AttachedOrbitalInfo : IDrawable
     [Category("Required")]
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Position { get; set; }
+    public XVector3 Position { get; set; }
 }
 
 [Serializable]
@@ -177,7 +265,7 @@ public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
     [Category("Other")]
     [Description("The starting rotation of the object.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Rotation { get; set; }
+    public XVector3 Rotation { get; set; }
 
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
@@ -187,7 +275,7 @@ public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
     [Category("Required")]
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Position { get; set; }
+    public XVector3 Position { get; set; }
 
     [Category("Next Scene Info")]
     [Description("This is the distance that will trigger the next scene to load.")]
@@ -216,7 +304,7 @@ public class SurfaceInfo : IDrawable
     [Category("Required")]
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Position { get; set; }
+    public XVector3 Position { get; set; }
 }
 
 [Serializable]
@@ -245,7 +333,7 @@ public class TeleportPoint
 
     [Description("The starting point of the teleport. This will recieve have a minimap blip icon in-game.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 Start { get; set; }
+    public XVector3 Start { get; set; }
 
     [Description("True if you want the start point to have an in-game marker.")]
     public bool StartMarker { get; set; } = true;
@@ -255,7 +343,7 @@ public class TeleportPoint
 
     [Description("The ending point of the teleport.")]
     [RefreshProperties(RefreshProperties.All)]
-    public Vector3 End { get; set; }
+    public XVector3 End { get; set; }
 
     [Description("True if you want the end point to have an in-game marker.")]
     public bool EndMarker { get; set; } = true;
@@ -283,12 +371,12 @@ public class NextSceneInfo
     [Category("Next Scene Info")]
     [Description("The position of the player, offsetted from the center of space, when the next scene loads.")]
     [RefreshProperties(RefreshProperties.All)]
-    public virtual Vector3 NextScenePosition { get; set; }
+    public virtual XVector3 NextScenePosition { get; set; }
 
     [Category("Next Scene Info")]
     [Description("The rotation of the player when the next scene loads.")]
     [RefreshProperties(RefreshProperties.All)]
-    public virtual Vector3 NextSceneRotation { get; set; }
+    public virtual XVector3 NextSceneRotation { get; set; }
 
     [Category("Next Scene Info")]
     [Description("The filename of the next scene that will load.")]
@@ -300,7 +388,7 @@ public interface IDrawable
 {
     string Model { get; set; }
 
-    Vector3 Position { get; set; }
+    XVector3 Position { get; set; }
 }
 
 public interface ITrigger

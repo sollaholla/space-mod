@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
+    </Reference>
     <Reference Include="NativeUI">
       <HintPath>..\..\..\..\DLL References\NativeUI.dll</HintPath>
     </Reference>
@@ -64,7 +68,6 @@
     <Compile Include="Scenes\Interiors\MapObject.cs" />
     <Compile Include="OrbitalSystems\OrbitalSystem.cs" />
     <Compile Include="OrbitalSystems\Orbital.cs" />
-    <Compile Include="Scenes\SceneInfo.cs" />
     <Compile Include="OrbitalSystems\AttachedOrbital.cs" />
     <Compile Include="Extensions\Debug.cs" />
     <Compile Include="Core.cs" />
