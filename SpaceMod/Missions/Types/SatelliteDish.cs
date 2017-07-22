@@ -96,8 +96,11 @@ namespace GTS.Missions.Types
         }
 
         /// <summary>
-        ///     Draw a marker and remove our blip if we've <see langword="checked" />
-        ///     for data.
+        ///     <para>
+        ///         Draw a marker and remove our blip if we've
+        ///         <see langword="checked" />
+        ///     </para>
+        ///     <para>for data.</para>
         /// </summary>
         public void Update()
         {

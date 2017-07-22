@@ -228,14 +228,7 @@ namespace GTS
             {
                 try
                 {
-                    if (_menuPool != null)
-                    {
-                        _menuPool.ProcessMenus();
-
-                        if (_menuPool.IsAnyMenuOpen())
-                            UI.HideHudComponentThisFrame(HudComponent.HelpText);
-                    }
-
+                    ProcessMenus();
                     SetVarsDependantOnSceneNull();
                     DisableWantedStars();
                     RunInternalMissions();
@@ -256,6 +249,14 @@ namespace GTS
         }
 
         #endregion
+
+        private void ProcessMenus()
+        {
+            if (_menuPool == null) return;
+            _menuPool.ProcessMenus();
+            if (!_menuPool.IsAnyMenuOpen()) return;
+            UI.HideHudComponentThisFrame(HudComponent.HelpText);
+        }
 
         #region Initialize
 
@@ -517,17 +518,15 @@ namespace GTS
             // Let's us go to space from earth.
 
             var height = PlayerPed.HeightAboveGround;
+            if (!(height > _enterOrbitHeight)) return;
 
-            if (height > _enterOrbitHeight)
-            {
-                var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes,
-                    _defaultSpaceScene));
-                SetCurrentScene(scene, _defaultSpaceScene);
+            var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes,
+                _defaultSpaceScene));
+            SetCurrentScene(scene, _defaultSpaceScene);
 
-                PlayerPosition += _defaultSpaceOffset;
-                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
-                else PlayerPed.Rotation = _defaultSpaceRotation;
-            }
+            PlayerPosition += _defaultSpaceOffset;
+            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
+            else PlayerPed.Rotation = _defaultSpaceRotation;
         }
 
         private void DoSceneUpdate()
@@ -815,24 +814,24 @@ namespace GTS
 
         private void EndActiveScenarios()
         {
-            if (Scenarios != null)
-                while (Scenarios.Count > 0)
-                {
-                    var scen = Scenarios[0];
-                    scen.OnEnded(false);
-                    Scenarios.RemoveAt(0);
-                }
+            if (Scenarios == null) return;
+            while (Scenarios.Count > 0)
+            {
+                var scen = Scenarios[0];
+                scen.OnEnded(false);
+                Scenarios.RemoveAt(0);
+            }
         }
 
         private void AbortActiveScenarios()
         {
-            if (Scenarios != null)
-                while (Scenarios.Count > 0)
-                {
-                    var scenario = Scenarios[0];
-                    scenario.OnAborted();
-                    Scenarios.RemoveAt(0);
-                }
+            if (Scenarios == null) return;
+            while (Scenarios.Count > 0)
+            {
+                var scenario = Scenarios[0];
+                scenario.OnAborted();
+                Scenarios.RemoveAt(0);
+            }
         }
 
         #endregion

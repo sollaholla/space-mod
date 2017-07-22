@@ -90,9 +90,11 @@ namespace GTS.Scenarios
         public abstract void OnEnded(bool success);
 
         /// <summary>
-        ///     This is executed when the space mod scripts are aborted or reloaded.
-        ///     This function can be used like the <see cref="Scenario.OnEnded" />
-        ///     function to clean up any remaining objects / entities.
+        ///     <para>
+        ///         This is executed when the space mod scripts are aborted or reloaded.
+        ///         This function can be used like the <see cref="Scenario.OnEnded" />
+        ///     </para>
+        ///     <para>function to clean up any remaining objects / entities.</para>
         /// </summary>
         public abstract void OnAborted();
 

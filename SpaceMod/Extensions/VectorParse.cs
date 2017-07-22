@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using GTA.Math;
 
 namespace GTS.Extensions
@@ -7,7 +6,7 @@ namespace GTS.Extensions
     public static class ParseVector3
     {
         /// <summary>
-        ///     <see cref="Read" /> a <see cref="Vector3" /> from a
+        ///     <see cref="ParseVector3.Read" /> a <see cref="Vector3" /> from a
         ///     <see cref="string" /> representation. Format should be "X:1 Y:2
         ///     Z:3". If any number fails to be parsed, or an error occurs, this
         ///     will return <see cref="GTA.Math.Vector3.Zero" /> .
@@ -38,7 +37,9 @@ namespace GTS.Extensions
                 float newZ;
 
                 // if we succeed in parsing them all, then we return the vector3.
-                if (float.TryParse(x, NumberStyles.Float, CultureInfo.InvariantCulture, out newX) && float.TryParse(y, NumberStyles.Float, CultureInfo.InvariantCulture, out newY) && float.TryParse(z, NumberStyles.Float, CultureInfo.InvariantCulture, out newZ))
+                if (float.TryParse(x, NumberStyles.Float, CultureInfo.InvariantCulture, out newX) &&
+                    float.TryParse(y, NumberStyles.Float, CultureInfo.InvariantCulture, out newY) &&
+                    float.TryParse(z, NumberStyles.Float, CultureInfo.InvariantCulture, out newZ))
                     return new Vector3(newX, newY, newZ);
 
                 return defaultValue;

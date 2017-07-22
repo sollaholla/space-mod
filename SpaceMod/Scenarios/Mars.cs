@@ -10,30 +10,25 @@ using GTS.Library;
 using GTS.Particles;
 using GTS.Scenarios;
 
+// ReSharper disable PublicMembersMustHaveComments
+
 namespace DefaultMissions
 {
+    /// <summary>
+    /// </summary>
     public class Mars : Scenario
     {
+        /// <summary>
+        /// </summary>
         public const string SettingsMissionStepString = "mission_step";
+
+        /// <summary>
+        /// </summary>
         public const string SettingsGeneralSectionString = "general";
+
+        /// <summary>
+        /// </summary>
         public const PedHash ShapeShiftModel = PedHash.Scientist01SMM;
-
-        private class MarsGreenhouseEvent : IEvent
-        {
-            public bool Complete { get; set; }
-
-            public void Start()
-            {
-            }
-
-            public void Stop()
-            {
-            }
-
-            public void Update()
-            {
-            }
-        }
 
         private class MarsEngineerExplosionScene : ICutScene
         {
@@ -464,9 +459,10 @@ namespace DefaultMissions
                         _ufo.CurrentBlip.Remove();
         }
 
-        private Ped ShapeShift_ReplacePed(OnFootCombatPed ped)
+        private Ped ShapeShift_ReplacePed(Entity ped)
         {
             var newAlien = Utils.CreateAlien(null, ped.Position, ped.Heading, WeaponHash.CombatPDW);
+            newAlien.PositionNoOffset = ped.Position;
             ShapeShift_PlaySmokeEffect(newAlien.Position);
             newAlien.Heading = ped.Heading;
             ped.Delete();
@@ -499,6 +495,7 @@ namespace DefaultMissions
                 Script.Yield();
 
             scientist.Task.ClearAllImmediately();
+            scientist.Task.TurnTo(Game.Player.Character);
             scientist.Task.LookAt(Game.Player.Character);
             Game.Player.Character.Task.LookAt(scientist);
 

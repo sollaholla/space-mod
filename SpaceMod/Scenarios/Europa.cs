@@ -116,14 +116,14 @@ namespace DefaultMissions
 
         private class EuropaAbductionCutScene : ICutScene
         {
-            private readonly List<Ped> _otherAliens = new List<Ped>();
-            private Camera _camera;
             private readonly Vector3 _generatorPos;
+            private readonly List<Ped> _otherAliens = new List<Ped>();
             private readonly float _playerTargetHeading;
+            private Camera _camera;
+            private DateTime _endTimer;
             private Ped _researchAlien;
             private int _step;
             private Prop _ufoInt;
-            private DateTime _endTimer;
 
             public EuropaAbductionCutScene(Vector3 generatorPos, float playerTargetHeading)
             {
@@ -423,12 +423,12 @@ namespace DefaultMissions
                     break;
                 case 9:
                     _entities.Clear();
-                    for (int i = 0; i < 45; i++)
+                    for (var i = 0; i < 45; i++)
                     {
-                        Vector3 spawn = playerCharacter.Position.Around(_random.Next(75, 150));
+                        var spawn = playerCharacter.Position.Around(_random.Next(75, 150));
                         spawn = Utils.GetGroundHeightRay(spawn);
                         if (spawn == Vector3.Zero) continue;
-                        Model m = new Model(PedHash.MovAlien01);
+                        var m = new Model(PedHash.MovAlien01);
                         m.Request(5000);
                         var ped = Utils.CreateAlien(m, spawn, 0, WeaponHash.CombatPDW);
                         if (!Entity.Exists(ped)) continue;
@@ -440,7 +440,8 @@ namespace DefaultMissions
                     {
                         TimeCycleModifier.Set("Drug_deadman", 1.0f);
                         var position = playerCharacter.Position;
-                        Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, 500, true, false, false, false);
+                        Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, 500, true, false, false,
+                            false);
                         if (playerCharacter.IsDead)
                             break;
                         foreach (var attachedOrbital in CurrentScene.Galaxy.AttachedOrbitals)
@@ -471,16 +472,18 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 11:
-                    Effects.Start(ScreenEffect.DrugsMichaelAliensFightOut, looped:true);
+                    Effects.Start(ScreenEffect.DrugsMichaelAliensFightOut, looped: true);
                     playerCharacter.Weapons.Select(WeaponHash.Unarmed);
                     Game.Player.CanControlCharacter = false;
-                    playerCharacter.Task.PlayAnimation("rcmbarry", "bar_1_teleport_mic", 1.0f, -4.0f, -1, AnimationFlags.Loop, 0.0f);
+                    playerCharacter.Task.PlayAnimation("rcmbarry", "bar_1_teleport_mic", 1.0f, -4.0f, -1,
+                        AnimationFlags.Loop, 0.0f);
                     Game.FadeScreenOut(4000);
                     Script.Wait(4000);
                     _missionStep++;
                     break;
                 case 12:
-                    playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20; playerCharacter.Task.ClearAllImmediately();
+                    playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20;
+                    playerCharacter.Task.ClearAllImmediately();
                     playerCharacter.Task.Skydive();
                     playerCharacter.CanRagdoll = false;
                     playerCharacter.IsInvincible = true;

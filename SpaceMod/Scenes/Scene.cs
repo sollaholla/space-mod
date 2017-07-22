@@ -640,7 +640,7 @@ namespace GTS.Scenes
                 var interior = new Interior(interiorInfo.Name, interiorInfo.Type);
 
                 interior.Request();
-                
+
                 _interiors.Add(interior);
             }
 
