@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultMissions", "SpaceMod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTSCommon", "GTSCommon\GTSCommon.csproj", "{821106BB-F827-4D10-B7C5-A135B45F33BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS Scene Creator", "..\GTS Scene Creator\GTS Scene Creator\GTS Scene Creator.csproj", "{56C8E888-D12F-45FB-AC42-3EB7CBD4D1FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS Scene Creator", "GTS Scene Creator\GTS Scene Creator.csproj", "{56C8E888-D12F-45FB-AC42-3EB7CBD4D1FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
