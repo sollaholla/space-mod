@@ -38,29 +38,29 @@ public struct XVector3
         return "(" + X + ", " + Y + ", " + Z + ")";
     }
 
-    public static implicit operator Vector3(XVector3 l)
+    public static implicit operator Vector3(XVector3 obj)
     {
-        return new Vector3(l.X, l.Y, l.Z);
+        return new GTA.Math.Vector3(obj.X, obj.Y, obj.Z);
     }
 
-    public static bool operator ==(Vector3 l, XVector3 r)
+    public static bool operator ==(Vector3 left, XVector3 right)
     {
-        return l == new Vector3(r.X, r.Y, r.Z);
+        return left == new Vector3(right.X, right.Y, right.Z);
     }
 
-    public static bool operator !=(Vector3 l, XVector3 r)
+    public static bool operator !=(Vector3 left, XVector3 right)
     {
-        return !(l == new Vector3(r.X, r.Y, r.Z));
+        return !(left == new Vector3(right.X, right.Y, right.Z));
     }
     
-    public static Vector3 operator +(XVector3 r, Vector3 l)
+    public static Vector3 operator +(XVector3 left, Vector3 right)
     {
-        return l + new Vector3(r.X, r.Y, r.Z);
+        return new Vector3(left.X, left.Y, left.Z) + right;
     }
 
-    public static Vector3 operator -(XVector3 r, Vector3 l)
+    public static Vector3 operator -(XVector3 left, Vector3 right)
     {
-        return l - new Vector3(r.X, r.Y, r.Z);
+        return new Vector3(left.X, left.Y, left.Z) - right;
     }
 
     public static XVector3 operator +(XVector3 l, XVector3 r)
