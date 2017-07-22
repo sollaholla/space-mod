@@ -3,9 +3,9 @@ using GTA.Math;
 
 namespace DefaultMissions
 {
-    public struct Trigger
+    public class Trigger
     {
-        public Trigger(Vector3 position, float radius) : this()
+        public Trigger(Vector3 position, float radius)
         {
             Position = position;
             Radius = radius;

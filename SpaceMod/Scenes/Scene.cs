@@ -205,6 +205,8 @@ namespace GTS.Scenes
         /// </summary>
         internal Ped PlayerPed => Game.Player.Character ?? new Ped(0);
 
+        public bool StopTile { get; set; }
+
         /// <summary>
         /// </summary>
         internal Vector3 PlayerPosition
@@ -597,6 +599,8 @@ namespace GTS.Scenes
         private void TileTerrain()
         {
             if (!Info.SurfaceScene) return;
+
+            if (StopTile) return;
 
             foreach (var surface in Surfaces)
                 surface.DoInfiniteTile(PlayerPosition, surface.TileSize);

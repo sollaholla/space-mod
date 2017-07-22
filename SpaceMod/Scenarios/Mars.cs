@@ -108,7 +108,6 @@ namespace DefaultMissions
         private readonly Random _random = new Random();
         private readonly List<OnFootCombatPed> _aliens = new List<OnFootCombatPed>();
         private Vehicle _ufo;
-        private Ped _scientist;
         private ICutScene _engineerScene;
         private Vehicle _rover;
         private Ped _engineer;
@@ -477,64 +476,49 @@ namespace DefaultMissions
 
         private void MarsBase_DoScientistDialogue()
         {
+            CurrentScene.StopTile = true;
+
             var interior = CurrentScene.GetInterior("MarsBaseInterior");
-            if (interior == null)
-            {
-                Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                _missionStep++;
-                return;
-            }
+            var scientist = interior.Peds[0];
 
-            if (!Entity.Exists(_scientist))
-            {
-                var peds = interior.Peds.ToArray();
-                if (peds.Length <= 0)
-                {
-                    Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                    _missionStep++;
-                    return;
-                }
-                _scientist = peds[0];
-                //_scientist.AddBlip().Color = BlipColor.Yellow;
-                return;
-            }
+            HelperFunctions.DrawWaypoint(CurrentScene, scientist.Position);
 
-            HelperFunctions.DrawWaypoint(CurrentScene, _scientist.Position);
-
-            var distance = Game.Player.Character.Position.DistanceToSquared(_scientist.Position);
+            var distance = Game.Player.Character.Position.DistanceToSquared(scientist.Position);
             if (distance > 4) return;
 
             Utils.DisplayHelpTextWithGxt("PRESS_E");
             if (!Game.IsControlJustPressed(2, Control.Context))
                 return;
 
-            if (Blip.Exists(_scientist.CurrentBlip))
-                _scientist.CurrentBlip.Remove();
+            if (Blip.Exists(scientist.CurrentBlip))
+                scientist.CurrentBlip.Remove();
 
             const string animDict = "gestures@f@standing@casual";
             Function.Call(Hash.REQUEST_ANIM_DICT, animDict);
             while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, animDict))
                 Script.Yield();
 
-            _scientist.Task.ClearAllImmediately();
-            _scientist.Task.LookAt(Game.Player.Character);
-            Game.Player.Character.Task.LookAt(_scientist);
+            scientist.Task.ClearAllImmediately();
+            scientist.Task.LookAt(Game.Player.Character);
+            Game.Player.Character.Task.LookAt(scientist);
 
             Utils.ShowSubtitleWithGxt("MARS_LABEL_1");
             Script.Wait(5000);
-            _scientist.Task.PlayAnimation(animDict, "gesture_no_way");
+            scientist.Task.PlayAnimation(animDict, "gesture_no_way");
             Utils.ShowSubtitleWithGxt("MARS_LABEL_2");
             Script.Wait(5000);
-            _scientist.Task.PlayAnimation(animDict, "gesture_shrug_soft");
+            scientist.Task.PlayAnimation(animDict, "gesture_shrug_soft");
             Utils.ShowSubtitleWithGxt("MARS_LABEL_3");
             Script.Wait(5000);
-            _scientist.Task.PlayAnimation(animDict, "gesture_point");
+            scientist.Task.PlayAnimation(animDict, "gesture_point");
             Utils.ShowSubtitleWithGxt("MARS_LABEL_4", 1500);
             Script.Wait(1500);
             Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
             Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
             Game.Player.Character.Task.ClearLookAt();
             _missionStep++;
+
+            CurrentScene.StopTile = false;
         }
 
         private bool CreateEngineerFireFight()
@@ -662,6 +646,7 @@ namespace DefaultMissions
         {
             CleanUp_ResetGameChanges();
             CleanUpEntities(delete);
+            CurrentScene.StopTile = false;
         }
 
         private void CleanUp_ResetGameChanges()
