@@ -247,6 +247,8 @@ namespace GTS.Scenes
             }
         }
 
+        private bool _didUpdate;
+
         /// <summary>
         /// </summary>
         internal void Update()
@@ -594,21 +596,19 @@ namespace GTS.Scenes
 
         private void TileTerrain()
         {
-            if (Info.SurfaceScene)
-            {
-                foreach (var surface in Surfaces)
-                    surface.DoInfiniteTile(PlayerPosition, surface.TileSize);
+            if (!Info.SurfaceScene) return;
 
-                if (Entity.Exists(Galaxy))
-                {
-                    var xDistance = (PlayerPosition.X - _lastPlayerPosition.X) * Info.HorizonRotationMultiplier;
-                    var yDistance = (PlayerPosition.Y - _lastPlayerPosition.Y) * Info.HorizonRotationMultiplier;
-                    Galaxy.Quaternion = Quaternion.FromToRotation(Vector3.RelativeRight, Vector3.WorldUp * xDistance) *
-                                        Quaternion.FromToRotation(Vector3.RelativeFront, Vector3.WorldUp * yDistance) *
-                                        Galaxy.Quaternion;
-                    _lastPlayerPosition = PlayerPosition;
-                }
-            }
+            foreach (var surface in Surfaces)
+                surface.DoInfiniteTile(PlayerPosition, surface.TileSize);
+
+            if (!Entity.Exists(Galaxy)) return;
+
+            var xDistance = (PlayerPosition.X - _lastPlayerPosition.X) * Info.HorizonRotationMultiplier;
+            var yDistance = (PlayerPosition.Y - _lastPlayerPosition.Y) * Info.HorizonRotationMultiplier;
+            Galaxy.Quaternion = Quaternion.FromToRotation(Vector3.RelativeRight, Vector3.WorldUp * xDistance) *
+                                Quaternion.FromToRotation(Vector3.RelativeFront, Vector3.WorldUp * yDistance) *
+                                Galaxy.Quaternion;
+            _lastPlayerPosition = PlayerPosition;
         }
 
         private void CreateSpace()
@@ -636,15 +636,11 @@ namespace GTS.Scenes
                 var interior = new Interior(interiorInfo.Name, interiorInfo.Type);
 
                 interior.Request();
-
-                foreach (var v in interior.Vehicles)
-                {
-                    v.EnginePowerMultiplier = 500f;
-                    v.EngineTorqueMultiplier = 2.0f;
-                }
-
+                
                 _interiors.Add(interior);
             }
+
+            Debug.Log("Finished creating interiors.");
         }
 
         private void CreateTeleports()

@@ -263,6 +263,7 @@ namespace DefaultMissions
                 foreach (var ped in _otherAliens)
                     if (Entity.Exists(ped))
                         ped.Delete();
+                World.RenderingCamera = null;
             }
 
             private void SetupOtherAlien(Ped ped)
@@ -425,8 +426,13 @@ namespace DefaultMissions
                     Game.Player.Character.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
                     Game.Player.Character.Heading = 90;
                     Game.Player.Character.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
+                    Game.Player.Character.Weapons.Select(WeaponHash.Unarmed);
                     Script.Wait(250);
                     Game.FadeScreenIn(1000);
+                    _missionStep++;
+                    break;
+                case 9:
+                    TimeCycleModifier.Set("Drug_deadmen", 1.0f);
                     break;
             }
         }
@@ -609,6 +615,7 @@ namespace DefaultMissions
         {
             RemoveModels();
             CleanUpEntities(delete);
+            CurrentScene?.RefreshTimecycle();
             _europaMissileCutScene?.Stop();
             _abductionCutScene?.Stop();
             Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
