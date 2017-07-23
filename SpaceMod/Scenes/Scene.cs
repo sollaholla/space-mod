@@ -189,6 +189,11 @@ namespace GTS.Scenes
         public OrbitalSystem Galaxy { get; private set; }
 
         /// <summary>
+        /// These are objects that always rotate towards the camera.
+        /// </summary>
+        public List<Billboardable> Billboards { get; private set; }
+
+        /// <summary>
         ///     The filename of this scene.
         /// </summary>
         public string FileName { get; internal set; }
@@ -249,8 +254,6 @@ namespace GTS.Scenes
             }
         }
 
-        private bool _didUpdate;
-
         /// <summary>
         /// </summary>
         internal void Update()
@@ -271,6 +274,7 @@ namespace GTS.Scenes
                 HandlePlayerVehicle();
                 HandleTeleports();
                 TileTerrain();
+                BillboardBillboards();
             }
             finally
             {
@@ -315,6 +319,9 @@ namespace GTS.Scenes
 
                 foreach (var s in Surfaces)
                     s.Delete();
+
+                foreach (var billboard in Billboards)
+                    billboard.Delete();
 
                 GameplayCamera.ShakeAmplitude = 0;
 
@@ -596,6 +603,21 @@ namespace GTS.Scenes
 
         #region Spawning
 
+        private void BillboardBillboards()
+        {
+            foreach (var billboardable in Billboards)
+            {
+                var galaxyPosition = Database.GetGalaxyPosition();
+                billboardable.Quaternion = Quaternion.FromToRotation(billboardable.ForwardVector,
+                                    (billboardable.Position - galaxyPosition).Normalized) * billboardable.Quaternion;
+
+                var originalPosition = Info.GalaxyCenter + billboardable.OriginalPosition;
+                var distance = galaxyPosition.DistanceTo(originalPosition);
+                var scale = (billboardable.ParallaxScaling + 1) * GameplayCamera.FieldOfView / distance;
+                billboardable.Position = originalPosition - billboardable.ForwardVector * Math.Max(0, scale - 1);
+            }
+        }
+
         private void TileTerrain()
         {
             if (!Info.SurfaceScene) return;
@@ -625,6 +647,8 @@ namespace GTS.Scenes
                 .Where(o => o != default(AttachedOrbital)).ToList();
 
             Surfaces = Info.Surfaces?.Select(CreateSurface).Where(o => o != default(Surface)).ToList();
+
+            Billboards = Info.Billboards?.Select(x => new Billboardable(CreateProp(Info.GalaxyCenter + x.Position, x.Model).Handle, x.Position, x.ParallaxScale)).ToList();
 
             WormHoles = orbitals?.Where(x => x.WormHole).ToList();
 

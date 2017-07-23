@@ -120,6 +120,7 @@ public class SceneInfo : NextSceneInfo
         Interiors = new List<InteriorInfo>();
         Scenarios = new List<ScenarioInfo>();
         Teleports = new List<TeleportPoint>();
+        Billboards = new List<Billboard>();
     }
 
     [Category("Collections")]
@@ -149,6 +150,10 @@ public class SceneInfo : NextSceneInfo
     [Category("Collections")]
     [RefreshProperties(RefreshProperties.All)]
     public List<TeleportPoint> Teleports { get; set; }
+
+    [Category("Collections")]
+    [RefreshProperties(RefreshProperties.All)]
+    public List<Billboard> Billboards { get; set; }
 
     [Description("The model name of the skybox.")]
     [Category("Core Settings")]
@@ -226,11 +231,6 @@ public class Link : NextSceneInfo, ITrigger
 [Serializable]
 public class AttachedOrbitalInfo : IDrawable
 {
-    [Category("Other")]
-    [Description("The starting rotation of the object.")]
-    [RefreshProperties(RefreshProperties.All)]
-    public XVector3 Rotation { get; set; }
-
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
     [RefreshProperties(RefreshProperties.All)]
@@ -240,6 +240,11 @@ public class AttachedOrbitalInfo : IDrawable
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
+
+    [Category("Other")]
+    [Description("The starting rotation of the object.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public XVector3 Rotation { get; set; }
 }
 
 [Serializable]
@@ -364,6 +369,19 @@ public class ScenarioInfo
         "The namespace directory to the class. Example 'MyNamespace.MyClassName' NOTE: This class must derive from CustomScenario.")]
     [RefreshProperties(RefreshProperties.All)]
     public string Namespace { get; set; }
+}
+
+[Serializable]
+public class Billboard : IDrawable
+{
+    [RefreshProperties(RefreshProperties.All)]
+    public string Model { get; set; }
+
+    [RefreshProperties(RefreshProperties.All)]
+    public XVector3 Position { get; set; }
+
+    [RefreshProperties(RefreshProperties.All)]
+    public float ParallaxScale { get; set; }
 }
 
 public class NextSceneInfo
