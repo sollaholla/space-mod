@@ -796,6 +796,7 @@ namespace GTS
                         playerPedCurrentVehicle.Rotation = Vector3.Zero;
                         playerPedCurrentVehicle.Heading = 243;
                         playerPedCurrentVehicle.HasGravity = true;
+                        playerPedCurrentVehicle.Speed = 1000;
                     }
                     else
                     {

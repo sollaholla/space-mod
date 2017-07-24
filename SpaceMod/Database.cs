@@ -33,7 +33,7 @@ namespace GTS
                 Game.Player.Character.RelationshipGroup);
 
             TrevorAirport = new Vector3(1267.619f, 3137.67f, 40.41403f);
-            EarthAtmosphereEnterPosition = new Vector3(-3874.793f, 3878.417f, 780.7289f);
+            EarthAtmosphereEnterPosition = new Vector3(-3874.793f, 3878.417f, 7000.7289f);
         }
 
         /// <summary>

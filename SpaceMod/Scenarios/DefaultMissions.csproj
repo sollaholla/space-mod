@@ -20,7 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -39,8 +39,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
     </Reference>
+    <Reference Include="NativeUI">
+      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\NativeUI.dll</HintPath>
+    </Reference>
     <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\..\DLL References\ScriptHookVDotNet2.dll</HintPath>
+      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
