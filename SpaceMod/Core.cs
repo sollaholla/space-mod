@@ -117,11 +117,9 @@ namespace GTS
         /// <summary>
         ///     The position of the player in the game.
         /// </summary>
-        public Vector3 PlayerPosition
-        {
+        public Vector3 PlayerPosition {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set
-            {
+            set {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
@@ -411,17 +409,17 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
                 GTS.Settings.VehicleFlySpeed = sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
+            var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic) i).ToList(), flySensitivity);
+                    .Select(i => (dynamic)i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
                 GTS.Settings.MouseControlFlySensitivity = sender.IndexToItem(index);
@@ -658,17 +656,13 @@ namespace GTS
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
 
-                _currentScene = new Scene(scene) {FileName = fileName};
+                _currentScene = new Scene(scene) { FileName = fileName };
                 _currentScene.Start();
 
-                Function.Call(Hash.SET_CLOCK_TIME, _currentScene.Info.Time);
+                Function.Call(Hash.SET_CLOCK_TIME, _currentScene.Info.Time, _currentScene.Info.TimeMinutes, 0);
                 Function.Call(Hash.PAUSE_CLOCK, true);
 
-                if (_currentScene.Weather == (Weather) 14) Function.Call(Hash.SET_WEATHER_TYPE_NOW, "HALLOWEEN");
-                else World.Weather = _currentScene.Weather;
-
-                if ((int) World.Weather != -1)
-                    Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, WeatherNames[(int) World.Weather]);
+                Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, _currentScene.Info.WeatherName);
 
                 if (GTS.Settings.UseScenarios)
                     try
@@ -699,7 +693,7 @@ namespace GTS
 
                 Debug.Log("Creating Scenario: " + type.Name);
 
-                var instance = (Scenario) Activator.CreateInstance(type);
+                var instance = (Scenario)Activator.CreateInstance(type);
 
                 instance.OnAwake();
 
@@ -732,7 +726,7 @@ namespace GTS
             foreach (var e in entities)
             {
                 if (!e.IsDead && (e is Ped ||
-                                  e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
+                                  e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle)e))
                     continue;
 
                 e.Delete();

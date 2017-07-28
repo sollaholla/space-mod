@@ -165,6 +165,11 @@ public class SceneInfo : NextSceneInfo
     [RefreshProperties(RefreshProperties.All)]
     public int Time { get; set; }
 
+    [Description("Time time of day in minutes that we will use for the scene.")]
+    [Category("Core Settings")]
+    [RefreshProperties(RefreshProperties.All)]
+    public int TimeMinutes { get; set; }
+
     [Description("True if you want to use gravity for this scene.")]
     [Category("Core Settings")]
     [RefreshProperties(RefreshProperties.All)]
@@ -174,6 +179,26 @@ public class SceneInfo : NextSceneInfo
     [Category("Core Settings")]
     [RefreshProperties(RefreshProperties.All)]
     public float GravityLevel { get; set; }
+
+    [Description("The force (newt) that will be applied to the player when jumping. Remember that gravity will affect the force.")]
+    [Category("Core Settings")]
+    public float JumpForceOverride { get; set; } = 10.0f;
+
+    [Description("The position to spawn the vehicle on the surface. NOTE: May be removed in a later version.")]
+    [Category("Core Settings")]
+    public XVector3 VehicleSurfaceSpawn { get; set; } = new XVector3(-10029.57f, -10016.75f, 10001f);
+
+    [Description("The name of the timecycle modifier to use.")]
+    [Category("Core Settings - Weather")]
+    public string TimecycleModifier { get; set; }
+
+    [Description("The strength of the timecycle modifier.")]
+    [Category("Core Settings - Weather")]
+    public float TimecycleModifierStrength { get; set; } = 1.0f;
+
+    [Description("The weather index to use for this scene.")]
+    [Category("Core Settings - Weather")]
+    public string WeatherName { get; set; } = "EXTRASUNNY";
 
     [Description("The origin of the skybox, and all props.")]
     [Category("Core Settings")]
@@ -241,6 +266,8 @@ public class AttachedOrbitalInfo : IDrawable
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
 
+    public int LodDistance { get; set; } = -1;
+
     [Category("Other")]
     [Description("The starting rotation of the object.")]
     [RefreshProperties(RefreshProperties.All)]
@@ -282,6 +309,8 @@ public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
 
+    public int LodDistance { get; set; } = -1;
+
     [Category("Next Scene Info")]
     [Description("This is the distance that will trigger the next scene to load.")]
     [RefreshProperties(RefreshProperties.All)]
@@ -310,6 +339,8 @@ public class SurfaceInfo : IDrawable
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
+
+    public int LodDistance { get; set; } = -1;
 }
 
 [Serializable]
@@ -380,6 +411,8 @@ public class Billboard : IDrawable
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
 
+    public int LodDistance { get; set; } = -1;
+
     [RefreshProperties(RefreshProperties.All)]
     public float ParallaxScale { get; set; }
 }
@@ -407,6 +440,8 @@ public interface IDrawable
     string Model { get; set; }
 
     XVector3 Position { get; set; }
+
+    int LodDistance { get; set; }
 }
 
 public interface ITrigger

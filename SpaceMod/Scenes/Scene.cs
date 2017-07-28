@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using GTA;
@@ -68,7 +67,6 @@ namespace GTS.Scenes
             _playerTask = ZeroGTask.SpaceWalk;
             _startLock = new object();
             _updateLock = new object();
-            _useLowGJumping = Settings.MoonJump;
         }
 
         #region Fields
@@ -121,19 +119,7 @@ namespace GTS.Scenes
         private readonly List<Interior> _interiors;
 
         #endregion
-
-        #region Settings
-
-        private Vector3 _vehicleSpawn;
-        private bool _useLowGJumping;
-        private float _jumpForce = 10.0f;
-        private float _timeCycleStrength = 1.0f;
-        private float _interiorVehicleAccelerationMult = 10.0f;
-        private float _interiorVehicleMaxSpeed = 1000.0f;
-        private string _timeCycleMod = string.Empty;
-
-        #endregion
-
+        
         #region Physics
 
         private bool _enteringVehicle;
@@ -200,10 +186,6 @@ namespace GTS.Scenes
 
         /// <summary>
         /// </summary>
-        internal Weather Weather { get; private set; }
-
-        /// <summary>
-        /// </summary>
         internal Vehicle PlayerVehicle { get; private set; }
 
         /// <summary>
@@ -240,8 +222,11 @@ namespace GTS.Scenes
                 CreateSpace();
                 CreateInteriors();
                 CreateTeleports();
-                ReadSettings();
                 RefreshTimecycle();
+
+                // Core settings //////////////////////////////////////////////////////////////////////////////////////
+                _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
+                ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 ConfigurePlayerVehicleForSpace();
                 ResetPlayerPosition();
@@ -362,8 +347,8 @@ namespace GTS.Scenes
         /// </summary>
         public void RefreshTimecycle()
         {
-            if (!string.IsNullOrEmpty(_timeCycleMod) && _timeCycleStrength > 0)
-                TimeCycleModifier.Set(_timeCycleMod, _timeCycleStrength);
+            if (!string.IsNullOrEmpty(Info.TimecycleModifier) && Info.TimecycleModifierStrength > 0)
+                TimeCycleModifier.Set(Info.TimecycleModifier, Info.TimecycleModifierStrength);
             else
                 TimeCycleModifier.Clear();
         }
@@ -451,6 +436,8 @@ namespace GTS.Scenes
 
             prop.FreezePosition = true;
 
+            prop.LodDistance = data.LodDistance;
+
             var orbital = new AttachedOrbital(prop, data.Position, data.Rotation);
 
             model.MarkAsNoLongerNeeded();
@@ -483,6 +470,8 @@ namespace GTS.Scenes
                 RenderForLowConfig(prop);
 
             prop.FreezePosition = true;
+
+            prop.LodDistance = data.LodDistance;
 
             var orbital = new Orbital(prop, data.Name, data.RotationSpeed)
             {
@@ -523,6 +512,8 @@ namespace GTS.Scenes
             var prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
 
             prop.FreezePosition = true;
+
+            prop.LodDistance = data.LodDistance;
 
             if (Settings.LowConfigMode)
                 RenderForLowConfig(prop);
@@ -705,37 +696,14 @@ namespace GTS.Scenes
         #endregion
 
         #region Settings
-
-        private void ReadSettings()
-        {
-            //Extra settings///////////////////////////////////////////////////////////////////////////////////////////////
-            var settings = ScriptSettings.Load(Database.PathToScenes + "/" + "ExtraSettings.ini");
-            var section = Path.GetFileNameWithoutExtension(FileName);
-            Weather = (Weather) settings.GetValue(section, "weather", 1);
-            _vehicleSpawn = ParseVector3.Read(settings.GetValue(section, "vehicle_surface_spawn"),
-                Settings.DefaultVehicleSpawn);
-            _jumpForce = settings.GetValue(section, "jump_force_override", _jumpForce);
-            _useLowGJumping = settings.GetValue(section, "low_gravity_jumping", _useLowGJumping);
-            _timeCycleMod = settings.GetValue(section, "time_cycle_mod", _timeCycleMod);
-            _timeCycleStrength = settings.GetValue(section, "time_cycle_strength", _timeCycleStrength);
-            _interiorVehicleAccelerationMult = settings.GetValue(section, "interior_vehicle_acceleration_mult",
-                _interiorVehicleAccelerationMult);
-            _interiorVehicleMaxSpeed = settings.GetValue(section, "interior_vehicle_max_speed",
-                _interiorVehicleMaxSpeed);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // Core settings //////////////////////////////////////////////////////////////////////////////////////
-            _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////
-        }
-
+        
         private void SettingsUpdate()
         {
-            if (_useLowGJumping && Info.SurfaceScene)
+            if (Settings.MoonJump && Info.SurfaceScene)
             {
                 if (!_didJump && PlayerPed.IsJumping)
                 {
-                    PlayerPed.Velocity += PlayerPed.UpVector * _jumpForce;
+                    PlayerPed.Velocity += PlayerPed.UpVector * Info.JumpForceOverride;
 
                     _didJump = true;
                 }
@@ -793,7 +761,7 @@ namespace GTS.Scenes
                     vehicle.FreezePosition = true;
                     vehicle.Velocity = Vector3.Zero;
                     vehicle.Speed = 0;
-                    vehicle.PositionNoOffset = _vehicleSpawn + Vector3.WorldUp;
+                    vehicle.PositionNoOffset = Info.VehicleSurfaceSpawn + Vector3.WorldUp;
                     Script.Yield();
                     var groundPlacementTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
                     while (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f))
