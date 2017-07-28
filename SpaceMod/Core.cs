@@ -282,6 +282,8 @@ namespace GTS
                 Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             _endMissionCanStart = CanStartEndMission();
             GTS.Settings.LowConfigMode = Settings.GetValue("game", "low_config", false);
+            GTS.Settings.EarthAtmosphereEnterPosition =
+                ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"), GTS.Settings.EarthAtmosphereEnterPosition);
         }
 
         private void SaveSettings()
@@ -303,6 +305,7 @@ namespace GTS
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             Settings.SetValue("game", "low_config", GTS.Settings.LowConfigMode);
+            Settings.SetValue("mod", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
             Settings.Save();
         }
 
@@ -786,7 +789,7 @@ namespace GTS
                     if (PlayerPed.IsInVehicle())
                     {
                         var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
-                        playerPedCurrentVehicle.Position = Database.EarthAtmosphereEnterPosition;
+                        playerPedCurrentVehicle.Position = GTS.Settings.EarthAtmosphereEnterPosition;
                         playerPedCurrentVehicle.Rotation = Vector3.Zero;
                         playerPedCurrentVehicle.Heading = 243;
                         playerPedCurrentVehicle.HasGravity = true;
@@ -794,7 +797,7 @@ namespace GTS
                     }
                     else
                     {
-                        PlayerPosition = Database.TrevorAirport;
+                        PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
                     }
 
                     PlayerPed.HasGravity = true;

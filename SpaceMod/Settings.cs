@@ -39,5 +39,9 @@ namespace GTS
         /// <summary>
         /// </summary>
         public static bool LowConfigMode = false;
+
+        /// <summary>
+        /// </summary>
+        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-3874.793f, 3878.417f, 7000.7289f);
     }
 }

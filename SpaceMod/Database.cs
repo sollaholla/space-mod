@@ -31,9 +31,7 @@ namespace GTS
                 AlienRelationshipGroup);
             World.SetRelationshipBetweenGroups(Relationship.Hate, AlienRelationshipGroup,
                 Game.Player.Character.RelationshipGroup);
-
             TrevorAirport = new Vector3(1267.619f, 3137.67f, 40.41403f);
-            EarthAtmosphereEnterPosition = new Vector3(-3874.793f, 3878.417f, 7000.7289f);
         }
 
         /// <summary>
@@ -45,12 +43,7 @@ namespace GTS
         ///     The relationship group for aliens.
         /// </summary>
         public static int AlienRelationshipGroup { get; }
-
-        /// <summary>
-        ///     The location we teleport once we enter earths atmosphere.
-        /// </summary>
-        public static Vector3 EarthAtmosphereEnterPosition { get; }
-
+        
         /// <summary>
         ///     Return the <c>Gameplay</c> cameras current position if rendering, if
         ///     the camera is not rendering (e.g. he's in a vehicle with first
