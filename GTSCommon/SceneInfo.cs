@@ -230,6 +230,16 @@ public class SceneInfo : NextSceneInfo
     [RefreshProperties(RefreshProperties.All)]
     public override XVector3 NextScenePosition { get; set; }
 
+    [Category("Surface Settings")]
+    [Description("Set the water wave strength.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public float WaveStrength { get; set; }
+
+    [Category("Surface Settings")]
+    [Description("Set the wind speed.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public float WindSpeed { get; set; }
+
     [XmlIgnore]
     public bool SurfaceScene => Surfaces.Any();
 }

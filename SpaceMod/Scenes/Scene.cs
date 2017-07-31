@@ -94,6 +94,7 @@ namespace GTS.Scenes
         private bool _didJump;
         private bool _didSetTimecycle;
         private bool _didSetAreaTimecycle;
+        private bool _didSetSpaceAudio;
 
         #endregion
 
@@ -230,9 +231,8 @@ namespace GTS.Scenes
                 _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
                 _lastPlayerPosition = PlayerPosition;
-
+                Function.Call(Hash.STOP_AUDIO_SCENES);
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
                 Utils.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
                 GameplayCamera.RelativeHeading = 0;
@@ -244,9 +244,7 @@ namespace GTS.Scenes
         /// </summary>
         internal void Update()
         {
-            if (!Monitor.TryEnter(_updateLock))
-                return;
-
+            if (!Monitor.TryEnter(_updateLock)) return;
             try
             {
                 ConfigureRendering();
@@ -261,6 +259,7 @@ namespace GTS.Scenes
                 HandleTeleports();
                 TileTerrain();
                 BillboardBillboards();
+                ConfigureAudio();
             }
             finally
             {
@@ -310,6 +309,10 @@ namespace GTS.Scenes
                     billboard.Delete();
 
                 GameplayCamera.ShakeAmplitude = 0;
+
+                // Reset waves and wind speed.
+                Function.Call(Hash._0x5E5E99285AE812DB);
+                Function.Call(Hash.SET_WIND_SPEED, 1.0f);
 
                 if (newSceneLoading) return;
                 Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
@@ -787,6 +790,25 @@ namespace GTS.Scenes
             }
         }
 
+        private void ConfigureAudio()
+        {
+            if (Info.SurfaceScene) return;
+            if (FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
+            {
+                if (!_didSetSpaceAudio) return;
+                Function.Call(Hash.STOP_AUDIO_SCENES);
+                Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+                _didSetSpaceAudio = false;
+            }
+            else
+            {
+                if (_didSetSpaceAudio) return;
+                Function.Call(Hash.STOP_AUDIO_SCENES);
+                Function.Call(Hash.START_AUDIO_SCENE, "END_CREDITS_SCENE");
+                _didSetSpaceAudio = true;
+            }
+        }
+
         private void DrawMarkers()
         {
             if (!Settings.ShowCustomGui)
@@ -988,6 +1010,8 @@ namespace GTS.Scenes
             Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
             Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
             Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, true);
+            Function.Call(Hash.SET_WIND_SPEED, Info.WindSpeed);
+            Function.Call(Hash._0xB96B00E976BE977F, Info.WaveStrength);
         }
 
         private void HandleTimecycles()
