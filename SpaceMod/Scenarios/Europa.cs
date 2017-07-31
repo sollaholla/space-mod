@@ -319,7 +319,7 @@ namespace DefaultMissions
         #endregion
 
         #endregion
-        
+
         #region Functions
 
         #region Implemented

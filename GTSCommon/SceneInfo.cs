@@ -6,8 +6,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Serialization;
 using GTA.Math;
 
@@ -40,7 +40,7 @@ public struct XVector3
 
     public static implicit operator Vector3(XVector3 obj)
     {
-        return new GTA.Math.Vector3(obj.X, obj.Y, obj.Z);
+        return new Vector3(obj.X, obj.Y, obj.Z);
     }
 
     public static bool operator ==(Vector3 left, XVector3 right)
@@ -52,7 +52,7 @@ public struct XVector3
     {
         return !(left == new Vector3(right.X, right.Y, right.Z));
     }
-    
+
     public static Vector3 operator +(XVector3 left, Vector3 right)
     {
         return new Vector3(left.X, left.Y, left.Z) + right;
@@ -82,11 +82,11 @@ public class Vector3Converter : ExpandableObjectConverter
         return sourceType == typeof(string);
     }
 
-    public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
     {
         try
         {
-            var tokens = ((string)value).Split(';');
+            var tokens = ((string) value).Split(';');
 
             return new XVector3(float.Parse(tokens[0]), float.Parse(tokens[1]), float.Parse(tokens[2]));
         }
@@ -96,9 +96,10 @@ public class Vector3Converter : ExpandableObjectConverter
         }
     }
 
-    public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value,
+        Type destinationType)
     {
-        var p = (XVector3)value;
+        var p = (XVector3) value;
 
         return "(" + p.X + ", " + p.Y + ", " + p.Z + ")";
     }
@@ -185,7 +186,8 @@ public class SceneInfo : NextSceneInfo
     [RefreshProperties(RefreshProperties.All)]
     public float GravityLevel { get; set; }
 
-    [Description("The force (newt) that will be applied to the player when jumping. Remember that gravity will affect the force.")]
+    [Description(
+        "The force (newt) that will be applied to the player when jumping. Remember that gravity will affect the force.")]
     [Category("Core Settings")]
     public float JumpForceOverride { get; set; } = 10.0f;
 
@@ -271,6 +273,11 @@ public class Link : NextSceneInfo, ITrigger
 [Serializable]
 public class AttachedOrbitalInfo : IDrawable
 {
+    [Category("Other")]
+    [Description("The starting rotation of the object.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public XVector3 Rotation { get; set; }
+
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
     [RefreshProperties(RefreshProperties.All)]
@@ -282,11 +289,6 @@ public class AttachedOrbitalInfo : IDrawable
     public XVector3 Position { get; set; }
 
     public int LodDistance { get; set; } = -1;
-
-    [Category("Other")]
-    [Description("The starting rotation of the object.")]
-    [RefreshProperties(RefreshProperties.All)]
-    public XVector3 Rotation { get; set; }
 }
 
 [Serializable]
@@ -421,15 +423,15 @@ public class ScenarioInfo
 public class Billboard : IDrawable
 {
     [RefreshProperties(RefreshProperties.All)]
+    public float ParallaxScale { get; set; }
+
+    [RefreshProperties(RefreshProperties.All)]
     public string Model { get; set; }
 
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
 
     public int LodDistance { get; set; } = -1;
-
-    [RefreshProperties(RefreshProperties.All)]
-    public float ParallaxScale { get; set; }
 }
 
 [Serializable]
@@ -461,9 +463,6 @@ public class TimeCycleArea : ITrigger
     public int TimeMinutes { get; set; }
 
     [Category("General")]
-    public float TriggerDistance { get; set; }
-
-    [Category("General")]
     public XVector3 Location { get; set; }
 
     [Category("Weather")]
@@ -474,6 +473,9 @@ public class TimeCycleArea : ITrigger
 
     [Category("Weather")]
     public string WeatherName { get; set; }
+
+    [Category("General")]
+    public float TriggerDistance { get; set; }
 }
 
 public interface IDrawable

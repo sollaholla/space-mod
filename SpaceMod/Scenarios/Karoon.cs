@@ -42,7 +42,6 @@ namespace DefaultMissions
 
         public override void OnStart()
         {
-
         }
 
         public override void OnUpdate()
@@ -62,9 +61,7 @@ namespace DefaultMissions
         private void RemoveTubePeds()
         {
             foreach (var ped in _tubePeds)
-            {
                 ped.Delete();
-            }
         }
 
         #endregion
@@ -99,7 +96,7 @@ namespace DefaultMissions
                 ped.IsExplosionProof = true;
                 ped.IsFireProof = true;
                 ped.Task.PlayAnimation("skydive@parachute@", "chute_idle", 8.0f, -8.0f, -1, AnimationFlags.Loop, 0.0f);
-                ped.Task.PlayAnimation("mp_sleep", "sleep_loop", 8.0f, -8.0f, -1, (AnimationFlags)49, 0.0f);
+                ped.Task.PlayAnimation("mp_sleep", "sleep_loop", 8.0f, -8.0f, -1, (AnimationFlags) 49, 0.0f);
                 _tubePeds.Add(ped);
             }
         }

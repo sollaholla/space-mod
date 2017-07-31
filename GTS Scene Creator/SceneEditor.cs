@@ -32,7 +32,7 @@ namespace GTS_Scene_Creator
 
                 var s = new XmlSerializer(typeof(SceneInfo));
 
-                sceneInfo = (SceneInfo)s.Deserialize(r);
+                sceneInfo = (SceneInfo) s.Deserialize(r);
 
                 r.Close();
 
@@ -47,7 +47,7 @@ namespace GTS_Scene_Creator
                 MessageBox.Show(ex.Message);
             }
         }
-        
+
         private void clearAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
             sceneInfo = new SceneInfo();
@@ -65,7 +65,7 @@ namespace GTS_Scene_Creator
             {
                 Filter = FileDialogueFilter,
                 FileName = currentPath,
-                DefaultExt = "space",
+                DefaultExt = "space"
             };
 
             if (s.ShowDialog(this) == DialogResult.OK)
@@ -77,7 +77,7 @@ namespace GTS_Scene_Creator
                     serializer.Serialize(stream, sceneInfo);
                     stream.Close();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
@@ -92,7 +92,7 @@ namespace GTS_Scene_Creator
             {
                 Filter = FileDialogueFilter,
                 FileName = currentPath,
-                DefaultExt = "space",
+                DefaultExt = "space"
             };
 
             if (o.ShowDialog(this) == DialogResult.OK)
