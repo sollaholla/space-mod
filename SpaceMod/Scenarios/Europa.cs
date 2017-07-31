@@ -319,11 +319,7 @@ namespace DefaultMissions
         #endregion
 
         #endregion
-
-        #region Properties
-
-        #endregion
-
+        
         #region Functions
 
         #region Implemented
@@ -413,6 +409,7 @@ namespace DefaultMissions
                     }
                     break;
                 case 8:
+                    Utils.RemoveAllIpls(false);
                     playerCharacter.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
                     playerCharacter.Heading = 90;
                     playerCharacter.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
@@ -482,6 +479,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 12:
+                    Utils.RemoveAllIpls(true);
                     playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20;
                     playerCharacter.Task.ClearAllImmediately();
                     playerCharacter.Task.Skydive();

@@ -43,7 +43,7 @@ namespace GTS
         ///     The relationship group for aliens.
         /// </summary>
         public static int AlienRelationshipGroup { get; }
-        
+
         /// <summary>
         ///     Return the <c>Gameplay</c> cameras current position if rendering, if
         ///     the camera is not rendering (e.g. he's in a vehicle with first

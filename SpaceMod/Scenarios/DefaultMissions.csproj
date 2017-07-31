@@ -61,6 +61,7 @@
     <Compile Include="Fire.cs" />
     <Compile Include="HelperFunctions.cs" />
     <Compile Include="Interfaces.cs" />
+    <Compile Include="Karoon.cs" />
     <Compile Include="Mars.cs" />
     <Compile Include="Moon.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

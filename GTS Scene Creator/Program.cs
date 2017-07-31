@@ -20,10 +20,10 @@ namespace GTS_Scene_Creator
 
             if (args.Length > 0)
             {
-                string arg = args[0];
+                var arg = args[0];
                 if (File.Exists(arg) && Path.GetExtension(arg).EndsWith("space"))
                 {
-                    SceneEditorForm f = new SceneEditorForm();
+                    var f = new SceneEditorForm();
                     f.Deserialize(arg);
                     Application.Run(f);
                     return;

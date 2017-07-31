@@ -28,9 +28,9 @@ namespace GTS_Scene_Creator
             {
                 clearAllToolStripMenuItem_Click(null, new EventArgs());
 
-                StreamReader r = new StreamReader(currentPath);
+                var r = new StreamReader(currentPath);
 
-                XmlSerializer s = new XmlSerializer(typeof(SceneInfo));
+                var s = new XmlSerializer(typeof(SceneInfo));
 
                 sceneInfo = (SceneInfo)s.Deserialize(r);
 
@@ -61,7 +61,7 @@ namespace GTS_Scene_Creator
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveFileDialog s = new SaveFileDialog
+            var s = new SaveFileDialog
             {
                 Filter = FileDialogueFilter,
                 FileName = currentPath,
@@ -72,8 +72,8 @@ namespace GTS_Scene_Creator
             {
                 try
                 {
-                    FileStream stream = new FileStream(s.FileName, FileMode.Create);
-                    XmlSerializer serializer = new XmlSerializer(typeof(SceneInfo));
+                    var stream = new FileStream(s.FileName, FileMode.Create);
+                    var serializer = new XmlSerializer(typeof(SceneInfo));
                     serializer.Serialize(stream, sceneInfo);
                     stream.Close();
                 }
@@ -88,7 +88,7 @@ namespace GTS_Scene_Creator
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog o = new OpenFileDialog
+            var o = new OpenFileDialog
             {
                 Filter = FileDialogueFilter,
                 FileName = currentPath,

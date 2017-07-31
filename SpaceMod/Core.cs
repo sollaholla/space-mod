@@ -46,24 +46,6 @@ namespace GTS
 
         #region Variables
 
-        internal static readonly string[] WeatherNames =
-        {
-            "EXTRASUNNY",
-            "CLEAR",
-            "CLOUDS",
-            "SMOG",
-            "FOGGY",
-            "OVERCAST",
-            "RAIN",
-            "THUNDER",
-            "CLEARING",
-            "NEUTRAL",
-            "SNOW",
-            "BLIZZARD",
-            "SNOWLIGHT",
-            "XMAS"
-        };
-
         #region Misc
 
         private Scene _currentScene;
@@ -117,9 +99,11 @@ namespace GTS
         /// <summary>
         ///     The position of the player in the game.
         /// </summary>
-        public Vector3 PlayerPosition {
+        public Vector3 PlayerPosition
+        {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set {
+            set
+            {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
@@ -183,8 +167,8 @@ namespace GTS
 
             // Stop the current scene and reset the game
             // changes from that.
-            _currentScene?.Delete();
             AbortActiveScenarios();
+            _currentScene?.Delete();
             if (_currentScene != default(Scene))
             {
                 GiveSpawnControlToGame();
@@ -283,7 +267,8 @@ namespace GTS
             _endMissionCanStart = CanStartEndMission();
             GTS.Settings.LowConfigMode = Settings.GetValue("game", "low_config", false);
             GTS.Settings.EarthAtmosphereEnterPosition =
-                ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"), GTS.Settings.EarthAtmosphereEnterPosition);
+                ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"),
+                    GTS.Settings.EarthAtmosphereEnterPosition);
         }
 
         private void SaveSettings()
@@ -412,17 +397,17 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
                 GTS.Settings.VehicleFlySpeed = sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
+            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic)i).ToList(), flySensitivity);
+                    .Select(i => (dynamic) i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
                 GTS.Settings.MouseControlFlySensitivity = sender.IndexToItem(index);
@@ -654,12 +639,12 @@ namespace GTS
                 ClearAllEntities();
 
                 if (_currentScene != null && _currentScene != default(Scene))
-                    _currentScene.Delete();
+                    _currentScene.Delete(true);
 
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
 
-                _currentScene = new Scene(scene) { FileName = fileName };
+                _currentScene = new Scene(scene) {FileName = fileName};
                 _currentScene.Start();
 
                 Function.Call(Hash.SET_CLOCK_TIME, _currentScene.Info.Time, _currentScene.Info.TimeMinutes, 0);
@@ -696,7 +681,7 @@ namespace GTS
 
                 Debug.Log("Creating Scenario: " + type.Name);
 
-                var instance = (Scenario)Activator.CreateInstance(type);
+                var instance = (Scenario) Activator.CreateInstance(type);
 
                 instance.OnAwake();
 
@@ -729,7 +714,7 @@ namespace GTS
             foreach (var e in entities)
             {
                 if (!e.IsDead && (e is Ped ||
-                                  e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle)e))
+                                  e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
                     continue;
 
                 e.Delete();
@@ -762,7 +747,7 @@ namespace GTS
                 Game.FadeScreenOut(1000);
                 Wait(1000);
 
-                _currentScene?.Delete();
+                _currentScene?.Delete(isActualScene);
                 _currentScene = null;
 
                 ResetWeather();
@@ -775,7 +760,9 @@ namespace GTS
 
                     // AFTER creating the scene we set our offsets/rotations so that
                     // values set within the start of the scene are overridden.
-                    PlayerPosition = newScene.GalaxyCenter + exitOffset;
+                    if (exitOffset != Vector3.Zero)
+                        PlayerPosition = newScene.GalaxyCenter + exitOffset;
+
                     if (PlayerPed.IsInVehicle())
                         PlayerPed.CurrentVehicle.Rotation = exitRotation;
                     else PlayerPed.Rotation = exitRotation;

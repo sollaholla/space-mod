@@ -65,7 +65,7 @@ public struct XVector3
 
     public static XVector3 operator +(XVector3 l, XVector3 r)
     {
-        Vector3 result = new Vector3(l.X, l.Y, l.Z) + new Vector3(r.X, r.Y, r.Z);
+        var result = new Vector3(l.X, l.Y, l.Z) + new Vector3(r.X, r.Y, r.Z);
         return new XVector3(result.X, result.Y, result.Z);
     }
 
@@ -86,7 +86,7 @@ public class Vector3Converter : ExpandableObjectConverter
     {
         try
         {
-            string[] tokens = ((string)value).Split(';');
+            var tokens = ((string)value).Split(';');
 
             return new XVector3(float.Parse(tokens[0]), float.Parse(tokens[1]), float.Parse(tokens[2]));
         }
@@ -98,7 +98,7 @@ public class Vector3Converter : ExpandableObjectConverter
 
     public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
     {
-        XVector3 p = (XVector3)value;
+        var p = (XVector3)value;
 
         return "(" + p.X + ", " + p.Y + ", " + p.Z + ")";
     }
@@ -121,6 +121,7 @@ public class SceneInfo : NextSceneInfo
         Scenarios = new List<ScenarioInfo>();
         Teleports = new List<TeleportPoint>();
         Billboards = new List<Billboard>();
+        TimeCycleAreas = new List<TimeCycleArea>();
     }
 
     [Category("Collections")]
@@ -154,6 +155,10 @@ public class SceneInfo : NextSceneInfo
     [Category("Collections")]
     [RefreshProperties(RefreshProperties.All)]
     public List<Billboard> Billboards { get; set; }
+
+    [Category("Collections")]
+    [RefreshProperties(RefreshProperties.All)]
+    public List<TimeCycleArea> TimeCycleAreas { get; set; }
 
     [Description("The model name of the skybox.")]
     [Category("Core Settings")]
@@ -417,6 +422,7 @@ public class Billboard : IDrawable
     public float ParallaxScale { get; set; }
 }
 
+[Serializable]
 public class NextSceneInfo
 {
     [Category("Next Scene Info")]
@@ -433,6 +439,31 @@ public class NextSceneInfo
     [Description("The filename of the next scene that will load.")]
     [RefreshProperties(RefreshProperties.All)]
     public virtual string NextScene { get; set; }
+}
+
+[Serializable]
+public class TimeCycleArea : ITrigger
+{
+    [Category("General")]
+    public int Time { get; set; } = 23;
+
+    [Category("General")]
+    public int TimeMinutes { get; set; }
+
+    [Category("General")]
+    public float TriggerDistance { get; set; }
+
+    [Category("General")]
+    public XVector3 Location { get; set; }
+
+    [Category("Weather")]
+    public string TimeCycleModifier { get; set; }
+
+    [Category("Weather")]
+    public float TimeCycleModifierStrength { get; set; }
+
+    [Category("Weather")]
+    public string WeatherName { get; set; }
 }
 
 public interface IDrawable

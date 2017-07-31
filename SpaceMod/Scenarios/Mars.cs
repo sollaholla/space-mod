@@ -453,10 +453,10 @@ namespace DefaultMissions
                 ped.Update();
             }
 
-            if (Entity.Exists(_ufo))
-                if (_ufo.IsDead || Entity.Exists(_ufo.Driver) && _ufo.Driver.IsDead)
-                    if (Blip.Exists(_ufo.CurrentBlip))
-                        _ufo.CurrentBlip.Remove();
+            if (!Entity.Exists(_ufo)) return;
+            if (!_ufo.IsDead && (!Entity.Exists(_ufo.Driver) || !_ufo.Driver.IsDead)) return;
+            if (Blip.Exists(_ufo.CurrentBlip))
+                _ufo.CurrentBlip.Remove();
         }
 
         private Ped ShapeShift_ReplacePed(Entity ped)
@@ -641,9 +641,9 @@ namespace DefaultMissions
 
         private void CleanUp(bool delete)
         {
+            if (CurrentScene != null) CurrentScene.StopTile = false;
             CleanUp_ResetGameChanges();
             CleanUpEntities(delete);
-            CurrentScene.StopTile = false;
         }
 
         private void CleanUp_ResetGameChanges()

@@ -35,7 +35,7 @@ namespace DefaultMissions
 
             public void Start()
             {
-                var spawn = new Vector3(10000, 10000, 10000);
+                var spawn = new Vector3(10000, 10000, 50000);
                 _camera = World.CreateCamera(spawn, new Vector3(270, 0, 0), 60);
                 World.RenderingCamera = _camera;
                 Game.FadeScreenOut(0);
@@ -91,7 +91,8 @@ namespace DefaultMissions
                 switch (_step)
                 {
                     case 0:
-                        TimeCycleModifier.Set("heliGunCam", 1.0f);
+                        //TimeCycleModifier.Set("heliGunCam", 1.0f);
+                        _camera.FarClip = 100000;
                         _camera.PointAt(_ufo);
                         _step++;
                         break;

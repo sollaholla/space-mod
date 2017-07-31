@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -252,7 +253,7 @@ namespace GTS.Library
             for (var i = 0; i < helpText.Length; i += maxLen)
                 Function.Call(Hash._0x6C188BE134E074AA, helpText.Substring(i, Math.Min(maxLen, helpText.Length - i)));
 
-            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
+            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, 1, -1);
         }
 
         public static Vector3 GetGroundHeightRay(Vector3 position, Entity ignorEntity = null)
@@ -353,7 +354,26 @@ namespace GTS.Library
         public static void DisplayHelpTextWithGxt(string gxtEntry)
         {
             Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, gxtEntry);
-            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
+            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, 1, -1);
+        }
+
+        public static void RemoveAllIpls(bool remove)
+        {
+            var codebase = Assembly.GetExecutingAssembly().CodeBase;
+            var path = Path.GetDirectoryName(new Uri(codebase).LocalPath);
+            if (string.IsNullOrEmpty(path)) return;
+            var fileName = Path.Combine(path, "Space\\GAME_IPLS.txt");
+            if (!File.Exists(fileName)) return;
+            var lines = File.ReadAllLines(fileName);
+            foreach (var line in lines)
+            {
+                if (remove)
+                {
+                    Function.Call(Hash.REMOVE_IPL, line);
+                    continue;
+                }
+                Function.Call(Hash.REQUEST_IPL, line);
+            }
         }
     }
 

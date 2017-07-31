@@ -6,17 +6,22 @@ namespace GTS.OrbitalSystems
 {
     public class Surface : Entity
     {
-        public Surface(Prop prop, float tileSize = 1024) : base(prop.Handle)
+        public Surface(Prop prop, bool tile, float tileSize = 1024) : base(prop.Handle)
         {
             TileSize = tileSize;
+            Tile = tile;
         }
 
         public Prop[,] TerrainGrid { get; private set; } = new Prop[3, 3];
 
         public float TileSize { get; }
 
+        public bool Tile { get; }
+
         public void DoInfiniteTile(Vector3 playerPosition, float tileSize)
         {
+            if (!Tile) return;
+
             var xOffset = 0;
             var yOffset = 0;
             Prop playerTerrain = null;
@@ -68,6 +73,8 @@ namespace GTS.OrbitalSystems
 
         public void GenerateTerrain()
         {
+            if (!Tile) return;
+
             IsVisible = false;
 
             TerrainGrid[0, 0] = Utils.CreatePropNoOffset(Model, Position, false);
@@ -134,6 +141,8 @@ namespace GTS.OrbitalSystems
 
         public void RemoveTiles()
         {
+            if (!Tile) return;
+
             if (TerrainGrid != null)
                 for (var i = 0; i < TerrainGrid.GetLength(0); i++)
                 for (var j = 0; j < TerrainGrid.GetLength(1); j++)
