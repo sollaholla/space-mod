@@ -251,7 +251,6 @@ namespace GTS.Scenes
             {
                 ConfigureRendering();
                 SettingsUpdate();
-                UpdateWormHoles();
                 Galaxy.Update();
                 PilotPlayer();
                 PilotVehicle();
@@ -262,6 +261,7 @@ namespace GTS.Scenes
                 TileTerrain();
                 BillboardBillboards();
                 ConfigureAudio();
+                UpdateWormHoles();
             }
             finally
             {
@@ -271,7 +271,7 @@ namespace GTS.Scenes
 
         /// <summary>
         /// </summary>
-        internal void Delete(bool newSceneLoading = false)
+        internal void Delete()
         {
             lock (_updateLock)
             {
@@ -315,9 +315,7 @@ namespace GTS.Scenes
                 // Reset waves and wind speed.
                 Function.Call(Hash._0x5E5E99285AE812DB);
                 Function.Call(Hash.SET_WIND_SPEED, 1.0f);
-
-                if (newSceneLoading) return;
-                Function.Call(Hash.STOP_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+                Function.Call(Hash.STOP_AUDIO_SCENES);
                 Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
                 Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, ReticleTextureDict);
                 Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
@@ -1613,7 +1611,7 @@ namespace GTS.Scenes
                         else PlayerPed.Velocity = targetVelocity;
                         Script.Yield();
                     }
-                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextSceneRotation, Vector3.Zero);
+                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextSceneRotation, orbitalData.NextScenePosition);
                 }
             }
         }

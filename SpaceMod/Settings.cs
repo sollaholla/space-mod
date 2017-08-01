@@ -42,6 +42,6 @@ namespace GTS
 
         /// <summary>
         /// </summary>
-        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-3874.793f, 3878.417f, 7000.7289f);
+        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 7000);
     }
 }

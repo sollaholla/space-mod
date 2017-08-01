@@ -65,7 +65,7 @@ namespace GTS
         private bool _loadModelsAtStart;
         private bool _disableWantedStars = true;
         private bool _resetWantedLevel;
-        private float _enterOrbitHeight = 5000;
+        private float _enterOrbitHeight = 7500;
         private Keys _optionsMenuKey = Keys.NumPad9;
         private int _missionStatus = 2;
         private bool _didSetMissionFlag;
@@ -639,7 +639,7 @@ namespace GTS
                 ClearAllEntities();
 
                 if (_currentScene != null && _currentScene != default(Scene))
-                    _currentScene.Delete(true);
+                    _currentScene.Delete();
 
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
@@ -747,7 +747,7 @@ namespace GTS
                 Game.FadeScreenOut(1000);
                 Wait(1000);
 
-                _currentScene?.Delete(isActualScene);
+                _currentScene?.Delete();
                 _currentScene = null;
 
                 ResetWeather();
@@ -757,12 +757,8 @@ namespace GTS
                 if (newSceneFile != "cmd_earth")
                 {
                     CreateScene(newScene, newSceneFile);
-
-                    // AFTER creating the scene we set our offsets/rotations so that
-                    // values set within the start of the scene are overridden.
                     if (exitOffset != Vector3.Zero)
                         PlayerPosition = newScene.GalaxyCenter + exitOffset;
-
                     if (PlayerPed.IsInVehicle())
                         PlayerPed.CurrentVehicle.Rotation = exitRotation;
                     else PlayerPed.Rotation = exitRotation;
@@ -770,30 +766,31 @@ namespace GTS
                 else
                 {
                     Function.Call(Hash.PAUSE_CLOCK, false);
-
                     GiveSpawnControlToGame();
-
-                    if (PlayerPed.IsInVehicle())
-                    {
-                        var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
-                        playerPedCurrentVehicle.Position = GTS.Settings.EarthAtmosphereEnterPosition;
-                        playerPedCurrentVehicle.Rotation = Vector3.Zero;
-                        playerPedCurrentVehicle.Heading = 243;
-                        playerPedCurrentVehicle.HasGravity = true;
-                        playerPedCurrentVehicle.Speed = 1000;
-                    }
-                    else
-                    {
-                        PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
-                    }
-
+                    EnterAtmosphere();
                     PlayerPed.HasGravity = true;
-
                     Utils.SetGravityLevel(9.81f);
                 }
 
                 Wait(1000);
                 Game.FadeScreenIn(1000);
+            }
+        }
+
+        private void EnterAtmosphere()
+        {
+            if (PlayerPed.IsInVehicle())
+            {
+                var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
+                playerPedCurrentVehicle.Position = GTS.Settings.EarthAtmosphereEnterPosition;
+                playerPedCurrentVehicle.Rotation = Vector3.Zero;
+                playerPedCurrentVehicle.Heading = 243;
+                playerPedCurrentVehicle.HasGravity = true;
+                playerPedCurrentVehicle.Speed = 1000;
+            }
+            else
+            {
+                PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
             }
         }
 
