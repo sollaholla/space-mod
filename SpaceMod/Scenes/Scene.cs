@@ -603,6 +603,11 @@ namespace GTS.Scenes
             PlayerPosition = position;
         }
 
+        private void Exit()
+        {
+            Exited?.Invoke(this, Info.NextScene, Info.NextSceneRotation, Info.NextScenePosition);
+        }
+
         #endregion
 
         #region Spawning
@@ -900,12 +905,10 @@ namespace GTS.Scenes
         {
             if (!Info.SurfaceScene)
             {
-                if (!Game.IsLoading && !Game.IsScreenFadedOut)
-                    if (!_didRaiseGears && Entity.Exists(PlayerPed.CurrentVehicle))
-                    {
-                        PlayerPed.CurrentVehicle.LandingGear = VehicleLandingGear.Retracted;
-                        _didRaiseGears = true;
-                    }
+                if (Game.IsLoading || Game.IsScreenFadedOut) return;
+                if (_didRaiseGears || !Entity.Exists(PlayerPed.CurrentVehicle)) return;
+                PlayerPed.CurrentVehicle.LandingGear = VehicleLandingGear.Retracted;
+                _didRaiseGears = true;
                 return;
             }
 
@@ -913,6 +916,12 @@ namespace GTS.Scenes
                 return;
 
             const float distance = 15 * 2;
+
+            if (PlayerPed.Position.Z - Info.GalaxyCenter.Z > Info.SurfaceExitHeight)
+            {
+                Exit();
+                return;
+            }
 
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance &&
                 !PlayerPed.IsInVehicle())
@@ -927,7 +936,7 @@ namespace GTS.Scenes
 
             if (PlayerVehicle != null && PlayerPed.IsInVehicle(PlayerVehicle))
             {
-                Exited?.Invoke(this, Info.NextScene, Info.NextSceneRotation, Info.NextScenePosition);
+                Exit();
             }
             else if (PlayerPed.IsInVehicle())
             {

@@ -242,6 +242,11 @@ public class SceneInfo : NextSceneInfo
     [RefreshProperties(RefreshProperties.All)]
     public float WindSpeed { get; set; }
 
+    [Category("Surface Settings")]
+    [Description("The height above the galaxy center the player must be to exit the surface.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public float SurfaceExitHeight { get; set; } = 750f;
+
     [XmlIgnore]
     public bool SurfaceScene => Surfaces.Any();
 }

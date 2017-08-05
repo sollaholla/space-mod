@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using GTA.Math;
 
 namespace GTS.Extensions
@@ -23,25 +24,21 @@ namespace GTS.Extensions
                 if (string.IsNullOrEmpty(str))
                     return defaultValue;
 
-                // start at the 0 mark of the string.
-                var currentIndex = 0;
-
-                // we're gonna use the helper function to get our values, we made a helper to avoid code duplication.
-                var x = GetNum(str, 'X', ref currentIndex);
-                var y = GetNum(str, 'Y', ref currentIndex);
-                var z = GetNum(str, 'Z', ref currentIndex);
+                str = str.Replace("X", string.Empty).Replace("Y", string.Empty).Replace("Z", string.Empty).Replace(":", string.Empty);
+                var split = str.Split(' ');
 
                 // we'll use these as the new values.
-                float newX;
-                float newY;
-                float newZ;
+                var x = split[0];
+                var y = split[1];
+                var z = split[2];
 
                 // if we succeed in parsing them all, then we return the vector3.
-                if (float.TryParse(x, NumberStyles.Float, CultureInfo.InvariantCulture, out newX) &&
-                    float.TryParse(y, NumberStyles.Float, CultureInfo.InvariantCulture, out newY) &&
-                    float.TryParse(z, NumberStyles.Float, CultureInfo.InvariantCulture, out newZ))
+                if (float.TryParse(x, out float newX) &&
+                    float.TryParse(y, out float newY) &&
+                    float.TryParse(z, out float newZ))
                     return new Vector3(newX, newY, newZ);
 
+                // otherwise we just return the default value.
                 return defaultValue;
             }
             catch
