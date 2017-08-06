@@ -182,12 +182,12 @@ namespace DefaultMissions
                     case 2:
                         playerCharacter.Task.ClearAllImmediately();
 
-                        var interiorPos = _generatorPos + new Vector3(0, 0, 1000);
+                        var interiorPos = new Vector3(0, 0, 0);
                         m = new Model("hw1_22_shipint");
                         m.Request(5000);
                         _ufoInt = World.CreateProp(m, interiorPos, Vector3.Zero, false, false);
 
-                        playerCharacter.Position = new Vector3(-9884.021f, -10006.42f, 11016.31f);
+                        playerCharacter.Position = new Vector3(2.649f, 7.32f, 18.31f);
                         playerCharacter.Heading = 213.0546f;
                         playerCharacter.FreezePosition = true;
                         playerCharacter.Task.PlayAnimation("mp_sleep", "sleep_loop", 8.0f, -8.0f, -1,
@@ -425,7 +425,7 @@ namespace DefaultMissions
                         var spawn = playerCharacter.Position.Around(_random.Next(75, 150));
                         spawn = Utils.GetGroundHeightRay(spawn);
                         if (spawn == Vector3.Zero) continue;
-                        var m = new Model(PedHash.MovAlien01);
+                        var m = new Model(Utils.GetAlienModel());
                         m.Request(5000);
                         var ped = Utils.CreateAlien(m, spawn, 0, WeaponHash.CombatPDW);
                         if (!Entity.Exists(ped)) continue;

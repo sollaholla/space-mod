@@ -751,7 +751,7 @@ namespace GTS.Scenes
 
             DrawMarkers();
 
-            if (Camera.Exists(World.RenderingCamera))
+            if (Camera.Exists(World.RenderingCamera) || FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
             {
                 _didSetTimecycle = false;
             }
