@@ -59,8 +59,8 @@ namespace GTS
         #region Settings
 
         private string _defaultSpaceScene = "EarthOrbit.space";
-        private Vector3 _defaultSpaceOffset = new Vector3(0, 2500, 0);
-        private Vector3 _defaultSpaceRotation = new Vector3(0, 0, 180);
+        private Vector3 _defaultSpaceOffset = new Vector3(-2274.52f, 3298.333f, 39.02f);
+        private Vector3 _defaultSpaceRotation = new Vector3(0f, -69.22044f, 80.00073f);
         private bool _menuEnabled = true;
         private bool _loadModelsAtStart;
         private bool _disableWantedStars = true;
