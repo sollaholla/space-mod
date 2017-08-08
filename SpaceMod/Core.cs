@@ -592,7 +592,7 @@ namespace GTS
             Game.MaxWantedLevel = 0;
         }
 
-        private void ResetWeather()
+        private static void ResetWeather()
         {
             // Basically happens when we abort.
             Function.Call(Hash.CLEAR_WEATHER_TYPE_PERSIST);
@@ -605,7 +605,7 @@ namespace GTS
 
         #region Scene Management
 
-        private SceneInfo DeserializeFileAsScene(string fileName)
+        private static SceneInfo DeserializeFileAsScene(string fileName)
         {
             if (fileName == "cmd_earth")
                 return null;
@@ -836,7 +836,7 @@ namespace GTS
             }
         }
 
-        private void GiveSpawnControlToGame()
+        private static void GiveSpawnControlToGame()
         {
             Game.Globals[4].SetInt(0);
             Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, false);

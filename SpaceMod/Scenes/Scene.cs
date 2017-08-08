@@ -1620,7 +1620,8 @@ namespace GTS.Scenes
                         else PlayerPed.Velocity = targetVelocity;
                         Script.Yield();
                     }
-                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextSceneRotation, orbitalData.NextScenePosition);
+                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextSceneRotation,
+                        orbitalData.NextScenePosition);
                 }
             }
         }
