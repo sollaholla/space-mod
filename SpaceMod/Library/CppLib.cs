@@ -86,8 +86,6 @@ namespace GTS.Library
                 return;
 
             GTSLib_RemoveWater();
-
-            Debug.Log("Removing game water.");
         }
 
         public static void RestoreWater()
@@ -96,8 +94,14 @@ namespace GTS.Library
                 return;
 
             GTSLib_RestoreWater();
+        }
 
-            Debug.Log("Restoring game water.");
+        [DllImport("GTSLib.asi")]
+        private static extern bool GTSLib_IsRockstarEditorActive();
+
+        public static bool IsRockstarEditorActive()
+        {
+            return GTSLib_IsLibraryInitialized() && GTSLib_IsRockstarEditorActive();
         }
     }
 }

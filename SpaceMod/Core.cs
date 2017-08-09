@@ -30,6 +30,7 @@ namespace GTS
         {
             _tickLock = new object();
             Scenarios = new List<Scenario>();
+            new RockstarEditorTimecycler();
 
             Instance = this;
             KeyUp += OnKeyUp;
