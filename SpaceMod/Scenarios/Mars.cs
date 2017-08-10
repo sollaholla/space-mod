@@ -364,18 +364,13 @@ namespace DefaultMissions
                 return;
 
             var vehicleSpawn = Utils.GetGroundHeightRay(_marsEngineerRoverSpawn);
-            if (vehicleSpawn != Vector3.Zero)
-            {
-                var roverModel = new Model("lunar");
-                roverModel.Request(5000);
-                _rover = World.CreateVehicle(roverModel, vehicleSpawn);
-                if (Entity.Exists(_rover))
-                {
-                    _rover.RadioStation = RadioStation.RadioOff;
-                    _rover.Heading = _marsEngineerRoverHeading;
-                    roverModel.MarkAsNoLongerNeeded();
-                }
-            }
+            if (vehicleSpawn == Vector3.Zero) return;
+            var roverModel = new Model("lunar");
+            roverModel.Request(5000);
+            _rover = World.CreateVehicle(roverModel, vehicleSpawn);
+            if (!Entity.Exists(_rover)) return;
+            _rover.Heading = _marsEngineerRoverHeading;
+            roverModel.MarkAsNoLongerNeeded();
         }
 
         private void CreateAliens(Vector3 spawn)

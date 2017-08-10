@@ -43,5 +43,9 @@ namespace GTS
         /// <summary>
         /// </summary>
         public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 7000);
+
+        /// <summary>
+        /// </summary>
+        public static Vector3 EarthAtmosphereEnterRotation = new Vector3(-35, 0, 0);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +9,7 @@ namespace GTS
 {
     public class RockstarEditorTimecycler
     {
-        private int _timecycleModIndex = 0;
+        private int _timecycleModIndex;
         private readonly string[] _timecycleMods;
         private readonly System.Windows.Forms.Timer _timer;
 
@@ -34,11 +33,6 @@ namespace GTS
             }
 
             if (!GtsLib.IsRockstarEditorActive()) return;
-            if (Game.IsLoading) return;
-            if (Game.IsScreenFadedOut) return;
-            if (Game.IsScreenFadingOut) return;
-            if (Game.IsScreenFadingIn) return;
-            if (!Game.IsScreenFadedIn) return;
             TimeCycleModifier.Set(_timecycleMods[_timecycleModIndex], 1.0f);
             if (!Game.IsControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
             _timecycleModIndex = (_timecycleModIndex + 1) % _timecycleMods.Length;

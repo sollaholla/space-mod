@@ -6,10 +6,13 @@ namespace GTS.OrbitalSystems
 {
     public class Surface : Entity
     {
-        public Surface(Prop prop, bool tile, float tileSize = 1024) : base(prop.Handle)
+        private int _lod;
+
+        public Surface(Prop prop, bool tile, int lod, float tileSize) : base(prop.Handle)
         {
             TileSize = tileSize;
             Tile = tile;
+            _lod = lod;
         }
 
         public Prop[,] TerrainGrid { get; private set; } = new Prop[3, 3];
@@ -78,14 +81,31 @@ namespace GTS.OrbitalSystems
             IsVisible = false;
 
             TerrainGrid[0, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 0].LodDistance = _lod;
+
             TerrainGrid[0, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 1].LodDistance = _lod;
+
             TerrainGrid[0, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 2].LodDistance = _lod;
+
             TerrainGrid[1, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 0].LodDistance = _lod;
+
             TerrainGrid[1, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 1].LodDistance = _lod;
+
             TerrainGrid[1, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 2].LodDistance = _lod;
+
             TerrainGrid[2, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 0].LodDistance = _lod;
+
             TerrainGrid[2, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 1].LodDistance = _lod;
+
             TerrainGrid[2, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 2].LodDistance = _lod;
 
             UpdateTilePositions();
         }
