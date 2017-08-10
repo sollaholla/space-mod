@@ -658,7 +658,7 @@ namespace GTS
             {
                 if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
                     continue;
-                if (!e.IsAttachedTo(PlayerPed.CurrentVehicle))
+                if (PlayerPed.CurrentVehicle == null || !e.IsAttachedTo(PlayerPed.CurrentVehicle))
                     e.Delete();
             }
         }

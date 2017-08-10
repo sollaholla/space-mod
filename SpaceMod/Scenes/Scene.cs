@@ -605,7 +605,7 @@ namespace GTS.Scenes
 
             if (Info.SurfaceScene)
             {
-                if (!CanDoOrbitLanding())
+                if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding())
                 {
                     var newPosition = Utils.GetGroundHeightRay(position, PlayerPed);
                     var timer = DateTime.Now + new TimeSpan(0, 0, 5);
