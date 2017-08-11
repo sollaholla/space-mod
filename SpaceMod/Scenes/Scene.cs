@@ -1588,10 +1588,10 @@ namespace GTS.Scenes
             Game.DisableControlThisFrame(2, Control.WeaponWheelPrev);
             Game.DisableControlThisFrame(2, Control.WeaponWheelUpDown);
             Game.DisableControlThisFrame(2, Control.SelectWeapon);
-            //var leftRight = Game.CurrentInputMode == InputMode.MouseAndKeyboard
-            //    ? Game.GetControlNormal(2, Control.MoveLeftRight)
-            //    : Game.GetControlNormal(2, Control.VehicleFlyYawRight) -
-            //      Game.GetControlNormal(2, Control.VehicleFlyYawLeft);
+            var leftRight = Game.CurrentInputMode == InputMode.MouseAndKeyboard
+                ? Game.GetControlNormal(2, Control.MoveLeftRight)
+                : Game.GetControlNormal(2, Control.VehicleFlyYawRight) -
+                  Game.GetControlNormal(2, Control.VehicleFlyYawLeft);
             var upDown = Game.GetControlNormal(2, Control.VehicleFlyPitchUpDown);
             var roll = Game.GetControlNormal(2, Control.VehicleFlyRollLeftRight);
             var fly = Game.GetControlNormal(2, Control.VehicleFlyThrottleUp);
@@ -1600,18 +1600,18 @@ namespace GTS.Scenes
 
             if (mouseControlNormal > 0)
             {
-                //leftRight *= sensitivity;
+                leftRight *= sensitivity;
                 upDown *= sensitivity;
                 roll *= sensitivity;
             }
 
-            //_yawSpeed = Mathf.Lerp(_yawSpeed, leftRight, Game.LastFrameTime * .7f);
+            _yawSpeed = Mathf.Lerp(_yawSpeed, leftRight, Game.LastFrameTime * .7f);
             _pitchSpeed = Mathf.Lerp(_pitchSpeed, upDown, Game.LastFrameTime * 5);
             _rollSpeed = Mathf.Lerp(_rollSpeed, roll, Game.LastFrameTime * 5);
             _verticalSpeed = Mathf.Lerp(_verticalSpeed, fly, Game.LastFrameTime * 1.3f);
 
-            //var leftRightRotation =
-            //    Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.RightVector * _yawSpeed);
+            var leftRightRotation =
+                Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.RightVector * _yawSpeed);
             var upDownRotation =
                 Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.UpVector * _pitchSpeed);
             var rollRotation = Quaternion.FromToRotation(entityToFly.RightVector, -entityToFly.UpVector * _rollSpeed);
