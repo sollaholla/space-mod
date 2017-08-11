@@ -33,15 +33,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="GTSCommon">
+      <HintPath>D:\Games\Grand Theft Auto V\scripts\GTSCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
+      <HintPath>D:\Games\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="NativeUI">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\NativeUI.dll</HintPath>
+    <Reference Include="NAudio">
+      <HintPath>D:\Games\Grand Theft Auto V\scripts\NAudio.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -55,6 +59,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio\AudioController.cs" />
+    <Compile Include="LoadScaleform.cs" />
     <Compile Include="Missions\IntroMission.cs" />
     <Compile Include="Extensions\VectorParse.cs" />
     <Compile Include="Missions\Types\SatelliteDish.cs" />
@@ -78,12 +84,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Library\DotNetLib.cs" />
+    <Compile Include="ShuttleManager.cs" />
+    <Compile Include="SpaceShuttle.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts"
-COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts"
+COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

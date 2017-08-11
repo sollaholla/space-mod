@@ -9,7 +9,7 @@ using GTS.Library;
 
 namespace GTS.Scenes.Interiors
 {
-    public sealed class Interior
+    public sealed class Interior //TODO: Rename to a better name.
     {
         private bool _hidden;
         private Map _map;
@@ -48,7 +48,7 @@ namespace GTS.Scenes.Interiors
             {"Yoga", "WORLD_HUMAN_YOGA"}
         };
 
-        public Interior(string name, InteriorType type = InteriorType.Gta)
+        public Interior(string name, InteriorType type = InteriorType.Gta, bool isInteriorMap = true)
         {
             Name = name;
 
@@ -57,6 +57,8 @@ namespace GTS.Scenes.Interiors
             Peds = new List<Ped>();
 
             Type = type;
+            IsInteriorMap = isInteriorMap;
+            Loaded = false;
         }
 
         public bool IsActive => !string.IsNullOrEmpty(Name) &&
@@ -68,9 +70,20 @@ namespace GTS.Scenes.Interiors
 
         public List<Ped> Peds { get; }
 
+        public Blip MapBlip { get; set; }
+
         public string Name { get; }
 
         public InteriorType Type { get; }
+
+        public bool IsInteriorMap { get; set; }
+
+        public bool Loaded { get; private set; }
+
+        public List<MapObject> GetMapObjects()
+        {
+            return _map.Objects;
+        }
 
         public void Request()
         {
@@ -91,8 +104,8 @@ namespace GTS.Scenes.Interiors
                     Debug.Log("Request GTA IPL: " + Name);
                     break;
                 case InteriorType.MapEditor:
-                    _map = XmlSerializer.Deserialize<Map>(Database.PathToInteriors + "/" + Name + ".xml");
-                    if (_map != null && _map != default(Map))
+                    _map = XmlSerializer.Deserialize<Map>(IsInteriorMap ? (Database.PathToInteriors + "/" + Name + ".xml") : Name);
+                    if (_map != null && _map != default(Map) && !Loaded)
                     {
                         _map.Objects?.ForEach(InstantiateObject);
                         LogMapObjects();
@@ -102,6 +115,7 @@ namespace GTS.Scenes.Interiors
                         Debug.Log($"Failed To Create {Database.PathToInteriors + "/" + Name + ".xml"}",
                             DebugMessageType.Error);
                     }
+                    Loaded = true;
                     break;
             }
         }

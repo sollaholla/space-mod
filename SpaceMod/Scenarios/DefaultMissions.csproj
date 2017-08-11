@@ -33,17 +33,18 @@
   <ItemGroup>
     <Reference Include="GTS, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\bin\Debug\GTS.dll</HintPath>
+      <HintPath>D:\Games\Grand Theft Auto V\scripts\GTS.dll</HintPath>
     </Reference>
-    <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="GTSCommon">
+      <HintPath>D:\Games\Grand Theft Auto V\scripts\GTSCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
+      <HintPath>D:\Games\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="NativeUI">
-      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\NativeUI.dll</HintPath>
-    </Reference>
-    <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -69,7 +70,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\Space\Scenarios\"
-COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\Space\Scenarios\"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\Space\Scenarios"
+COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\Space\Scenarios"</PostBuildEvent>
   </PropertyGroup>
 </Project>

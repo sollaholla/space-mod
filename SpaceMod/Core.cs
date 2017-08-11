@@ -41,6 +41,8 @@ namespace GTS
             CreateCustomMenu();
             RequestModels();
 
+            _shuttleManager = new ShuttleManager();
+
             Debug.Log("Initialized!");
         }
 
@@ -67,7 +69,7 @@ namespace GTS
         private bool _resetWantedLevel;
         private float _enterOrbitHeight = 7500;
         private Keys _optionsMenuKey = Keys.NumPad9;
-        private int _missionStatus = 2;
+        private int _missionStatus = 0;
         private bool _didSetMissionFlag;
         private bool _didRestartEarthUpdate = true;
 
@@ -79,6 +81,12 @@ namespace GTS
 
         // private EndMission endMission = null;
         private bool _endMissionCanStart;
+
+        #endregion
+
+        #region Shuttle Stuff
+
+        private ShuttleManager _shuttleManager;
 
         #endregion
 
@@ -182,6 +190,8 @@ namespace GTS
             _introMission?.OnAborted();
             // endMission?.OnAborted();
 
+            _shuttleManager?.Abort();
+
             ///////////////////////////////////////////////////////////
             // NOTE: Putting this on the bottom since it uses some
             // Wait() statements, that will stop anything else from 
@@ -194,6 +204,12 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
+            if(e.KeyCode == Keys.K)
+            {
+                _shuttleManager.LoadMap();
+                _shuttleManager.CreateShuttle();
+            }
+
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
@@ -210,6 +226,7 @@ namespace GTS
             {
                 try
                 {
+                    _shuttleManager.Update();
                     ProcessMenus();
                     SetVarsDependantOnSceneNull();
                     DisableWantedStars();
@@ -253,7 +270,7 @@ namespace GTS
                 _defaultSpaceOffset);
             _defaultSpaceRotation = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_rotation"),
                 _defaultSpaceRotation);
-            _missionStatus = Settings.GetValue("main_mission", "mission_status", _missionStatus);
+            _missionStatus = Settings.GetValue("main_mission", "f", _missionStatus);
             GTS.Settings.UseSpaceWalk = Settings.GetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
             GTS.Settings.ShowCustomGui = Settings.GetValue("settings", "show_custom_Gui", GTS.Settings.ShowCustomGui);
             GTS.Settings.UseScenarios = Settings.GetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);

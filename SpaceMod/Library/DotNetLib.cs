@@ -375,6 +375,27 @@ namespace GTS.Library
                 Function.Call(Hash.REQUEST_IPL, line);
             }
         }
+
+        public static Model RequestModel(string modelName)
+        {
+            Model model = new Model(modelName);
+            model.Request();
+            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 7);
+            while (!model.IsLoaded)
+            {
+                Script.Yield();
+                if (DateTime.UtcNow > timout)
+                    break;
+            }
+
+            if (!model.IsLoaded)
+            {
+                UI.Notify("A model ~r~failed~s~ to load, aborting script.");
+                throw new SystemException(nameof(model));
+            }
+
+            return model;
+        }
     }
 
     public class LoopedPtfx

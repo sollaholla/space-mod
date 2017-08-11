@@ -71,7 +71,7 @@ namespace GTS.Missions
             while (Game.IsLoading)
                 Script.Yield();
 
-            _missionStep = 10;
+            //_missionStep = 10;
 
             CreateColonel();
 

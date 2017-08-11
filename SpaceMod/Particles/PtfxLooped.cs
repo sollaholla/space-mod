@@ -47,6 +47,17 @@ namespace GTS.Particles
                 offset.Z, rotation.X, rotation.Y, rotation.Z, boneIndex, scale, false, false, false, false);
         }
 
+        public int Play(Entity entity, string bone, Vector3 offset, Vector3 rotation, float scale)
+        {
+            if (Handle != -1) return Handle;
+            Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, Asset);
+            return Handle = Function.Call<int>(Hash._START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE, FxName, entity, offset.X,
+                offset.Y,
+                offset.Z, rotation.X, rotation.Y, rotation.Z, Function.Call<int>(Hash.GET_ENTITY_BONE_INDEX_BY_NAME, entity.Handle, bone),
+                scale, false, false, false, false);
+
+        }
+
         public bool Exists()
         {
             return Function.Call<bool>(Hash.DOES_PARTICLE_FX_LOOPED_EXIST, Handle);

@@ -87,7 +87,6 @@ namespace GTS.Missions.Types
         {
             if (_blip != null)
                 return;
-
             _blip = new Blip(World.CreateBlip(Position).Handle)
             {
                 Color = BlipColor.Yellow,
