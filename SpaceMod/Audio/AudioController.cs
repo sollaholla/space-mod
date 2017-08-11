@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using GTA;
 using NAudio.Wave;
 
 namespace GTS.Audio
@@ -12,8 +11,7 @@ namespace GTS.Audio
 
     public static class AudioController
     {
-        private const string Path = ".\\scripts\\Space\\Audio\\";
-
+        private const string Path = Database.PathToAudio + "\\";
         private static WaveFileReader _wave;
         private static DirectSoundOut _output;
 
@@ -24,7 +22,7 @@ namespace GTS.Audio
 
             _wave = new WaveFileReader(path);
             _output = new DirectSoundOut();
-            var waveChannel32 = new WaveChannel32(_wave) { Volume = volume };
+            var waveChannel32 = new WaveChannel32(_wave) {Volume = volume};
             _output.Init(waveChannel32);
             _output.Play();
         }

@@ -2,24 +2,26 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using GTA;
 using GTS.Library;
+using Control = GTA.Control;
 
 namespace GTS
 {
     public class RockstarEditorTimecycler
     {
-        private int _timecycleModIndex;
         private readonly string[] _timecycleMods;
-        private readonly System.Windows.Forms.Timer _timer;
+        private readonly Timer _timer;
+        private int _timecycleModIndex;
 
         public RockstarEditorTimecycler()
         {
             const string timecycles = ".\\scripts\\Space\\TimecycleMods.txt";
             if (!File.Exists(timecycles)) return;
-            _timecycleMods = new List<string> { "" }.Concat(File.ReadAllLines(timecycles)).ToArray();
+            _timecycleMods = new List<string> {""}.Concat(File.ReadAllLines(timecycles)).ToArray();
             if (_timecycleMods.Length <= 0) return;
-            _timer = new System.Windows.Forms.Timer { Interval = 10 };
+            _timer = new Timer {Interval = 10};
             _timer.Start();
             _timer.Tick += RockstarEditorTick;
         }

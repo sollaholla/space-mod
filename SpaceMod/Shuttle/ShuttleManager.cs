@@ -1,58 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTS.Scenes.Interiors;
-using GTS.Extensions;
-using GTS.Library;
 
-namespace GTS
+namespace GTS.Shuttle
 {
     public class ShuttleManager
     {
+        // TODO: Convert some of these to settings.
+        private readonly string _astronautModel = "s_m_m_movspace_01";
+        private readonly float _enterOrbitHeight;
         private readonly string _mapLocation = Database.PathToInteriors + "\\LaunchStation.xml";
+        private readonly float _shuttleHeading = 95;
+        private readonly float _shuttleInteractDistance = 75;
+
+        private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
+
+        private Interior _map;
 
         private SpaceShuttle _shuttle;
         private Vehicle _shuttleVehicle;
 
-        private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
-        private readonly float _shuttleHeading = 95;
-        private readonly float _shuttleInteractDistance = 75;
-        private readonly string _astronautModel = "s_m_m_movspace_01";
-        private readonly float _enterOrbitHeight;
-
-        private Interior _map;
-        
 
         public ShuttleManager(float enterOrbitHeight)
         {
             _enterOrbitHeight = enterOrbitHeight;
         }
-
-        #region TEMPORARY!
-        public static bool IsHelpMessageBeingDisplayed()
-        {
-            return Function.Call<bool>(Hash.IS_HELP_MESSAGE_BEING_DISPLAYED);
-        }
-
-        public static void DisplayHelpTextThisFrame(string helpText)
-        {
-            Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, "CELL_EMAIL_BCON");
-
-            const int maxStringLength = 99;
-
-            for (var i = 0; i < helpText.Length; i += maxStringLength)
-            {
-                Function.Call(Hash._0x6C188BE134E074AA, helpText.Substring(i, Math.Min(maxStringLength, helpText.Length - i)));
-            }
-
-            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
-        }
-        #endregion
 
         public void Update()
         {
@@ -68,9 +43,10 @@ namespace GTS
                 var dist = _shuttle.Position.DistanceTo(Game.Player.Character.Position);
                 if (dist > _shuttleInteractDistance) return;
                 Game.DisableControlThisFrame(2, Control.Enter);
-                DisplayHelpTextThisFrame("Press ~INPUT_ENTER~ to enter the shuttle.");
+                DisplayHelpTextThisFrame(
+                    "Press ~INPUT_ENTER~ to enter the shuttle."); // TODO: Replace this with GXT label.
                 if (!Game.IsDisabledControlJustPressed(2, Control.Enter)) return;
-                EnterShuttle();
+                PlacePlayerInShuttle();
             }
 
             if (_shuttle.HeightAboveGround <= _enterOrbitHeight) return;
@@ -90,11 +66,9 @@ namespace GTS
             _shuttle?.CleanUp();
             _shuttle?.Delete();
 
-            if (_map != null)
-            {
-                _map.Remove();
-                _map.MapBlip?.Remove();
-            }
+            if (_map == null) return;
+            _map.Remove();
+            _map.MapBlip?.Remove();
         }
 
         public void LoadMap()
@@ -103,27 +77,21 @@ namespace GTS
             CreateShuttle();
             _map.Request();
 
-            if (_map.Loaded)
-            {
-                var positions = _map.GetMapObjects().Select(x => x.Position).ToArray();
-                Vector3 accumulator = Vector3.Zero;
+            if (!_map.Loaded) return;
+            var positions = _map.GetMapObjects().Select(x => x.Position).ToArray();
+            var accumulator = positions.Aggregate(Vector3.Zero, (current, position) => current + position);
 
-                // Add to the accumulator.
-                foreach (var position in positions)
-                    accumulator += position;
-
-                // This is basically like calculating the average of regular numbers.
-                Vector3 average = accumulator / positions.Length;
-                _map.MapBlip = World.CreateBlip(average);
-                _map.MapBlip.Sprite = BlipSprite.Hangar;
-                _map.MapBlip.Color = BlipColor.Blue;
-            }
+            // This is basically like calculating the average of regular numbers.
+            var average = accumulator / positions.Length;
+            _map.MapBlip = World.CreateBlip(average);
+            _map.MapBlip.Sprite = BlipSprite.Hangar;
+            _map.MapBlip.Color = BlipColor.Blue;
         }
 
         public void CreateShuttle()
         {
             if (_shuttle != null) return;
-            Model m = new Model("shuttle");
+            var m = new Model("shuttle");
             m.Request(5000);
             _shuttleVehicle = World.CreateVehicle(m, _shuttlePosition, _shuttleHeading);
             _shuttleVehicle.HasCollision = false;
@@ -132,7 +100,7 @@ namespace GTS
             _shuttle.LodDistance = -1;
         }
 
-        public void EnterShuttle()
+        public void PlacePlayerInShuttle()
         {
             var newPlayer = World.CreatePed(_astronautModel, Game.Player.Character.Position);
             var player = Game.Player.Character;
@@ -152,5 +120,27 @@ namespace GTS
             _shuttleVehicle.LockStatus = VehicleLockStatus.Locked;
             _shuttleVehicle.CurrentBlip?.Remove();
         }
+
+        #region TEMPORARY!
+
+        public static bool IsHelpMessageBeingDisplayed()
+        {
+            return Function.Call<bool>(Hash.IS_HELP_MESSAGE_BEING_DISPLAYED);
+        }
+
+        public static void DisplayHelpTextThisFrame(string helpText)
+        {
+            Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, "CELL_EMAIL_BCON");
+
+            const int maxStringLength = 99;
+
+            for (var i = 0; i < helpText.Length; i += maxStringLength)
+                Function.Call(Hash._0x6C188BE134E074AA,
+                    helpText.Substring(i, Math.Min(maxStringLength, helpText.Length - i)));
+
+            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
+        }
+
+        #endregion
     }
 }

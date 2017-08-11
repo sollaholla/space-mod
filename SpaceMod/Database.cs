@@ -22,6 +22,10 @@ namespace GTS
 
         /// <summary>
         /// </summary>
+        internal const string PathToAudio = ".\\scripts\\Space\\Audio";
+
+        /// <summary>
+        /// </summary>
         internal const string NotifyHeader = "~p~~h~Grand Theft Space~h~~n~~s~";
 
         static Database()

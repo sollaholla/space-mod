@@ -53,9 +53,9 @@ namespace GTS.Particles
             Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, Asset);
             return Handle = Function.Call<int>(Hash._START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE, FxName, entity, offset.X,
                 offset.Y,
-                offset.Z, rotation.X, rotation.Y, rotation.Z, Function.Call<int>(Hash.GET_ENTITY_BONE_INDEX_BY_NAME, entity.Handle, bone),
+                offset.Z, rotation.X, rotation.Y, rotation.Z,
+                Function.Call<int>(Hash.GET_ENTITY_BONE_INDEX_BY_NAME, entity.Handle, bone),
                 scale, false, false, false, false);
-
         }
 
         public bool Exists()

@@ -1,15 +1,14 @@
-﻿using GTA;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Linq;
+using System.Threading;
+using GTA;
 
-namespace GTS
+namespace GTS.Shuttle
 {
     public class LoadScaleformDrawer : Script
     {
         private readonly List<LoadScaleform> _loadScaleforms;
-
-        private bool _refreshedScaleforms;
 
         private readonly object _tickLock = new object();
 
@@ -24,7 +23,7 @@ namespace GTS
 
         public bool DrawingScaleforms => _loadScaleforms != null && _loadScaleforms.Any(x => x.Draw);
 
-        private void OnTick(object sender, System.EventArgs e)
+        private void OnTick(object sender, EventArgs e)
         {
             if (!Monitor.TryEnter(_tickLock)) return;
 
@@ -40,11 +39,6 @@ namespace GTS
             {
                 Monitor.Exit(_tickLock);
             }
-        }
-
-        public void RefreshScaleforms()
-        {
-
         }
 
         public LoadScaleform Create(string text = "Loading...")
@@ -80,10 +74,7 @@ namespace GTS
 
         public string Text
         {
-            set
-            {
-                Scaleform?.CallFunction("SET_DATA_SLOT", 0, "b_50", value);
-            }
+            set => Scaleform?.CallFunction("SET_DATA_SLOT", 0, "b_50", value);
         }
     }
 }

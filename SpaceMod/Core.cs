@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using GTA;
@@ -12,8 +11,8 @@ using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
 using GTS.Missions;
-using GTS.Scenarios;
 using GTS.Scenes;
+using GTS.Shuttle;
 using NativeUI;
 
 namespace GTS
@@ -68,7 +67,7 @@ namespace GTS
         private bool _resetWantedLevel;
         private float _enterOrbitHeight = 7500;
         private Keys _optionsMenuKey = Keys.NumPad9;
-        private int _missionStatus = 0;
+        private int _missionStatus;
         private bool _didSetMissionFlag;
         private bool _didRestartEarthUpdate = true;
 
@@ -85,7 +84,7 @@ namespace GTS
 
         #region Shuttle Stuff
 
-        private ShuttleManager _shuttleManager;
+        private readonly ShuttleManager _shuttleManager;
 
         #endregion
 
@@ -733,9 +732,12 @@ namespace GTS
                 playerPedCurrentVehicle.HasGravity = true;
                 playerPedCurrentVehicle.Speed = 1000;
             }
-            else PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
+            else
+            {
+                PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
+            }
         }
-        
+
         #endregion
 
         #region Utility

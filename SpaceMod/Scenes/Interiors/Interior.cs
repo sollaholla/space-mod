@@ -104,7 +104,9 @@ namespace GTS.Scenes.Interiors
                     Debug.Log("Request GTA IPL: " + Name);
                     break;
                 case InteriorType.MapEditor:
-                    _map = XmlSerializer.Deserialize<Map>(IsInteriorMap ? (Database.PathToInteriors + "/" + Name + ".xml") : Name);
+                    _map = XmlSerializer.Deserialize<Map>(IsInteriorMap
+                        ? Database.PathToInteriors + "/" + Name + ".xml"
+                        : Name);
                     if (_map != null && _map != default(Map) && !Loaded)
                     {
                         _map.Objects?.ForEach(InstantiateObject);

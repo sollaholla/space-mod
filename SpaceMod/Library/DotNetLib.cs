@@ -378,9 +378,9 @@ namespace GTS.Library
 
         public static Model RequestModel(string modelName)
         {
-            Model model = new Model(modelName);
+            var model = new Model(modelName);
             model.Request();
-            DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 7);
+            var timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 7);
             while (!model.IsLoaded)
             {
                 Script.Yield();
@@ -685,10 +685,7 @@ namespace GTS.Library
         {
             Message = new ScaleFormMessage();
 
-            Tick += (sender, args) =>
-            {
-                Message.DoTransition();
-            };
+            Tick += (sender, args) => { Message.DoTransition(); };
         }
 
         public static ScaleFormMessage Message { get; set; }

@@ -1,7 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using GTA;
 using GTA.Native;
-using GTS.Extensions;
 
 namespace GTS.Library
 {
@@ -28,7 +26,8 @@ namespace GTS.Library
                 Function.Call(Hash.SET_MOBILE_PHONE_RADIO_STATE, true);
                 Function.Call(Hash.SET_RADIO_TO_STATION_NAME, "RADIO_01_CLASS_ROCK");
                 Function.Call(Hash._0x4E404A9361F75BB2, "RADIO_01_CLASS_ROCK", "END_CREDITS_SAVE_MICHAEL_TREVOR", true);
-                if (!Function.Call<bool>(Hash.IS_AUDIO_SCENE_ACTIVE, "END_CREDITS_SCENE")) Function.Call(Hash.START_AUDIO_SCENE, "END_CREDITS_SCENE");
+                if (!Function.Call<bool>(Hash.IS_AUDIO_SCENE_ACTIVE, "END_CREDITS_SCENE"))
+                    Function.Call(Hash.START_AUDIO_SCENE, "END_CREDITS_SCENE");
                 Function.Call(Hash.SET_CREDITS_ACTIVE, true);
                 Function.Call(Hash._0xB51B9AB9EF81868C, false);
                 Function.Call(Hash.SET_GAME_PAUSES_FOR_STREAMING, false);
@@ -50,7 +49,8 @@ namespace GTS.Library
             Function.Call(Hash.SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY, false);
             Function.Call(Hash.SET_MOBILE_PHONE_RADIO_STATE, false);
             Function.Call(Hash.SET_RADIO_TO_STATION_NAME, "OFF");
-            if (Function.Call<bool>(Hash.IS_AUDIO_SCENE_ACTIVE, "END_CREDITS_SCENE")) Function.Call(Hash.STOP_AUDIO_SCENE, "END_CREDITS_SCENE");
+            if (Function.Call<bool>(Hash.IS_AUDIO_SCENE_ACTIVE, "END_CREDITS_SCENE"))
+                Function.Call(Hash.STOP_AUDIO_SCENE, "END_CREDITS_SCENE");
             Function.Call(Hash.SET_CREDITS_ACTIVE, false);
             Function.Call(Hash._0xB51B9AB9EF81868C, true);
             Function.Call(Hash.SET_GAME_PAUSES_FOR_STREAMING, true);
@@ -101,7 +101,8 @@ namespace GTS.Library
         }
 
         [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)]string name, bool toggle);
+        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)] string name,
+            bool toggle);
 
         public static void SetScriptCanBePaused(bool toggle)
         {

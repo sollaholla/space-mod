@@ -6,7 +6,7 @@ namespace GTS.OrbitalSystems
 {
     public class Surface : Entity
     {
-        private int _lod;
+        private readonly int _lod;
 
         public Surface(Prop prop, bool tile, int lod, float tileSize) : base(prop.Handle)
         {
