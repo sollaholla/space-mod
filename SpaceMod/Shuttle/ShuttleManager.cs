@@ -21,7 +21,6 @@ namespace GTS.Shuttle
         private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
 
         private Interior _map;
-
         private SpaceShuttle _shuttle;
         private Vehicle _shuttleVehicle;
 
@@ -63,13 +62,6 @@ namespace GTS.Shuttle
             _shuttle?.Delete();
             _map?.Remove();
             _map?.MapBlip?.Remove();
-
-            if (_shuttleVehicle == null) return;
-            foreach (var shuttlePassenger in _shuttleVehicle.Passengers)
-            {
-                if (shuttlePassenger?.IsPlayer ?? true) continue;
-                shuttlePassenger.Delete();
-            }
         }
 
         public void LoadMap()
@@ -111,16 +103,6 @@ namespace GTS.Shuttle
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player.Handle, newPlayer.Handle, 1, 1);
             player.Delete();
             Game.Player.Character.Task.WarpIntoVehicle(_shuttleVehicle, VehicleSeat.Driver);
-            for (var i = 0; i < _shuttleVehicle.PassengerSeats; i++)
-            {
-                var ped = World.CreatePed(_astronautModel, Vector3.Zero);
-                Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 3, false);
-                ped.SetIntoVehicle(_shuttleVehicle, VehicleSeat.Any);
-                ped.RelationshipGroup = newPlayer.RelationshipGroup;
-                newPlayer.CurrentPedGroup.Add(ped, false);
-                ped.Task.StandStill(-1);
-                ped.AlwaysKeepTask = true;
-            }
             _shuttleVehicle.LockStatus = VehicleLockStatus.Locked;
             _shuttleVehicle.CurrentBlip?.Remove();
         }
