@@ -1619,7 +1619,6 @@ namespace GTS.Scenes
             entityToFly.Quaternion = Quaternion.Lerp(entityToFly.Quaternion, rotation, Game.LastFrameTime * 1.3f);
 
             if (!canFly) return;
-
             if (fly > 0)
             {
                 var targetVelocity = entityToFly.ForwardVector.Normalized * flySpeed * _verticalSpeed;
