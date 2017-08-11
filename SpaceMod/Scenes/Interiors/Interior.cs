@@ -153,16 +153,12 @@ namespace GTS.Scenes.Interiors
         private static Model GetModel(MapObject o)
         {
             var model = new Model(o.Hash);
-
             model.Request();
-
-            var timeout2 = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
-
+            var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
             while (!model.IsLoaded)
             {
                 Script.Yield();
-
-                if (DateTime.UtcNow > timeout2)
+                if (DateTime.UtcNow > timeout)
                     break;
             }
 
@@ -217,8 +213,8 @@ namespace GTS.Scenes.Interiors
 
         private void CreatePed(MapObject mapObject, Model model)
         {
-            var ped = new Ped(World.CreatePed(model, mapObject.Position - Vector3.WorldUp, mapObject.Rotation.Z)
-                .Handle);
+            var ped = new Ped(
+                World.CreatePed(model, mapObject.Position - Vector3.WorldUp, mapObject.Rotation.Z)?.Handle ?? 0);
 
             if (!mapObject.Dynamic)
                 ped.FreezePosition = true;
@@ -230,9 +226,7 @@ namespace GTS.Scenes.Interiors
 
             SetScenario(mapObject, ped);
 
-            Relationship relationship;
-
-            if (Enum.TryParse(mapObject.Relationship, out relationship))
+            if (Enum.TryParse(mapObject.Relationship, out Relationship relationship))
             {
                 if (relationship == Relationship.Hate)
                     ped.RelationshipGroup = Game.GenerateHash("HATES_PLAYER");

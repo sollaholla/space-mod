@@ -3,6 +3,7 @@ using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTS.Scenes;
 using GTS.Scenes.Interiors;
 
 namespace GTS.Shuttle
@@ -11,6 +12,7 @@ namespace GTS.Shuttle
     {
         // TODO: Convert some of these to settings.
         private readonly string _astronautModel = "s_m_m_movspace_01";
+
         private readonly float _enterOrbitHeight;
         private readonly string _mapLocation = Database.PathToInteriors + "\\LaunchStation.xml";
         private readonly float _shuttleHeading = 95;
@@ -74,8 +76,10 @@ namespace GTS.Shuttle
         public void LoadMap()
         {
             _map = new Interior(_mapLocation, InteriorType.MapEditor, false);
-            CreateShuttle();
+            var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
+            loadScaleform.Draw = true;
             _map.Request();
+            LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
 
             if (!_map.Loaded) return;
             var positions = _map.GetMapObjects().Select(x => x.Position).ToArray();
@@ -85,7 +89,8 @@ namespace GTS.Shuttle
             var average = accumulator / positions.Length;
             _map.MapBlip = World.CreateBlip(average);
             _map.MapBlip.Sprite = BlipSprite.Hangar;
-            _map.MapBlip.Color = BlipColor.Blue;
+            _map.MapBlip.Color = Scene.MarkerBlipColor;
+            _map.MapBlip.Name = "Shuttle Launch Site";
         }
 
         public void CreateShuttle()

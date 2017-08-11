@@ -28,9 +28,6 @@ namespace GTS
         public Core()
         {
             _tickLock = new object();
-            _shuttleManager = new ShuttleManager(_enterOrbitHeight);
-            _shuttleManager.LoadMap();
-
             Instance = this;
             KeyUp += OnKeyUp;
             Tick += OnTick;
@@ -84,7 +81,7 @@ namespace GTS
 
         #region Shuttle Stuff
 
-        private readonly ShuttleManager _shuttleManager;
+        private ShuttleManager _shuttleManager;
 
         #endregion
 
@@ -210,7 +207,7 @@ namespace GTS
             {
                 try
                 {
-                    _shuttleManager.Update();
+                    CreateShuttleMap();
                     ProcessMenus();
                     SetVarsDependantOnSceneNull();
                     DisableWantedStars();
@@ -500,6 +497,20 @@ namespace GTS
             }
         }
 
+        private void CreateShuttleMap()
+        {
+            if (_shuttleManager == null)
+            {
+                while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
+                    Yield();
+                Wait(1000);
+
+                _shuttleManager = new ShuttleManager(_enterOrbitHeight);
+                _shuttleManager.LoadMap();
+            }
+            _shuttleManager.Update();
+        }
+
         #endregion
 
         #region Runtime Scene Updates
@@ -553,6 +564,7 @@ namespace GTS
                     _introMission.Completed += (scenario, success) =>
                     {
                         SetMissionStatus(1);
+                        _shuttleManager.CreateShuttle();
                         _introMission = null;
                     };
                 }
