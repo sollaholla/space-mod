@@ -92,27 +92,7 @@ namespace GTS
 
             if (_map != null)
             {
-                while (_map.Props.Count > 0)
-                {
-                    Prop prop = _map.Props[0];
-                    prop.Delete();
-                    _map.Props.RemoveAt(0);
-                }
-
-                while (_map.Peds.Count > 0)
-                {
-                    Ped ped = _map.Peds[0];
-                    ped.Delete();
-                    _map.Peds.RemoveAt(0);
-                }
-
-                while (_map.Vehicles.Count > 0)
-                {
-                    Vehicle vehicle = _map.Vehicles[0];
-                    vehicle.Delete();
-                    _map.Vehicles.RemoveAt(0);
-                }
-
+                _map.Remove();
                 _map.MapBlip?.Remove();
             }
         }
@@ -125,16 +105,6 @@ namespace GTS
 
             if (_map.Loaded)
             {
-                UI.Notify(
-                    $"{_map.Peds.Count} out of {_map.GetMapObjects().Count(o => o.Type == ObjectTypes.Ped)} Peds loaded!",
-                    true);
-                UI.Notify(
-                    $"{_map.Vehicles.Count} out of {_map.GetMapObjects().Count(o => o.Type == ObjectTypes.Vehicle)} Vehicles loaded!",
-                    true);
-                UI.Notify(
-                    $"{_map.Props.Count} out of {_map.GetMapObjects().Count(o => o.Type == ObjectTypes.Prop)} Props loaded!",
-                    true);
-
                 var positions = _map.GetMapObjects().Select(x => x.Position).ToArray();
                 Vector3 accumulator = Vector3.Zero;
 
@@ -157,10 +127,6 @@ namespace GTS
             m.Request(5000);
             _shuttleVehicle = World.CreateVehicle(m, _shuttlePosition, _shuttleHeading);
             _shuttleVehicle.HasCollision = false;
-            var blip = _shuttleVehicle.AddBlip();
-            blip.Sprite = BlipSprite.Plane;
-            blip.Color = BlipColor.Blue;
-            blip.Name = "NASA Shuttle";
             _shuttle = new SpaceShuttle(_shuttleVehicle.Handle, _shuttlePosition);
             _shuttle.Rotation = _shuttle.Rotation + new Vector3(90, 0, 0); // Rotate the shuttle upwards.
             _shuttle.LodDistance = -1;

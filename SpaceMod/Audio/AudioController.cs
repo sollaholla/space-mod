@@ -12,7 +12,7 @@ namespace GTS.Audio
 
     public static class AudioController
     {
-        private const string Path = "./scripts/Space/Audio/";
+        private const string Path = ".\\scripts\\Space\\Audio\\";
 
         private static WaveFileReader _wave;
         private static DirectSoundOut _output;

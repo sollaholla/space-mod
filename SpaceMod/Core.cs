@@ -30,6 +30,7 @@ namespace GTS
         {
             _tickLock = new object();
             _shuttleManager = new ShuttleManager(_enterOrbitHeight);
+            _shuttleManager.LoadMap();
 
             Instance = this;
             KeyUp += OnKeyUp;
@@ -194,12 +195,6 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.K)
-            {
-                _shuttleManager.LoadMap();
-                _shuttleManager.CreateShuttle();
-            }
-
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
