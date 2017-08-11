@@ -22,11 +22,16 @@ namespace GTS
         private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
         private readonly float _shuttleHeading = 95;
         private readonly float _shuttleInteractDistance = 75;
-        private readonly float _sequnceCompletionHeight = 5000;
-
         private readonly string _astronautModel = "s_m_m_movspace_01";
+        private readonly float _enterOrbitHeight;
 
         private Interior _map;
+        
+
+        public ShuttleManager(float enterOrbitHeight)
+        {
+            _enterOrbitHeight = enterOrbitHeight;
+        }
 
         #region TEMPORARY!
         public static bool IsHelpMessageBeingDisplayed()
@@ -68,7 +73,7 @@ namespace GTS
                 EnterShuttle();
             }
 
-            if (_shuttle.HeightAboveGround <= _sequnceCompletionHeight) return;
+            if (_shuttle.HeightAboveGround <= _enterOrbitHeight) return;
             _shuttle.CleanUp();
             _shuttle = null;
             _shuttleVehicle.HasCollision = true;
@@ -83,7 +88,6 @@ namespace GTS
             }
 
             _shuttle?.CleanUp();
-
             _shuttle?.Delete();
 
             if (_map != null)

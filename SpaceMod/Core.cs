@@ -29,6 +29,7 @@ namespace GTS
         public Core()
         {
             _tickLock = new object();
+            _shuttleManager = new ShuttleManager(_enterOrbitHeight);
 
             Instance = this;
             KeyUp += OnKeyUp;
@@ -39,8 +40,6 @@ namespace GTS
             SaveSettings();
             CreateCustomMenu();
             RequestModels();
-
-            _shuttleManager = new ShuttleManager();
 
             Debug.Log("Initialized!");
         }
@@ -659,7 +658,6 @@ namespace GTS
 
                 Function.Call(Hash.SET_CLOCK_TIME, _currentScene.Info.Time, _currentScene.Info.TimeMinutes, 0);
                 Function.Call(Hash.PAUSE_CLOCK, true);
-
                 Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, _currentScene.Info.WeatherName);
 
                 _currentScene.Exited += CurrentSceneOnExited;

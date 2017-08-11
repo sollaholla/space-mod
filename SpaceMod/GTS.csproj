@@ -40,8 +40,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="NAudio">
-      <HintPath>D:\Games\Grand Theft Auto V\scripts\NAudio.dll</HintPath>
+    <Reference Include="NAudio, Version=1.8.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.1.8.2\lib\net35\NAudio.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet2, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -60,7 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioController.cs" />
-    <Compile Include="LoadScaleform.cs" />
+    <Compile Include="Shuttle\LoadScaleform.cs" />
     <Compile Include="Missions\IntroMission.cs" />
     <Compile Include="Extensions\VectorParse.cs" />
     <Compile Include="Missions\Types\SatelliteDish.cs" />
@@ -68,7 +68,7 @@
     <Compile Include="Library\CppLib.cs" />
     <Compile Include="OrbitalSystems\Billboardable.cs" />
     <Compile Include="OrbitalSystems\Surface.cs" />
-    <Compile Include="RockstarEditorTimecycler.cs" />
+    <Compile Include="Library\RockstarEditorTimecycler.cs" />
     <Compile Include="Scenario\Scenario.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="Scenes\Interiors\Interior.cs" />
@@ -85,10 +85,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Library\DotNetLib.cs" />
-    <Compile Include="ShuttleManager.cs" />
-    <Compile Include="SpaceShuttle.cs" />
+    <Compile Include="Shuttle\ShuttleManager.cs" />
+    <Compile Include="Shuttle\SpaceShuttle.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts"

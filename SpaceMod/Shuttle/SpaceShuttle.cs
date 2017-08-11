@@ -75,21 +75,6 @@ namespace GTS
 
         public void Control()
         {
-            //         Game.DisableAllControlsThisFrame(2);
-            //         Game.EnableControlThisFrame(2, GTA.Control.LookUpDown);
-            //         Game.EnableControlThisFrame(2, GTA.Control.LookLeftRight);
-            //         Game.EnableControlThisFrame(2, GTA.Control.ScaledLookLeftRight);
-            //         Game.EnableControlThisFrame(2, GTA.Control.ScaledLookUpDown);
-            //         Game.EnableControlThisFrame(2, GTA.Control.NextCamera);
-            //Game.EnableControlThisFrame(2, GTA.Control.ReplayRecord);
-            //Game.EnableControlThisFrame(2, GTA.Control.ReplayStartStopRecording);
-            //Game.EnableControlThisFrame(2, GTA.Control.ReplayStartStopRecordingSecondary);
-            //Game.EnableControlThisFrame(2, GTA.Control.FrontendPause);
-            //Game.EnableControlThisFrame(2, GTA.Control.FrontendPauseAlternate);
-            //Game.EnableControlThisFrame(2, GTA.Control.ReplayPause);
-            //Game.EnableControlThisFrame(2, GTA.Control.ReplaySave);
-            //Game.EnableControlThisFrame(2, GTA.Control.SaveReplayClip);
-            //Game.EnableControlThisFrame(2, GTA.Control.CharacterWheel);
             Game.DisableControlThisFrame(2, GTA.Control.Jump);
             var values = (Control[])Enum.GetValues(typeof(Control));
             foreach (var control in values)
@@ -180,7 +165,6 @@ namespace GTS
             if (effect != null) return;
             effect = new PtfxLooped(name, asset);
             effect.Play(ent, 0, offset, rotation, scale);
-            //effect.PlayLoopedOnEntity(ent, offset, rotation, scale);
         }
 
         private void DetachSequence()
