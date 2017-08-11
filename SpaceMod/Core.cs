@@ -309,12 +309,10 @@ namespace GTS
             Game.MissionFlag = _didSetMissionFlag = false;
             DoEarthUpdate();
 
-            if (!_didRestartEarthUpdate)
-            {
-                _didRestartEarthUpdate = true;
-                GtsLib.RestoreWater();
-                Utils.RestartScript("blip_controller"); // Beware of this function, it may delay the mod.
-            }
+            if (_didRestartEarthUpdate) return;
+            _didRestartEarthUpdate = true;
+            GtsLib.RestoreWater();
+            Utils.RestartScript("blip_controller"); // Beware of this function, it may delay the mod.
         }
 
         private void SceneNotNull()
@@ -334,7 +332,7 @@ namespace GTS
 
         private bool CanStartEndMission()
         {
-            return true;
+            return false;
         }
 
         private void CreateCustomMenu()
