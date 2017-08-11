@@ -196,25 +196,24 @@ public class SceneInfo : NextSceneInfo
     public XVector3 VehicleSurfaceSpawn { get; set; } = new XVector3(-10029.57f, -10016.75f, 10001f);
 
     [Description("The name of the timecycle modifier to use.")]
-    [Category("Core Settings - Weather")]
+    [Category("Core Settings")]
     public string TimecycleModifier { get; set; }
 
     [Description("The strength of the timecycle modifier.")]
-    [Category("Core Settings - Weather")]
+    [Category("Core Settings")]
     public float TimecycleModifierStrength { get; set; } = 1.0f;
 
     [Description("The weather index to use for this scene.")]
-    [Category("Core Settings - Weather")]
+    [Category("Core Settings")]
     public string WeatherName { get; set; } = "EXTRASUNNY";
 
     [Description("The origin of the skybox, and all props.")]
     [Category("Core Settings")]
     [RefreshProperties(RefreshProperties.All)]
-    public XVector3 GalaxyCenter { get; set; } = new XVector3(-10000, -10000, 10000);
+    public XVector3 GalaxyCenter { get; set; } = new XVector3(-10000, -10000, 30000);
 
     [Category("Surface Settings")]
-    [Description(
-        "The angular speed multiplier for the skybox. Rotation is based your angle to any celestial body. (E.g. Travelling far enough north of a celestail body will hide it behind the southern horizon line)")]
+    [Description("The speed at which the sky rotates based on our movement.")]
     public float HorizonRotationMultiplier { get; set; } = 0.00005f;
 
     [Category("Surface Settings")]
@@ -243,9 +242,50 @@ public class SceneInfo : NextSceneInfo
     public float WindSpeed { get; set; }
 
     [Category("Surface Settings")]
+    [Description("Don't draw 3D clouds.")]
+    public bool CloudsEnabled { get; set; }
+
+    [Category("Surface Settings")]
+    [Description("The cloud type.")]
+    public string CloudType { get; set; }
+
+    [Category("Surface Settings")]
+    [Description("The minimum depth (distance from Galaxy Center Z) that we will begin to damage the player.")]
+    public float CrushMinDepth { get; set; }
+
+    [Category("Surface Settings")]
+    [Description("The maximum crush depth (distance from Galaxy Center Z), if reached will kill the player.")]
+    public float CrushMaxDepth { get; set; }
+
+    [Category("Surface Settings")]
+    [Description("This is the damage multiplier for Min Max crush depth.")]
+    public float CrushDamageMultiplier { get; set; }
+
+    [Category("Surface Settings")]
+    [Description("Use leave surface prompt when in a new vehicle.")]
+    public bool LeaveSurfacePrompt { get; set; } = false;
+
+    [Category("Surface Settings")]
+    [Description("Allow orbit landing if no missions block it.")]
+    public bool OrbitAllowLanding { get; set; } = true;
+
+    [Category("Surface Settings")]
+    public XVector3 OrbitLandingPosition { get; set; } = new XVector3(0, 0, 500);
+
+    [Category("Surface Settings")]
+    public XVector3 OrbitLandingRotation { get; set; } = new XVector3(-25, 0, 0);
+
+    [Category("Surface Settings")]
+    public float OrbitLandingSpeed { get; set; } = 150f;
+
+    [Category("Surface Settings")]
     [Description("The height above the galaxy center the player must be to exit the surface.")]
     [RefreshProperties(RefreshProperties.All)]
-    public float SurfaceExitHeight { get; set; } = 750f;
+    public float OrbitLeaveHeight { get; set; } = 750f;
+
+    [Category("Audio")]
+    [Description("Use sound. Mostly for scenes (like space) in which you don't want sound to play unless in first person.")]
+    public bool UseSound { get; set; }
 
     [XmlIgnore]
     public bool SurfaceScene => Surfaces.Any();
@@ -362,6 +402,7 @@ public class SurfaceInfo : IDrawable
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
 
+    [Category("Settings")]
     public int LodDistance { get; set; } = -1;
 }
 

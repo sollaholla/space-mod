@@ -259,6 +259,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 3:
+                    if (Game.Player.Character.IsInVehicle()) return;
                     Utils.DisplayHelpTextWithGxt("PLANT_FLAG");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;

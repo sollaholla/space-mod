@@ -691,7 +691,10 @@ namespace GTS.Library
         {
             Message = new ScaleFormMessage();
 
-            Tick += (sender, args) => { Message.DoTransition(); };
+            Tick += (sender, args) =>
+            {
+                Message.DoTransition();
+            };
         }
 
         public static ScaleFormMessage Message { get; set; }

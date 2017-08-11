@@ -184,8 +184,6 @@ namespace GTS.Scenes.Interiors
 
             prop.Position = mapObject.Position;
 
-            prop.LodDistance = 512;
-
             model.MarkAsNoLongerNeeded();
 
             Props.Add(prop);
@@ -209,8 +207,6 @@ namespace GTS.Scenes.Interiors
             vehicle.FreezePosition = !mapObject.Dynamic;
 
             vehicle.SirenActive = mapObject.SirensActive;
-
-            vehicle.LodDistance = 512;
 
             model.MarkAsNoLongerNeeded();
 
@@ -253,8 +249,6 @@ namespace GTS.Scenes.Interiors
             }
 
             ped.BlockPermanentEvents = false;
-
-            ped.LodDistance = 512;
 
             model.MarkAsNoLongerNeeded();
 

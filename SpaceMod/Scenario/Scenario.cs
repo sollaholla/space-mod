@@ -30,6 +30,8 @@ namespace GTS.Scenarios
         /// </summary>
         public Scene CurrentScene => Core.Instance.GetCurrentScene();
 
+        public virtual bool BlockOrbitLanding { get; set; } = true;
+
         /// <summary>
         /// </summary>
         internal event OnScenarioCompleted Completed;

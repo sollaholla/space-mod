@@ -29,7 +29,6 @@ namespace GTS
         public Core()
         {
             _tickLock = new object();
-            Scenarios = new List<Scenario>();
 
             Instance = this;
             KeyUp += OnKeyUp;
@@ -117,13 +116,6 @@ namespace GTS
             }
         }
 
-        /// <summary>
-        ///     The scenarios loaded for the current scene. These are
-        ///     <see langword="internal" /> so that the integrity of another persons
-        ///     custom scenario cannot be redacted.
-        /// </summary>
-        public List<Scenario> Scenarios { get; }
-
         #endregion
 
         #region Methods
@@ -175,8 +167,7 @@ namespace GTS
 
             // Stop the current scene and reset the game
             // changes from that.
-            AbortActiveScenarios();
-            _currentScene?.Delete();
+            _currentScene?.Delete(true);
             if (_currentScene != default(Scene))
             {
                 GiveSpawnControlToGame();
@@ -286,6 +277,9 @@ namespace GTS
             GTS.Settings.EarthAtmosphereEnterPosition =
                 ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"),
                     GTS.Settings.EarthAtmosphereEnterPosition);
+            GTS.Settings.EarthAtmosphereEnterRotation =
+                ParseVector3.Read(Settings.GetValue("mod", "earth_atmos_rot"),
+                    GTS.Settings.EarthAtmosphereEnterRotation);
         }
 
         private void SaveSettings()
@@ -308,6 +302,7 @@ namespace GTS
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             Settings.SetValue("game", "low_config", GTS.Settings.LowConfigMode);
             Settings.SetValue("mod", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
+            Settings.SetValue("mod", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
             Settings.Save();
         }
 
@@ -536,7 +531,6 @@ namespace GTS
         {
             // Updates the scene.
             Function.Call(Hash.SET_WIND_SPEED, 0.0f);
-            Scenarios?.ForEach(scenario => scenario.Update());
             Function.Call(Hash._CLEAR_CLOUD_HAT);
             if (PlayerPed.CurrentVehicle != null)
                 PlayerPed.CurrentVehicle.HasGravity = _currentScene.Info.UseGravity;
@@ -609,7 +603,7 @@ namespace GTS
             Game.MaxWantedLevel = 0;
         }
 
-        private void ResetWeather()
+        private static void ResetWeather()
         {
             // Basically happens when we abort.
             Function.Call(Hash.CLEAR_WEATHER_TYPE_PERSIST);
@@ -622,7 +616,7 @@ namespace GTS
 
         #region Scene Management
 
-        private SceneInfo DeserializeFileAsScene(string fileName)
+        private static SceneInfo DeserializeFileAsScene(string fileName)
         {
             if (fileName == "cmd_earth")
                 return null;
@@ -652,7 +646,6 @@ namespace GTS
         {
             lock (_tickLock)
             {
-                EndActiveScenarios();
                 ClearAllEntities();
 
                 if (_currentScene != null && _currentScene != default(Scene))
@@ -669,58 +662,7 @@ namespace GTS
 
                 Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, _currentScene.Info.WeatherName);
 
-                if (GTS.Settings.UseScenarios)
-                    try
-                    {
-                        CreateScenariosForSceneInfo(scene);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
-                    }
                 _currentScene.Exited += CurrentSceneOnExited;
-            }
-        }
-
-        private void CreateScenariosForSceneInfo(SceneInfo scene)
-        {
-            foreach (var scenarioInfo in scene.Scenarios)
-            {
-                var assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
-
-                if (assembly == null)
-                    continue;
-
-                var type = assembly.GetType(scenarioInfo.Namespace);
-
-                if (type == null || type.BaseType != typeof(Scenario))
-                    continue;
-
-                Debug.Log("Creating Scenario: " + type.Name);
-
-                var instance = (Scenario) Activator.CreateInstance(type);
-
-                instance.OnAwake();
-
-                if (instance.IsScenarioComplete())
-                    continue;
-
-                Scenarios.Add(instance);
-            }
-
-            foreach (var scenario in Scenarios)
-            {
-                scenario.OnStart();
-
-                scenario.Completed += ScenarioComplete;
-            }
-        }
-
-        private void ScenarioComplete(Scenario scenario, bool success)
-        {
-            lock (_tickLock)
-            {
-                Scenarios.Remove(scenario);
             }
         }
 
@@ -730,11 +672,10 @@ namespace GTS
 
             foreach (var e in entities)
             {
-                if (!e.IsDead && (e is Ped ||
-                                  e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
+                if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
                     continue;
-
-                e.Delete();
+                if (PlayerPed.CurrentVehicle == null || !e.IsAttachedTo(PlayerPed.CurrentVehicle))
+                    e.Delete();
             }
         }
 
@@ -743,7 +684,6 @@ namespace GTS
             lock (_tickLock)
             {
                 var isActualScene = newSceneFile != "cmd_earth";
-
                 var newScene = DeserializeFileAsScene(newSceneFile);
 
                 if (isActualScene && newScene == null)
@@ -754,11 +694,8 @@ namespace GTS
                 }
 
                 if (isActualScene && newScene.SurfaceScene)
-
                     RaiseLandingGear();
-
                 else if (!isActualScene)
-                    // if this ISNT an actual scene check if we can start the end mission.
                     _endMissionCanStart = CanStartEndMission();
 
                 Game.FadeScreenOut(1000);
@@ -768,7 +705,6 @@ namespace GTS
                 _currentScene = null;
 
                 ResetWeather();
-                EndActiveScenarios();
                 ClearAllEntities();
 
                 if (newSceneFile != "cmd_earth")
@@ -800,39 +736,13 @@ namespace GTS
             {
                 var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
                 playerPedCurrentVehicle.Position = GTS.Settings.EarthAtmosphereEnterPosition;
-                playerPedCurrentVehicle.Rotation = Vector3.Zero;
-                playerPedCurrentVehicle.Heading = 243;
+                playerPedCurrentVehicle.Rotation = GTS.Settings.EarthAtmosphereEnterRotation;
                 playerPedCurrentVehicle.HasGravity = true;
                 playerPedCurrentVehicle.Speed = 1000;
             }
-            else
-            {
-                PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
-            }
+            else PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
         }
-
-        private void EndActiveScenarios()
-        {
-            if (Scenarios == null) return;
-            while (Scenarios.Count > 0)
-            {
-                var scen = Scenarios[0];
-                scen.OnEnded(false);
-                Scenarios.RemoveAt(0);
-            }
-        }
-
-        private void AbortActiveScenarios()
-        {
-            if (Scenarios == null) return;
-            while (Scenarios.Count > 0)
-            {
-                var scenario = Scenarios[0];
-                scenario.OnAborted();
-                Scenarios.RemoveAt(0);
-            }
-        }
-
+        
         #endregion
 
         #region Utility
@@ -853,7 +763,7 @@ namespace GTS
             }
         }
 
-        private void GiveSpawnControlToGame()
+        private static void GiveSpawnControlToGame()
         {
             Game.Globals[4].SetInt(0);
             Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, false);

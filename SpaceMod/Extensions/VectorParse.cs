@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using GTA.Math;
+﻿using GTA.Math;
 
 namespace GTS.Extensions
 {
@@ -24,7 +22,8 @@ namespace GTS.Extensions
                 if (string.IsNullOrEmpty(str))
                     return defaultValue;
 
-                str = str.Replace("X", string.Empty).Replace("Y", string.Empty).Replace("Z", string.Empty).Replace(":", string.Empty);
+                str = str.Replace("X", string.Empty).Replace("Y", string.Empty).Replace("Z", string.Empty)
+                    .Replace(":", string.Empty);
                 var split = str.Split(' ');
 
                 // we'll use these as the new values.
