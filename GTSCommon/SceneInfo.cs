@@ -284,7 +284,8 @@ public class SceneInfo : NextSceneInfo
     public float OrbitLeaveHeight { get; set; } = 750f;
 
     [Category("Audio")]
-    [Description("Use sound. Mostly for scenes (like space) in which you don't want sound to play unless in first person.")]
+    [Description(
+        "Use sound. Mostly for scenes (like space) in which you don't want sound to play unless in first person.")]
     public bool UseSound { get; set; }
 
     [XmlIgnore]

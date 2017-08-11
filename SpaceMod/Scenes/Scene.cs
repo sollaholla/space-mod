@@ -1170,7 +1170,7 @@ namespace GTS.Scenes
             if (!PlayerPed.IsInVehicle(PlayerVehicle))
                 return;
 
-            SpaceWalk_Fly(PlayerVehicle, Settings.VehicleFlySpeed, Settings.MouseControlFlySensitivity,
+            EntityFlightControl(PlayerVehicle, Settings.VehicleFlySpeed, Settings.MouseControlFlySensitivity,
                 !PlayerVehicle.IsOnAllWheels);
         }
 
@@ -1326,9 +1326,8 @@ namespace GTS.Scenes
 
                         // get some params for this sequence.
                         var distance = PlayerPosition.DistanceTo(_vehicleRepairPos);
-                        Vector3 min, max, min2, max2;
-                        float radius;
-                        GetDimensions(PlayerPed, out min, out max, out min2, out max2, out radius);
+                        GetDimensions(PlayerPed, out Vector3 _, out Vector3 _, out Vector3 _, out Vector3 _,
+                            out float radius);
 
                         // make sure we're within distance of the vehicle.
                         if (distance > radius)
@@ -1397,11 +1396,8 @@ namespace GTS.Scenes
         private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f,
             bool debug = false)
         {
-            Vector3 min, max;
-            Vector3 minVector2, maxVector2;
-            float radius;
-
-            GetDimensions(entity, out min, out max, out minVector2, out maxVector2, out radius);
+            GetDimensions(entity, out Vector3 min, out Vector3 max, out Vector3 minVector2, out Vector3 maxVector2,
+                out float radius);
 
             var offset = new Vector3(0, 0, radius);
             offset = PlayerPed.Quaternion * offset;
@@ -1430,8 +1426,8 @@ namespace GTS.Scenes
             var normal = ray.SurfaceNormal;
 
             if (velocityUser != null)
-                velocityUser.Velocity = (normal * velocityUser.Velocity.Length() + (entity.Position - ray.HitCoords)) *
-                                        bounceDamp;
+                velocityUser.Velocity = (normal * velocityUser.Velocity.Length() +
+                                         (entity.Position - ray.HitCoords)) * bounceDamp;
 
             return true;
         }
@@ -1580,7 +1576,7 @@ namespace GTS.Scenes
             }
         }
 
-        private void SpaceWalk_Fly(Entity entityToFly, float flySpeed, float sensitivity, bool canFly = true)
+        private void EntityFlightControl(Entity entityToFly, float flySpeed, float sensitivity, bool canFly = true)
         {
             UI.HideHudComponentThisFrame(HudComponent.WeaponWheel);
             Game.DisableControlThisFrame(2, Control.WeaponWheelLeftRight);
@@ -1607,7 +1603,6 @@ namespace GTS.Scenes
 
             // TODO: Convert to setting.
             const float controlFlightSpeed = 2f;
-
             _yawSpeed = Mathf.Lerp(_yawSpeed, leftRight, Game.LastFrameTime * controlFlightSpeed);
             _pitchSpeed = Mathf.Lerp(_pitchSpeed, upDown, Game.LastFrameTime * controlFlightSpeed);
             _rollSpeed = Mathf.Lerp(_rollSpeed, roll, Game.LastFrameTime * controlFlightSpeed);
@@ -1615,13 +1610,15 @@ namespace GTS.Scenes
 
             var leftRightRotation =
                 Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.RightVector * _yawSpeed);
-            var upDownRotation =
-                Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.UpVector * _pitchSpeed);
+            var upDownRotation = Quaternion.FromToRotation(entityToFly.ForwardVector,
+                entityToFly.UpVector * _pitchSpeed);
             var rollRotation = Quaternion.FromToRotation(entityToFly.RightVector, -entityToFly.UpVector * _rollSpeed);
             var rotation = leftRightRotation * upDownRotation * rollRotation * entityToFly.Quaternion;
             entityToFly.Quaternion = Quaternion.Lerp(entityToFly.Quaternion, rotation, Game.LastFrameTime);
 
-            if (!canFly) return;
+            if (!canFly)
+                return;
+
             if (fly > 0)
             {
                 var targetVelocity = entityToFly.ForwardVector.Normalized * flySpeed * _verticalSpeed;
@@ -1636,12 +1633,10 @@ namespace GTS.Scenes
 
         private void SpaceWalk_Toggle()
         {
-            // so this is when we're not floating
             if (_spaceWalkDummy == null)
             {
                 if (Entity.Exists(PlayerVehicle))
                     PlayerVehicle.IsInvincible = true;
-
                 _spaceWalkDummy = World.CreateVehicle(VehicleHash.Panto, Vector3.Zero, PlayerPed.Heading);
                 if (_spaceWalkDummy == null) return;
                 var lastPosition = PlayerPed.Position;
@@ -1682,7 +1677,7 @@ namespace GTS.Scenes
                     Core.Instance.Settings.Save();
                 }
 
-                SpaceWalk_Fly(_spaceWalkDummy, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, _spaceWalkDummy));
+                EntityFlightControl(_spaceWalkDummy, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, _spaceWalkDummy));
             }
         }
 

@@ -15,9 +15,9 @@ namespace GTS.Missions
 {
     internal class IntroMission : Scenario
     {
-        private Ped _colonel;
         private readonly float _colonelHeading = 313.5386f;
         private readonly Vector3 _colonelSpawn = new Vector3(-2356.895f, 3248.412f, 101.4508f);
+
         private readonly List<SatelliteDish> _dishes = new List<SatelliteDish>
         {
             new SatelliteDish(new Vector3(1965.244f, 2917.519f, 56.16845f),
@@ -33,12 +33,13 @@ namespace GTS.Missions
             new SatelliteDish(new Vector3(2136.944f, 2900.711f, 57.26347f),
                 new Vector3(2136.4319f, 2899.8953f, 57.4265f), new Vector3(0, 0, 145.059f), 140.3007f)
         };
-        private bool _dishesInitialized;
-        private Blip _dishesAreaBlip;
-        private Vector3 _dishesArea = new Vector3(1965.244f, 2917.519f, 56.16845f);
 
         private readonly Vector3 _humaneLabsEnterance = new Vector3(3574.148f, 3736.34f, 36.64266f);
         private readonly Vector3 _humaneLabsExit = new Vector3(3540.65f, 3675.77f, 28.12f);
+        private Ped _colonel;
+        private readonly Vector3 _dishesArea = new Vector3(1965.244f, 2917.519f, 56.16845f);
+        private Blip _dishesAreaBlip;
+        private bool _dishesInitialized;
         private Blip _humaneLabsBlip;
         private Interior _humaneLabsIpl;
         private bool _isHumaneLabsMessageShown;
@@ -511,8 +512,10 @@ namespace GTS.Missions
             var distEnd = PlayerPed.Position.DistanceToSquared(end);
             const float triggerDist = 0.4f;
 
-            World.DrawMarker(MarkerType.VerticalCylinder, start, Vector3.RelativeFront, Vector3.Zero, new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
-            World.DrawMarker(MarkerType.VerticalCylinder, end, Vector3.RelativeFront, Vector3.Zero, new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
+            World.DrawMarker(MarkerType.VerticalCylinder, start, Vector3.RelativeFront, Vector3.Zero,
+                new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
+            World.DrawMarker(MarkerType.VerticalCylinder, end, Vector3.RelativeFront, Vector3.Zero,
+                new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
 
             if (distStart < 4f)
             {
