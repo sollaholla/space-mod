@@ -29,7 +29,6 @@ namespace GTS
         public Core()
         {
             _tickLock = new object();
-            new RockstarEditorTimecycler();
 
             Instance = this;
             KeyUp += OnKeyUp;
@@ -186,6 +185,9 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
+            if (Game.IsPaused) return;
+            if (Game.IsLoading) return;
+
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
@@ -197,6 +199,9 @@ namespace GTS
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
+            if (Game.IsPaused) return;
+            if (Game.IsLoading) return;
+
             if (!Monitor.TryEnter(_tickLock)) return;
             try
             {

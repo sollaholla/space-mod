@@ -670,7 +670,13 @@ namespace GTS.Library
         {
             Message = new ScaleFormMessage();
 
-            Tick += (sender, args) => { Message.DoTransition(); };
+            Tick += (sender, args) =>
+            {
+                if (Game.IsPaused) return;
+                if (Game.IsLoading) return;
+
+                Message.DoTransition();
+            };
         }
 
         public static ScaleFormMessage Message { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using GTA;
 using GTA.Native;
 using GTS.Extensions;
 
@@ -97,6 +98,15 @@ namespace GTS.Library
         public static bool IsRockstarEditorActive()
         {
             return GTSLib_IsLibraryInitialized() && GTSLib_IsRockstarEditorActive() == 1;
+        }
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)]string name, bool toggle);
+
+        public static void SetScriptCanBePaused(bool toggle)
+        {
+            if (!GTSLib_IsLibraryInitialized()) return;
+            GTSLib_SetScriptCanBePaused(Function.Call<string>(Hash.GET_THIS_SCRIPT_NAME), toggle);
         }
     }
 }
