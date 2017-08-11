@@ -133,13 +133,13 @@ namespace GTS.Shuttle
                 new Vector3(85, 0, 0), 20.0f);
 
             if (_mainThrusters != null) return;
-            _mainThrusters = new PtfxLooped("veh_exhaust_afterburner", "core");
-            var thrust1 = _mainThrusters.Play(this, "exhaust", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
-            var thrust2 = _mainThrusters.Play(this, "exhaust_2", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
-            var thrust3 = _mainThrusters.Play(this, "exhaust_3", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, thrust1, "throttle", 100, 0);
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, thrust2, "throttle", 100, 0);
-            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, thrust3, "throttle", 100, 0);
+            //_mainThrusters = new PtfxLooped("veh_exhaust_afterburner", "core");
+            //var thrust1 = _mainThrusters.Play(this, "exhaust", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
+            //var thrust2 = _mainThrusters.Play(this, "exhaust_2", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
+            //var thrust3 = _mainThrusters.Play(this, "exhaust_3", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
+            //Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, thrust1, "throttle", 100, 0);
+            //Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, thrust2, "throttle", 100, 0);
+            //Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, thrust3, "throttle", 100, 0);
         }
 
         private static void PlayLoopedOnEnt(ref PtfxLooped effect, Entity ent, string asset, string name,
