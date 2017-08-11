@@ -388,12 +388,6 @@ namespace GTS.Library
                     break;
             }
 
-            if (!model.IsLoaded)
-            {
-                UI.Notify("A model ~r~failed~s~ to load, aborting script.");
-                throw new SystemException(nameof(model));
-            }
-
             return model;
         }
     }

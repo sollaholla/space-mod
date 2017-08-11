@@ -60,15 +60,25 @@ namespace GTS
             _parent = new Vehicle(handle);
             spawn = spawn + new Vector3(0, 0, 5);
             Function.Call((Hash)0xCFC8BE9A5E1FE575, handle, 3);
-            _extTank = World.CreateProp("exttank", spawn, false, false);
-            _srbL = World.CreateProp("srbl", Vector3.Zero, false, false);
-            _srbR = World.CreateProp("srbr", Vector3.Zero, false, false);
+
+            Model m = new Model("exttank");
+            m.Request(5000);
+            _extTank = World.CreateProp(m, spawn, false, false);
+            m = new Model("srbl");
+            m.Request(5000);
+            _srbL = World.CreateProp(m, Vector3.Zero, false, false);
+            m = new Model("srbr");
+            m.Request(5000);
+            _srbR = World.CreateProp(m, Vector3.Zero, false, false);
+            
             _extTank.LodDistance = -1;
             _srbL.LodDistance = -1;
             _srbR.LodDistance = -1;
+
             _extTank.AttachTo(this, 0, new Vector3(0, -1, 0), new Vector3());
             _srbL.AttachTo(_extTank, 0, new Vector3(), new Vector3());
             _srbR.AttachTo(_extTank, 0, new Vector3(), new Vector3());
+
             IsFireProof = true;
             FreezePosition = true;
         }
@@ -83,10 +93,7 @@ namespace GTS
                     Game.DisableControlThisFrame(2, control);
             }
 
-            if (_launching)
-            {
-                Thrust();
-            }
+            if (_launching) Thrust();
             else
             {
                 DisplayHelpTextThisFrame("Press ~INPUT_JUMP~ to launch.");

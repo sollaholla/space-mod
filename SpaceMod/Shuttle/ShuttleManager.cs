@@ -14,7 +14,7 @@ namespace GTS
 {
     public class ShuttleManager
     {
-        private readonly string _mapLocation = @"./scripts/NasaShuttleDemo/Maps/SS.xml";
+        private readonly string _mapLocation = Database.PathToInteriors + "\\LaunchStation.xml";
 
         private SpaceShuttle _shuttle;
         private Vehicle _shuttleVehicle;
@@ -120,51 +120,7 @@ namespace GTS
         public void LoadMap()
         {
             _map = new Interior(_mapLocation, InteriorType.MapEditor, false);
-
             CreateShuttle();
-
-            //_currentMap.Objects?.ForEach(obj =>
-            //{
-            //    LoadScaleform scaleform = LoadScaleformDrawer.Instance.Create($"Loading {obj.Hash}...");
-            //    scaleform.Draw = true;
-
-            //    Model model = new Model(obj.Hash);
-            //    model.Request();
-            //    DateTime timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
-            //    while (!model.IsLoaded)
-            //    {
-            //        Yield();
-            //        if (DateTime.UtcNow > timout)
-            //            break;
-            //    }
-            //    if (!model.IsLoaded)
-            //    {
-            //        UI.Notify("An object ~r~failed~s~ to load properly, even after ~y~5~s~ second request.");
-            //        return;
-            //    }
-
-            //    switch (obj.Type)
-            //    {
-            //         TODO: Implement pickups and markers??
-            //        case ObjectTypes.Marker:
-            //            break;
-            //        case ObjectTypes.Pickup:
-            //            break;
-            //        case ObjectTypes.Ped:
-            //            _currentMap.Peds.Add(PropStreamer.CreatePed(obj, model));
-            //        break;
-            //            case ObjectTypes.Prop:
-            //                _currentMap.Props.Add(PropStreamer.CreateProp(obj, model));
-            //        break;
-            //            case ObjectTypes.Vehicle:
-            //                _currentMap.Vehicles.Add(PropStreamer.CreateVehicle(obj, model));
-            //        break;
-            //    }
-
-            //    scaleform.Draw = false;
-            //    LoadScaleformDrawer.Instance.RemoveLoadScaleform(scaleform);
-            //});
-
             _map.Request();
 
             if (_map.Loaded)
@@ -188,26 +144,18 @@ namespace GTS
 
                 // This is basically like calculating the average of regular numbers.
                 Vector3 average = accumulator / positions.Length;
-
                 _map.MapBlip = World.CreateBlip(average);
                 _map.MapBlip.Sprite = BlipSprite.Hangar;
                 _map.MapBlip.Color = BlipColor.Blue;
             }
-            UI.Notify("Everything loaded ~g~successfully~s~!");
         }
 
         public void CreateShuttle()
         {
             if (_shuttle != null) return;
-            LoadScaleform loadScaleform = LoadScaleformDrawer.Instance.Create("Loading Shuttle Models...");
-            loadScaleform.Draw = true;
-            Model model = Utils.RequestModel("shuttle");
-            Utils.RequestModel("exttank");
-            Utils.RequestModel("srbl");
-            Utils.RequestModel("srbr");
-            loadScaleform.Draw = false;
-            LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
-            _shuttleVehicle = World.CreateVehicle(model, _shuttlePosition, _shuttleHeading);
+            Model m = new Model("shuttle");
+            m.Request(5000);
+            _shuttleVehicle = World.CreateVehicle(m, _shuttlePosition, _shuttleHeading);
             _shuttleVehicle.HasCollision = false;
             var blip = _shuttleVehicle.AddBlip();
             blip.Sprite = BlipSprite.Plane;

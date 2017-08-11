@@ -35,8 +35,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Grand Theft Auto V\scripts\GTS.dll</HintPath>
     </Reference>
-    <Reference Include="GTSCommon">
-      <HintPath>D:\Games\Grand Theft Auto V\scripts\GTSCommon.dll</HintPath>
+    <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
     </Reference>
     <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -70,7 +71,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\Space\Scenarios"
-COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\Space\Scenarios"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\script\Space\Scenarios\"
+COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\Space\Scenarios\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
