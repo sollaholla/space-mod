@@ -672,9 +672,6 @@ namespace GTS.Library
 
             Tick += (sender, args) =>
             {
-                if (Game.IsPaused) return;
-                if (Game.IsLoading) return;
-
                 Message.DoTransition();
             };
         }
