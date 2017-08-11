@@ -251,7 +251,7 @@ namespace GTS
                 _defaultSpaceOffset);
             _defaultSpaceRotation = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_rotation"),
                 _defaultSpaceRotation);
-            _missionStatus = Settings.GetValue("main_mission", "f", _missionStatus);
+            _missionStatus = Settings.GetValue("main_mission", "mission_status", _missionStatus);
             GTS.Settings.UseSpaceWalk = Settings.GetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
             GTS.Settings.ShowCustomGui = Settings.GetValue("settings", "show_custom_Gui", GTS.Settings.ShowCustomGui);
             GTS.Settings.UseScenarios = Settings.GetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
@@ -334,20 +334,6 @@ namespace GTS
 
         private bool CanStartEndMission()
         {
-            if (Settings.GetValue("main_mission", "mission_status", 0) != 1)
-                return false;
-
-            // TODO FIXME: Need to do something better than this.
-            var scenarioSettings = ScriptSettings.Load(Database.PathToScenarios + "/MoonMission01.ini");
-            if (!scenarioSettings.GetValue("scenario_config", "complete", false))
-                return false;
-            scenarioSettings = ScriptSettings.Load(Database.PathToScenarios + "/MarsMission01.ini");
-            if (!scenarioSettings.GetValue("scenario_config", "complete", false))
-                return false;
-            scenarioSettings = ScriptSettings.Load(Database.PathToScenarios + "/MarsMission02.ini");
-            if (!scenarioSettings.GetValue("scenario_config", "complete", false))
-                return false;
-
             return true;
         }
 
@@ -507,6 +493,8 @@ namespace GTS
 
                 _shuttleManager = new ShuttleManager(_enterOrbitHeight);
                 _shuttleManager.LoadMap();
+                if (_missionStatus > 0)
+                    _shuttleManager.CreateShuttle();
             }
             _shuttleManager.Update();
         }
