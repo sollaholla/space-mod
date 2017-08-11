@@ -1605,18 +1605,21 @@ namespace GTS.Scenes
                 roll *= sensitivity;
             }
 
-            _yawSpeed = Mathf.Lerp(_yawSpeed, leftRight, Game.LastFrameTime * .7f);
-            _pitchSpeed = Mathf.Lerp(_pitchSpeed, upDown, Game.LastFrameTime * 5);
-            _rollSpeed = Mathf.Lerp(_rollSpeed, roll, Game.LastFrameTime * 5);
-            _verticalSpeed = Mathf.Lerp(_verticalSpeed, fly, Game.LastFrameTime * 1.3f);
+            // TODO: Convert to setting.
+            const float controlFlightSpeed = 2f;
+
+            _yawSpeed = Mathf.Lerp(_yawSpeed, leftRight, Game.LastFrameTime * controlFlightSpeed);
+            _pitchSpeed = Mathf.Lerp(_pitchSpeed, upDown, Game.LastFrameTime * controlFlightSpeed);
+            _rollSpeed = Mathf.Lerp(_rollSpeed, roll, Game.LastFrameTime * controlFlightSpeed);
+            _verticalSpeed = Mathf.Lerp(_verticalSpeed, fly, Game.LastFrameTime * controlFlightSpeed);
 
             var leftRightRotation =
                 Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.RightVector * _yawSpeed);
             var upDownRotation =
                 Quaternion.FromToRotation(entityToFly.ForwardVector, entityToFly.UpVector * _pitchSpeed);
             var rollRotation = Quaternion.FromToRotation(entityToFly.RightVector, -entityToFly.UpVector * _rollSpeed);
-            var rotation = /*leftRightRotation * */upDownRotation * rollRotation * entityToFly.Quaternion;
-            entityToFly.Quaternion = Quaternion.Lerp(entityToFly.Quaternion, rotation, Game.LastFrameTime * 1.3f);
+            var rotation = leftRightRotation * upDownRotation * rollRotation * entityToFly.Quaternion;
+            entityToFly.Quaternion = Quaternion.Lerp(entityToFly.Quaternion, rotation, Game.LastFrameTime);
 
             if (!canFly) return;
             if (fly > 0)
