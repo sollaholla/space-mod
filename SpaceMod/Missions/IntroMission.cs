@@ -15,10 +15,9 @@ namespace GTS.Missions
 {
     internal class IntroMission : Scenario
     {
+        private Ped _colonel;
         private readonly float _colonelHeading = 313.5386f;
-
         private readonly Vector3 _colonelSpawn = new Vector3(-2356.895f, 3248.412f, 101.4508f);
-
         private readonly List<SatelliteDish> _dishes = new List<SatelliteDish>
         {
             new SatelliteDish(new Vector3(1965.244f, 2917.519f, 56.16845f),
@@ -34,18 +33,14 @@ namespace GTS.Missions
             new SatelliteDish(new Vector3(2136.944f, 2900.711f, 57.26347f),
                 new Vector3(2136.4319f, 2899.8953f, 57.4265f), new Vector3(0, 0, 145.059f), 140.3007f)
         };
+        private bool _dishesInitialized;
+        private Blip _dishesAreaBlip;
+        private Vector3 _dishesArea = new Vector3(1965.244f, 2917.519f, 56.16845f);
 
         private readonly Vector3 _humaneLabsEnterance = new Vector3(3574.148f, 3736.34f, 36.64266f);
-
         private readonly Vector3 _humaneLabsExit = new Vector3(3540.65f, 3675.77f, 28.12f);
-        private Ped _colonel;
-
-        private bool _dishesInitialized;
-
         private Blip _humaneLabsBlip;
-
         private Interior _humaneLabsIpl;
-
         private bool _isHumaneLabsMessageShown;
 
         private bool _isSatelliteMessageShown;
@@ -57,10 +52,8 @@ namespace GTS.Missions
             Vehicles = new List<Vehicle>();
         }
 
-        private Ped PlayerPed => Game.Player.Character;
-
+        private static Ped PlayerPed => Game.Player.Character;
         private List<Ped> Peds { get; }
-
         private List<Vehicle> Vehicles { get; }
 
         public override void OnAwake()
@@ -79,31 +72,10 @@ namespace GTS.Missions
             _humaneLabsIpl = new Interior("v_lab");
         }
 
-        private void CreateColonel()
-        {
-            _colonel?.Delete(); // in case the colonel already exists somehow.
-
-            var m = new Model(PedHash.Marine01SMM);
-            m.Request(5000);
-            _colonel = World.CreatePed(m, _colonelSpawn - Vector3.WorldUp, _colonelHeading);
-            if (_colonel == null)
-                // Let's break here just in case.
-                throw new NullReferenceException("Colonel returned null for IntroMission.");
-
-            var b = new Blip(_colonel.AddBlip().Handle)
-            {
-                Sprite = BlipSprite.GTAOMission,
-                Color = Scene.MarkerBlipColor,
-                ShowRoute = true,
-                Name = "Colonel Larson"
-            };
-            _colonel.SetDefaultClothes();
-            _colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
-            _colonel.CanRagdoll = false;
-        }
-
         public override void OnUpdate()
         {
+            DoWorkingElevator();
+
             switch (_missionStep)
             {
                 case 0:
@@ -113,7 +85,7 @@ namespace GTS.Missions
                         return;
 
                     World.DrawMarker(MarkerType.UpsideDownCone, _colonel.Position + Vector3.WorldUp * 1.5f,
-                        Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
+                        Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Gold);
                     Utils.DisplayHelpTextWithGxt("END_LABEL_1");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
@@ -126,14 +98,11 @@ namespace GTS.Missions
                         _colonel.Task.ChatTo(PlayerPed);
 
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_1", 5000);
-                        Script.Wait(5000);
-
+                        Script.Wait(2300);
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_2", 5000);
                         Script.Wait(5000);
-
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_3", 6000);
                         Script.Wait(6000);
-
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_4", 6000);
                         Script.Wait(6000);
 
@@ -147,12 +116,15 @@ namespace GTS.Missions
                         Game.FadeScreenIn(1000);
                         Script.Wait(1000);
 
+                        var m = new Model("crusader");
+                        m.Request(5000);
+                        Vehicles.Add(World.CreateVehicle(m, new Vector3(-2327.254f, 3265.089f, 31.82764f), 331.297f));
+
                         _missionStep++;
                     }
                     break;
 
                 case 1:
-
                     if (!_isSatelliteMessageShown)
                     {
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_5", 5000);
@@ -161,6 +133,19 @@ namespace GTS.Missions
 
                     if (!_dishesInitialized)
                     {
+                        if (!Blip.Exists(_dishesAreaBlip))
+                        {
+                            _dishesAreaBlip = World.CreateBlip(_dishesArea, 150);
+                            _dishesAreaBlip.ShowRoute = true;
+                            _dishesAreaBlip.Alpha = 155;
+                            _dishesAreaBlip.Color = BlipColor.Yellow;
+                        }
+
+                        var dist = PlayerPed.Position.DistanceToSquared(_dishesArea);
+                        if (dist > 200 * 200)
+                            return;
+
+                        _dishesAreaBlip?.Remove();
                         _dishes.ForEach(dish =>
                         {
                             dish.CreateLaptop();
@@ -214,7 +199,7 @@ namespace GTS.Missions
                     if (!_isHumaneLabsMessageShown)
                     {
                         Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                        if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
+                        while (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
                             Script.Yield();
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_8"));
                         Effects.Start(ScreenEffect.SuccessNeutral, 5000);
@@ -226,7 +211,7 @@ namespace GTS.Missions
                     if (_humaneLabsBlip == null)
                         _humaneLabsBlip = new Blip(World.CreateBlip(_humaneLabsEnterance).Handle)
                         {
-                            Color = Scene.MarkerBlipColor,
+                            Color = BlipColor.Yellow,
                             Name = "Humane Labs",
                             ShowRoute = true
                         };
@@ -286,7 +271,7 @@ namespace GTS.Missions
                     if (b != null)
                     {
                         b.Name = "Scientist";
-                        b.Color = Scene.MarkerBlipColor;
+                        b.Color = BlipColor.Yellow;
                     }
 
                     Peds.ForEach(p =>
@@ -324,7 +309,7 @@ namespace GTS.Missions
                         mainScientist.Task.AchieveHeading((PlayerPed.Position - mainScientist.Position).ToHeading());
                         Script.Wait(1000);
                         Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                        if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
+                        while (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
                             Script.Yield();
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_11"));
                         Effects.Start(ScreenEffect.SuccessNeutral, 5000);
@@ -341,7 +326,7 @@ namespace GTS.Missions
                     _humaneLabsBlip?.Remove();
                     _humaneLabsBlip = new Blip(World.CreateBlip(_humaneLabsExit).Handle)
                     {
-                        Color = Scene.MarkerBlipColor,
+                        Color = BlipColor.Yellow,
                         Name = "Outside"
                     };
 
@@ -358,7 +343,6 @@ namespace GTS.Missions
                         return;
 
                     Utils.DisplayHelpTextWithGxt("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
-
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
                         _humaneLabsIpl?.Remove();
@@ -422,12 +406,11 @@ namespace GTS.Missions
 
                         v.CurrentBlip.Alpha = v.Passengers.Length > 0 && v.Passengers.All(x => !x.IsDead) ? 255 : 0;
 
-                        if (v.Position.DistanceTo(PlayerPed.Position) > 300)
-                        {
-                            v.Passengers?.ToList()?.ForEach(p => p?.Delete());
-                            v.Driver?.Delete();
-                            v.Delete();
-                        }
+                        if (!(v.Position.DistanceTo(PlayerPed.Position) > 300)) return;
+                        var list = v.Passengers.ToList();
+                        list.ForEach(p => p?.Delete());
+                        v.Driver?.Delete();
+                        v.Delete();
                     });
 
                     Peds.ForEach(p =>
@@ -472,7 +455,7 @@ namespace GTS.Missions
                         return;
 
                     World.DrawMarker(MarkerType.UpsideDownCone, _colonel.Position + Vector3.WorldUp * 1.5f,
-                        Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Red);
+                        Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Gold);
                     Utils.DisplayHelpTextWithGxt("END_LABEL_1");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
@@ -492,7 +475,7 @@ namespace GTS.Missions
                         Script.Wait(7000);
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_18");
                         Script.Wait(2000);
-                        Function.Call(Hash._PLAY_AMBIENT_SPEECH1, _colonel.Handle, "Generic_Thanks",
+                        Function.Call(Hash._PLAY_AMBIENT_SPEECH1, PlayerPed.Handle, "Generic_Thanks",
                             "Speech_Params_Force");
                         Utils.ShowSubtitleWithGxt("INTRO_LABEL_19");
                         Script.Wait(4000);
@@ -504,7 +487,7 @@ namespace GTS.Missions
                         Game.FadeScreenIn(1500);
 
                         Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
-                        if (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
+                        while (!Function.Call<bool>(Hash.IS_MISSION_COMPLETE_PLAYING))
                             Script.Yield();
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_20"));
                         Effects.Start(ScreenEffect.SuccessNeutral, 5000);
@@ -517,12 +500,41 @@ namespace GTS.Missions
             }
         }
 
-        private void DeletePeds()
+        private static void DoWorkingElevator()
         {
-            Peds?.ForEach(p => p?.Delete()); // delete the other peds.
+            var start = new Vector3(-2360.916f, 3249.298f, 31.81073f);
+            var end = new Vector3(-2360.835f, 3249.45f, 91.90375f);
+            const float startHeading = 320.1821f;
+            const float endHeading = 326.1702f;
+
+            var distStart = PlayerPed.Position.DistanceToSquared(start);
+            var distEnd = PlayerPed.Position.DistanceToSquared(end);
+            const float triggerDist = 0.4f;
+
+            World.DrawMarker(MarkerType.VerticalCylinder, start, Vector3.RelativeFront, Vector3.Zero, new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
+            World.DrawMarker(MarkerType.VerticalCylinder, end, Vector3.RelativeFront, Vector3.Zero, new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
+
+            if (distStart < 4f)
+            {
+                Utils.DisplayHelpTextWithGxt("PRESS_E");
+                if (!Game.IsControlJustPressed(2, Control.Context)) return;
+                Game.FadeScreenOut(1);
+                PlayerPed.Position = end;
+                PlayerPed.Heading = endHeading;
+                Game.FadeScreenIn(1000);
+            }
+            else if (distEnd < 4f)
+            {
+                Utils.DisplayHelpTextWithGxt("PRESS_E");
+                if (!Game.IsControlJustPressed(2, Control.Context)) return;
+                Game.FadeScreenOut(1);
+                PlayerPed.Position = start;
+                PlayerPed.Heading = startHeading;
+                Game.FadeScreenIn(1000);
+            }
         }
 
-        private void StartScenarioChecked(Ped ped, string name)
+        private static void StartScenarioChecked(Ped ped, string name)
         {
             if (ped == null)
                 return;
@@ -549,10 +561,38 @@ namespace GTS.Missions
             }
 
             _dishes?.ForEach(x => x?.Aborted());
+            _dishesAreaBlip?.Remove();
             Vehicles?.ForEach(v => v?.Delete());
             _humaneLabsBlip?.Remove();
             _colonel?.Delete();
             DeletePeds();
+        }
+
+        private void CreateColonel()
+        {
+            _colonel?.Delete(); // in case the colonel already exists somehow.
+
+            var m = new Model(PedHash.Marine01SMM);
+            m.Request(5000);
+            _colonel = World.CreatePed(m, _colonelSpawn - Vector3.WorldUp, _colonelHeading);
+            if (_colonel == null)
+                // Let's break here just in case.
+                throw new NullReferenceException("Colonel returned null for IntroMission.");
+
+            var b = _colonel.AddBlip();
+            b.Sprite = BlipSprite.GTAOMission;
+            b.Color = Scene.MarkerBlipColor;
+            b.ShowRoute = true;
+            b.Name = "Colonel Larson";
+
+            _colonel.SetDefaultClothes();
+            _colonel.RelationshipGroup = PlayerPed.RelationshipGroup;
+            _colonel.CanRagdoll = false;
+        }
+
+        private void DeletePeds()
+        {
+            Peds?.ForEach(p => p?.Delete()); // delete the other peds.
         }
     }
 }

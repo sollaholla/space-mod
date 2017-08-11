@@ -1187,11 +1187,18 @@ namespace GTS.Scenes
             // here's when we're flying around and stuff.
             if (PlayerPed.IsInVehicle())
             {
+                _spaceWalkDummy?.Delete();
+                _spaceWalkDummy = null;
+
                 if (!Entity.Exists(PlayerVehicle) || !PlayerPed.IsInVehicle(PlayerVehicle))
                 {
                     PlayerVehicle = PlayerPed.CurrentVehicle;
                     PlayerVehicle.HasGravity = false;
                     Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerVehicle.Handle, false);
+                }
+                else
+                {
+                    PlayerVehicle.IsInvincible = false;
                 }
 
                 //if (PlayerVehicle.Velocity.Length() > 0.15f)
@@ -1209,9 +1216,6 @@ namespace GTS.Scenes
 
                 PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
                 _enteringVehicle = false;
-
-                _spaceWalkDummy?.Delete();
-                _spaceWalkDummy = null;
             }
             // here's where we're in space without a vehicle.
             else if (!PlayerPed.IsRagdoll && !PlayerPed.IsJumpingOutOfVehicle)
@@ -1633,6 +1637,9 @@ namespace GTS.Scenes
             // so this is when we're not floating
             if (_spaceWalkDummy == null)
             {
+                if (Entity.Exists(PlayerVehicle))
+                    PlayerVehicle.IsInvincible = true;
+
                 _spaceWalkDummy = World.CreateVehicle(VehicleHash.Panto, Vector3.Zero, PlayerPed.Heading);
                 if (_spaceWalkDummy == null) return;
                 var lastPosition = PlayerPed.Position;

@@ -59,18 +59,17 @@ namespace GTS.Shuttle
 
         public void Abort()
         {
-            foreach (var shuttlePassenger in _shuttleVehicle.Passengers)
-            {
-                if (shuttlePassenger.IsPlayer) continue;
-                shuttlePassenger.Delete();
-            }
-
             _shuttle?.CleanUp();
             _shuttle?.Delete();
+            _map?.Remove();
+            _map?.MapBlip?.Remove();
 
-            if (_map == null) return;
-            _map.Remove();
-            _map.MapBlip?.Remove();
+            if (_shuttleVehicle == null) return;
+            foreach (var shuttlePassenger in _shuttleVehicle.Passengers)
+            {
+                if (shuttlePassenger?.IsPlayer ?? true) continue;
+                shuttlePassenger.Delete();
+            }
         }
 
         public void LoadMap()
