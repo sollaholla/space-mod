@@ -180,7 +180,7 @@ namespace DefaultMissions
                         _step++;
                         break;
                     case 2:
-                        playerCharacter.Task.ClearAllImmediately();
+                        playerCharacter.Task.ClearAll();
 
                         var interiorPos = new Vector3(0, 0, 0);
                         m = new Model("hw1_22_shipint");
@@ -274,7 +274,7 @@ namespace DefaultMissions
                 if (Game.Player.Character.FreezePosition)
                     Game.Player.Character.FreezePosition = false;
 
-                Game.Player.Character.Task.ClearAllImmediately();
+                Game.Player.Character.Task.ClearAll();
 
                 World.RenderingCamera = null;
             }
@@ -481,7 +481,7 @@ namespace DefaultMissions
                 case 12:
                     Utils.RemoveAllIpls(true);
                     playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20;
-                    playerCharacter.Task.ClearAllImmediately();
+                    playerCharacter.Task.ClearAll();
                     playerCharacter.Task.Skydive();
                     playerCharacter.CanRagdoll = false;
                     playerCharacter.IsInvincible = true;
@@ -626,7 +626,7 @@ namespace DefaultMissions
 
         private static void Intro_GivePlayerExtinguisher()
         {
-            var w = Game.Player.Character.Weapons.Give(WeaponHash.FireExtinguisher, 9999, true, true);
+            Game.Player.Character.Weapons.Give(WeaponHash.FireExtinguisher, 9999, true, true);
             Intro_SetExtinguisherAmmo();
         }
 

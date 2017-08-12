@@ -629,11 +629,11 @@ namespace GTS
 
         private void SetCurrentScene(SceneInfo scene, string fileName = default(string))
         {
-            Game.FadeScreenOut(1000);
-            Wait(1000);
+            PlayerPed.IsInvincible = true;
+            Game.FadeScreenOut(0);
             CreateScene(scene, fileName);
-            Wait(1000);
             Game.FadeScreenIn(1000);
+            PlayerPed.IsInvincible = false;
         }
 
         private void CreateScene(SceneInfo scene, string fileName = default(string))
