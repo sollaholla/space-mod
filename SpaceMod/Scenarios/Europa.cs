@@ -412,9 +412,11 @@ namespace DefaultMissions
                     Utils.RemoveAllIpls(false);
                     playerCharacter.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
                     playerCharacter.Heading = 90;
+                    playerCharacter.Task.ClearAllImmediately();
                     playerCharacter.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
                     playerCharacter.Weapons.Select(WeaponHash.Unarmed);
-                    Script.Wait(250);
+                    while (!Utils.AreAllIplsLoaded())
+                        Script.Yield();
                     Game.FadeScreenIn(1000);
                     _missionStep++;
                     break;

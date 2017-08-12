@@ -31,9 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GTS, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="GTS, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Games\Grand Theft Auto V\scripts\GTS.dll</HintPath>
+      <HintPath>..\bin\Debug\GTS.dll</HintPath>
     </Reference>
     <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
