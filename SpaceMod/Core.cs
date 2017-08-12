@@ -487,12 +487,15 @@ namespace GTS
             {
                 while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
                     Yield();
-                Wait(1000);
+                Wait(5000);
 
+                var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
+                loadScaleform.Draw = true;
                 _shuttleManager = new ShuttleManager(_enterOrbitHeight);
                 _shuttleManager.LoadMap();
                 if (_missionStatus > 0)
                     _shuttleManager.CreateShuttle();
+                LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
             }
             _shuttleManager.Update();
         }

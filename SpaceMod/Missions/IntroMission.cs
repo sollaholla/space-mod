@@ -34,10 +34,11 @@ namespace GTS.Missions
                 new Vector3(2136.4319f, 2899.8953f, 57.4265f), new Vector3(0, 0, 145.059f), 140.3007f)
         };
 
+        private readonly Vector3 _dishesArea = new Vector3(1965.244f, 2917.519f, 56.16845f);
+
         private readonly Vector3 _humaneLabsEnterance = new Vector3(3574.148f, 3736.34f, 36.64266f);
         private readonly Vector3 _humaneLabsExit = new Vector3(3540.65f, 3675.77f, 28.12f);
         private Ped _colonel;
-        private readonly Vector3 _dishesArea = new Vector3(1965.244f, 2917.519f, 56.16845f);
         private Blip _dishesAreaBlip;
         private bool _dishesInitialized;
         private Blip _humaneLabsBlip;

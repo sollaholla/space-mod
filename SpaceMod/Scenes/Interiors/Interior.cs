@@ -154,7 +154,7 @@ namespace GTS.Scenes.Interiors
         {
             var model = new Model(o.Hash);
             model.Request();
-            var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
+            var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 1500);
             while (!model.IsLoaded)
             {
                 Script.Yield();
@@ -172,18 +172,12 @@ namespace GTS.Scenes.Interiors
 
             if (!Entity.Exists(prop))
                 return;
-
             prop.Rotation = mapObject.Rotation;
-
             if (!mapObject.Dynamic && !mapObject.Door)
                 prop.FreezePosition = true;
-
             prop.Quaternion = mapObject.Quaternion;
-
             prop.Position = mapObject.Position;
-
             model.MarkAsNoLongerNeeded();
-
             Props.Add(prop);
         }
 
@@ -193,21 +187,13 @@ namespace GTS.Scenes.Interiors
 
             if (!Entity.Exists(vehicle))
                 return;
-
             vehicle.Rotation = mapObject.Rotation;
-
             vehicle.Quaternion = mapObject.Quaternion;
-
             vehicle.PrimaryColor = (VehicleColor) mapObject.PrimaryColor;
-
             vehicle.SecondaryColor = (VehicleColor) mapObject.SecondaryColor;
-
             vehicle.FreezePosition = !mapObject.Dynamic;
-
             vehicle.SirenActive = mapObject.SirensActive;
-
             model.MarkAsNoLongerNeeded();
-
             Vehicles.Add(vehicle);
         }
 
@@ -220,12 +206,9 @@ namespace GTS.Scenes.Interiors
                 ped.FreezePosition = true;
 
             ped.Quaternion = mapObject.Quaternion;
-
             if (mapObject.Weapon != null)
                 ped.Weapons.Give(mapObject.Weapon.Value, 15, true, true);
-
             SetScenario(mapObject, ped);
-
             if (Enum.TryParse(mapObject.Relationship, out Relationship relationship))
             {
                 if (relationship == Relationship.Hate)
@@ -245,9 +228,7 @@ namespace GTS.Scenes.Interiors
             }
 
             ped.BlockPermanentEvents = false;
-
             model.MarkAsNoLongerNeeded();
-
             Peds?.Add(ped);
         }
 

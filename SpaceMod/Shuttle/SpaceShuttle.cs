@@ -27,7 +27,8 @@ namespace GTS.Shuttle
         private float _forceMult;
 
         private bool _launching;
-        private PtfxLooped _mainThrusters;
+
+        //private PtfxLooped _mainThrusters;
         private PtfxLooped _srbLEffect;
 
         private PtfxLooped _srbREffect;
@@ -39,14 +40,21 @@ namespace GTS.Shuttle
             Function.Call((Hash) 0xCFC8BE9A5E1FE575, handle, 3);
 
             var m = new Model("exttank");
-            m.Request(5000);
+            var m2 = new Model("srbl");
+            var m3 = new Model("srbr");
+            m.Request();
+            m2.Request();
+            m3.Request();
+            while (!m.IsLoaded || !m2.IsLoaded || !m3.IsLoaded)
+                Script.Yield();
+
             _extTank = World.CreateProp(m, spawn, false, false);
-            m = new Model("srbl");
-            m.Request(5000);
-            _srbL = World.CreateProp(m, Vector3.Zero, false, false);
-            m = new Model("srbr");
-            m.Request(5000);
-            _srbR = World.CreateProp(m, Vector3.Zero, false, false);
+            _srbL = World.CreateProp(m2, Vector3.Zero, false, false);
+            _srbR = World.CreateProp(m3, Vector3.Zero, false, false);
+
+            m.MarkAsNoLongerNeeded();
+            m2.MarkAsNoLongerNeeded();
+            m3.MarkAsNoLongerNeeded();
 
             _extTank.LodDistance = -1;
             _srbL.LodDistance = -1;
@@ -112,7 +120,7 @@ namespace GTS.Shuttle
             }
             else if (HeightAboveGround > 250)
             {
-                var nextRotation = _flipRotation + new Vector3(50, 0, 0);
+                var nextRotation = _flipRotation + new Vector3(40, 0, 0);
                 var rotation = Rotation;
                 rotation.X = nextRotation.X % 360;
                 Rotation = Vector3.Lerp(Rotation, rotation, Game.LastFrameTime * 0.075f);
@@ -132,7 +140,7 @@ namespace GTS.Shuttle
             PlayLoopedOnEnt(ref _srbREffect, _srbR, "core", "exp_sht_flame", new Vector3(6.5f, -17, -7),
                 new Vector3(85, 0, 0), 20.0f);
 
-            if (_mainThrusters != null) return;
+            //if (_mainThrusters != null) return;
             //_mainThrusters = new PtfxLooped("veh_exhaust_afterburner", "core");
             //var thrust1 = _mainThrusters.Play(this, "exhaust", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);
             //var thrust2 = _mainThrusters.Play(this, "exhaust_2", new Vector3(0, -1, 0), Vector3.Zero, 2.0f);

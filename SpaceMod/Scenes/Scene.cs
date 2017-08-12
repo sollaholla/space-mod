@@ -572,7 +572,7 @@ namespace GTS.Scenes
 
             return prop;
         }
-        
+
         private static Model RequestModel(string modelName, int time = 5)
         {
             var model = new Model(modelName);
@@ -1368,7 +1368,8 @@ namespace GTS.Scenes
             }
         }
 
-        private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f, bool debug = false)
+        private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f,
+            bool debug = false)
         {
             GetDimensions(entity, out Vector3 min, out Vector3 max, out Vector3 minVector2, out Vector3 maxVector2,
                 out float radius);
@@ -1406,7 +1407,8 @@ namespace GTS.Scenes
             return true;
         }
 
-        private void GetDimensions(Entity entity, out Vector3 min, out Vector3 max, out Vector3 minVector2, out Vector3 maxVector2, out float radius)
+        private void GetDimensions(Entity entity, out Vector3 min, out Vector3 max, out Vector3 minVector2,
+            out Vector3 maxVector2, out float radius)
         {
             entity.Model.GetDimensions(out min, out max);
 

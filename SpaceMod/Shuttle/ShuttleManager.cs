@@ -67,11 +67,7 @@ namespace GTS.Shuttle
         public void LoadMap()
         {
             _map = new Interior(_mapLocation, InteriorType.MapEditor, false);
-            var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
-            loadScaleform.Draw = true;
             _map.Request();
-            LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
-
             if (!_map.Loaded) return;
             var positions = _map.GetMapObjects().Select(x => x.Position).ToArray();
             var accumulator = positions.Aggregate(Vector3.Zero, (current, position) => current + position);
@@ -88,12 +84,14 @@ namespace GTS.Shuttle
         {
             if (_shuttle != null) return;
             var m = new Model("shuttle");
-            m.Request(5000);
+            m.Request();
+            while (!m.IsLoaded)
+                Script.Yield();
             _shuttleVehicle = World.CreateVehicle(m, _shuttlePosition, _shuttleHeading);
+            _shuttleVehicle.Rotation = _shuttleVehicle.Rotation + new Vector3(90, 0, 0); // Rotate the shuttle upwards.
             _shuttleVehicle.HasCollision = false;
+            _shuttleVehicle.FreezePosition = true;
             _shuttle = new SpaceShuttle(_shuttleVehicle.Handle, _shuttlePosition);
-            _shuttle.Rotation = _shuttle.Rotation + new Vector3(90, 0, 0); // Rotate the shuttle upwards.
-            _shuttle.LodDistance = -1;
         }
 
         public void PlacePlayerInShuttle()
