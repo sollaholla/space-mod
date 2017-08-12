@@ -492,9 +492,6 @@ namespace GTS.Scenes
             var prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
             prop.Rotation = data.Rotation;
 
-            if (Settings.LowConfigMode)
-                RenderForLowConfig(prop);
-
             prop.FreezePosition = true;
 
             prop.LodDistance = data.LodDistance;
@@ -541,9 +538,6 @@ namespace GTS.Scenes
 
             prop.LodDistance = data.LodDistance;
 
-            if (Settings.LowConfigMode)
-                RenderForLowConfig(prop);
-
             var surface = new Surface(prop, data.Tile, data.LodDistance, data.TileSize);
 
             surface.GenerateTerrain();
@@ -574,19 +568,11 @@ namespace GTS.Scenes
 
             prop.FreezePosition = true;
 
-            if (Settings.LowConfigMode)
-                RenderForLowConfig(prop);
-
             model.MarkAsNoLongerNeeded();
 
             return prop;
         }
-
-        private static void RenderForLowConfig(Prop prop)
-        {
-            prop.LodDistance *= 2;
-        }
-
+        
         private static Model RequestModel(string modelName, int time = 5)
         {
             var model = new Model(modelName);
@@ -628,7 +614,7 @@ namespace GTS.Scenes
             PlayerPosition = position;
         }
 
-        private void SurfaceExit()
+        private void ExitSceneFromSurface()
         {
             Exited?.Invoke(this, Info.NextScene, Info.NextSceneRotation, Info.NextScenePosition);
         }
@@ -873,6 +859,8 @@ namespace GTS.Scenes
 
             if (Info.SurfaceScene)
             {
+                GtsLib.ResetVehicleGravity(vehicle);
+
                 if (CanDoOrbitLanding())
                 {
                     vehicle.Rotation = Info.OrbitLandingRotation;
@@ -1021,7 +1009,7 @@ namespace GTS.Scenes
 
             if (PlayerPed.Position.Z - Info.GalaxyCenter.Z > Info.OrbitLeaveHeight)
             {
-                SurfaceExit();
+                ExitSceneFromSurface();
                 return;
             }
 
@@ -1041,7 +1029,7 @@ namespace GTS.Scenes
 
             if (PlayerVehicle != null && PlayerPed.IsInVehicle(PlayerVehicle) && !CanDoOrbitLanding())
             {
-                SurfaceExit();
+                ExitSceneFromSurface();
             }
             else if (PlayerPed.IsInVehicle())
             {
@@ -1200,19 +1188,6 @@ namespace GTS.Scenes
                 {
                     PlayerVehicle.IsInvincible = false;
                 }
-
-                //if (PlayerVehicle.Velocity.Length() > 0.15f)
-                //{
-                //    PlayerVehicle.LockStatus = VehicleLockStatus.StickPlayerInside;
-
-                //    if (Game.IsControlJustPressed(2, Control.Enter))
-                //        Utils.DisplayHelpTextWithGxt("GTS_LABEL_10");
-                //}
-                //else
-                //{
-                //    if (PlayerVehicle.LockStatus == VehicleLockStatus.StickPlayerInside)
-                //        PlayerVehicle.LockStatus = VehicleLockStatus.None;
-                //}
 
                 PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
                 _enteringVehicle = false;
@@ -1393,8 +1368,7 @@ namespace GTS.Scenes
             }
         }
 
-        private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f,
-            bool debug = false)
+        private bool ArtificialCollision(Entity entity, Entity velocityUser, float bounceDamp = 0.25f, bool debug = false)
         {
             GetDimensions(entity, out Vector3 min, out Vector3 max, out Vector3 minVector2, out Vector3 maxVector2,
                 out float radius);
@@ -1432,8 +1406,7 @@ namespace GTS.Scenes
             return true;
         }
 
-        private void GetDimensions(Entity entity, out Vector3 min, out Vector3 max, out Vector3 minVector2,
-            out Vector3 maxVector2, out float radius)
+        private void GetDimensions(Entity entity, out Vector3 min, out Vector3 max, out Vector3 minVector2, out Vector3 maxVector2, out float radius)
         {
             entity.Model.GetDimensions(out min, out max);
 

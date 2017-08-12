@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using GTA;
 using GTA.Native;
 
 namespace GTS.Library
@@ -10,6 +11,28 @@ namespace GTS.Library
 
         [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_InitCredits();
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_EndCredits();
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_SetWorldGravity(float gravity);
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_RemoveWater();
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_RestoreWater();
+
+        [DllImport("GTSLib.asi")]
+        private static extern byte GTSLib_IsRockstarEditorActive();
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)] string name,
+            bool toggle);
+
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_SetVehicleGravity(int vehicle, float gravity);
 
         public static void RollCredits()
         {
@@ -37,9 +60,6 @@ namespace GTS.Library
             }
         }
 
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_EndCredits();
-
         public static void CutCredits()
         {
             if (!GTSLib_IsLibraryInitialized())
@@ -59,9 +79,6 @@ namespace GTS.Library
             GTSLib_EndCredits();
         }
 
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetWorldGravity(float gravity);
-
         public static void SetGravityLevel(float gravity)
         {
             if (!GTSLib_IsLibraryInitialized())
@@ -69,12 +86,6 @@ namespace GTS.Library
 
             GTSLib_SetWorldGravity(gravity);
         }
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_RemoveWater();
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_RestoreWater();
 
         public static void RemoveWater()
         {
@@ -92,22 +103,34 @@ namespace GTS.Library
             GTSLib_RestoreWater();
         }
 
-        [DllImport("GTSLib.asi")]
-        private static extern byte GTSLib_IsRockstarEditorActive();
-
         public static bool IsRockstarEditorActive()
         {
             return GTSLib_IsLibraryInitialized() && GTSLib_IsRockstarEditorActive() == 1;
         }
 
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)] string name,
-            bool toggle);
-
         public static void SetScriptCanBePaused(bool toggle)
         {
             if (!GTSLib_IsLibraryInitialized()) return;
             GTSLib_SetScriptCanBePaused(Function.Call<string>(Hash.GET_THIS_SCRIPT_NAME), toggle);
+        }
+
+        public static void SetVehicleGravity(Vehicle vehicle, float gravity)
+        {
+            if (!GTSLib_IsLibraryInitialized())
+                return;
+            if (vehicle == null)
+                return;
+            GTSLib_SetVehicleGravity(vehicle.Handle, gravity);
+        }
+
+        public static void ResetVehicleGravity(Vehicle vehicle)
+        {
+            if (!GTSLib_IsLibraryInitialized())
+                return;
+            const float defGravity = 9.8000002f;
+            if (vehicle == null)
+                return;
+            SetVehicleGravity(vehicle, defGravity);
         }
     }
 }
