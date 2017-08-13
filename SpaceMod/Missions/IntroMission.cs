@@ -9,7 +9,6 @@ using GTS.Library;
 using GTS.Missions.Types;
 using GTS.Scenarios;
 using GTS.Scenes;
-using GTS.Scenes.Interiors;
 
 namespace GTS.Missions
 {
@@ -331,7 +330,8 @@ namespace GTS.Missions
                     if (distance > 1.3f)
                         return;
 
-                    GtsLibNet.DisplayHelpTextWithGxt("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
+                    GtsLibNet.DisplayHelpTextWithGxt(
+                        "INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
                         Game.FadeScreenOut(1);

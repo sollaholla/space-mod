@@ -717,7 +717,7 @@ namespace GTS
 
             foreach (var e in entities)
             {
-                if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle)e))
+                if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
                     continue;
                 if (PlayerPed.CurrentVehicle == null || !e.IsAttachedTo(PlayerPed.CurrentVehicle))
                     e.Delete();

@@ -1510,9 +1510,7 @@ namespace GTS.Scenes
             if (ped.IsInVehicle(vehicle)) return;
             if (_spaceWalkDummy == null)
             {
-                if (_enteringVehicle) {
-                    EnterVehicle_Reset(vehicle);
-                }
+                if (_enteringVehicle) EnterVehicle_Reset(vehicle);
                 return;
             }
 
