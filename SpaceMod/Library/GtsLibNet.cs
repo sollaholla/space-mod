@@ -219,6 +219,7 @@ namespace GTS.Library
         public static void TerminateScript(string name)
         {
             if (!Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
+            GtsLib.GetScriptStackSize(name); // cache the stack size before termination.
             Function.Call(Hash.TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME, name);
         }
 
