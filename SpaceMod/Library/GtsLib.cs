@@ -1,4 +1,5 @@
-﻿using GTA;
+﻿using System.Collections.Generic;
+using GTA;
 using GTA.Native;
 using System.Runtime.InteropServices;
 
@@ -10,6 +11,8 @@ namespace GTS.Library
     /// </summary>
     internal static class GtsLib
     {
+        private static readonly Dictionary<string, uint> ScriptStackSizes = new Dictionary<string, uint>();
+
         [DllImport("GTSLib.asi")]
         private static extern bool GTSLib_IsLibraryInitialized();
 
@@ -131,7 +134,13 @@ namespace GTS.Library
         {
             if (!GTSLib_IsLibraryInitialized() || string.IsNullOrEmpty(script))
                 return 0;
-            return GTSLib_GetScriptAllocatedStackSize(script);
+
+            if (ScriptStackSizes.ContainsKey(script))
+                return ScriptStackSizes[script];
+
+            var stackSize = GTSLib_GetScriptAllocatedStackSize(script);
+            ScriptStackSizes.Add(script, stackSize);
+            return stackSize;
         }
 
         /// <summary>

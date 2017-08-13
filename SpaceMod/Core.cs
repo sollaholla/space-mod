@@ -452,9 +452,7 @@ namespace GTS
 
         private void RequestModels()
         {
-            // TODO FIXME: This seems to slow down the game, so it might
-            // be a good idea to just ditch this feature.
-
+            // TODO FIXME: This seems to slow down the game, so it might be a good idea to just ditch this feature.
             if (!_loadModelsAtStart)
                 return;
 
