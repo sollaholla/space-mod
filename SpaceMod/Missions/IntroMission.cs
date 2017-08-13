@@ -67,10 +67,7 @@ namespace GTS.Missions
             while (Game.IsLoading)
                 Script.Yield();
 
-            //_missionStep = 10;
-
             CreateColonel();
-
             _humaneLabsIpl = new Interior("v_lab");
         }
 

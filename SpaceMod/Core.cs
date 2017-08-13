@@ -97,12 +97,12 @@ namespace GTS
         /// <summary>
         ///     The players character/ped.
         /// </summary>
-        public Ped PlayerPed => Game.Player.Character;
+        private static Ped PlayerPed => Game.Player.Character;
 
         /// <summary>
         ///     The position of the player in the game.
         /// </summary>
-        public Vector3 PlayerPosition
+        private static Vector3 PlayerPosition
         {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
             set
@@ -208,10 +208,12 @@ namespace GTS
                 try
                 {
                     CreateShuttleMap();
+                    OpenMilitaryGates();
                     ProcessMenus();
                     SetVarsDependantOnSceneNull();
                     DisableWantedStars();
                     RunInternalMissions();
+                    OpenMilitaryGates();
                 }
                 // Locks our tick method so that if the last tick did 
                 // not finish we will wait until it does to exit this method.
@@ -330,7 +332,7 @@ namespace GTS
             }
         }
 
-        private bool CanStartEndMission()
+        private static bool CanStartEndMission()
         {
             return false;
         }
@@ -659,7 +661,7 @@ namespace GTS
             }
         }
 
-        private void ClearAllEntities()
+        private static void ClearAllEntities()
         {
             var entities = World.GetAllEntities();
 
@@ -723,7 +725,7 @@ namespace GTS
             }
         }
 
-        private void EnterAtmosphere()
+        private static void EnterAtmosphere()
         {
             if (PlayerPed.IsInVehicle())
             {
@@ -743,7 +745,14 @@ namespace GTS
 
         #region Utility
 
-        private void RaiseLandingGear()
+        private static void OpenMilitaryGates()
+        {
+            var doorHash = Game.GenerateHash("prop_sec_barrier_ld_01a");
+            Function.Call(Hash._DOOR_CONTROL, doorHash, -1589.582f, 2793.6707f, 16.8591f, false, 0.0f, 45.0f, 0.0f);
+            Function.Call(Hash._DOOR_CONTROL, doorHash, -1588.267f, 2793.2126f, 16.8472f, false, 0.0f, 45.0f, 0.0f);
+        }
+
+        private static void RaiseLandingGear()
         {
             var vehicle = PlayerPed.CurrentVehicle;
             if (PlayerPed.IsInVehicle() && Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle))
