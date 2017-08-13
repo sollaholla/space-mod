@@ -158,7 +158,7 @@ namespace GTS
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
             GtsLibNet.SetGravityLevel(9.81f);
-            GtsLib.CutCredits();
+            GtsLib.EndCredits();
             GtsLib.RestoreWater();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Game.MissionFlag = !_didSetMissionFlag;
@@ -865,9 +865,9 @@ namespace GTS
 //            endMissionComplete = true;
 //            Settings.SetValue("settings", "end_mission_complete", endMissionComplete);
 //            Settings.Save();
-//            GTSLib.RollCredits();
+//            GTSLib.InitCredits();
 //            Wait(30000);
-//            GTSLib.CutCredits();
+//            GTSLib.EndCredits();
 //            Yield();
 //        }
 //    }
