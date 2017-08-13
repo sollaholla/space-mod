@@ -357,13 +357,7 @@ namespace GTS.Library
                 Function.Call(Hash.REQUEST_IPL, line);
             }
         }
-
-        public static bool AreAllIplsLoaded()
-        {
-            var lines = GetIplsToLoad();
-            return lines.All(line => Function.Call<bool>(Hash.IS_IPL_ACTIVE, line));
-        }
-
+        
         private static IEnumerable<string> GetIplsToLoad()
         {
             var codebase = Assembly.GetExecutingAssembly().CodeBase;

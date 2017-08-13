@@ -21,27 +21,27 @@ namespace GTS.Shuttle
         private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
 
         private Interior _map;
-        private SpaceShuttle _shuttle;
         private Vehicle _shuttleVehicle;
-
 
         public ShuttleManager(float enterOrbitHeight)
         {
             _enterOrbitHeight = enterOrbitHeight;
         }
 
+        public SpaceShuttle Shuttle { get; private set; }
+
         public void Update()
         {
             if (_shuttleVehicle == null) return;
-            if (_shuttle == null) return;
+            if (Shuttle == null) return;
 
             if (Game.Player.Character.IsInVehicle(_shuttleVehicle))
             {
-                _shuttle.Control();
+                Shuttle.Control();
             }
             else
             {
-                var dist = _shuttle.Position.DistanceTo(Game.Player.Character.Position);
+                var dist = Shuttle.Position.DistanceTo(Game.Player.Character.Position);
                 if (dist > _shuttleInteractDistance) return;
                 Game.DisableControlThisFrame(2, Control.Enter);
                 DisplayHelpTextThisFrame(
@@ -50,16 +50,16 @@ namespace GTS.Shuttle
                 PlacePlayerInShuttle();
             }
 
-            if (_shuttle.HeightAboveGround <= _enterOrbitHeight) return;
-            _shuttle.CleanUp();
-            _shuttle = null;
+            if (Shuttle.HeightAboveGround <= _enterOrbitHeight) return;
+            Shuttle.CleanUp();
+            Shuttle = null;
             _shuttleVehicle.HasCollision = true;
         }
 
         public void Abort()
         {
-            _shuttle?.CleanUp();
-            _shuttle?.Delete();
+            Shuttle?.CleanUp();
+            Shuttle?.Delete();
             _map?.Remove();
             _map?.MapBlip?.Remove();
         }
@@ -82,7 +82,7 @@ namespace GTS.Shuttle
 
         public void CreateShuttle()
         {
-            if (_shuttle != null) return;
+            if (Shuttle != null) return;
             var m = new Model("shuttle");
             m.Request();
             while (!m.IsLoaded)
@@ -91,7 +91,7 @@ namespace GTS.Shuttle
             _shuttleVehicle.Rotation = _shuttleVehicle.Rotation + new Vector3(90, 0, 0); // Rotate the shuttle upwards.
             _shuttleVehicle.HasCollision = false;
             _shuttleVehicle.FreezePosition = true;
-            _shuttle = new SpaceShuttle(_shuttleVehicle.Handle, _shuttlePosition);
+            Shuttle = new SpaceShuttle(_shuttleVehicle.Handle, _shuttlePosition);
         }
 
         public void PlacePlayerInShuttle()

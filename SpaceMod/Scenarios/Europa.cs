@@ -233,6 +233,9 @@ namespace DefaultMissions
                         {
                             Script.Yield();
                             Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
+                            UI.HideHudComponentThisFrame(HudComponent.HelpText);
+                            UI.HideHudComponentThisFrame(HudComponent.FloatingHelpText1);
+                            UI.HideHudComponentThisFrame(HudComponent.FloatingHelpText2);
                             _camera.FieldOfView -= Game.LastFrameTime * 2;
                         }
                         Game.FadeScreenOut(1);
@@ -416,8 +419,7 @@ namespace DefaultMissions
                     playerCharacter.Task.ClearAllImmediately();
                     playerCharacter.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
                     playerCharacter.Weapons.Select(WeaponHash.Unarmed);
-                    while (!GtsLibNet.AreAllIplsLoaded())
-                        Script.Yield();
+                    Script.Wait(2000);
                     Game.FadeScreenIn(1000);
                     _missionStep++;
                     break;

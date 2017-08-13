@@ -502,7 +502,6 @@ namespace GTS
         private void DoEarthUpdate()
         {
             // Let's us go to space from earth.
-
             var height = PlayerPed.HeightAboveGround;
             if (!(height > _enterOrbitHeight)) return;
 
@@ -513,6 +512,12 @@ namespace GTS
             PlayerPosition += _defaultSpaceOffset;
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
             else PlayerPed.Rotation = _defaultSpaceRotation;
+
+            if (PlayerPed.CurrentVehicle != _shuttleManager.Shuttle)
+            {
+                _shuttleManager.Shuttle?.CleanUp();
+                _shuttleManager.Shuttle?.Delete();
+            }
 
             if (_introMission == null /*&& _endMission == null*/)
                 StartMissionScripts();
