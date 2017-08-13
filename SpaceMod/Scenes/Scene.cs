@@ -1090,11 +1090,6 @@ namespace GTS.Scenes
 
                 Game.DisableControlThisFrame(2, Control.VehicleExit);
                 if (!Game.IsDisabledControlJustPressed(2, Control.VehicleExit)) return;
-                var p = PlayerVehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.Abigail);
-                p.IsVisible = false;
-                p.BlockPermanentEvents = true;
-                p.IsInvincible = true;
-                p.Task.StandStill(-1);
                 PlayerPed.Task.WarpOutOfVehicle(PlayerVehicle);
                 return;
             }
