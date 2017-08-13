@@ -236,7 +236,7 @@ namespace GTS.Scenes
                 CreateInteriors();
                 CreateTeleports();
                 RefreshTimecycle();
-                Utils.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
+                GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
                 CreateScenarios();
                 ConfigurePlayerVehicleForSpace();
                 ResetPlayerPosition();
@@ -245,7 +245,7 @@ namespace GTS.Scenes
                 Function.Call(Hash.STOP_AUDIO_SCENES);
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
                 GameplayCamera.RelativeHeading = 0;
-                Utils.RemoveAllIpls(true);
+                GtsLibNet.RemoveAllIpls(true);
             }
         }
 
@@ -344,7 +344,7 @@ namespace GTS.Scenes
                 Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
                 Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, false);
                 Function.Call(Hash._CLEAR_CLOUD_HAT);
-                Utils.RemoveAllIpls(false);
+                GtsLibNet.RemoveAllIpls(false);
             }
         }
 
@@ -489,7 +489,7 @@ namespace GTS.Scenes
 
             Debug.Log($"Successfully loaded model: {data.Model}");
 
-            var prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
+            var prop = GtsLibNet.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
             prop.Rotation = data.Rotation;
 
             prop.FreezePosition = true;
@@ -532,7 +532,7 @@ namespace GTS.Scenes
 
             Debug.Log($"Successfully loaded model: {data.Model}");
 
-            var prop = Utils.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
+            var prop = GtsLibNet.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
 
             prop.FreezePosition = true;
 
@@ -594,12 +594,12 @@ namespace GTS.Scenes
             if (Info.SurfaceScene)
                 if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding())
                 {
-                    var newPosition = Utils.GetGroundHeightRay(position, PlayerPed);
+                    var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
                     var timer = DateTime.Now + new TimeSpan(0, 0, 5);
 
                     while (newPosition == Vector3.Zero && DateTime.Now < timer)
                     {
-                        newPosition = Utils.GetGroundHeightRay(position, PlayerPed);
+                        newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
                         Script.Yield();
                     }
 
@@ -949,7 +949,7 @@ namespace GTS.Scenes
 
                 if (distanceStart < distance)
                 {
-                    Utils.DisplayHelpTextWithGxt("PRESS_E");
+                    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
 
                     if (Game.IsControlJustReleased(2, Control.Context))
                     {
@@ -971,7 +971,7 @@ namespace GTS.Scenes
 
                 if (distanceEnd < distance)
                 {
-                    Utils.DisplayHelpTextWithGxt("PRESS_E");
+                    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
@@ -1019,7 +1019,7 @@ namespace GTS.Scenes
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance &&
                 !PlayerPed.IsInVehicle())
             {
-                Utils.DisplayHelpTextWithGxt("RET_ORBIT");
+                GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT");
 
                 Game.DisableControlThisFrame(2, Control.Enter);
 
@@ -1033,7 +1033,7 @@ namespace GTS.Scenes
             }
             else if (PlayerPed.IsInVehicle())
             {
-                Utils.DisplayHelpTextWithGxt("RET_ORBIT2");
+                GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT2");
 
                 Game.DisableControlThisFrame(2, Control.Context);
 
@@ -1077,7 +1077,7 @@ namespace GTS.Scenes
             //        PlayerPed.Kill();
             //}
 
-            Utils.TerminateScriptByName("respawn_controller");
+            GtsLibNet.TerminateScript("respawn_controller");
             Game.Globals[4].SetInt(1);
             Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, true);
             Function.Call(Hash.SET_FADE_IN_AFTER_DEATH_ARREST, false);
@@ -1267,7 +1267,7 @@ namespace GTS.Scenes
                                 _spaceWalkDummy.HasGravity = false;
                                 PlayerPed.IsVisible = true;
                                 Function.Call(Hash.SET_VEHICLE_GRAVITY, _spaceWalkDummy, false);
-                                Utils.NotifyWithGxt("GTS_LABEL_26");
+                                GtsLibNet.NotifyWithGxt("GTS_LABEL_26");
                                 Mined?.Invoke(this, _minableObject);
                                 _lastMinePos = Vector3.Zero;
                                 _minableObject = null;
@@ -1462,7 +1462,7 @@ namespace GTS.Scenes
             if (!_minableProps.Contains(entHit)) return;
 
             // let's start mining!
-            Utils.DisplayHelpTextWithGxt("SW_MINE");
+            GtsLibNet.DisplayHelpTextWithGxt("SW_MINE");
             Game.DisableControlThisFrame(2, Control.Context);
             if (Game.IsDisabledControlJustPressed(2, Control.Context))
             {
@@ -1487,7 +1487,7 @@ namespace GTS.Scenes
             var entVeh = (Vehicle) entHit;
             if (entVeh != vehicle) return;
 
-            Utils.DisplayHelpTextWithGxt("SW_REPAIR");
+            GtsLibNet.DisplayHelpTextWithGxt("SW_REPAIR");
             Game.DisableControlThisFrame(2, Control.Context);
 
             if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
@@ -1645,7 +1645,7 @@ namespace GTS.Scenes
 
                 if (!_didSpaceWalkTut)
                 {
-                    Utils.DisplayHelpTextThisFrame(
+                    GtsLibNet.DisplayHelpTextThisFrame(
                         "~BLIP_INFO_ICON~ To rotate your character:~n~Use ~INPUT_VEH_FLY_YAW_LEFT~ ~INPUT_VEH_FLY_YAW_RIGHT~ for left and right.~n~Use ~INPUT_VEH_FLY_ROLL_LR~ for roll.~n~Use ~INPUT_VEH_FLY_PITCH_UD~ for up-down pitch.",
                         "CELL_EMAIL_BCON");
                     Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", _didSpaceWalkTut = true);
@@ -1709,7 +1709,7 @@ namespace GTS.Scenes
                     {
                         var direction = PlayerPosition - wormHolePosition;
                         direction.Normalize();
-                        var targetPos = Utils.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
+                        var targetPos = GtsLibNet.RotatePointAroundPivot(PlayerPosition, wormHolePosition,
                             new Vector3(0, 0, 2000 * Game.LastFrameTime));
                         var playerPos = PlayerPed.IsInVehicle()
                             ? PlayerPed.CurrentVehicle.Position

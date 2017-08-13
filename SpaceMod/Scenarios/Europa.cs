@@ -43,7 +43,7 @@ namespace DefaultMissions
             public void Start()
             {
                 var ufo = HelperFunctions.SpawnUfo(_spawn, 0);
-                var alien = Utils.CreateAlien(PedHash.MovAlien01, ufo.Position, 0, WeaponHash.Unarmed);
+                var alien = GtsLibNet.CreateAlien(PedHash.MovAlien01, ufo.Position, 0, WeaponHash.Unarmed);
                 alien.SetIntoVehicle(ufo, VehicleSeat.Driver);
                 alien.Task.Wait(-1);
                 ufo.Heading = (Game.Player.Character.Position - ufo.Position).ToHeading();
@@ -92,7 +92,7 @@ namespace DefaultMissions
                         {
                             var randDist = _rand.Next(5, 20);
                             var spawn = spawnPoint.Around(randDist);
-                            var ped = Utils.CreateAlien(PedHash.MovAlien01, spawn, 0, WeaponHash.CombatPDW);
+                            var ped = GtsLibNet.CreateAlien(PedHash.MovAlien01, spawn, 0, WeaponHash.CombatPDW);
                             if (!Entity.Exists(ped)) continue;
                             ped.Task.FightAgainst(Game.Player.Character);
                             PlaySmoke(ped.Position - Vector3.WorldUp, 1.0f);
@@ -382,7 +382,7 @@ namespace DefaultMissions
                         Effects.Start(ScreenEffect.SuccessNeutral, 5000);
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("ENEMIES_ELIM"));
                         Script.Wait(4500);
-                        Utils.ShowSubtitleWithGxt("FIX_GENERATOR");
+                        GtsLibNet.ShowSubtitleWithGxt("FIX_GENERATOR");
                         _missionStep++;
                         SaveSettings();
                     }
@@ -391,7 +391,7 @@ namespace DefaultMissions
                     HelperFunctions.DrawWaypoint(CurrentScene, _generatorPosition);
                     var distance = playerCharacter.Position.DistanceToSquared2D(_generatorPosition);
                     if (distance > 4) return;
-                    Utils.DisplayHelpTextWithGxt("PRESS_E");
+                    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context)) return;
                     _missionStep++;
                     break;
@@ -409,13 +409,13 @@ namespace DefaultMissions
                     }
                     break;
                 case 8:
-                    Utils.RemoveAllIpls(false);
+                    GtsLibNet.RemoveAllIpls(false);
                     playerCharacter.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
                     playerCharacter.Heading = 90;
                     playerCharacter.Task.ClearAllImmediately();
                     playerCharacter.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
                     playerCharacter.Weapons.Select(WeaponHash.Unarmed);
-                    while (!Utils.AreAllIplsLoaded())
+                    while (!GtsLibNet.AreAllIplsLoaded())
                         Script.Yield();
                     Game.FadeScreenIn(1000);
                     _missionStep++;
@@ -425,11 +425,11 @@ namespace DefaultMissions
                     for (var i = 0; i < 45; i++)
                     {
                         var spawn = playerCharacter.Position.Around(_random.Next(75, 150));
-                        spawn = Utils.GetGroundHeightRay(spawn);
+                        spawn = GtsLibNet.GetGroundHeightRay(spawn);
                         if (spawn == Vector3.Zero) continue;
-                        var m = new Model(Utils.GetAlienModel());
+                        var m = new Model(GtsLibNet.GetAlienModel());
                         m.Request(5000);
-                        var ped = Utils.CreateAlien(m, spawn, 0, WeaponHash.CombatPDW);
+                        var ped = GtsLibNet.CreateAlien(m, spawn, 0, WeaponHash.CombatPDW);
                         if (!Entity.Exists(ped)) continue;
                         ped.Task.FightAgainst(playerCharacter);
                         ped.AddBlip().Scale = 0.5f;
@@ -481,7 +481,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 12:
-                    Utils.RemoveAllIpls(true);
+                    GtsLibNet.RemoveAllIpls(true);
                     playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20;
                     playerCharacter.Task.ClearAll();
                     playerCharacter.Task.Skydive();
@@ -623,7 +623,7 @@ namespace DefaultMissions
             _fire = new Fire(_fireCoord - Vector3.WorldUp, false);
             _fire.Start();
             Script.Wait(1000);
-            Utils.ShowSubtitleWithGxt("EXT_FIRE");
+            GtsLibNet.ShowSubtitleWithGxt("EXT_FIRE");
         }
 
         private static void Intro_GivePlayerExtinguisher()

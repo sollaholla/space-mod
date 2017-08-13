@@ -42,7 +42,6 @@ namespace GTS.Missions
         private Blip _dishesAreaBlip;
         private bool _dishesInitialized;
         private Blip _humaneLabsBlip;
-        private Interior _humaneLabsIpl;
         private bool _isHumaneLabsMessageShown;
 
         private bool _isSatelliteMessageShown;
@@ -68,7 +67,6 @@ namespace GTS.Missions
                 Script.Yield();
 
             CreateColonel();
-            _humaneLabsIpl = new Interior("v_lab");
         }
 
         public override void OnUpdate()
@@ -85,7 +83,7 @@ namespace GTS.Missions
 
                     World.DrawMarker(MarkerType.UpsideDownCone, _colonel.Position + Vector3.WorldUp * 1.5f,
                         Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Gold);
-                    Utils.DisplayHelpTextWithGxt("END_LABEL_1");
+                    GtsLibNet.DisplayHelpTextWithGxt("END_LABEL_1");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
@@ -96,13 +94,13 @@ namespace GTS.Missions
                         PlayerPed.Task.StandStill(-1);
                         _colonel.Task.ChatTo(PlayerPed);
 
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_1", 5000);
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_1", 5000);
                         Script.Wait(2300);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_2", 5000);
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_2", 5000);
                         Script.Wait(5000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_3", 6000);
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_3", 6000);
                         Script.Wait(6000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_4", 6000);
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_4", 6000);
                         Script.Wait(6000);
 
                         Game.FadeScreenOut(1000);
@@ -126,7 +124,7 @@ namespace GTS.Missions
                 case 1:
                     if (!_isSatelliteMessageShown)
                     {
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_5", 5000);
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_5", 5000);
                         _isSatelliteMessageShown = true;
                     }
 
@@ -162,7 +160,7 @@ namespace GTS.Missions
                             if (dist > 1.75f)
                                 continue;
 
-                            Utils.DisplayHelpTextWithGxt("INTRO_LABEL_6");
+                            GtsLibNet.DisplayHelpTextWithGxt("INTRO_LABEL_6");
 
                             // Ayyee that's pretty good. -Solla
                             if (Game.IsControlJustPressed(2, Control.Context))
@@ -203,7 +201,7 @@ namespace GTS.Missions
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_8"));
                         Effects.Start(ScreenEffect.SuccessNeutral, 5000);
                         Script.Wait(4500);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_7");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_7");
                         _isHumaneLabsMessageShown = true;
                     }
 
@@ -226,20 +224,12 @@ namespace GTS.Missions
                     var distance = Vector3.Distance(PlayerPed.Position, _humaneLabsEnterance);
                     if (distance <= 1.5f)
                     {
-                        Utils.DisplayHelpTextWithGxt(
+                        GtsLibNet.DisplayHelpTextWithGxt(
                             "INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
 
                         if (Game.IsControlJustPressed(2, Control.Context))
                         {
                             Game.FadeScreenOut(1);
-                            _humaneLabsIpl.Request();
-                            var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
-                            while (!_humaneLabsIpl.IsActive)
-                            {
-                                Script.Yield();
-                                if (DateTime.UtcNow > timeout)
-                                    break;
-                            }
                             PlayerPed.Position = _humaneLabsExit - Vector3.WorldUp;
                             PlayerPed.Heading = 173.5802f;
                             Game.FadeScreenIn(750);
@@ -299,7 +289,7 @@ namespace GTS.Missions
                     if (distance > 1.3f)
                         return;
 
-                    Utils.DisplayHelpTextWithGxt("INTRO_LABEL_10"); // "Press INPUT_TALK to talk to the scientist".
+                    GtsLibNet.DisplayHelpTextWithGxt("INTRO_LABEL_10"); // "Press INPUT_TALK to talk to the scientist".
 
                     if (Game.IsControlJustPressed(2, Control.Talk))
                     {
@@ -313,7 +303,7 @@ namespace GTS.Missions
                         ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("INTRO_LABEL_11"));
                         Effects.Start(ScreenEffect.SuccessNeutral, 5000);
                         Script.Wait(750);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_12");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_12");
                         mainScientist.CurrentBlip?.Remove();
                         _missionStep++;
                     }
@@ -341,10 +331,9 @@ namespace GTS.Missions
                     if (distance > 1.3f)
                         return;
 
-                    Utils.DisplayHelpTextWithGxt("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
+                    GtsLibNet.DisplayHelpTextWithGxt("INTRO_LABEL_9"); // "Press ~INPUT_CONTEXT~ to enter/exit humane labs."
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
-                        _humaneLabsIpl?.Remove();
                         Game.FadeScreenOut(1);
                         PlayerPed.Position = _humaneLabsEnterance - Vector3.WorldUp;
                         PlayerPed.Heading = -173.5802f;
@@ -352,7 +341,7 @@ namespace GTS.Missions
                         Peds?.ForEach(p => p?.Delete());
                         Script.Wait(750);
                         Game.FadeScreenIn(1000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_13");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_13");
                         _missionStep++;
                     }
 
@@ -455,7 +444,7 @@ namespace GTS.Missions
 
                     World.DrawMarker(MarkerType.UpsideDownCone, _colonel.Position + Vector3.WorldUp * 1.5f,
                         Vector3.RelativeRight, Vector3.Zero, new Vector3(0.35f, 0.35f, 0.35f), Color.Gold);
-                    Utils.DisplayHelpTextWithGxt("END_LABEL_1");
+                    GtsLibNet.DisplayHelpTextWithGxt("END_LABEL_1");
 
                     if (Game.IsControlJustPressed(2, Control.Context))
                     {
@@ -464,19 +453,19 @@ namespace GTS.Missions
                         PlayerPed.Task.StandStill(-1);
                         _colonel.Task.ChatTo(PlayerPed);
 
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_14");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_14");
                         Script.Wait(7000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_15");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_15");
                         Script.Wait(7000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_16");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_16");
                         Script.Wait(7000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_17");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_17");
                         Script.Wait(7000);
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_18");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_18");
                         Script.Wait(2000);
                         Function.Call(Hash._PLAY_AMBIENT_SPEECH1, PlayerPed.Handle, "Generic_Thanks",
                             "Speech_Params_Force");
-                        Utils.ShowSubtitleWithGxt("INTRO_LABEL_19");
+                        GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_19");
                         Script.Wait(4000);
 
                         Game.FadeScreenOut(1500);
@@ -517,7 +506,7 @@ namespace GTS.Missions
 
             if (distStart < 4f)
             {
-                Utils.DisplayHelpTextWithGxt("PRESS_E");
+                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
                 if (!Game.IsControlJustPressed(2, Control.Context)) return;
                 Game.FadeScreenOut(1);
                 PlayerPed.Position = end;
@@ -526,7 +515,7 @@ namespace GTS.Missions
             }
             else if (distEnd < 4f)
             {
-                Utils.DisplayHelpTextWithGxt("PRESS_E");
+                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
                 if (!Game.IsControlJustPressed(2, Control.Context)) return;
                 Game.FadeScreenOut(1);
                 PlayerPed.Position = start;
@@ -555,12 +544,6 @@ namespace GTS.Missions
 
         private void CleanUp()
         {
-            if (_humaneLabsIpl.IsActive)
-            {
-                PlayerPed.Position = _humaneLabsEnterance;
-                _humaneLabsIpl.Remove();
-            }
-
             _dishes?.ForEach(x => x?.Aborted());
             _dishesAreaBlip?.Remove();
             Vehicles?.ForEach(v => v?.Delete());

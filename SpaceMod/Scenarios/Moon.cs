@@ -260,11 +260,11 @@ namespace DefaultMissions
                     break;
                 case 3:
                     if (Game.Player.Character.IsInVehicle()) return;
-                    Utils.DisplayHelpTextWithGxt("PLANT_FLAG");
+                    GtsLibNet.DisplayHelpTextWithGxt("PLANT_FLAG");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
                     var spawn = Game.Player.Character.Position + Game.Player.Character.ForwardVector * 2;
-                    var ground = Utils.GetGroundHeightRay(spawn, Game.Player.Character);
+                    var ground = GtsLibNet.GetGroundHeightRay(spawn, Game.Player.Character);
                     if (ground != Vector3.Zero) spawn = ground;
                     Game.Player.Character.Task.PlayAnimation("pickup_object", "pickup_low");
                     _lastFlagPos = spawn;
@@ -288,7 +288,7 @@ namespace DefaultMissions
                     HelperFunctions.DrawWaypoint(CurrentScene, _laptop.Position);
                     if (distance > 3)
                         return;
-                    Utils.DisplayHelpTextWithGxt("PRESS_E");
+                    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
                     _cutscene = new MoonSatelliteCutscene(_cutscenePlanetModel);
@@ -448,7 +448,7 @@ namespace DefaultMissions
             for (var i = 0; i < _enemyCount; i++)
             {
                 var spawn = pedSpawn.Around(_random.Next(5, 15));
-                var alien = Utils.CreateAlien(null, spawn, 90, WeaponHash.Railgun);
+                var alien = GtsLibNet.CreateAlien(null, spawn, 90, WeaponHash.Railgun);
                 if (!Entity.Exists(alien)) continue;
                 alien.AddBlip().Scale = 0.5f;
                 _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});

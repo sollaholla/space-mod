@@ -112,6 +112,9 @@ namespace GTS
             }
         }
 
+        // TODO: Temp.
+        private static bool CanStartEndMission => false;
+
         #endregion
 
         #region Methods
@@ -154,7 +157,7 @@ namespace GTS
             // Reset the game.
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
-            Utils.SetGravityLevel(9.81f);
+            GtsLibNet.SetGravityLevel(9.81f);
             GtsLib.CutCredits();
             GtsLib.RestoreWater();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
@@ -186,7 +189,7 @@ namespace GTS
             // if the script no longer exists it won't be restarted
             // when we abort. :/
             ///////////////////////////////////////////////////////////
-            Utils.RestartScript("blip_controller");
+            GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
@@ -264,7 +267,6 @@ namespace GTS
                 GTS.Settings.DefaultVehicleSpawn);
             GTS.Settings.VehicleFlySpeed =
                 Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            _endMissionCanStart = CanStartEndMission();
             GTS.Settings.LowConfigMode = Settings.GetValue("game", "low_config", false);
             GTS.Settings.EarthAtmosphereEnterPosition =
                 ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"),
@@ -272,6 +274,8 @@ namespace GTS
             GTS.Settings.EarthAtmosphereEnterRotation =
                 ParseVector3.Read(Settings.GetValue("mod", "earth_atmos_rot"),
                     GTS.Settings.EarthAtmosphereEnterRotation);
+
+            _endMissionCanStart = CanStartEndMission;
         }
 
         private void SaveSettings()
@@ -310,31 +314,20 @@ namespace GTS
         {
             Game.MissionFlag = _didSetMissionFlag = false;
             DoEarthUpdate();
-
             if (_didRestartEarthUpdate) return;
             _didRestartEarthUpdate = true;
             GtsLib.RestoreWater();
-            Utils.RestartScript("blip_controller"); // Beware of this function, it may delay the mod.
+            GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
         }
 
         private void SceneNotNull()
         {
             Game.MissionFlag = _didSetMissionFlag = true;
-
-            if (_currentScene.Info != null)
-                DoSceneUpdate();
-
-            if (_didRestartEarthUpdate)
-            {
-                _didRestartEarthUpdate = false;
-                GtsLib.RemoveWater();
-                Utils.TerminateScriptByName("blip_controller");
-            }
-        }
-
-        private static bool CanStartEndMission()
-        {
-            return false;
+            if (_currentScene.Info != null) DoSceneUpdate();
+            if (!_didRestartEarthUpdate) return;
+            GtsLib.RemoveWater();
+            GtsLibNet.TerminateScript("blip_controller");
+            _didRestartEarthUpdate = false;
         }
 
         private void CreateCustomMenu()
@@ -520,17 +513,17 @@ namespace GTS
             PlayerPosition += _defaultSpaceOffset;
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
             else PlayerPed.Rotation = _defaultSpaceRotation;
+
+            StartMissionScripts();
         }
 
         private void DoSceneUpdate()
         {
-            // Updates the scene.
-            Function.Call(Hash.SET_WIND_SPEED, 0.0f);
-            Function.Call(Hash._CLEAR_CLOUD_HAT);
             if (PlayerPed.CurrentVehicle != null)
                 PlayerPed.CurrentVehicle.HasGravity = _currentScene.Info.UseGravity;
             else PlayerPed.HasGravity = _currentScene.Info.UseGravity;
             _currentScene.Update();
+            StopMissionScripts();
         }
 
         private void RunInternalMissions()
@@ -577,26 +570,36 @@ namespace GTS
         {
             if (!_disableWantedStars)
             {
-                if (_resetWantedLevel) return;
-                Utils.RequestScript("re_prison");
-                Utils.RequestScript("re_prisonlift");
-                Utils.RequestScript("am_prison");
-                Utils.RequestScript("re_lossantosintl");
-                Utils.RequestScript("re_armybase");
-                Utils.RequestScript("restrictedareas");
-                Game.MaxWantedLevel = 5;
-                _resetWantedLevel = true;
+                StartWantedLevelScripts();
                 return;
             }
-            _resetWantedLevel = false;
-            Utils.TerminateScriptByName("re_prison");
-            Utils.TerminateScriptByName("re_prisonlift");
-            Utils.TerminateScriptByName("am_prison");
-            Utils.TerminateScriptByName("re_lossantosintl");
-            Utils.TerminateScriptByName("re_armybase");
-            Utils.TerminateScriptByName("restrictedareas");
+            StopWantedLevelScripts();
+        }
+
+        private void StartWantedLevelScripts()
+        {
+            if (_resetWantedLevel) return;
+            GtsLibNet.StartScript("re_prison", GtsLib.GetScriptStackSize("re_prison"));
+            GtsLibNet.StartScript("re_prisonlift", GtsLib.GetScriptStackSize("re_prisonlift"));
+            GtsLibNet.StartScript("am_prison", GtsLib.GetScriptStackSize("am_prison"));
+            GtsLibNet.StartScript("re_lossantosintl", GtsLib.GetScriptStackSize("re_lossantosintl"));
+            GtsLibNet.StartScript("re_armybase", GtsLib.GetScriptStackSize("re_armybase"));
+            GtsLibNet.StartScript("restrictedareas", GtsLib.GetScriptStackSize("restrictedareas"));
+            Game.MaxWantedLevel = 5;
+            _resetWantedLevel = true;
+        }
+
+        private void StopWantedLevelScripts()
+        {
+            GtsLibNet.TerminateScript("re_prison");
+            GtsLibNet.TerminateScript("re_prisonlift");
+            GtsLibNet.TerminateScript("am_prison");
+            GtsLibNet.TerminateScript("re_lossantosintl");
+            GtsLibNet.TerminateScript("re_armybase");
+            GtsLibNet.TerminateScript("restrictedareas");
             Game.Player.WantedLevel = 0;
             Game.MaxWantedLevel = 0;
+            _resetWantedLevel = false;
         }
 
         private static void ResetWeather()
@@ -661,19 +664,6 @@ namespace GTS
             }
         }
 
-        private static void ClearAllEntities()
-        {
-            var entities = World.GetAllEntities();
-
-            foreach (var e in entities)
-            {
-                if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
-                    continue;
-                if (PlayerPed.CurrentVehicle == null || !e.IsAttachedTo(PlayerPed.CurrentVehicle))
-                    e.Delete();
-            }
-        }
-
         private void CurrentSceneOnExited(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset)
         {
             lock (_tickLock)
@@ -691,7 +681,7 @@ namespace GTS
                 if (isActualScene && newScene.SurfaceScene)
                     RaiseLandingGear();
                 else if (!isActualScene)
-                    _endMissionCanStart = CanStartEndMission();
+                    _endMissionCanStart = CanStartEndMission;
 
                 Game.FadeScreenOut(1000);
                 Wait(1000);
@@ -717,13 +707,17 @@ namespace GTS
                     GiveSpawnControlToGame();
                     EnterAtmosphere();
                     PlayerPed.HasGravity = true;
-                    Utils.SetGravityLevel(9.81f);
+                    GtsLibNet.SetGravityLevel(9.81f);
                 }
 
                 Wait(1000);
                 Game.FadeScreenIn(1000);
             }
         }
+
+        #endregion
+
+        #region Utility
 
         private static void EnterAtmosphere()
         {
@@ -741,9 +735,18 @@ namespace GTS
             }
         }
 
-        #endregion
+        private static void ClearAllEntities()
+        {
+            var entities = World.GetAllEntities();
 
-        #region Utility
+            foreach (var e in entities)
+            {
+                if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle)e))
+                    continue;
+                if (PlayerPed.CurrentVehicle == null || !e.IsAttachedTo(PlayerPed.CurrentVehicle))
+                    e.Delete();
+            }
+        }
 
         private static void OpenMilitaryGates()
         {
@@ -776,6 +779,22 @@ namespace GTS
             Function.Call(Hash.SET_FADE_OUT_AFTER_ARREST, true);
             Function.Call(Hash.SET_FADE_OUT_AFTER_DEATH, true);
             Function.Call(Hash.IGNORE_NEXT_RESTART, false);
+        }
+
+        private static void StopMissionScripts()
+        {
+            GtsLibNet.TerminateScript("mission_triggerer_a");
+            GtsLibNet.TerminateScript("mission_triggerer_b");
+            GtsLibNet.TerminateScript("mission_triggerer_c");
+            GtsLibNet.TerminateScript("mission_triggerer_d");
+        }
+
+        private static void StartMissionScripts()
+        {
+            GtsLibNet.StartScript("mission_triggerer_a", GtsLib.GetScriptStackSize("mission_triggerer_a"));
+            GtsLibNet.StartScript("mission_triggerer_b", GtsLib.GetScriptStackSize("mission_triggerer_b"));
+            GtsLibNet.StartScript("mission_triggerer_c", GtsLib.GetScriptStackSize("mission_triggerer_c"));
+            GtsLibNet.StartScript("mission_triggerer_d", GtsLib.GetScriptStackSize("mission_triggerer_d"));
         }
 
         #endregion

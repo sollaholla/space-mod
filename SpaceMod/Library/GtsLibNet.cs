@@ -141,13 +141,13 @@ namespace GTS.Library
         IgnoreTrafficWhenDriving = 52
     }
 
-    public static class Utils
+    public static class GtsLibNet
     {
         private const string AlienModelsTextFile = "./scripts/Space/Aliens.txt";
         private const string DefaultAlienModel = "S_M_M_MovAlien_01";
         private static readonly string[] AlienModels;
 
-        static Utils()
+        static GtsLibNet()
         {
             AlienModels = new string[0];
 
@@ -197,30 +197,25 @@ namespace GTS.Library
             return p;
         }
 
-        public static void TerminateScriptByName(string name)
+        public static void TerminateScript(string name)
         {
-            if (!Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name))
-                return;
-
+            if (!Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
             Function.Call(Hash.TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME, name);
+        }
+
+        public static void StartScript(string name, int stackSize)
+        {
+            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
+            RequestScript(name);
+            if (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) return;
+            Function.Call(Hash.START_NEW_SCRIPT, name, stackSize);
+            Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
         }
 
         public static void RequestScript(string name)
         {
-            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name))
-                return;
-
+            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
             Function.Call(Hash.REQUEST_SCRIPT, name);
-
-            var timeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
-
-            while (Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
-            {
-                if (DateTime.UtcNow > timeout)
-                    break;
-
-                Script.Yield();
-            }
         }
 
         public static bool IsPlayingAnim(this Entity entity, string animDict, string animName)
@@ -301,15 +296,6 @@ namespace GTS.Library
         public static void SetGravityLevel(float level)
         {
             GtsLib.SetGravityLevel(level);
-        }
-
-        public static void RestartScript(string name)
-        {
-            Function.Call(Hash.REQUEST_SCRIPT, name);
-            var timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
-            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name) && DateTime.UtcNow < timout) Script.Yield();
-            Function.Call(Hash.START_NEW_SCRIPT, name, 1624);
-            Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
         }
 
         public static void Ragdoll(this Ped ped, int duration, RagdollType type)

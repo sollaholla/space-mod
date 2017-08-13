@@ -80,31 +80,31 @@ namespace GTS.OrbitalSystems
 
             IsVisible = false;
 
-            TerrainGrid[0, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 0] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[0, 0].LodDistance = _lod;
 
-            TerrainGrid[0, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 1] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[0, 1].LodDistance = _lod;
 
-            TerrainGrid[0, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[0, 2] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[0, 2].LodDistance = _lod;
 
-            TerrainGrid[1, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 0] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[1, 0].LodDistance = _lod;
 
-            TerrainGrid[1, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 1] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[1, 1].LodDistance = _lod;
 
-            TerrainGrid[1, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[1, 2] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[1, 2].LodDistance = _lod;
 
-            TerrainGrid[2, 0] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 0] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[2, 0].LodDistance = _lod;
 
-            TerrainGrid[2, 1] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 1] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[2, 1].LodDistance = _lod;
 
-            TerrainGrid[2, 2] = Utils.CreatePropNoOffset(Model, Position, false);
+            TerrainGrid[2, 2] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
             TerrainGrid[2, 2].LodDistance = _lod;
 
             UpdateTilePositions();

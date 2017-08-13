@@ -21,7 +21,7 @@ namespace DefaultMissions
 
         public static Vehicle SpawnUfo(Vector3 spawn, float checkRadius = 50, string model = "zanufo")
         {
-            var spawnPoint = Utils.GetGroundHeightRay(spawn);
+            var spawnPoint = GtsLibNet.GetGroundHeightRay(spawn);
 
             if (spawnPoint == Vector3.Zero)
                 return new Vehicle(0);

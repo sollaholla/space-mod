@@ -140,7 +140,7 @@ namespace DefaultMissions
                     // mission knows if we've been to mars already.
                     /////////////////////////////////////////////////////
                     _missionStep++;
-                    Utils.ShowSubtitleWithGxt("DEFEND_AREA");
+                    GtsLibNet.ShowSubtitleWithGxt("DEFEND_AREA");
                     SaveSettings();
                     break;
                 case 1:
@@ -149,7 +149,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 2:
-                    Utils.ShowSubtitleWithGxt("MARS_GO_TO");
+                    GtsLibNet.ShowSubtitleWithGxt("MARS_GO_TO");
                     _missionStep++;
                     SaveSettings();
                     break;
@@ -158,7 +158,7 @@ namespace DefaultMissions
                     t = new Trigger(_marsBasePos, _marsBaseRadius);
                     if (t.IsInTrigger(playerCharacter.Position))
                     {
-                        Utils.ShowSubtitleWithGxt("CHECK_SCI");
+                        GtsLibNet.ShowSubtitleWithGxt("CHECK_SCI");
                         _missionStep++;
                     }
                     break;
@@ -174,7 +174,7 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 6:
-                    Utils.ShowSubtitleWithGxt("MARS_MISSION_PT2_FIND");
+                    GtsLibNet.ShowSubtitleWithGxt("MARS_MISSION_PT2_FIND");
                     _missionStep++;
                     break;
                 case 7:
@@ -215,7 +215,7 @@ namespace DefaultMissions
                     t = new Trigger(_engineer.Position, 2.5f);
                     if (!t.IsInTrigger(playerCharacter.Position))
                         return;
-                    Utils.DisplayHelpTextWithGxt("PRESS_E");
+                    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
                     if (!Game.IsControlJustPressed(2, Control.Context))
                         return;
                     Function.Call(Hash._PLAY_AMBIENT_SPEECH1, playerCharacter, "Generic_Hi", "Speech_Params_Force");
@@ -363,7 +363,7 @@ namespace DefaultMissions
             if (Entity.Exists(_rover))
                 return;
 
-            var vehicleSpawn = Utils.GetGroundHeightRay(_marsEngineerRoverSpawn);
+            var vehicleSpawn = GtsLibNet.GetGroundHeightRay(_marsEngineerRoverSpawn);
             if (vehicleSpawn == Vector3.Zero) return;
             var roverModel = new Model("lunar");
             roverModel.Request(5000);
@@ -378,7 +378,7 @@ namespace DefaultMissions
             for (var i = 0; i < _enemyCount; i++)
             {
                 var position = spawn.Around(_random.Next(25, 35));
-                var alien = Utils.CreateAlien(PedHash.Scientist01SMM, position, 0, WeaponHash.CombatPDW);
+                var alien = GtsLibNet.CreateAlien(PedHash.Scientist01SMM, position, 0, WeaponHash.CombatPDW);
                 if (!Entity.Exists(alien)) continue;
                 alien.AddBlip().Scale = 0.5f;
                 _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
@@ -393,7 +393,7 @@ namespace DefaultMissions
 
             if (Entity.Exists(vehicle))
             {
-                var pilotModel = new Model(Utils.GetAlienModel());
+                var pilotModel = new Model(GtsLibNet.GetAlienModel());
                 pilotModel.Request(5000);
                 var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, pilotModel);
 
@@ -456,7 +456,7 @@ namespace DefaultMissions
 
         private Ped ShapeShift_ReplacePed(Entity ped)
         {
-            var newAlien = Utils.CreateAlien(null, ped.Position, ped.Heading, WeaponHash.CombatPDW);
+            var newAlien = GtsLibNet.CreateAlien(null, ped.Position, ped.Heading, WeaponHash.CombatPDW);
             newAlien.PositionNoOffset = ped.Position;
             ShapeShift_PlaySmokeEffect(newAlien.Position);
             newAlien.Heading = ped.Heading;
@@ -477,7 +477,7 @@ namespace DefaultMissions
             var distance = Game.Player.Character.Position.DistanceToSquared(scientist.Position);
             if (distance > 4) return;
 
-            Utils.DisplayHelpTextWithGxt("PRESS_E");
+            GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
             if (!Game.IsControlJustPressed(2, Control.Context))
                 return;
 
@@ -494,16 +494,16 @@ namespace DefaultMissions
             scientist.Task.LookAt(Game.Player.Character);
             Game.Player.Character.Task.LookAt(scientist);
 
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_1");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_1");
             Script.Wait(5000);
             scientist.Task.PlayAnimation(animDict, "gesture_no_way");
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_2");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_2");
             Script.Wait(5000);
             scientist.Task.PlayAnimation(animDict, "gesture_shrug_soft");
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_3");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_3");
             Script.Wait(5000);
             scientist.Task.PlayAnimation(animDict, "gesture_point");
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_4", 1500);
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_4", 1500);
             Script.Wait(1500);
             Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "FRANKLIN_BIG_01");
             Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
@@ -523,9 +523,9 @@ namespace DefaultMissions
 
         private bool EngineerFight_CreateEngineer()
         {
-            if (Utils.GetGroundHeightRay(_marsEngineerSpawn) == Vector3.Zero)
+            if (GtsLibNet.GetGroundHeightRay(_marsEngineerSpawn) == Vector3.Zero)
                 return false;
-            var spawn = Utils.GetGroundHeightRay(_marsEngineerSpawn);
+            var spawn = GtsLibNet.GetGroundHeightRay(_marsEngineerSpawn);
             var model = new Model(PedHash.Movspace01SMM);
             model.Request(5000);
             _engineer = World.CreatePed(model, spawn);
@@ -538,10 +538,10 @@ namespace DefaultMissions
         private bool EngineerFight_CreateDecoyAlien()
         {
             var spawn = _engineer.Position + _engineer.ForwardVector * 15;
-            if (Utils.GetGroundHeightRay(spawn) == Vector3.Zero)
+            if (GtsLibNet.GetGroundHeightRay(spawn) == Vector3.Zero)
                 return false;
-            spawn = Utils.GetGroundHeightRay(spawn);
-            var alien = Utils.CreateAlien(null, spawn, -_engineer.Heading, WeaponHash.Railgun);
+            spawn = GtsLibNet.GetGroundHeightRay(spawn);
+            var alien = GtsLibNet.CreateAlien(null, spawn, -_engineer.Heading, WeaponHash.Railgun);
             alien.AddBlip().Scale = 0.5f;
             alien.IsOnlyDamagedByPlayer = true;
             alien.Heading = (_engineer.Position - alien.Position).ToHeading();
@@ -552,9 +552,9 @@ namespace DefaultMissions
         private bool EngineerFight_CreateEngineerShuttle()
         {
             var spawn = _engineer.Position + _engineer.RightVector * 25;
-            if (Utils.GetGroundHeightRay(spawn) == Vector3.Zero)
+            if (GtsLibNet.GetGroundHeightRay(spawn) == Vector3.Zero)
                 return false;
-            spawn = Utils.GetGroundHeightRay(spawn);
+            spawn = GtsLibNet.GetGroundHeightRay(spawn);
             var model = new Model("shuttle");
             model.Request(5000);
             _engineerShuttle = World.CreateVehicle(model, spawn - Vector3.WorldUp);
@@ -577,16 +577,16 @@ namespace DefaultMissions
             Game.Player.Character.Task.LookAt(_engineer);
             Game.Player.Character.Task.StandStill(-1);
 
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_5");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_5");
             Script.Wait(5000);
             _engineer.Task.PlayAnimation(animDict, "gesture_no_way");
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_6");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_6");
             Script.Wait(5000);
             _engineer.Task.PlayAnimation(animDict, "gesture_shrug_soft");
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_7");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_7");
             Script.Wait(5000);
             _engineer.Task.PlayAnimation(animDict, "gesture_point");
-            Utils.ShowSubtitleWithGxt("MARS_LABEL_8");
+            GtsLibNet.ShowSubtitleWithGxt("MARS_LABEL_8");
             Script.Wait(5000);
             Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
 

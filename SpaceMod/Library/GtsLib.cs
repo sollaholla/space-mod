@@ -132,5 +132,10 @@ namespace GTS.Library
                 return;
             SetVehicleGravity(vehicle, defGravity);
         }
+
+        public static int GetScriptStackSize(string script)
+        {
+            return 1024;
+        }
     }
 }
