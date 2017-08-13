@@ -47,7 +47,7 @@ namespace DefaultMissions
                 alien.SetIntoVehicle(ufo, VehicleSeat.Driver);
                 alien.Task.Wait(-1);
                 ufo.Heading = (Game.Player.Character.Position - ufo.Position).ToHeading();
-                Entities.AddRange(new Entity[] {ufo.Driver, ufo});
+                Entities.AddRange(new Entity[] { ufo.Driver, ufo });
                 PlaySmoke(ufo.Position - Vector3.WorldUp, 70f);
                 ufo.AddBlip().Scale = 0.8f;
             }
@@ -74,7 +74,7 @@ namespace DefaultMissions
                         break;
                     case 1:
                         Game.DisableControlThisFrame(2, Control.Aim);
-                        if (Function.Call<bool>(Hash.IS_EXPLOSION_IN_SPHERE, (int) ExplosionType.PlaneRocket,
+                        if (Function.Call<bool>(Hash.IS_EXPLOSION_IN_SPHERE, (int)ExplosionType.PlaneRocket,
                             _firePos.X, _firePos.Y, _firePos.Z, 500f))
                         {
                             Script.Wait(1500);
@@ -220,6 +220,7 @@ namespace DefaultMissions
                             Vector3.Zero,
                             30);
                         _camera.PointAt(playerCharacter);
+
                         World.RenderingCamera = _camera;
                         TimeCycleModifier.Set("heliGunCam", 1.0f);
                         Script.Wait(500);
@@ -228,15 +229,15 @@ namespace DefaultMissions
                         _step++;
                         break;
                     case 3:
-                        if (DateTime.UtcNow > _endTimer)
+                        while (DateTime.UtcNow < _endTimer)
                         {
-                            Game.FadeScreenOut(1);
-                            Script.Wait(1000);
-                            Complete = true;
-                            return;
+                            Script.Yield();
+                            Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
+                            _camera.FieldOfView -= Game.LastFrameTime * 2;
                         }
-                        Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-                        _camera.FieldOfView -= Game.LastFrameTime * 2;
+                        Game.FadeScreenOut(1);
+                        Script.Wait(1000);
+                        Complete = true;
                         break;
                 }
             }
@@ -574,7 +575,7 @@ namespace DefaultMissions
             {
                 // Request the model first, since sometimes the props fail to load.
                 var extinguisherModel =
-                    new Model(Function.Call<int>(Hash.GET_WEAPONTYPE_MODEL, (int) WeaponHash.FireExtinguisher));
+                    new Model(Function.Call<int>(Hash.GET_WEAPONTYPE_MODEL, (int)WeaponHash.FireExtinguisher));
 
                 if (!extinguisherModel.IsLoaded)
                 {

@@ -284,67 +284,74 @@ namespace GTS.Scenes
         {
             lock (_updateLock)
             {
-                _spaceWalkDummy?.Delete();
-
-                foreach (var v in _vehicles)
-                    if (Entity.Exists(v) && PlayerVehicle != v)
-                        v.Delete();
-
-                if (PlayerVehicle != null)
+                try
                 {
-                    PlayerPed.SetIntoVehicle(PlayerVehicle, VehicleSeat.Driver);
-                    PlayerVehicle.LockStatus = VehicleLockStatus.None;
+                    _spaceWalkDummy?.Delete();
 
-                    var heading = PlayerVehicle.Heading;
-                    PlayerVehicle.Quaternion = Quaternion.Identity;
-                    PlayerVehicle.Heading = heading;
-                    PlayerVehicle.Velocity = Vector3.Zero;
-                    PlayerVehicle.IsInvincible = false;
-                    PlayerVehicle.EngineRunning = true;
-                    PlayerVehicle.FreezePosition = false;
-                    PlayerVehicle.IsPersistent = true;
-                }
+                    foreach (var v in _vehicles)
+                        if (Entity.Exists(v) && PlayerVehicle != v)
+                            v.Delete();
 
-                Galaxy.Delete();
-
-                foreach (var scenario in Scenarios)
-                {
-                    if (aborted)
+                    if (PlayerVehicle != null)
                     {
-                        scenario.OnAborted();
-                        continue;
+                        PlayerPed.SetIntoVehicle(PlayerVehicle, VehicleSeat.Driver);
+                        PlayerVehicle.LockStatus = VehicleLockStatus.None;
+
+                        var heading = PlayerVehicle.Heading;
+                        PlayerVehicle.Quaternion = Quaternion.Identity;
+                        PlayerVehicle.Heading = heading;
+                        PlayerVehicle.Velocity = Vector3.Zero;
+                        PlayerVehicle.IsInvincible = false;
+                        PlayerVehicle.EngineRunning = true;
+                        PlayerVehicle.FreezePosition = false;
+                        PlayerVehicle.IsPersistent = true;
                     }
-                    scenario.OnEnded(false);
+
+                    Galaxy.Delete();
+
+                    foreach (var scenario in Scenarios)
+                    {
+                        if (aborted)
+                        {
+                            scenario?.OnAborted();
+                            continue;
+                        }
+                        scenario?.OnEnded(false);
+                    }
+
+                    foreach (var b in _blips)
+                        b?.Remove();
+
+                    foreach (var interior in _interiors)
+                        interior?.Remove();
+
+                    foreach (var s in Surfaces)
+                        s?.Delete();
+
+                    foreach (var billboard in Billboards)
+                        billboard?.Delete();
+
+                    GameplayCamera.ShakeAmplitude = 0;
+
+                    // Reset waves and wind speed.
+                    Function.Call(Hash._0x5E5E99285AE812DB);
+                    Function.Call(Hash.SET_WIND_SPEED, 1.0f);
+                    Function.Call(Hash.STOP_AUDIO_SCENES);
+                    Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
+                    Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, ReticleTextureDict);
+                    Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
+                    Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
+                    Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
+                    Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
+                    Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
+                    Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, false);
+                    Function.Call(Hash._CLEAR_CLOUD_HAT);
+                    GtsLibNet.RemoveAllIpls(false);
                 }
-
-                foreach (var b in _blips)
-                    b.Remove();
-
-                foreach (var interior in _interiors)
-                    interior.Remove();
-
-                foreach (var s in Surfaces)
-                    s.Delete();
-
-                foreach (var billboard in Billboards)
-                    billboard.Delete();
-
-                GameplayCamera.ShakeAmplitude = 0;
-
-                // Reset waves and wind speed.
-                Function.Call(Hash._0x5E5E99285AE812DB);
-                Function.Call(Hash.SET_WIND_SPEED, 1.0f);
-                Function.Call(Hash.STOP_AUDIO_SCENES);
-                Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-                Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, ReticleTextureDict);
-                Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-                Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-                Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-                Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-                Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-                Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, false);
-                Function.Call(Hash._CLEAR_CLOUD_HAT);
-                GtsLibNet.RemoveAllIpls(false);
+                catch (Exception e)
+                {
+                    Debug.Log("Failed to abort: " + e.Message + Environment.NewLine + e.StackTrace);
+                }
             }
         }
 
