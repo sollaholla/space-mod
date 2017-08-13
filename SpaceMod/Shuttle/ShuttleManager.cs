@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTS.Library;
 using GTS.Scenes;
 using GTS.Scenes.Interiors;
 
@@ -96,13 +98,63 @@ namespace GTS.Shuttle
 
         public void PlacePlayerInShuttle()
         {
-            var newPlayer = World.CreatePed(_astronautModel, Game.Player.Character.Position);
-            var player = Game.Player.Character;
-            Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player.Handle, newPlayer.Handle, 1, 1);
-            player.Delete();
-            Game.Player.Character.Task.WarpIntoVehicle(_shuttleVehicle, VehicleSeat.Driver);
+            var playerPed = Game.Player.Character;
+
+            // Get the model for the player.
+            var modelName = _astronautModel;
+            if (playerPed.Model == PedHash.Michael)
+                modelName = "player_zero(spacesuit)";
+            else if (playerPed.Model == PedHash.Franklin)
+                modelName = "player_one(spacesuit)";
+            else if (playerPed.Model == PedHash.Trevor)
+                modelName = "player_two(spacesuit)";
+            else if (playerPed.Model == PedHash.FreemodeMale01)
+                modelName = "mp_m_freemode_01(spacesuit)";
+            else if (playerPed.Model == PedHash.FreemodeFemale01)
+                modelName = "mp_f_freemode_01(spacesuit)";
+
+            var m = new Model(modelName);
+            m.Request();
+            while (!m.IsLoaded)
+                Script.Yield();
+
+            var newPlayer = World.CreatePed(m, playerPed.Position);
+            var weapons = GetWeapons(playerPed);
+            TransferWeapons(weapons, newPlayer);
+            Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, newPlayer, true, true);
+            playerPed.Delete();
+            playerPed = Game.Player.Character;
+            _shuttleVehicle.LockStatus = VehicleLockStatus.None;
+            playerPed.SetIntoVehicle(_shuttleVehicle, VehicleSeat.Driver);
             _shuttleVehicle.LockStatus = VehicleLockStatus.Locked;
-            _shuttleVehicle.CurrentBlip?.Remove();
+        }
+
+        private static void TransferWeapons(IEnumerable<Weapon> weapons, Ped ped)
+        {
+            foreach (var weapon in weapons)
+            {
+                var newWeapon = ped.Weapons.Give(weapon.Hash, weapon.Ammo, false, false);
+                for (var i = 0; i < weapon.MaxComponents; i++)
+                {
+                    var component = weapon.GetComponent(i);
+                    if (weapon.IsComponentActive(component))
+                        newWeapon.SetComponent(component, true);
+                }
+            }
+        }
+
+        private static IEnumerable<Weapon> GetWeapons(Ped ped)
+        {
+            var weapons = new List<Weapon>();
+            var weaponHashes = (WeaponHash[]) Enum.GetValues(typeof(WeaponHash));
+            foreach (var weaponHash in weaponHashes)
+            {
+                if (!ped.Weapons.HasWeapon(weaponHash))
+                    continue;
+                weapons.Add(ped.Weapons[weaponHash]);
+
+            }
+            return weapons.ToArray();
         }
 
         #region TEMPORARY!
