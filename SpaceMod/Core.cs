@@ -514,7 +514,9 @@ namespace GTS
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
             else PlayerPed.Rotation = _defaultSpaceRotation;
 
-            StartMissionScripts();
+            if (_introMission == null /*&& _endMission == null*/)
+                StartMissionScripts();
+            else StopMissionScripts();
         }
 
         private void DoSceneUpdate()
@@ -574,32 +576,6 @@ namespace GTS
                 return;
             }
             StopWantedLevelScripts();
-        }
-
-        private void StartWantedLevelScripts()
-        {
-            if (_resetWantedLevel) return;
-            GtsLibNet.StartScript("re_prison", GtsLib.GetScriptStackSize("re_prison"));
-            GtsLibNet.StartScript("re_prisonlift", GtsLib.GetScriptStackSize("re_prisonlift"));
-            GtsLibNet.StartScript("am_prison", GtsLib.GetScriptStackSize("am_prison"));
-            GtsLibNet.StartScript("re_lossantosintl", GtsLib.GetScriptStackSize("re_lossantosintl"));
-            GtsLibNet.StartScript("re_armybase", GtsLib.GetScriptStackSize("re_armybase"));
-            GtsLibNet.StartScript("restrictedareas", GtsLib.GetScriptStackSize("restrictedareas"));
-            Game.MaxWantedLevel = 5;
-            _resetWantedLevel = true;
-        }
-
-        private void StopWantedLevelScripts()
-        {
-            GtsLibNet.TerminateScript("re_prison");
-            GtsLibNet.TerminateScript("re_prisonlift");
-            GtsLibNet.TerminateScript("am_prison");
-            GtsLibNet.TerminateScript("re_lossantosintl");
-            GtsLibNet.TerminateScript("re_armybase");
-            GtsLibNet.TerminateScript("restrictedareas");
-            Game.Player.WantedLevel = 0;
-            Game.MaxWantedLevel = 0;
-            _resetWantedLevel = false;
         }
 
         private static void ResetWeather()
@@ -795,6 +771,32 @@ namespace GTS
             GtsLibNet.StartScript("mission_triggerer_b", GtsLib.GetScriptStackSize("mission_triggerer_b"));
             GtsLibNet.StartScript("mission_triggerer_c", GtsLib.GetScriptStackSize("mission_triggerer_c"));
             GtsLibNet.StartScript("mission_triggerer_d", GtsLib.GetScriptStackSize("mission_triggerer_d"));
+        }
+
+        private void StartWantedLevelScripts()
+        {
+            if (_resetWantedLevel) return;
+            GtsLibNet.StartScript("re_prison", GtsLib.GetScriptStackSize("re_prison"));
+            GtsLibNet.StartScript("re_prisonlift", GtsLib.GetScriptStackSize("re_prisonlift"));
+            GtsLibNet.StartScript("am_prison", GtsLib.GetScriptStackSize("am_prison"));
+            GtsLibNet.StartScript("re_lossantosintl", GtsLib.GetScriptStackSize("re_lossantosintl"));
+            GtsLibNet.StartScript("re_armybase", GtsLib.GetScriptStackSize("re_armybase"));
+            GtsLibNet.StartScript("restrictedareas", GtsLib.GetScriptStackSize("restrictedareas"));
+            Game.MaxWantedLevel = 5;
+            _resetWantedLevel = true;
+        }
+
+        private void StopWantedLevelScripts()
+        {
+            GtsLibNet.TerminateScript("re_prison");
+            GtsLibNet.TerminateScript("re_prisonlift");
+            GtsLibNet.TerminateScript("am_prison");
+            GtsLibNet.TerminateScript("re_lossantosintl");
+            GtsLibNet.TerminateScript("re_armybase");
+            GtsLibNet.TerminateScript("restrictedareas");
+            Game.Player.WantedLevel = 0;
+            Game.MaxWantedLevel = 0;
+            _resetWantedLevel = false;
         }
 
         #endregion
