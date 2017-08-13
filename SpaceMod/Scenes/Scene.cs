@@ -1501,7 +1501,13 @@ namespace GTS.Scenes
         private void SpaceWalk_EnterVehicle(Ped ped, Vehicle vehicle)
         {
             if (ped.IsInVehicle(vehicle)) return;
-            if (_spaceWalkDummy == null) return;
+            if (_spaceWalkDummy == null)
+            {
+                if (_enteringVehicle) {
+                    EnterVehicle_Reset(vehicle);
+                }
+                return;
+            }
 
             var doorPos = vehicle.HasBone("door_dside_f") ? vehicle.GetBoneCoord("door_dside_f") : vehicle.Position;
 
@@ -1542,13 +1548,18 @@ namespace GTS.Scenes
 
                 if (!(ped.Position.DistanceTo(doorPos) < 1.5f) && vehicle.HasBone("door_dside_f")) return;
 
-                _spaceWalkDummy?.Delete();
-                _spaceWalkDummy = null;
-                PlayerPed.Detach();
-                PlayerPed.Task.ClearAllImmediately();
-                PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
-                _enteringVehicle = false;
+                EnterVehicle_Reset(vehicle);
             }
+        }
+
+        private void EnterVehicle_Reset(Vehicle vehicle)
+        {
+            PlayerPed.Detach();
+            _spaceWalkDummy?.Delete();
+            _spaceWalkDummy = null;
+            PlayerPed.Task.ClearAllImmediately();
+            PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+            _enteringVehicle = false;
         }
 
         private void EntityFlightControl(Entity entityToFly, float flySpeed, float sensitivity, bool canFly = true)
