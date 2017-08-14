@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using GTA;
 using GTA.Math;
@@ -68,6 +69,7 @@ namespace GTS.Shuttle
 
         public void LoadMap()
         {
+            if (!File.Exists(_mapLocation)) return;
             _map = new Interior(_mapLocation, InteriorType.MapEditor, false);
             _map.Request();
             if (!_map.Loaded) return;
