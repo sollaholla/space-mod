@@ -480,8 +480,6 @@ namespace GTS
             {
                 while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
                     Yield();
-                Wait(5000);
-
                 var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
                 loadScaleform.Draw = true;
                 _shuttleManager = new ShuttleManager(_enterOrbitHeight);

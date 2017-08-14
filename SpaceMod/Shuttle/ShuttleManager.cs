@@ -145,16 +145,8 @@ namespace GTS.Shuttle
 
         private static IEnumerable<Weapon> GetWeapons(Ped ped)
         {
-            var weapons = new List<Weapon>();
             var weaponHashes = (WeaponHash[]) Enum.GetValues(typeof(WeaponHash));
-            foreach (var weaponHash in weaponHashes)
-            {
-                if (!ped.Weapons.HasWeapon(weaponHash))
-                    continue;
-                weapons.Add(ped.Weapons[weaponHash]);
-
-            }
-            return weapons.ToArray();
+            return (from weaponHash in weaponHashes where ped.Weapons.HasWeapon(weaponHash) select ped.Weapons[weaponHash]).ToArray();
         }
 
         #region TEMPORARY!

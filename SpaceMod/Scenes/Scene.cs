@@ -1015,11 +1015,11 @@ namespace GTS.Scenes
                     continue;
 
                 var position = Info.GalaxyCenter + orbital.Position;
-
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
 
-                if (distance <= orbital.TriggerDistance * orbital.TriggerDistance)
-                    Exited?.Invoke(this, orbital.NextScene, orbital.NextSceneRotation, orbital.NextScenePosition);
+                if (!(distance <= orbital.TriggerDistance * orbital.TriggerDistance)) continue;
+                Exited?.Invoke(this, orbital.NextScene, orbital.NextSceneRotation, orbital.NextScenePosition);
+                break;
             }
 
             foreach (var link in Info.SceneLinks)
@@ -1028,11 +1028,11 @@ namespace GTS.Scenes
                     continue;
 
                 var position = Info.GalaxyCenter + link.Position;
-
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
 
-                if (distance <= link.TriggerDistance * link.TriggerDistance)
-                    Exited?.Invoke(this, link.NextScene, link.NextSceneRotation, link.NextScenePosition);
+                if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
+                Exited?.Invoke(this, link.NextScene, link.NextSceneRotation, link.NextScenePosition);
+                break;
             }
         }
 
@@ -1093,6 +1093,7 @@ namespace GTS.Scenes
                 PlayerPed.Task.WarpOutOfVehicle(PlayerVehicle);
                 return;
             }
+
             if (Entity.Exists(PlayerVehicle))
             {
                 PlayerVehicle.Velocity = Vector3.Lerp(PlayerVehicle.Velocity, Vector3.Zero, Game.LastFrameTime * 2f);
@@ -1103,6 +1104,13 @@ namespace GTS.Scenes
 
             CreateSpaceWalkObj();
             PlaySpaceWalkAnim();
+
+            if (!_didSpaceWalkTut)
+            {
+                GtsLibNet.DisplayHelpTextWithGxt("SPACEWALK_INFO");
+                Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", _didSpaceWalkTut = true);
+                Core.Instance.Settings.Save();
+            }
 
             var didCollide = ArtificialCollision(PlayerPed, _spaceWalkObj);
             EntityFlightControl(_spaceWalkObj, 1.0f, 1.0f, !didCollide);
