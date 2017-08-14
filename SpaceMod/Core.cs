@@ -152,7 +152,7 @@ namespace GTS
             PlayerPed.Task.ClearAll();
             PlayerPed.HasGravity = true;
             PlayerPed.FreezePosition = false;
-            PlayerPed.CanRagdoll = false;
+            PlayerPed.CanRagdoll = true;
 
             // Reset the game.
             Game.TimeScale = 1.0f;
@@ -404,8 +404,11 @@ namespace GTS
             var sceneSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Scenes");
             var useScenariosCheckbox = new UIMenuCheckboxItem("Use Scenarios", GTS.Settings.UseScenarios);
             useScenariosCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.UseScenarios = check; };
+            var debugTriggerCheckbox = new UIMenuCheckboxItem("Debug Triggers", GTS.Settings.DebugTriggers);
+            debugTriggerCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.DebugTriggers = check; };
 
             sceneSettingsMenu.AddItem(useScenariosCheckbox);
+            sceneSettingsMenu.AddItem(debugTriggerCheckbox);
 
             #endregion
 

@@ -137,18 +137,12 @@ namespace GTS.Scenes
         /// </summary>
         public string FileName { get; internal set; }
 
-        /// <summary>
-        /// </summary>
         internal Vehicle PlayerVehicle { get; private set; }
 
-        /// <summary>
-        /// </summary>
         internal static Ped PlayerPed => Game.Player.Character ?? new Ped(0);
 
         public bool StopTile { get; set; }
 
-        /// <summary>
-        /// </summary>
         internal Vector3 PlayerPosition {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
             set {
@@ -158,8 +152,6 @@ namespace GTS.Scenes
             }
         }
 
-        /// <summary>
-        /// </summary>
         internal void Start()
         {
             lock (_startLock)
@@ -181,8 +173,6 @@ namespace GTS.Scenes
             }
         }
 
-        /// <summary>
-        /// </summary>
         internal void Update()
         {
             if (!Monitor.TryEnter(_updateLock)) return;
@@ -211,8 +201,6 @@ namespace GTS.Scenes
             }
         }
 
-        /// <summary>
-        /// </summary>
         internal void Delete(bool aborted = false)
         {
             lock (_updateLock)
@@ -1017,6 +1005,9 @@ namespace GTS.Scenes
                 var position = Info.GalaxyCenter + orbital.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
 
+                if (Settings.DebugTriggers)
+                    World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero, new Vector3(orbital.TriggerDistance, orbital.TriggerDistance, orbital.TriggerDistance), Color.FromArgb(150, 255, 0, 0));
+
                 if (!(distance <= orbital.TriggerDistance * orbital.TriggerDistance)) continue;
                 Exited?.Invoke(this, orbital.NextScene, orbital.NextSceneRotation, orbital.NextScenePosition);
                 break;
@@ -1029,6 +1020,9 @@ namespace GTS.Scenes
 
                 var position = Info.GalaxyCenter + link.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
+
+                if (Settings.DebugTriggers)
+                    World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero, new Vector3(link.TriggerDistance, link.TriggerDistance, link.TriggerDistance), Color.FromArgb(150, 255, 255, 0));
 
                 if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
                 Exited?.Invoke(this, link.NextScene, link.NextSceneRotation, link.NextScenePosition);
@@ -1075,6 +1069,9 @@ namespace GTS.Scenes
         private void SpaceWalk()
         {
             if (Info.SurfaceScene)
+                return;
+
+            if (!Settings.UseSpaceWalk)
                 return;
 
             if (PlayerPed.IsInVehicle())
