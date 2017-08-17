@@ -617,17 +617,14 @@ namespace GTS.Scenes
 
         private void UpdateBillboards()
         {
+            var galaxyPosition = Database.GetGalaxyPosition();
             foreach (var billboardable in Billboards)
             {
-                var galaxyPosition = Database.GetGalaxyPosition();
-                billboardable.Quaternion = Quaternion.FromToRotation(billboardable.ForwardVector,
-                                               (billboardable.Position - galaxyPosition).Normalized) *
-                                           billboardable.Quaternion;
-
-                var originalPosition = Info.GalaxyCenter + billboardable.OriginalPosition;
-                var distance = galaxyPosition.DistanceTo(originalPosition);
-                var scale = (billboardable.ParallaxScaling + 1) * GameplayCamera.FieldOfView / distance;
-                billboardable.Position = originalPosition - billboardable.ForwardVector * Math.Max(0, scale - 1);
+                var aDir = billboardable.ForwardVector;
+                var bDir = billboardable.Position - galaxyPosition;
+                if (bDir.Length() > 0)
+                    bDir.Normalize();
+                billboardable.Quaternion = Quaternion.Lerp(billboardable.Quaternion, Quaternion.FromToRotation(aDir, bDir) * billboardable.Quaternion, Game.LastFrameTime * 5);
             }
         }
 
@@ -1068,14 +1065,15 @@ namespace GTS.Scenes
 
         private void SpaceWalk()
         {
+            // If this is a surface scene, make sure these
+            // controls are not active.
             if (Info.SurfaceScene)
                 return;
 
-            if (!Settings.UseSpaceWalk)
-                return;
-
+            // Make sure we're not spacewalking while in a vehicle.
             if (PlayerPed.IsInVehicle())
             {
+                // Reset the new vehicle with proper gravity levels, and priority.
                 if (PlayerVehicle != PlayerPed.CurrentVehicle)
                 {
                     PlayerVehicle = PlayerPed.CurrentVehicle;
@@ -1083,25 +1081,43 @@ namespace GTS.Scenes
                     PlayerVehicle.HasGravity = false;
                     GtsLib.SetVehicleGravity(PlayerVehicle, 0.0f);
                 }
+
+                // Stop spacewalking and then make sure to 
+                // disable vehicle exit controls.
                 StopSpaceWalk();
-
-                Game.DisableControlThisFrame(2, Control.VehicleExit);
-                if (!Game.IsDisabledControlJustPressed(2, Control.VehicleExit)) return;
-                PlayerPed.Task.WarpOutOfVehicle(PlayerVehicle);
+                ExitVehicleWithControls();
                 return;
             }
 
-            if (Entity.Exists(PlayerVehicle))
+            // If we don't wish to use spacewalking then 
+            // return, and stop spacewalking completely.
+            if (!Settings.UseSpaceWalk)
             {
-                PlayerVehicle.Velocity = Vector3.Lerp(PlayerVehicle.Velocity, Vector3.Zero, Game.LastFrameTime * 2f);
+                StopSpaceWalk();
+                return;
             }
 
-            if (PlayerPed.IsJumpingOutOfVehicle || PlayerPed.IsRagdoll)
-                return;
+            // Slow down the player vehicle so he's not stranded.
+            if (Entity.Exists(PlayerVehicle))
+                PlayerVehicle.Velocity = Vector3.Lerp(PlayerVehicle.Velocity, Vector3.Zero, Game.LastFrameTime * 2f);
 
+            // If the player is jumping out of the vehicle, or he/she is ragdoll, 
+            // we need to wait for those tasks to finish.
+            if (PlayerPed.IsJumpingOutOfVehicle || PlayerPed.IsRagdoll)
+            {
+                // Let's stop the ragdoll to catch ourselves from drifting.
+                if (PlayerPed.IsRagdoll)
+                    PlayerPed.Task.ClearAll();
+                return;
+            }
+
+            // Create the spacewalk helper vehicle, 
+            // and play the proper animation.
             CreateSpaceWalkObj();
             PlaySpaceWalkAnim();
 
+            // Make sure we display tutorial info in-case 
+            // the user doesn't understand spacewalking.
             if (!_didSpaceWalkTut)
             {
                 GtsLibNet.DisplayHelpTextWithGxt("SPACEWALK_INFO");
@@ -1109,6 +1125,7 @@ namespace GTS.Scenes
                 Core.Instance.Settings.Save();
             }
 
+            // Fly the player's spacewalk helper around.
             var didCollide = ArtificialCollision(PlayerPed, _spaceWalkObj);
             EntityFlightControl(_spaceWalkObj, 1.0f, 1.0f, !didCollide);
         }
@@ -1117,7 +1134,7 @@ namespace GTS.Scenes
         {
             if (Entity.Exists(_spaceWalkObj))
                 return;
-
+            
             var model = new Model("panto");
             model.Request();
             while (!model.IsLoaded)
@@ -1157,6 +1174,7 @@ namespace GTS.Scenes
             if (PlayerPed.IsAttachedTo(_spaceWalkObj))
                 PlayerPed.Detach();
             _spaceWalkObj?.Delete();
+            PlayerPed.Task.ClearAll();
         }
 
         private static bool ArtificialCollision(Entity entity, Entity entityParent, float bounceDamp = 0.25f,
@@ -1266,6 +1284,13 @@ namespace GTS.Scenes
                 entity.Velocity = Vector3.Lerp(entity.Velocity, -entity.ForwardVector * flySpeed,
                     Game.LastFrameTime);
             }
+        }
+
+        private void ExitVehicleWithControls()
+        {
+            Game.DisableControlThisFrame(2, Control.VehicleExit);
+            if (!Game.IsDisabledControlJustPressed(2, Control.VehicleExit)) return;
+            PlayerPed.Task.WarpOutOfVehicle(PlayerVehicle);
         }
 
         //private void SpaceWalk_CreateWeldingProp(Ped ped)

@@ -69,7 +69,6 @@
     <Compile Include="Library\GtsLib.cs" />
     <Compile Include="OrbitalSystems\Billboardable.cs" />
     <Compile Include="OrbitalSystems\Surface.cs" />
-    <Compile Include="Library\RockstarEditorTimecycler.cs" />
     <Compile Include="Scenario\Scenario.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="Scenes\Interiors\Interior.cs" />

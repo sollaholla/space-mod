@@ -61,7 +61,7 @@ namespace GTS.Extensions
         public static void LogEntityData(Entity entity)
         {
             Log($"Logging entity data:{Environment.NewLine}" +
-                $"\tPosition: {entity.Position - Vector3.WorldUp}{Environment.NewLine}" +
+                $"\tPosition: {entity.Position - (Core.Instance.GetCurrentScene() != null ? Core.Instance.GetCurrentScene().Info.GalaxyCenter : (XVector3)Vector3.Zero)}{Environment.NewLine}" +
                 $"\tHeading: {entity.Heading}{Environment.NewLine}" +
                 $"\tRotation: {entity.Rotation}{Environment.NewLine}" +
                 $"\tQuaternion: {entity.Quaternion}{Environment.NewLine}" +
