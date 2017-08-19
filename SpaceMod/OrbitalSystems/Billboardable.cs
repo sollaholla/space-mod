@@ -3,16 +3,18 @@ using GTA.Math;
 
 namespace GTS.OrbitalSystems
 {
-    public class Billboardable : Entity
+    public sealed class Billboardable : Entity
     {
-        public Billboardable(int handle, Vector3 originalPosition, float perpectiveScaling) : base(handle)
+        public Billboardable(int handle, Vector3 startPosition) : base(handle)
         {
-            ParallaxScaling = perpectiveScaling;
-            OriginalPosition = originalPosition;
+            StartPosition = startPosition;
+            Rotation = Vector3.Zero;
         }
 
-        public Vector3 OriginalPosition { get; }
+        public Vector3 StartPosition { get; }
 
-        public float ParallaxScaling { get; }
+        public float ParallaxAmount { get; set; }
+
+        public float ParallaxStartDistance { get; set; }
     }
 }

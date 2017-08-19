@@ -55,7 +55,7 @@ namespace GTS
         /// </summary>
         /// <returns>
         /// </returns>
-        internal static Vector3 GetGalaxyPosition()
+        internal static Vector3 ViewFinderPosition()
         {
             return
                 GameplayCamera.IsRendering

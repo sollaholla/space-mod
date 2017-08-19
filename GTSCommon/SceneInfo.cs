@@ -480,7 +480,10 @@ public class ScenarioInfo
 public class Billboard : IDrawable
 {
     [RefreshProperties(RefreshProperties.All)]
-    public float ParallaxScale { get; set; }
+    public float ParallaxAmount { get; set; } = 0.125f;
+
+    [RefreshProperties(RefreshProperties.All)]
+    public float ParallaxStartDistance { get; set; } = 5000f;
 
     [RefreshProperties(RefreshProperties.All)]
     public string Model { get; set; }

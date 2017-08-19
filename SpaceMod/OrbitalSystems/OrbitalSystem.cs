@@ -37,7 +37,7 @@ namespace GTS.OrbitalSystems
             //Rotate();
 
             // Stay with the camera.
-            Position = Database.GetGalaxyPosition();
+            Position = Database.ViewFinderPosition();
 
             // Update locked orbitals.
             AttachedOrbitals?.ForEach(AttachOrbital);
