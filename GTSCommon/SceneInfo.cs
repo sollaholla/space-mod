@@ -232,6 +232,11 @@ public class SceneInfo : NextSceneInfo
     public override XVector3 NextScenePosition { get; set; }
 
     [Category("Surface Settings")]
+    [Description("Set the puddle intensity on this planet. Only works for puddles that 'don't' already exist.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public float PuddleIntensity { get; set; } = 0.0f;
+
+    [Category("Surface Settings")]
     [Description("Set the water wave strength.")]
     [RefreshProperties(RefreshProperties.All)]
     public float WaveStrength { get; set; }
