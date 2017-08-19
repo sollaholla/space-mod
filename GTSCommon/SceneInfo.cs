@@ -283,6 +283,11 @@ public class SceneInfo : NextSceneInfo
     [RefreshProperties(RefreshProperties.All)]
     public float OrbitLeaveHeight { get; set; } = 750f;
 
+    [Category("Surface Settings")]
+    [Description("The position (offset) that non-landable vehicle's will be located after landing.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public XVector3 OrbitalVehicleOffset { get; set; } = new XVector3(250, 190, 750);
+
     [Category("Audio")]
     [Description(
         "Use sound. Mostly for scenes (like space) in which you don't want sound to play unless in first person.")]

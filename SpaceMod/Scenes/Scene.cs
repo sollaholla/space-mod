@@ -13,6 +13,7 @@ using GTS.Library;
 using GTS.OrbitalSystems;
 using GTS.Scenarios;
 using GTS.Scenes.Interiors;
+using GTS.Vehicles;
 using Font = GTA.Font;
 
 namespace GTS.Scenes
@@ -66,7 +67,9 @@ namespace GTS.Scenes
         private bool _didSetTimecycle;
         private bool _didSetAreaTimecycle;
         private bool _didSetSpaceAudio;
+        private bool _isSpaceVehicleInOrbit;
         private Vehicle _spaceWalkObj;
+        private Vector3 _vehicleLeavePos;
 
         private readonly object _startLock;
         private readonly object _updateLock;
@@ -75,6 +78,7 @@ namespace GTS.Scenes
         private readonly List<Prop> _minableProps;
         private readonly List<Vehicle> _vehicles;
         private readonly List<Interior> _interiors;
+        private SpaceVehicleInfo _spaceVehicles;
 
         private float _yawSpeed;
         private float _pitchSpeed;
@@ -95,6 +99,7 @@ namespace GTS.Scenes
             Scenarios = new List<Scenario>();
             _interiors = new List<Interior>();
             _blips = new List<Blip>();
+            _spaceVehicles = new SpaceVehicleInfo();
 
             _startLock = new object();
             _updateLock = new object();
@@ -156,6 +161,7 @@ namespace GTS.Scenes
         {
             lock (_startLock)
             {
+                GetSpaceVehicles();
                 CreateSpace();
                 CreateInteriors();
                 CreateTeleports();
@@ -269,6 +275,41 @@ namespace GTS.Scenes
 
             foreach (var billboard in Billboards)
                 billboard?.Delete();
+        }
+
+        private void GetSpaceVehicles()
+        {
+            const string path = ".\\scripts\\Space\\SpaceVehicles.xml";
+            if (!File.Exists(path))
+                return;
+            _spaceVehicles = Extensions.XmlSerializer.Deserialize<SpaceVehicleInfo>(path);
+        }
+
+        private void ResetPlayerPosition()
+        {
+            var position = Info.GalaxyCenter;
+            if (Info.SurfaceScene)
+            {
+                if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding() || _isSpaceVehicleInOrbit)
+                {
+                    var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
+                    var timer = DateTime.Now + new TimeSpan(0, 0, 5);
+
+                    while (newPosition == Vector3.Zero && DateTime.Now < timer)
+                    {
+                        newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
+                        Script.Yield();
+                    }
+
+                    if (newPosition != Vector3.Zero)
+                        position = newPosition;
+                }
+                else
+                {
+                    return;
+                }
+            }
+            PlayerPosition = position;
         }
 
         private void ResetPlayerVehicle()
@@ -516,33 +557,6 @@ namespace GTS.Scenes
             return model;
         }
 
-        private void ResetPlayerPosition()
-        {
-            var position = Info.GalaxyCenter;
-
-            if (Info.SurfaceScene)
-                if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding())
-                {
-                    var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
-                    var timer = DateTime.Now + new TimeSpan(0, 0, 5);
-
-                    while (newPosition == Vector3.Zero && DateTime.Now < timer)
-                    {
-                        newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
-                        Script.Yield();
-                    }
-
-                    if (newPosition != Vector3.Zero)
-                        position = newPosition;
-                }
-                else
-                {
-                    return;
-                }
-
-            PlayerPosition = position;
-        }
-
         private void ExitSceneFromSurface()
         {
             Exited?.Invoke(this, Info.NextScene, Info.NextSceneRotation, Info.NextScenePosition);
@@ -768,13 +782,16 @@ namespace GTS.Scenes
             if (Info.SurfaceScene)
             {
                 GtsLib.ResetVehicleGravity(vehicle);
-
-                if (CanDoOrbitLanding())
+                SpaceVehicle spaceVehicle;
+                if ((spaceVehicle = _spaceVehicles?.VehicleData.Find(x => x.RemainInOrbit && Game.GenerateHash(x.Model ?? string.Empty) == vehicle.Model.Hash)) == null)
                 {
-                    vehicle.Rotation = Info.OrbitLandingRotation;
-                    vehicle.Position = Info.GalaxyCenter + Info.OrbitLandingPosition;
-                    Function.Call(Hash.SET_VEHICLE_FORWARD_SPEED, vehicle, Info.OrbitLandingSpeed);
-                    return;
+                    if (CanDoOrbitLanding())
+                    {
+                        vehicle.Rotation = Info.OrbitLandingRotation;
+                        vehicle.Position = Info.GalaxyCenter + Info.OrbitLandingPosition;
+                        Function.Call(Hash.SET_VEHICLE_FORWARD_SPEED, vehicle, Info.OrbitLandingSpeed);
+                        return;
+                    }
                 }
 
                 PlayerPed.Task.ClearAllImmediately();
@@ -783,9 +800,30 @@ namespace GTS.Scenes
                 vehicle.Heading = 230f;
                 vehicle.Velocity = Vector3.Zero;
                 vehicle.Speed = 0;
-                vehicle.PositionNoOffset = Info.VehicleSurfaceSpawn + Vector3.WorldUp;
-                if (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f))
-                    Debug.Log("Couldn't place vehicle on ground properly.");
+
+                if (spaceVehicle == null)
+                {
+                    vehicle.PositionNoOffset = Info.VehicleSurfaceSpawn + Vector3.WorldUp;
+                    if (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f))
+                        Debug.Log("Couldn't place vehicle on ground properly.");
+                }
+                else
+                {
+                    vehicle.PositionNoOffset = Info.OrbitalVehicleOffset + Info.GalaxyCenter;
+                    vehicle.FreezePosition = true;
+                    _isSpaceVehicleInOrbit = true;
+                    var b = World.CreateBlip(Info.VehicleSurfaceSpawn);
+                    b.Sprite = BlipSprite.Garage2;
+                    b.Name = "Exit Surface";
+                    _vehicleLeavePos = Info.VehicleSurfaceSpawn;
+                    var p = GtsLibNet.GetGroundHeightRay(b.Position, PlayerPed);
+                    if (p != Vector3.Zero)
+                    {
+                        _vehicleLeavePos = p;
+                        b.Position = p;
+                    }
+                    _blips.Add(b);
+                }
             }
             else
             {
@@ -916,6 +954,20 @@ namespace GTS.Scenes
                 return;
             }
 
+            if (_isSpaceVehicleInOrbit)
+            {
+                World.DrawMarker(MarkerType.VerticalCylinder, _vehicleLeavePos, Vector3.RelativeRight, Vector3.Zero,
+                    new Vector3(0.4f, 0.4f, 0.4f), Color.DarkRed);
+                var dist = PlayerPed.Position.DistanceToSquared(_vehicleLeavePos);
+                if (dist < 4)
+                {
+                    GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT");
+                    Game.DisableControlThisFrame(2, Control.Enter);
+                    if (Game.IsDisabledControlJustPressed(2, Control.Enter))
+                        ExitSceneFromSurface();
+                }
+            }
+            
             if (!Info.LeaveSurfacePrompt)
                 return;
 
@@ -1059,8 +1111,15 @@ namespace GTS.Scenes
             if (!PlayerPed.IsInVehicle(PlayerVehicle))
                 return;
 
-            EntityFlightControl(PlayerVehicle, Settings.VehicleFlySpeed, Settings.MouseControlFlySensitivity,
-                !PlayerVehicle.IsOnAllWheels);
+            float speed = Settings.VehicleFlySpeed;
+            var v = _spaceVehicles?.VehicleData.Find(
+                x => Game.GenerateHash(x.Model) == PlayerVehicle.Model.Hash);
+            
+            if (v != null)
+                speed = v.Speed;
+
+            EntityFlightControl(PlayerVehicle, speed, Settings.MouseControlFlySensitivity,
+                !PlayerVehicle.IsOnAllWheels, v?.RotationMultiplier ?? 1);
         }
 
         private void SpaceWalk()
@@ -1134,7 +1193,7 @@ namespace GTS.Scenes
         {
             if (Entity.Exists(_spaceWalkObj))
                 return;
-            
+
             var model = new Model("panto");
             model.Request();
             while (!model.IsLoaded)
@@ -1231,7 +1290,7 @@ namespace GTS.Scenes
             radius = (minVector2 - maxVector2).Length() / 2.5f;
         }
 
-        private void EntityFlightControl(Entity entity, float flySpeed, float sensitivity, bool canFly = true)
+        private void EntityFlightControl(Entity entity, float flySpeed, float sensitivity, bool canFly = true, float rotationMult = 1)
         {
             UI.HideHudComponentThisFrame(HudComponent.WeaponWheel);
             Game.DisableControlThisFrame(2, Control.WeaponWheelLeftRight);
@@ -1268,7 +1327,7 @@ namespace GTS.Scenes
             var upDownRotation = Quaternion.FromToRotation(entity.ForwardVector,
                 entity.UpVector * _pitchSpeed);
             var rollRotation = Quaternion.FromToRotation(entity.RightVector, -entity.UpVector * _rollSpeed);
-            var rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion;
+            var rotation = leftRightRotation * upDownRotation * rollRotation * entity.Quaternion * rotationMult;
             entity.Quaternion = Quaternion.Lerp(entity.Quaternion, rotation, Game.LastFrameTime);
 
             if (!canFly)

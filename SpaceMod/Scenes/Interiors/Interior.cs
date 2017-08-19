@@ -257,9 +257,7 @@ namespace GTS.Scenes.Interiors
 
         public void Remove()
         {
-            if (!IsActive)
-                return;
-
+            if (!IsActive) return;
             switch (Type)
             {
                 case InteriorType.Gta:

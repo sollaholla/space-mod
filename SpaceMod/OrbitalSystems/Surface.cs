@@ -162,11 +162,10 @@ namespace GTS.OrbitalSystems
         public void RemoveTiles()
         {
             if (!Tile) return;
-
-            if (TerrainGrid != null)
-                for (var i = 0; i < TerrainGrid.GetLength(0); i++)
-                for (var j = 0; j < TerrainGrid.GetLength(1); j++)
-                    TerrainGrid[i, j]?.Delete();
+            if (TerrainGrid == null) return;
+            for (var i = 0; i < TerrainGrid.GetLength(0); i++)
+            for (var j = 0; j < TerrainGrid.GetLength(1); j++)
+                TerrainGrid[i, j]?.Delete();
         }
     }
 }

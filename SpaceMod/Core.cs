@@ -753,6 +753,7 @@ namespace GTS
 
         private static void GiveSpawnControlToGame()
         {
+            if (Game.Globals[4].GetInt() == 0) return;
             Game.Globals[4].SetInt(0);
             Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, false);
             Function.Call(Hash.SET_FADE_IN_AFTER_DEATH_ARREST, true);

@@ -87,6 +87,7 @@
     <Compile Include="Library\GtsLibNet.cs" />
     <Compile Include="Shuttle\ShuttleManager.cs" />
     <Compile Include="Shuttle\SpaceShuttle.cs" />
+    <Compile Include="Vehicles\SpaceVehicleInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
