@@ -54,12 +54,10 @@ namespace DefaultMissions
                 }
 
                 var v = World.CreateVehicle("zanufo", spawn + Vector3.WorldDown * 100, 0);
-                if (Entity.Exists(v))
-                {
-                    v.FreezePosition = true;
-                    _ufo = v;
-                    _pos = v.Position;
-                }
+                if (!Entity.Exists(v)) return;
+                v.FreezePosition = true;
+                _ufo = v;
+                _pos = v.Position;
             }
 
             public void Stop()
@@ -194,7 +192,7 @@ namespace DefaultMissions
         private int _enemyCount = 15;
         private int _pilotCount = 3;
         private float _aiWeaponDamage = 0.01f;
-        private string _flagModel = "ind_prop_dlc_flag_02";
+        private string _flagModel = "ind_prop_dlc_flag_01";
         private string _cutscenePlanetModel = "mars_large";
         private Vector3 _lastFlagPos = Vector3.Zero;
 

@@ -446,8 +446,6 @@ namespace DefaultMissions
                             false);
                         if (playerCharacter.IsDead)
                             break;
-                        foreach (var attachedOrbital in CurrentScene.Galaxy.AttachedOrbitals)
-                            attachedOrbital.IsVisible = false;
                         foreach (var entity in _entities)
                             if (entity.IsDead && entity.CurrentBlip.Exists())
                                 entity.CurrentBlip.Remove();
@@ -460,8 +458,6 @@ namespace DefaultMissions
                         EndScenario(false);
                         return;
                     }
-                    foreach (var attachedOrbital in CurrentScene.Galaxy.AttachedOrbitals)
-                        attachedOrbital.IsVisible = false;
                     _missionStep++;
                     break;
                 case 10:

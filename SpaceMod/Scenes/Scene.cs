@@ -88,6 +88,8 @@ namespace GTS.Scenes
         private readonly List<Prop> _minableProps;
         private readonly List<Vehicle> _vehicles;
         private readonly List<Interior> _interiors;
+        private List<Orbital> _orbitals;
+        private List<AttachedOrbital> _attachedOrbitals;
         private SpaceVehicleInfo _spaceVehicles;
 
         private float _yawSpeed;
@@ -135,7 +137,7 @@ namespace GTS.Scenes
         /// <summary>
         ///     The orbital system of this scene.
         /// </summary>
-        public OrbitalSystem Galaxy { get; private set; }
+        public Skybox Skybox { get; private set; }
 
         /// <summary>
         ///     These are objects that always rotate towards the camera.
@@ -198,11 +200,14 @@ namespace GTS.Scenes
             if (!Monitor.TryEnter(_updateLock)) return;
             try
             {
+                var viewFinderPosition = Database.ViewFinderPosition();
                 ConfigureRendering();
                 ConfigureWeather();
                 UpdateAudio();
                 SettingsUpdate();
-                Galaxy.Update();
+                if (Entity.Exists(Skybox))
+                    Skybox.Position = viewFinderPosition;
+                UpdateOrbitals(viewFinderPosition);
                 SpaceWalk();
                 PilotVehicle();
                 HandleDeath();
@@ -210,7 +215,7 @@ namespace GTS.Scenes
                 HandlePlayerVehicle();
                 UpdateInteriorTeleports();
                 UpdateSurfaceTiles();
-                UpdateBillboards();
+                UpdateBillboards(viewFinderPosition);
                 UpdateWormHoles();
                 LowerPedAndVehicleDensity();
                 Scenarios?.ForEach(scenario => scenario.Update());
@@ -227,7 +232,7 @@ namespace GTS.Scenes
             {
                 try
                 {
-                    Galaxy.Delete();
+                    Skybox.Delete();
                     RemovePreviousVehicles();
                     ResetPlayerVehicle();
                     ClearLists(aborted);
@@ -419,7 +424,7 @@ namespace GTS.Scenes
             Function.Call(Hash.CLEAR_DRAW_ORIGIN);
         }
 
-        private static AttachedOrbital CreateAttachedOrbital(AttachedOrbitalInfo data)
+        private AttachedOrbital CreateAttachedOrbital(AttachedOrbitalInfo data)
         {
             if (string.IsNullOrEmpty(data.Model))
             {
@@ -438,16 +443,16 @@ namespace GTS.Scenes
 
             Debug.Log($"Successfully loaded model: {data.Model}");
 
-            var prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
-
-            if (Settings.LowConfigMode)
-                prop.LodDistance = -1;
-
+            var prop = World.CreateProp(model, Info.GalaxyCenter + data.Position, data.Rotation, false, false);
             prop.FreezePosition = true;
-
             prop.LodDistance = data.LodDistance;
 
-            var orbital = new AttachedOrbital(prop, data.Position, data.Rotation);
+            var orbital = new AttachedOrbital(prop, data.Position, data.Rotation)
+            {
+                FreezeX = data.FreezeXCoord,
+                FreezeY = data.FreezeYCoord,
+                FreezeZ = data.FreezeZCoord
+            };
 
             model.MarkAsNoLongerNeeded();
 
@@ -474,9 +479,7 @@ namespace GTS.Scenes
 
             var prop = GtsLibNet.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
             prop.Rotation = data.Rotation;
-
             prop.FreezePosition = true;
-
             prop.LodDistance = data.LodDistance;
 
             var orbital = new Orbital(prop, data.Name, data.RotationSpeed)
@@ -506,7 +509,6 @@ namespace GTS.Scenes
             }
 
             var model = RequestModel(data.Model);
-
             if (!model.IsLoaded)
             {
                 Debug.Log($"Failed to load model: {data.Model}", DebugMessageType.Error);
@@ -514,17 +516,13 @@ namespace GTS.Scenes
             }
 
             Debug.Log($"Successfully loaded model: {data.Model}");
-
             var prop = GtsLibNet.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
 
             prop.FreezePosition = true;
-
             prop.LodDistance = data.LodDistance;
 
             var surface = new Surface(prop, data.Tile, data.LodDistance, data.TileSize);
-
             surface.GenerateTerrain();
-
             model.MarkAsNoLongerNeeded();
 
             return surface;
@@ -536,7 +534,6 @@ namespace GTS.Scenes
                 return new Prop(0);
 
             var model = RequestModel(modelName);
-
             if (!model.IsLoaded)
             {
                 Debug.Log($"Failed to load model: {modelName}", DebugMessageType.Error);
@@ -546,11 +543,8 @@ namespace GTS.Scenes
             Debug.Log($"Successfully loaded model: {modelName}");
 
             var prop = World.CreateProp(model, Vector3.Zero, Vector3.Zero, false, false);
-
             prop.Position = position;
-
             prop.FreezePosition = true;
-
             model.MarkAsNoLongerNeeded();
 
             return prop;
@@ -642,14 +636,13 @@ namespace GTS.Scenes
             Scenarios.Remove(scenario);
         }
 
-        private void UpdateBillboards()
+        private void UpdateBillboards(Vector3 viewFinderPosition)
         {
-            var viewfinderPosition = Database.ViewFinderPosition();
             foreach (var billboardable in Billboards)
             {
                 var pos = Info.GalaxyCenter + billboardable.StartPosition;
                 var startDist = billboardable.ParallaxStartDistance;
-                var d = viewfinderPosition.DistanceTo(pos);
+                var d = viewFinderPosition.DistanceTo(pos);
                 if (d < startDist && d > 1000)
                 {
                     var m = (startDist - d) * billboardable.ParallaxAmount;
@@ -658,7 +651,7 @@ namespace GTS.Scenes
                 else billboardable.Position = pos;
 
                 var aDir = billboardable.ForwardVector;
-                var bDir = billboardable.Position - viewfinderPosition;
+                var bDir = billboardable.Position - viewFinderPosition;
                 if (bDir.Length() > 0)
                     bDir.Normalize();
                 billboardable.Quaternion = Quaternion.Lerp(billboardable.Quaternion,
@@ -674,24 +667,15 @@ namespace GTS.Scenes
 
             foreach (var surface in Surfaces)
                 surface.DoInfiniteTile(PlayerPosition, surface.TileSize);
-
-            if (!Entity.Exists(Galaxy)) return;
-
-            var xDistance = (PlayerPosition.X - _lastPlayerPosition.X) * Info.HorizonRotationMultiplier;
-            var yDistance = (PlayerPosition.Y - _lastPlayerPosition.Y) * Info.HorizonRotationMultiplier;
-            Galaxy.Quaternion = Quaternion.FromToRotation(Vector3.RelativeRight, Vector3.WorldUp * xDistance) *
-                                Quaternion.FromToRotation(Vector3.RelativeFront, Vector3.WorldUp * yDistance) *
-                                Galaxy.Quaternion;
-            _lastPlayerPosition = PlayerPosition;
         }
 
         private void CreateSpace()
         {
             var skybox = CreateProp(PlayerPed.Position, Info.SkyboxModel);
 
-            var orbitals = Info.Orbitals?.Select(CreateOrbital).Where(o => o != default(Orbital)).ToList();
+            _orbitals = Info.Orbitals?.Select(CreateOrbital).Where(o => o != default(Orbital)).ToList();
 
-            var attachedOrbitals = Info.AttachedOrbitals?.Select(CreateAttachedOrbital)
+            _attachedOrbitals = Info.AttachedOrbitals?.Select(CreateAttachedOrbital)
                 .Where(o => o != default(AttachedOrbital)).ToList();
 
             Surfaces = Info.Surfaces?.Select(CreateSurface).Where(o => o != default(Surface)).ToList();
@@ -704,25 +688,29 @@ namespace GTS.Scenes
                         ParallaxStartDistance = x.ParallaxStartDistance
                     }).ToList();
 
-            WormHoles = orbitals?.Where(x => x.WormHole).ToList();
+            WormHoles = _orbitals?.Where(x => x.WormHole).ToList();
 
-            Galaxy = new OrbitalSystem(skybox ?? new Prop(0), orbitals, attachedOrbitals, -0.3f);
+            Skybox = new Skybox(skybox ?? new Prop(0));
 
             Info.SceneLinks.ForEach(CreateLink);
         }
 
         private void CreateInteriors()
         {
+            RequestInteriors();
+
+            if (Info.Interiors.Any())
+                Debug.Log($"Created {_interiors.Count}/{Info.Interiors.Count} interiors.");
+        }
+
+        private void RequestInteriors()
+        {
             foreach (var interiorInfo in Info.Interiors)
             {
                 var interior = new Interior(interiorInfo.Name, interiorInfo.Type);
-
                 interior.Request();
-
                 _interiors.Add(interior);
             }
-
-            Debug.Log("Finished creating interiors.");
         }
 
         private void CreateTeleports()
@@ -766,8 +754,6 @@ namespace GTS.Scenes
             UI.HideHudComponentThisFrame(HudComponent.AreaName);
 
             Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME);
-
-            DrawPlanetMarkers();
 
             if (Camera.Exists(World.RenderingCamera) || FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
             {
@@ -863,6 +849,51 @@ namespace GTS.Scenes
             }
         }
 
+        private void UpdateOrbitals(Vector3 viewFinderPosition)
+        {
+            if (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, ReticleTextureDict))
+            {
+                Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, ReticleTextureDict);
+                while (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, ReticleTextureDict))
+                    Script.Yield();
+            }
+
+            foreach (var o in _orbitals)
+            {
+                if (!Settings.ShowCustomGui)
+                    return;
+
+                DrawMarkerAt(o.Position, o.Name);
+
+                if (Math.Abs(o.RotationSpeed) > 0.00001f)
+                {
+                    o.Quaternion = Quaternion.Lerp(o.Quaternion,
+                        Quaternion.FromToRotation(o.ForwardVector, o.RightVector) * o.Quaternion,
+                        Game.LastFrameTime * o.RotationSpeed);
+                }
+            }
+
+            foreach (var a in _attachedOrbitals)
+            {
+                var pos = viewFinderPosition + a.AttachOffset;
+                if (a.FreezeX)
+                    pos.X = Info.GalaxyCenter.X + a.AttachOffset.X;
+                if (a.FreezeY)
+                    pos.Y = Info.GalaxyCenter.Y + a.AttachOffset.Y;
+                if (a.FreezeZ)
+                    pos.Z = Info.GalaxyCenter.Z + a.AttachOffset.Z;
+                a.Position = pos;
+            }
+
+            foreach (var l in Info.SceneLinks)
+            {
+                if (!Settings.ShowCustomGui)
+                    return;
+
+                DrawMarkerAt(Info.GalaxyCenter + l.Position, l.Name);
+            }
+        }
+
         private void UpdateAudio()
         {
             if (Info.UseSound) return;
@@ -880,25 +911,6 @@ namespace GTS.Scenes
                 Function.Call(Hash.START_AUDIO_SCENE, "END_CREDITS_SCENE");
                 _didSetSpaceAudio = true;
             }
-        }
-
-        private void DrawPlanetMarkers()
-        {
-            if (!Settings.ShowCustomGui)
-                return;
-
-            if (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, ReticleTextureDict))
-            {
-                Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, ReticleTextureDict);
-                while (!Function.Call<bool>(Hash.HAS_STREAMED_TEXTURE_DICT_LOADED, ReticleTextureDict))
-                    Script.Yield();
-            }
-
-            foreach (var o in Galaxy.Orbitals)
-                DrawMarkerAt(o.Position, o.Name);
-
-            foreach (var l in Info.SceneLinks)
-                DrawMarkerAt(Info.GalaxyCenter + l.Position, l.Name);
         }
 
         private void UpdateInteriorTeleports()
@@ -1140,7 +1152,6 @@ namespace GTS.Scenes
         private void PilotVehicle()
         {
             if (Info.SurfaceScene) return;
-
             if (!Entity.Exists(PlayerVehicle))
                 return;
 
@@ -1616,7 +1627,6 @@ namespace GTS.Scenes
                 roll *= sensitivity;
             }
 
-            // TODO: Convert to setting.
             const float controlFlightSpeed = 2f;
             _yawSpeed = Mathf.Lerp(_yawSpeed, leftRight, Game.LastFrameTime * controlFlightSpeed);
             _pitchSpeed = Mathf.Lerp(_pitchSpeed, upDown, Game.LastFrameTime * controlFlightSpeed);

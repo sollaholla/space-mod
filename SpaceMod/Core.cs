@@ -267,7 +267,6 @@ namespace GTS
                 GTS.Settings.DefaultVehicleSpawn);
             GTS.Settings.VehicleFlySpeed =
                 Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            GTS.Settings.LowConfigMode = Settings.GetValue("game", "low_config", false);
             GTS.Settings.EarthAtmosphereEnterPosition =
                 ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"),
                     GTS.Settings.EarthAtmosphereEnterPosition);
@@ -296,7 +295,6 @@ namespace GTS
                 GTS.Settings.MouseControlFlySensitivity);
             Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            Settings.SetValue("game", "low_config", GTS.Settings.LowConfigMode);
             Settings.SetValue("mod", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
             Settings.SetValue("mod", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
             Settings.Save();

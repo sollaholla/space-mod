@@ -17,5 +17,11 @@ namespace GTS.OrbitalSystems
         public Vector3 AttachOffset { get; }
 
         public Vector3 AttachRotation { get; }
+
+        public bool FreezeX { get; set; }
+
+        public bool FreezeY { get; set; }
+
+        public bool FreezeZ { get; set; }
     }
 }

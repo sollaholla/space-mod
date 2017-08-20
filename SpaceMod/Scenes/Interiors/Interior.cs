@@ -61,8 +61,7 @@ namespace GTS.Scenes.Interiors
             Loaded = false;
         }
 
-        public bool IsActive => !string.IsNullOrEmpty(Name) &&
-                                (Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) || _map != null && _map.Objects.Any());
+        public bool IsActive => Type == InteriorType.Gta ? Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) : _map?.Objects.Any() ?? false;
 
         public List<Vehicle> Vehicles { get; }
 
@@ -93,14 +92,8 @@ namespace GTS.Scenes.Interiors
             {
                 case InteriorType.Gta:
                     Function.Call(Hash.REQUEST_IPL, Name);
-                    const int timeout = 5;
-                    var time = DateTime.UtcNow + new TimeSpan(0, 0, 0, timeout);
                     while (!IsActive)
-                    {
                         Script.Yield();
-                        if (DateTime.UtcNow > time)
-                            break;
-                    }
                     Debug.Log("Request GTA IPL: " + Name);
                     break;
                 case InteriorType.MapEditor:

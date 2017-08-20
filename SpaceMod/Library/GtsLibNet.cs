@@ -301,9 +301,6 @@ namespace GTS.Library
             var prop = new Prop(Function.Call<int>(Hash.CREATE_OBJECT_NO_OFFSET, model.Hash, position.X, position.Y,
                 position.Z, true, true, dynamic));
 
-            if (Settings.LowConfigMode)
-                prop.LodDistance *= 2;
-
             return prop;
         }
 
@@ -454,7 +451,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     <see cref="Start" /> particle FX on the specified entity.
+        ///     Start particle FX on the specified entity.
         /// </summary>
         /// <param name="entity"><see cref="Entity" /> to attach to.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -476,7 +473,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     <see cref="Start" /> particle FX on the specified entity.
+        ///     Start particle FX on the specified entity.
         /// </summary>
         /// <param name="entity"><see cref="Entity" /> to attach to.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -486,7 +483,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     <see cref="Start" /> particle FX at the specified position.
+        ///     Start particle FX at the specified position.
         /// </summary>
         /// <param name="position">Position in world space.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -502,7 +499,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     <see cref="Start" /> particle FX at the specified position.
+        ///     Start particle FX at the specified position.
         /// </summary>
         /// <param name="position">Position in world space.</param>
         /// <param name="scale">Scale of the fx.</param>
@@ -512,7 +509,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     <see cref="Remove" /> the particle FX
+        ///     Remove the particle FX
         /// </summary>
         public void Remove()
         {
@@ -523,7 +520,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        ///     <see cref="Remove" /> the particle FX in range
+        ///     Remove the particle FX in range
         /// </summary>
         public void Remove(Vector3 position, float radius)
         {
@@ -889,7 +886,7 @@ namespace GTS.Library
 
     public static class Effects
     {
-        private static readonly string[] _effects =
+        private static readonly string[] Eff =
         {
             "SwitchHUDIn",
             "SwitchHUDOut",
@@ -976,8 +973,8 @@ namespace GTS.Library
 
         private static string EffectToString(ScreenEffect screenEffect)
         {
-            if (screenEffect >= 0 && (int) screenEffect <= _effects.Length)
-                return _effects[(int) screenEffect];
+            if (screenEffect >= 0 && (int) screenEffect <= Eff.Length)
+                return Eff[(int) screenEffect];
             return "INVALID";
         }
 

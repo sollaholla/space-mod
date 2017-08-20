@@ -211,11 +211,7 @@ public class SceneInfo : NextSceneInfo
     [Category("Core Settings")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 GalaxyCenter { get; set; } = new XVector3(-10000, -10000, 30000);
-
-    [Category("Surface Settings")]
-    [Description("The speed at which the sky rotates based on our movement.")]
-    public float HorizonRotationMultiplier { get; set; } = 0.00005f;
-
+    
     [Category("Surface Settings")]
     [Description("The filename of the next scene that will load once we leave the surface.")]
     [RefreshProperties(RefreshProperties.All)]
@@ -254,17 +250,17 @@ public class SceneInfo : NextSceneInfo
     [Description("The cloud type.")]
     public string CloudType { get; set; }
 
-    [Category("Surface Settings")]
-    [Description("The minimum depth (distance from Galaxy Center Z) that we will begin to damage the player.")]
-    public float CrushMinDepth { get; set; }
+    //[Category("Surface Settings")]
+    //[Description("The minimum depth (distance from Galaxy Center Z) that we will begin to damage the player.")]
+    //public float CrushMinDepth { get; set; }
 
-    [Category("Surface Settings")]
-    [Description("The maximum crush depth (distance from Galaxy Center Z), if reached will kill the player.")]
-    public float CrushMaxDepth { get; set; }
+    //[Category("Surface Settings")]
+    //[Description("The maximum crush depth (distance from Galaxy Center Z), if reached will kill the player.")]
+    //public float CrushMaxDepth { get; set; }
 
-    [Category("Surface Settings")]
-    [Description("This is the damage multiplier for Min Max crush depth.")]
-    public float CrushDamageMultiplier { get; set; }
+    //[Category("Surface Settings")]
+    //[Description("This is the damage multiplier for Min Max crush depth.")]
+    //public float CrushDamageMultiplier { get; set; }
 
     [Category("Surface Settings")]
     [Description("Use leave surface prompt when in a new vehicle.")]
@@ -343,6 +339,16 @@ public class AttachedOrbitalInfo : IDrawable
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
+
+    [Category("Optional")]
+    [Description("Stop this object from moving on the X axis.")]
+    public bool FreezeXCoord { get; set; }
+    [Category("Optional")]
+    [Description("Stop this object from moving on the Y axis.")]
+    public bool FreezeYCoord { get; set; }
+    [Category("Optional")]
+    [Description("Stop this object from moving on the Z axis.")]
+    public bool FreezeZCoord { get; set; }
 
     public int LodDistance { get; set; } = -1;
 }

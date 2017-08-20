@@ -74,7 +74,7 @@
     <Compile Include="Scenes\Interiors\Interior.cs" />
     <Compile Include="Scenes\Interiors\Map.cs" />
     <Compile Include="Scenes\Interiors\MapObject.cs" />
-    <Compile Include="OrbitalSystems\OrbitalSystem.cs" />
+    <Compile Include="OrbitalSystems\Skybox.cs" />
     <Compile Include="OrbitalSystems\Orbital.cs" />
     <Compile Include="OrbitalSystems\AttachedOrbital.cs" />
     <Compile Include="Extensions\Debug.cs" />
