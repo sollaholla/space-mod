@@ -3,6 +3,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTS.Audio;
+using GTS.Library;
 using GTS.Particles;
 
 namespace GTS.Shuttle
@@ -82,7 +83,7 @@ namespace GTS.Shuttle
             }
             else
             {
-                DisplayHelpTextThisFrame("Press ~INPUT_JUMP~ to launch.");
+                GtsLibNet.DisplayHelpTextWithGxt("SHUT_LAUNCH");
                 if (!Game.IsDisabledControlJustPressed(2, GTA.Control.Jump)) return;
                 _launching = true;
                 var character = Game.Player.Character;

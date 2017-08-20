@@ -61,7 +61,9 @@ namespace GTS.Scenes.Interiors
             Loaded = false;
         }
 
-        public bool IsActive => Type == InteriorType.Gta ? Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name) : _map?.Objects.Any() ?? false;
+        public bool IsActive => Type == InteriorType.Gta
+            ? Function.Call<bool>(Hash.IS_IPL_ACTIVE, Name)
+            : _map?.Objects.Any() ?? false;
 
         public List<Vehicle> Vehicles { get; }
 

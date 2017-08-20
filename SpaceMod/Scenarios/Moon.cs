@@ -44,8 +44,14 @@ namespace DefaultMissions
                     Script.Yield();
                 Game.FadeScreenIn(1000);
 
-                var planet = World.CreateProp(_planetModel,
+                var m = new Model(_planetModel);
+                m.Request();
+                while (!m.IsLoaded)
+                    Script.Yield();
+
+                var planet = World.CreateProp(m,
                     spawn + Vector3.RelativeFront * 5000 + Vector3.WorldDown * 100, false, false);
+                planet.LodDistance = -1;
 
                 if (Entity.Exists(planet))
                 {
@@ -183,8 +189,8 @@ namespace DefaultMissions
         private Prop _laptop;
         private ICutScene _cutscene;
         private readonly Random _random = new Random();
-        private Vector3 _laptopSpawnPosition = new Vector3(-10002.10f, -10004.52f, 10001.463f);
-        private Vector3 _laptopSpawnRotation = new Vector3(0, 0, 0.2404f);
+        private Vector3 _laptopSpawnPosition = new Vector3(-9997.60f, -10012.47f, 10001.20f);
+        private Vector3 _laptopSpawnRotation = new Vector3(0, 0, -65.32f);
 
         #region Settings
 

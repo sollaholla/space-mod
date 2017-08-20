@@ -25,8 +25,7 @@ namespace GTS.Extensions
             }
             catch (Exception ex)
             {
-                File.WriteAllText(@"SerializerError.log",
-                    $"[{DateTime.UtcNow.ToShortDateString()}] {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+                Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
             }
             return obj;
         }
@@ -42,8 +41,7 @@ namespace GTS.Extensions
             }
             catch (Exception ex)
             {
-                File.WriteAllText(@"SerializerError.log",
-                    $"[{DateTime.UtcNow.ToShortDateString()}] {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+                Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
             }
         }
     }

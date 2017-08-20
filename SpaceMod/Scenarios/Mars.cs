@@ -469,7 +469,7 @@ namespace DefaultMissions
         {
             CurrentScene.StopTile = true;
 
-            var interior = CurrentScene.GetInterior("MarsBaseInterior");
+            var interior = CurrentScene.GetInterior("MarsInteriorPeds");
             var scientist = interior.Peds[0];
 
             HelperFunctions.DrawWaypoint(CurrentScene, scientist.Position);

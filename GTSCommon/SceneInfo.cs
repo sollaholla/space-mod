@@ -211,7 +211,7 @@ public class SceneInfo : NextSceneInfo
     [Category("Core Settings")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 GalaxyCenter { get; set; } = new XVector3(-10000, -10000, 30000);
-    
+
     [Category("Surface Settings")]
     [Description("The filename of the next scene that will load once we leave the surface.")]
     [RefreshProperties(RefreshProperties.All)]
@@ -330,6 +330,18 @@ public class AttachedOrbitalInfo : IDrawable
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Rotation { get; set; }
 
+    [Category("Optional")]
+    [Description("Stop this object from moving on the X axis.")]
+    public bool FreezeXCoord { get; set; }
+
+    [Category("Optional")]
+    [Description("Stop this object from moving on the Y axis.")]
+    public bool FreezeYCoord { get; set; }
+
+    [Category("Optional")]
+    [Description("Stop this object from moving on the Z axis.")]
+    public bool FreezeZCoord { get; set; }
+
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
     [RefreshProperties(RefreshProperties.All)]
@@ -339,16 +351,6 @@ public class AttachedOrbitalInfo : IDrawable
     [Description("The position of this object offsetted from the center of space.")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 Position { get; set; }
-
-    [Category("Optional")]
-    [Description("Stop this object from moving on the X axis.")]
-    public bool FreezeXCoord { get; set; }
-    [Category("Optional")]
-    [Description("Stop this object from moving on the Y axis.")]
-    public bool FreezeYCoord { get; set; }
-    [Category("Optional")]
-    [Description("Stop this object from moving on the Z axis.")]
-    public bool FreezeZCoord { get; set; }
 
     public int LodDistance { get; set; } = -1;
 }

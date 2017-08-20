@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using GTA;
 using GTA.Native;
-using System.Runtime.InteropServices;
 
 namespace GTS.Library
 {
     /// <summary>
-    /// Full Credits: Unknown Modder (c) 2017
-    /// GTSLib.asi, NoBoundaryLimits.asi, RespawnFix.asi
+    ///     Full Credits: Unknown Modder (c) 2017
+    ///     GTSLib.asi, NoBoundaryLimits.asi, RespawnFix.asi
     /// </summary>
     internal static class GtsLib
     {
@@ -35,16 +35,17 @@ namespace GTS.Library
         private static extern byte GTSLib_IsRockstarEditorActive();
 
         [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)] string name, bool toggle);
+        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)] string name,
+            bool toggle);
 
         [DllImport("GTSLib.asi")]
-        private static extern uint GTSLib_GetScriptAllocatedStackSize([MarshalAs(UnmanagedType.LPStr)]string name);
+        private static extern uint GTSLib_GetScriptAllocatedStackSize([MarshalAs(UnmanagedType.LPStr)] string name);
 
         [DllImport("GTSLib.asi")]
         private static extern void GTSLib_SetVehicleGravity(int vehicle, float gravity);
 
         /// <summary>
-        /// Run the custom in-game credits for Grand Theft Space.
+        ///     Run the custom in-game credits for Grand Theft Space.
         /// </summary>
         public static void InitCredits()
         {
@@ -62,7 +63,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Make sure you call <see cref="InitCredits"/> before calling this method.
+        ///     Make sure you call <see cref="InitCredits" /> before calling this method.
         /// </summary>
         public static void EndCredits()
         {
@@ -76,7 +77,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Set the world gravity level to the specified value. Default value: 9.8000002f.
+        ///     Set the world gravity level to the specified value. Default value: 9.8000002f.
         /// </summary>
         /// <param name="gravity"></param>
         public static void SetGravityLevel(float gravity)
@@ -88,7 +89,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Gives a script the capability to run without being paused.
+        ///     Gives a script the capability to run without being paused.
         /// </summary>
         /// <param name="toggle"></param>
         public static void SetScriptCanBePaused(bool toggle)
@@ -98,7 +99,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Set the specified vehicle's gravity level.
+        ///     Set the specified vehicle's gravity level.
         /// </summary>
         /// <param name="vehicle"></param>
         /// <param name="gravity"></param>
@@ -112,7 +113,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Reset the vehicle's gravity level to the game default: 9.8000002f.
+        ///     Reset the vehicle's gravity level to the game default: 9.8000002f.
         /// </summary>
         /// <param name="vehicle"></param>
         public static void ResetVehicleGravity(Vehicle vehicle)
@@ -126,7 +127,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Get the stack size of the given script.
+        ///     Get the stack size of the given script.
         /// </summary>
         /// <param name="script"></param>
         /// <returns></returns>
@@ -144,7 +145,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Get a value indicating whether or not the rockstar video editor is active.
+        ///     Get a value indicating whether or not the rockstar video editor is active.
         /// </summary>
         /// <returns></returns>
         public static bool IsRockstarEditorActive()
@@ -153,7 +154,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Remove the in-game water.
+        ///     Remove the in-game water.
         /// </summary>
         public static void RemoveWater()
         {
@@ -162,7 +163,7 @@ namespace GTS.Library
         }
 
         /// <summary>
-        /// Restore the in-game water.
+        ///     Restore the in-game water.
         /// </summary>
         public static void RestoreWater()
         {

@@ -44,11 +44,10 @@ namespace GTS.Shuttle
             }
             else
             {
-                var dist = Shuttle.Position.DistanceTo(Game.Player.Character.Position);
+                var dist = Game.Player.Character.Position.DistanceTo(_shuttlePosition);
                 if (dist > _shuttleInteractDistance) return;
                 Game.DisableControlThisFrame(2, Control.Enter);
-                DisplayHelpTextThisFrame(
-                    "Press ~INPUT_ENTER~ to enter the shuttle."); // TODO: Replace this with GXT label.
+                GtsLibNet.DisplayHelpTextWithGxt("SHUT_ENTER");
                 if (!Game.IsDisabledControlJustPressed(2, Control.Enter)) return;
                 PlacePlayerInShuttle();
             }
@@ -148,29 +147,9 @@ namespace GTS.Shuttle
         private static IEnumerable<Weapon> GetWeapons(Ped ped)
         {
             var weaponHashes = (WeaponHash[]) Enum.GetValues(typeof(WeaponHash));
-            return (from weaponHash in weaponHashes where ped.Weapons.HasWeapon(weaponHash) select ped.Weapons[weaponHash]).ToArray();
+            return (from weaponHash in weaponHashes
+                where ped.Weapons.HasWeapon(weaponHash)
+                select ped.Weapons[weaponHash]).ToArray();
         }
-
-        #region TEMPORARY!
-
-        public static bool IsHelpMessageBeingDisplayed()
-        {
-            return Function.Call<bool>(Hash.IS_HELP_MESSAGE_BEING_DISPLAYED);
-        }
-
-        public static void DisplayHelpTextThisFrame(string helpText)
-        {
-            Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, "CELL_EMAIL_BCON");
-
-            const int maxStringLength = 99;
-
-            for (var i = 0; i < helpText.Length; i += maxStringLength)
-                Function.Call(Hash._0x6C188BE134E074AA,
-                    helpText.Substring(i, Math.Min(maxStringLength, helpText.Length - i)));
-
-            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
-        }
-
-        #endregion
     }
 }

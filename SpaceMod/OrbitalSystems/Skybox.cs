@@ -13,7 +13,9 @@ namespace GTS.OrbitalSystems
     {
         //private readonly SkyboxRotationAxis _rotationAxis;
 
-        public Skybox(IHandleable prop/*, float rotationSpeed = 0*//*, SkyboxRotationAxis rotationAxis = SkyboxRotationAxis.Z*/) : base(prop.Handle)
+        public Skybox(
+            IHandleable prop /*, float rotationSpeed = 0*/ /*, SkyboxRotationAxis rotationAxis = SkyboxRotationAxis.Z*/)
+            : base(prop.Handle)
         {
             //SkyboxRotationSpeed = rotationSpeed;
 
@@ -57,10 +59,10 @@ namespace GTS.OrbitalSystems
         {
             base.Delete();
         }
+        /////     length.
+        /////     Returns all planets positions and rotations in the array order 0 to
 
         ///// <summary>
-        /////     Returns all planets positions and rotations in the array order 0 to
-        /////     length.
         ///// </summary>
         ///// <returns>
         ///// </returns>

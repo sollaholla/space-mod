@@ -58,46 +58,44 @@ namespace GTS.Scenes
         /// </summary>
         public const string ReticleTexture = "hud_lock";
 
-        public event OnSceneExitEvent Exited;
-
-        private Vector3 _lastPlayerPosition;
-        private bool _didRaiseGears;
-        private bool _didSpaceWalkTut;
-        private bool _didJump;
-        private bool _didSetTimecycle;
-        private bool _didSetAreaTimecycle;
-        private bool _didSetSpaceAudio;
-        private bool _isSpaceVehicleInOrbit;
-        private Vehicle _spaceWalkObj;
-        private Vector3 _vehicleLeavePos;
-        private bool _enteringVehicle;
-        private DateTime _vehicleRepairTimeout;
-        private DateTime _mineTimeout;
-        private Vector3 _vehicleRepairPos;
-        private Vector3 _vehicleRepairNormal;
-        private Vector3 _lastMinePos;
-        private Prop _minableObject;
-        private Prop _weldingProp;
-        private LoopedPtfx _weldPtfx;
-        private ZeroGTask _playerTask;
+        private readonly List<Blip> _blips;
+        private readonly List<Interior> _interiors;
+        private readonly List<Prop> _minableProps;
 
         private readonly object _startLock;
         private readonly object _updateLock;
-
-        private readonly List<Blip> _blips;
-        private readonly List<Prop> _minableProps;
         private readonly List<Vehicle> _vehicles;
-        private readonly List<Interior> _interiors;
-        private List<Orbital> _orbitals;
         private List<AttachedOrbital> _attachedOrbitals;
-        private SpaceVehicleInfo _spaceVehicles;
+        private bool _didJump;
+        private bool _didRaiseGears;
+        private bool _didSetAreaTimecycle;
+        private bool _didSetSpaceAudio;
+        private bool _didSetTimecycle;
+        private bool _didSpaceWalkTut;
+        private bool _enteringVehicle;
+        private bool _isSpaceVehicleInOrbit;
+        private Vector3 _lastMinePos;
 
-        private float _yawSpeed;
+        private Vector3 _lastPlayerPosition;
+        private Prop _minableObject;
+        private DateTime _mineTimeout;
+        private List<Orbital> _orbitals;
         private float _pitchSpeed;
+        private ZeroGTask _playerTask;
         private float _rollSpeed;
-        private float _verticalSpeed;
+        private SpaceVehicleInfo _spaceVehicles;
+        private Vehicle _spaceWalkObj;
 
         private bool _startedMining;
+        private Vector3 _vehicleLeavePos;
+        private Vector3 _vehicleRepairNormal;
+        private Vector3 _vehicleRepairPos;
+        private DateTime _vehicleRepairTimeout;
+        private float _verticalSpeed;
+        private Prop _weldingProp;
+        private LoopedPtfx _weldPtfx;
+
+        private float _yawSpeed;
 
         /// <summary>
         ///     Our standard constructor.
@@ -172,6 +170,8 @@ namespace GTS.Scenes
                 else PlayerPed.Position = value;
             }
         }
+
+        public event OnSceneExitEvent Exited;
 
         internal void Start()
         {
@@ -307,7 +307,6 @@ namespace GTS.Scenes
         {
             var position = Info.GalaxyCenter;
             if (Info.SurfaceScene)
-            {
                 if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding() || _isSpaceVehicleInOrbit)
                 {
                     var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
@@ -326,7 +325,6 @@ namespace GTS.Scenes
                 {
                     return;
                 }
-            }
             PlayerPosition = position;
         }
 
@@ -648,7 +646,10 @@ namespace GTS.Scenes
                     var m = (startDist - d) * billboardable.ParallaxAmount;
                     billboardable.Position = pos - billboardable.ForwardVector * m;
                 }
-                else billboardable.Position = pos;
+                else
+                {
+                    billboardable.Position = pos;
+                }
 
                 var aDir = billboardable.ForwardVector;
                 var bDir = billboardable.Position - viewFinderPosition;
@@ -802,7 +803,6 @@ namespace GTS.Scenes
                         _spaceVehicles?.VehicleData.Find(
                             x => x.RemainInOrbit && Game.GenerateHash(x.Model ?? string.Empty) ==
                                  vehicle.Model.Hash)) == null)
-                {
                     if (CanDoOrbitLanding())
                     {
                         vehicle.Rotation = Info.OrbitLandingRotation;
@@ -810,7 +810,6 @@ namespace GTS.Scenes
                         Function.Call(Hash.SET_VEHICLE_FORWARD_SPEED, vehicle, Info.OrbitLandingSpeed);
                         return;
                     }
-                }
 
                 PlayerPed.Task.ClearAllImmediately();
                 vehicle.Quaternion = Quaternion.Identity;
@@ -866,11 +865,9 @@ namespace GTS.Scenes
                 DrawMarkerAt(o.Position, o.Name);
 
                 if (Math.Abs(o.RotationSpeed) > 0.00001f)
-                {
                     o.Quaternion = Quaternion.Lerp(o.Quaternion,
                         Quaternion.FromToRotation(o.ForwardVector, o.RightVector) * o.Quaternion,
                         Game.LastFrameTime * o.RotationSpeed);
-                }
             }
 
             foreach (var a in _attachedOrbitals)
@@ -944,8 +941,9 @@ namespace GTS.Scenes
 
                         PlayerPosition = t.End - Vector3.WorldUp;
                         PlayerPed.Heading = t.EndHeading;
-
                         GameplayCamera.RelativeHeading = 0;
+
+                        Script.Wait(750);
                         Game.FadeScreenIn(750);
                     }
                 }
@@ -961,8 +959,9 @@ namespace GTS.Scenes
 
                 PlayerPosition = t.Start - Vector3.WorldUp;
                 PlayerPed.Heading = t.StartHeading;
-
                 GameplayCamera.RelativeHeading = 0;
+
+                Script.Wait(750);
                 Game.FadeScreenIn(750);
             }
         }
@@ -1185,7 +1184,10 @@ namespace GTS.Scenes
                     PlayerVehicle.HasGravity = false;
                     Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerVehicle.Handle, false);
                 }
-                else PlayerVehicle.IsInvincible = false;
+                else
+                {
+                    PlayerVehicle.IsInvincible = false;
+                }
                 PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
                 _enteringVehicle = false;
             }
@@ -1220,7 +1222,10 @@ namespace GTS.Scenes
                             // we also want to allow the player to mine asteroids!
                             SpaceWalk_MineAsteroids(PlayerPed, PlayerVehicle, 5f);
                         }
-                        else PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
+                        else
+                        {
+                            PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
+                        }
                         break;
                     // this let's us mine asteroids.
                     case ZeroGTask.Mine:
