@@ -17,22 +17,18 @@ namespace GTS.Shuttle
     public class SpaceShuttle : Entity
     {
         private readonly Entity _extTank;
-
         private readonly Entity _srbL;
         private readonly Entity _srbR;
 
-        private Vector3 _currentForce;
-
         private DetachSequence _currentSequence = Shuttle.DetachSequence.Attached;
+        private Vector3 _currentForce;
         private Vector3 _flipRotation;
         private float _forceMult;
-
         private bool _launching;
 
-        //private PtfxLooped _mainThrusters;
         private PtfxLooped _srbLEffect;
-
         private PtfxLooped _srbREffect;
+
         private Vector3 _startRotation;
 
         public SpaceShuttle(int handle, Vector3 spawn) : base(handle)
@@ -56,10 +52,6 @@ namespace GTS.Shuttle
             m.MarkAsNoLongerNeeded();
             m2.MarkAsNoLongerNeeded();
             m3.MarkAsNoLongerNeeded();
-
-            _extTank.LodDistance = -1;
-            _srbL.LodDistance = -1;
-            _srbR.LodDistance = -1;
 
             _extTank.AttachTo(this, 0, new Vector3(0, -1, 0), new Vector3());
             _srbL.AttachTo(_extTank, 0, new Vector3(), new Vector3());
@@ -106,8 +98,7 @@ namespace GTS.Shuttle
         {
             if (_forceMult < 10)
                 _forceMult += Game.LastFrameTime * 5;
-            else
-                _forceMult = 10;
+            else _forceMult = 10;
 
             _currentForce = Vector3.Lerp(_currentForce, ForwardVector * _forceMult, Game.LastFrameTime * 1.5f);
 
@@ -172,7 +163,6 @@ namespace GTS.Shuttle
 
                         _srbL.Detach();
                         _srbL.ApplyForce(-RightVector * 15);
-
                         _srbR.Detach();
                         _srbR.ApplyForce(RightVector * 15);
 
@@ -183,13 +173,15 @@ namespace GTS.Shuttle
                     if (HeightAboveGround > 4500 && _extTank.IsAttached())
                     {
                         _extTank.HasCollision = false;
-
-                        Detach();
-                        Function.Call(Hash.REMOVE_PARTICLE_FX_FROM_ENTITY, _extTank.Handle);
-
                         _currentSequence = Shuttle.DetachSequence.Default;
+                        Function.Call(Hash.REMOVE_PARTICLE_FX_FROM_ENTITY, _extTank.Handle);
+                        Detach();
                     }
                     break;
+                case Shuttle.DetachSequence.Default:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -200,27 +192,5 @@ namespace GTS.Shuttle
             _srbR?.Delete();
             _extTank?.Delete();
         }
-
-        #region TEMPORARY!
-
-        public static bool IsHelpMessageBeingDisplayed()
-        {
-            return Function.Call<bool>(Hash.IS_HELP_MESSAGE_BEING_DISPLAYED);
-        }
-
-        public static void DisplayHelpTextThisFrame(string helpText)
-        {
-            Function.Call(Hash._SET_TEXT_COMPONENT_FORMAT, "CELL_EMAIL_BCON");
-
-            const int maxStringLength = 99;
-
-            for (var i = 0; i < helpText.Length; i += maxStringLength)
-                Function.Call(Hash._0x6C188BE134E074AA,
-                    helpText.Substring(i, Math.Min(maxStringLength, helpText.Length - i)));
-
-            Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, IsHelpMessageBeingDisplayed() ? 0 : 1, -1);
-        }
-
-        #endregion
     }
 }
