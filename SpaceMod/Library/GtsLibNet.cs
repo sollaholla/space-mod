@@ -225,6 +225,7 @@ namespace GTS.Library
 
         public static void StartScript(string name, uint stackSize)
         {
+            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
             RequestScript(name);
             if (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) return;
             Function.Call(Hash.START_NEW_SCRIPT, name, stackSize);

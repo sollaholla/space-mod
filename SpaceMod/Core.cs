@@ -613,7 +613,8 @@ namespace GTS
         private void SetCurrentScene(SceneInfo scene, string fileName = default(string))
         {
             PlayerPed.IsInvincible = true;
-            Game.FadeScreenOut(0);
+            Game.FadeScreenOut(500);
+            Wait(750);
             CreateScene(scene, fileName);
             Game.FadeScreenIn(1000);
             PlayerPed.IsInvincible = false;
@@ -623,13 +624,13 @@ namespace GTS
         {
             lock (_tickLock)
             {
-                ClearAllEntities();
-
                 if (_currentScene != null && _currentScene != default(Scene))
                     _currentScene.Delete();
 
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
+
+                ClearAllEntities();
 
                 _currentScene = new Scene(scene) {FileName = fileName};
                 _currentScene.Start();
@@ -715,15 +716,7 @@ namespace GTS
 
         private static void ClearAllEntities()
         {
-            var entities = World.GetAllEntities();
-
-            foreach (var e in entities)
-            {
-                if (!e.IsDead && (e is Ped || e is Vehicle && PlayerPed.CurrentVehicle == (Vehicle) e))
-                    continue;
-                if (PlayerPed.CurrentVehicle == null || !e.IsAttachedTo(PlayerPed.CurrentVehicle))
-                    e.Delete();
-            }
+            Function.Call(Hash.CLEAR_AREA, 0, 0, 0, 100000, true, false, false, false);
         }
 
         private static void OpenMilitaryGates()

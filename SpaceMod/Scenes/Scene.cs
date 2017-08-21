@@ -177,6 +177,8 @@ namespace GTS.Scenes
         {
             lock (_startLock)
             {
+                Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
+                GtsLibNet.RemoveAllIpls(true);
                 GetSpaceVehicles();
                 CreateSpace();
                 CreateInteriors();
@@ -191,7 +193,6 @@ namespace GTS.Scenes
                 Function.Call(Hash.STOP_AUDIO_SCENES);
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
                 GameplayCamera.RelativeHeading = 0;
-                GtsLibNet.RemoveAllIpls(true);
             }
         }
 
@@ -237,6 +238,7 @@ namespace GTS.Scenes
                     ResetPlayerVehicle();
                     ClearLists(aborted);
                     ResetGameData();
+                    Function.Call(Hash._LOWER_MAP_PROP_DENSITY, false);
                 }
                 catch (Exception e)
                 {
@@ -293,6 +295,12 @@ namespace GTS.Scenes
 
             foreach (var billboard in Billboards)
                 billboard?.Delete();
+
+            foreach (var orbital in _orbitals)
+                orbital?.Delete();
+
+            foreach (var lOrbital in _attachedOrbitals)
+                lOrbital?.Delete();
         }
 
         private void GetSpaceVehicles()
@@ -548,17 +556,12 @@ namespace GTS.Scenes
             return prop;
         }
 
-        private static Model RequestModel(string modelName, int time = 5)
+        private static Model RequestModel(string modelName)
         {
             var model = new Model(modelName);
-            var timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, time);
             model.Request();
             while (!model.IsLoaded)
-            {
-                if (DateTime.UtcNow > timout)
-                    break;
                 Script.Yield();
-            }
             return model;
         }
 
@@ -943,7 +946,7 @@ namespace GTS.Scenes
                         PlayerPed.Heading = t.EndHeading;
                         GameplayCamera.RelativeHeading = 0;
 
-                        Script.Wait(750);
+                        Script.Wait(1250);
                         Game.FadeScreenIn(750);
                     }
                 }
@@ -961,7 +964,7 @@ namespace GTS.Scenes
                 PlayerPed.Heading = t.StartHeading;
                 GameplayCamera.RelativeHeading = 0;
 
-                Script.Wait(750);
+                Script.Wait(1250);
                 Game.FadeScreenIn(750);
             }
         }
