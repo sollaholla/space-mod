@@ -868,15 +868,15 @@ namespace GTS.Scenes
 
             foreach (var o in _orbitals)
             {
-                if (!Settings.ShowCustomGui)
-                    continue;
-
-                DrawMarkerAt(o.Position, o.Name);
-
                 if (Math.Abs(o.RotationSpeed) > 0.00001f)
                     o.Quaternion = Quaternion.Lerp(o.Quaternion,
                         Quaternion.FromToRotation(o.ForwardVector, o.RightVector) * o.Quaternion,
                         Game.LastFrameTime * o.RotationSpeed);
+
+                if (!Settings.ShowCustomGui)
+                    continue;
+
+                DrawMarkerAt(o.Position, o.Name);
             }
 
             foreach (var a in _attachedOrbitals)
