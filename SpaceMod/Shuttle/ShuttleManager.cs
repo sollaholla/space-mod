@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTS.Library;
-using GTS.Scenes;
-using GTS.Scenes.Interiors;
 
 namespace GTS.Shuttle
 {
@@ -15,15 +12,10 @@ namespace GTS.Shuttle
     {
         // TODO: Convert some of these to settings.
         private readonly string _astronautModel = "s_m_m_movspace_01";
-
         private readonly float _enterOrbitHeight;
-        private readonly string _mapLocation = Database.PathToInteriors + "\\LaunchStation.xml";
         private readonly float _shuttleHeading = 95;
         private readonly float _shuttleInteractDistance = 75;
-
         private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
-
-        private Interior _map;
         private Vehicle _shuttleVehicle;
 
         public ShuttleManager(float enterOrbitHeight)
@@ -62,25 +54,6 @@ namespace GTS.Shuttle
         {
             Shuttle?.CleanUp();
             Shuttle?.Delete();
-            _map?.Remove();
-            _map?.MapBlip?.Remove();
-        }
-
-        public void LoadMap()
-        {
-            if (!File.Exists(_mapLocation)) return;
-            _map = new Interior(_mapLocation, InteriorType.MapEditor, false);
-            _map.Request();
-            if (!_map.Loaded) return;
-            var positions = _map.GetMapObjects().Select(x => x.Position).ToArray();
-            var accumulator = positions.Aggregate(Vector3.Zero, (current, position) => current + position);
-
-            // This is basically like calculating the average of regular numbers.
-            var average = accumulator / positions.Length;
-            _map.MapBlip = World.CreateBlip(average);
-            _map.MapBlip.Sprite = BlipSprite.Hangar;
-            _map.MapBlip.Color = Scene.MarkerBlipColor;
-            _map.MapBlip.Name = "Shuttle Launch Site";
         }
 
         public void CreateShuttle()
@@ -103,16 +76,24 @@ namespace GTS.Shuttle
 
             // Get the model for the player.
             var modelName = _astronautModel;
-            if (playerPed.Model == PedHash.Michael)
-                modelName = "player_zero(spacesuit)";
-            else if (playerPed.Model == PedHash.Franklin)
-                modelName = "player_one(spacesuit)";
-            else if (playerPed.Model == PedHash.Trevor)
-                modelName = "player_two(spacesuit)";
-            else if (playerPed.Model == PedHash.FreemodeMale01)
-                modelName = "mp_m_freemode_01(spacesuit)";
-            else if (playerPed.Model == PedHash.FreemodeFemale01)
-                modelName = "mp_f_freemode_01(spacesuit)";
+            switch ((PedHash)playerPed.Model.Hash)
+            {
+                case PedHash.Michael:
+                    modelName = "player_zero(spacesuit)";
+                    break;
+                case PedHash.Franklin:
+                    modelName = "player_one(spacesuit)";
+                    break;
+                case PedHash.Trevor:
+                    modelName = "player_two(spacesuit)";
+                    break;
+                case PedHash.FreemodeMale01:
+                    modelName = "mp_m_freemode_01(spacesuit)";
+                    break;
+                case PedHash.FreemodeFemale01:
+                    modelName = "mp_f_freemode_01(spacesuit)";
+                    break;
+            }
 
             var m = new Model(modelName);
             m.Request();

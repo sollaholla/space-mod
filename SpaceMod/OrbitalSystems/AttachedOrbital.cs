@@ -5,11 +5,8 @@ namespace GTS.OrbitalSystems
 {
     public class AttachedOrbital : Entity
     {
-        private readonly Prop _prop;
-
-        public AttachedOrbital(Prop prop, Vector3 attachOffset, Vector3 attachRotation) : base(prop.Handle)
+        public AttachedOrbital(IHandleable prop, Vector3 attachOffset, Vector3 attachRotation) : base(prop.Handle)
         {
-            _prop = prop;
             AttachOffset = attachOffset;
             AttachRotation = attachRotation;
         }

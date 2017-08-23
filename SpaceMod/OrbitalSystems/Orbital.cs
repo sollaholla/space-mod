@@ -1,11 +1,10 @@
 ﻿using GTA;
-using GTA.Math;
 
 namespace GTS.OrbitalSystems
 {
-    public class Orbital : AttachedOrbital
+    public class Orbital : Entity
     {
-        public Orbital(Prop prop, string name, float rotationSpeed) : base(prop, Vector3.Zero, Vector3.Zero)
+        public Orbital(IHandleable prop, string name, float rotationSpeed) : base(prop.Handle)
         {
             Name = name;
             RotationSpeed = rotationSpeed;
@@ -16,12 +15,5 @@ namespace GTS.OrbitalSystems
         public bool WormHole { get; set; }
 
         public float RotationSpeed { get; set; }
-
-        public void Rotate()
-        {
-            var rotation = Rotation;
-            rotation.Z += Game.LastFrameTime * RotationSpeed;
-            Rotation = rotation;
-        }
     }
 }

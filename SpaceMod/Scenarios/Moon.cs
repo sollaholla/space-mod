@@ -522,6 +522,7 @@ namespace DefaultMissions
             if (!Entity.Exists(flag))
                 return;
 
+            flag.MarkAsNoLongerNeeded();
             flag.FreezePosition = true;
 
             ///////////////////////////

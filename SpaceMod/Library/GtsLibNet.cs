@@ -165,6 +165,8 @@ namespace GTS.Library
         private const string AlienModelsTextFile = "./scripts/Space/Aliens.txt";
         private const string DefaultAlienModel = "S_M_M_MovAlien_01";
         private static readonly string[] AlienModels;
+        private static readonly string[] StartingIpls;
+        private static readonly string[] AllIpls;
 
         static GtsLibNet()
         {
@@ -175,6 +177,9 @@ namespace GTS.Library
                 var text = File.ReadAllLines(AlienModelsTextFile).Select(x => x.Trim()).ToArray();
                 AlienModels = text;
             }
+
+            AllIpls = GetIplsToLoad()?.ToArray();
+            StartingIpls = AllIpls?.Where(x => Function.Call<bool>(Hash.IS_IPL_ACTIVE, x)).ToArray() ?? new string[0];
         }
 
         public static string GetAlienModel()
@@ -363,7 +368,7 @@ namespace GTS.Library
 
         public static void RemoveAllIpls(bool remove)
         {
-            var lines = GetIplsToLoad();
+            var lines = AllIpls ?? new string[0];
             foreach (var line in lines)
             {
                 if (remove)
@@ -371,12 +376,16 @@ namespace GTS.Library
                     Function.Call(Hash.REMOVE_IPL, line);
                     continue;
                 }
-                Function.Call(Hash.REQUEST_IPL, line);
+
+                if (StartingIpls == null || StartingIpls.Contains(line))
+                    Function.Call(Hash.REQUEST_IPL, line);
             }
         }
 
         private static IEnumerable<string> GetIplsToLoad()
         {
+            if (AllIpls != null)
+                return AllIpls;
             var codebase = Assembly.GetExecutingAssembly().CodeBase;
             var path = Path.GetDirectoryName(new Uri(codebase).LocalPath);
             if (string.IsNullOrEmpty(path)) return new string[0];

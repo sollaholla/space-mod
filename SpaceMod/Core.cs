@@ -22,25 +22,6 @@ namespace GTS
     /// </summary>
     internal class Core : Script
     {
-        /// <summary>
-        ///     Our standard constructor.
-        /// </summary>
-        public Core()
-        {
-            _tickLock = new object();
-            Instance = this;
-            KeyUp += OnKeyUp;
-            Tick += OnTick;
-            Aborted += OnAborted;
-
-            ReadSettings();
-            SaveSettings();
-            CreateCustomMenu();
-            RequestModels();
-
-            Debug.Log("Initialized!");
-        }
-
         #region Variables
 
         #region Misc
@@ -86,6 +67,25 @@ namespace GTS
         #endregion
 
         #endregion
+
+        /// <summary>
+        ///     Our standard constructor.
+        /// </summary>
+        public Core()
+        {
+            _tickLock = new object();
+            Instance = this;
+            KeyUp += OnKeyUp;
+            Tick += OnTick;
+            Aborted += OnAborted;
+
+            ReadSettings();
+            SaveSettings();
+            CreateCustomMenu();
+            RequestModels();
+
+            Debug.Log("Initialized!");
+        }
 
         #region Properties
 
@@ -484,7 +484,6 @@ namespace GTS
                 var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
                 loadScaleform.Draw = true;
                 _shuttleManager = new ShuttleManager(_enterOrbitHeight);
-                _shuttleManager.LoadMap();
                 if (_missionStatus > 0)
                     _shuttleManager.CreateShuttle();
                 LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);

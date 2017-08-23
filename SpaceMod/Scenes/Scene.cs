@@ -72,17 +72,17 @@ namespace GTS.Scenes
         private bool _didSetSpaceAudio;
         private bool _didSetTimecycle;
         private bool _didSpaceWalkTut;
+        private bool _didDeleteScene;
         private bool _enteringVehicle;
         private bool _isSpaceVehicleInOrbit;
         private Vector3 _lastMinePos;
 
-        private Vector3 _lastPlayerPosition;
         private Prop _minableObject;
         private DateTime _mineTimeout;
         private List<Orbital> _orbitals;
         private float _pitchSpeed;
-        private ZeroGTask _playerTask;
         private float _rollSpeed;
+        private ZeroGTask _playerTask;
         private SpaceVehicleInfo _spaceVehicles;
         private Vehicle _spaceWalkObj;
 
@@ -177,6 +177,8 @@ namespace GTS.Scenes
         {
             lock (_startLock)
             {
+                if (_didDeleteScene)
+                    return;
                 Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
                 GtsLibNet.RemoveAllIpls(true);
                 GetSpaceVehicles();
@@ -189,7 +191,6 @@ namespace GTS.Scenes
                 ConfigureVehicleForScene();
                 ResetPlayerPosition();
                 _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
-                _lastPlayerPosition = PlayerPosition;
                 Function.Call(Hash.STOP_AUDIO_SCENES);
                 Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
                 GameplayCamera.RelativeHeading = 0;
@@ -201,6 +202,8 @@ namespace GTS.Scenes
             if (!Monitor.TryEnter(_updateLock)) return;
             try
             {
+                if (_didDeleteScene)
+                    return;
                 var viewFinderPosition = Database.ViewFinderPosition();
                 ConfigureRendering();
                 ConfigureWeather();
@@ -233,6 +236,7 @@ namespace GTS.Scenes
             {
                 try
                 {
+                    _didDeleteScene = true;
                     Skybox.Delete();
                     RemovePreviousVehicles();
                     ResetPlayerVehicle();
@@ -379,8 +383,7 @@ namespace GTS.Scenes
         {
             if (!string.IsNullOrEmpty(Info.TimecycleModifier) && Info.TimecycleModifierStrength > 0)
                 TimeCycleModifier.Set(Info.TimecycleModifier, Info.TimecycleModifierStrength);
-            else
-                TimeCycleModifier.Clear();
+            else TimeCycleModifier.Clear();
         }
 
         /// <summary>
@@ -759,11 +762,14 @@ namespace GTS.Scenes
 
             Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME);
 
-            if (Camera.Exists(World.RenderingCamera) || FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
+            if (Camera.Exists(World.RenderingCamera))
             {
                 _didSetTimecycle = false;
+                _didSetAreaTimecycle = false;
+                return;
             }
-            else if (!_didSetTimecycle)
+
+            if (!_didSetTimecycle)
             {
                 RefreshTimecycle();
                 _didSetTimecycle = true;
@@ -863,7 +869,7 @@ namespace GTS.Scenes
             foreach (var o in _orbitals)
             {
                 if (!Settings.ShowCustomGui)
-                    return;
+                    continue;
 
                 DrawMarkerAt(o.Position, o.Name);
 
@@ -888,7 +894,7 @@ namespace GTS.Scenes
             foreach (var l in Info.SceneLinks)
             {
                 if (!Settings.ShowCustomGui)
-                    return;
+                    continue;
 
                 DrawMarkerAt(Info.GalaxyCenter + l.Position, l.Name);
             }
@@ -1190,7 +1196,9 @@ namespace GTS.Scenes
                 else
                 {
                     PlayerVehicle.IsInvincible = false;
+                    PlayerVehicle.FreezePosition = false;
                 }
+
                 PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
                 _enteringVehicle = false;
             }
@@ -1213,7 +1221,6 @@ namespace GTS.Scenes
                                 // since we're floating already or, "not in a vehicle" technically, we want to stop our vehicle
                                 // from moving and allow the payer to re-enter it.
                                 PlayerVehicle.LockStatus = VehicleLockStatus.None;
-                                PlayerVehicle.Velocity = Vector3.Zero;
                                 SpaceWalk_EnterVehicle(PlayerPed, PlayerVehicle);
 
                                 // we also want to let the player mine stuff, repair stuff, etc.
@@ -1370,6 +1377,11 @@ namespace GTS.Scenes
                         throw new ArgumentOutOfRangeException(nameof(_playerTask),
                             "The player state specified is out of range, and does not exist.");
                 }
+            }
+            else if (PlayerPed.IsRagdoll || PlayerPed.IsJumpingOutOfVehicle)
+            {
+                if (Entity.Exists(PlayerVehicle))
+                    PlayerVehicle.FreezePosition = true;
             }
         }
 
