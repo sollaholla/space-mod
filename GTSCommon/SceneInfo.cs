@@ -400,6 +400,10 @@ public class SurfaceInfo : IDrawable
         "The size of your terrain in meters. 1024 is the default scale. This will affect how far your terrain tiles are generated from the parent terrain tile.")]
     public float TileSize { get; set; } = 1024;
 
+    [Category("Settings")]
+    [Description("The dimensions of the terrain e.g. 1x1 makes 7 tiles ([0,0][1,0][0,1][1,1][-1,0][0,-1][-1,-1]) etc.")]
+    public int Dimensions { get; set; } = 4;
+
     [Category("Required")]
     [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
     [RefreshProperties(RefreshProperties.All)]

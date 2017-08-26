@@ -532,8 +532,8 @@ namespace GTS.Scenes
             prop.FreezePosition = true;
             prop.LodDistance = data.LodDistance;
 
-            var surface = new Surface(prop, data.Tile, data.LodDistance, data.TileSize);
-            surface.GenerateTerrain();
+            var surface = new Surface(prop, data.TileSize, data.Dimensions) {CanUpdate = data.Tile};
+            surface.GenerateNeighbors();
             model.MarkAsNoLongerNeeded();
 
             return surface;
@@ -671,11 +671,9 @@ namespace GTS.Scenes
         private void UpdateSurfaceTiles()
         {
             if (!Info.SurfaceScene) return;
-
             if (StopTile) return;
-
             foreach (var surface in Surfaces)
-                surface.DoInfiniteTile(PlayerPosition, surface.TileSize);
+                surface.Update();
         }
 
         private void CreateSpace()

@@ -1,4 +1,5 @@
-﻿using GTA;
+﻿using System;
+using GTA;
 using GTA.Math;
 using GTS.Library;
 
@@ -6,166 +7,102 @@ namespace GTS.OrbitalSystems
 {
     public class Surface : Entity
     {
-        private readonly int _lod;
+        private readonly int _dimensions;
+        private readonly float _tileSize;
 
-        public Surface(Prop prop, bool tile, int lod, float tileSize) : base(prop.Handle)
-        {
-            TileSize = tileSize;
-            Tile = tile;
-            _lod = lod;
+        private Entity[,] _tiles = new Entity[0, 0];
+        private Entity _lastTile;
+
+        private Entity LastTile {
+            set {
+                if (_lastTile != value)
+                    RePositionTerrainTiles(value.Position);
+                _lastTile = value;
+            }
         }
 
-        public Prop[,] TerrainGrid { get; private set; } = new Prop[3, 3];
+        public bool CanUpdate { get; set; }
 
-        public float TileSize { get; }
-
-        public bool Tile { get; }
-
-        public void DoInfiniteTile(Vector3 playerPosition, float tileSize)
+        public Surface(IHandleable prop, float tileSize, int dimensions) : base(prop.Handle)
         {
-            if (!Tile) return;
+            _tileSize = tileSize;
+            _dimensions = dimensions;
+        }
 
-            var xOffset = 0;
-            var yOffset = 0;
-            Prop playerTerrain = null;
+        public void Update()
+        {
+            if (!CanUpdate) return;
 
-            for (var x = 0; x < 3; x++)
+            var player = Game.Player.Character;
+            if (player == null) return;
+            var playerPos = player.Position;
+
+            Entity newTile = null;
+            var isInBounds = false;
+            var div = _tileSize / 2;
+
+            for (var i = -_dimensions; i <= _dimensions; i++)
             {
-                for (var y = 0; y < 3; y++)
-                    if (playerPosition.X >= TerrainGrid[x, y].Position.X &&
-                        playerPosition.X <= TerrainGrid[x, y].Position.X + tileSize &&
-                        playerPosition.Y >= TerrainGrid[x, y].Position.Y &&
-                        playerPosition.Y <= TerrainGrid[x, y].Position.Y + tileSize)
-                    {
-                        playerTerrain = TerrainGrid[x, y];
-                        xOffset = 1 - x;
-                        yOffset = 1 - y;
-                        break;
-                    }
-
-                if (playerTerrain != null)
-                    break;
-            }
-
-            if (playerTerrain != TerrainGrid[1, 1])
-            {
-                var newTerrainGrid = new Prop[3, 3];
-                for (var x = 0; x < 3; x++)
-                for (var y = 0; y < 3; y++)
+                for (var j = -_dimensions; j <= _dimensions; j++)
                 {
-                    var newX = x + xOffset;
-                    if (newX < 0)
-                        newX = 2;
-                    else if (newX > 2)
-                        newX = 0;
-
-                    var newY = y + yOffset;
-                    if (newY < 0)
-                        newY = 2;
-                    else if (newY > 2)
-                        newY = 0;
-
-                    newTerrainGrid[newX, newY] = TerrainGrid[x, y];
+                    var tile = _tiles[i + _dimensions, j + _dimensions];
+                    var tilePos = tile.Position;
+                    if (!(playerPos.X < tilePos.X + div) || !(playerPos.X > tilePos.X - div)) continue;
+                    if (!(playerPos.Y < tilePos.Y + div) || !(playerPos.Y > tilePos.Y - div)) continue;
+                    newTile = tile;
+                    isInBounds = true;
                 }
-
-                TerrainGrid = newTerrainGrid;
-
-                UpdateTilePositions();
             }
+
+            if (!isInBounds)
+            {
+                var nearestX = (float)Math.Round(playerPos.X / _tileSize, MidpointRounding.AwayFromZero) * _tileSize;
+                var nearestY = (float)Math.Round(playerPos.Y / _tileSize, MidpointRounding.AwayFromZero) * _tileSize;
+                RePositionTerrainTiles(new Vector3(nearestX, nearestY, 0));
+                return;
+            }
+
+            LastTile = newTile;
         }
 
-        public void GenerateTerrain()
+        public void GenerateNeighbors()
         {
-            if (!Tile) return;
+            if (!CanUpdate) return;
 
-            IsVisible = false;
-
-            TerrainGrid[0, 0] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[0, 0].LodDistance = _lod;
-
-            TerrainGrid[0, 1] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[0, 1].LodDistance = _lod;
-
-            TerrainGrid[0, 2] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[0, 2].LodDistance = _lod;
-
-            TerrainGrid[1, 0] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[1, 0].LodDistance = _lod;
-
-            TerrainGrid[1, 1] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[1, 1].LodDistance = _lod;
-
-            TerrainGrid[1, 2] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[1, 2].LodDistance = _lod;
-
-            TerrainGrid[2, 0] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[2, 0].LodDistance = _lod;
-
-            TerrainGrid[2, 1] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[2, 1].LodDistance = _lod;
-
-            TerrainGrid[2, 2] = GtsLibNet.CreatePropNoOffset(Model, Position, false);
-            TerrainGrid[2, 2].LodDistance = _lod;
-
-            UpdateTilePositions();
+            _tiles = new Entity[_dimensions * 2 + 1, _dimensions * 2 + 1];
+            for (var i = -_dimensions; i <= _dimensions; i++)
+            {
+                for (var j = -_dimensions; j <= _dimensions; j++)
+                {
+                    var obj = GtsLibNet.CreatePropNoOffset(Model.Hash, Position + new Vector3(i, j, 0) * _tileSize, true);
+                    obj.FreezePosition = true;
+                    obj.Quaternion = Quaternion;
+                    _tiles[i + _dimensions, j + _dimensions] = obj;
+                }
+            }
+            LastTile = this;
         }
 
-        public void UpdateTilePositions()
+        private void RePositionTerrainTiles(Vector3 rootTilePosition)
         {
-            TerrainGrid[0, 0].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X - TileSize,
-                TerrainGrid[1, 1].Position.Y + TileSize,
-                TerrainGrid[1, 1].Position.Z);
+            if (!CanUpdate) return;
 
-            TerrainGrid[0, 1].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X - TileSize,
-                TerrainGrid[1, 1].Position.Y,
-                TerrainGrid[1, 1].Position.Z);
-
-            TerrainGrid[0, 2].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X - TileSize,
-                TerrainGrid[1, 1].Position.Y - TileSize,
-                TerrainGrid[1, 1].Position.Z);
-
-            TerrainGrid[1, 0].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X,
-                TerrainGrid[1, 1].Position.Y + TileSize,
-                TerrainGrid[1, 1].Position.Z);
-
-            TerrainGrid[1, 2].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X,
-                TerrainGrid[1, 1].Position.Y - TileSize,
-                TerrainGrid[1, 1].Position.Z);
-
-            TerrainGrid[2, 0].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X + TileSize,
-                TerrainGrid[1, 1].Position.Y + TileSize,
-                TerrainGrid[1, 1].Position.Z);
-
-            TerrainGrid[2, 1].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X + TileSize,
-                TerrainGrid[1, 1].Position.Y,
-                TerrainGrid[1, 1].Position.Z);
-
-            TerrainGrid[2, 2].Position = new Vector3(
-                TerrainGrid[1, 1].Position.X + TileSize,
-                TerrainGrid[1, 1].Position.Y - TileSize,
-                TerrainGrid[1, 1].Position.Z);
+            for (var i = -_dimensions; i <= _dimensions; i++)
+            for (var j = -_dimensions; j <= _dimensions; j++)
+                _tiles[i + _dimensions, j + _dimensions].Position = rootTilePosition + new Vector3(i, j, 0) * _tileSize;
         }
 
         public new void Delete()
         {
             base.Delete();
-            RemoveTiles();
-        }
 
-        public void RemoveTiles()
-        {
-            if (!Tile) return;
-            if (TerrainGrid == null) return;
-            for (var i = 0; i < TerrainGrid.GetLength(0); i++)
-            for (var j = 0; j < TerrainGrid.GetLength(1); j++)
-                TerrainGrid[i, j]?.Delete();
+            for (var i = 0; i < _tiles.GetUpperBound(0); i++)
+            {
+                for (var j = 0; j < _tiles.GetUpperBound(1); j++)
+                {
+                    _tiles[i, j].Delete();
+                }
+            }
         }
     }
 }
