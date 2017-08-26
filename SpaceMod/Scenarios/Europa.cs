@@ -162,7 +162,7 @@ namespace DefaultMissions
                         break;
                     case 1:
                         var timer = DateTime.UtcNow + new TimeSpan(0, 0, 0, 3);
-                        var m = new Model("dt1_tc_UFOcore");
+                        var m = new Model("ufo");
                         m.Request(5000);
                         var abductionPos = playerCharacter.Position + playerCharacter.UpVector * 20;
                         var p = World.CreateProp(m, abductionPos, Vector3.Zero, false, false);
@@ -176,14 +176,14 @@ namespace DefaultMissions
                         }
                         Game.FadeScreenOut(1000);
                         Script.Wait(1000);
-                        p.Delete();
+                        p?.Delete();
                         _step++;
                         break;
                     case 2:
                         playerCharacter.Task.ClearAll();
 
                         var interiorPos = new Vector3(0, 0, 0);
-                        m = new Model("hw1_22_shipint");
+                        m = new Model("ufo_interior");
                         m.Request(5000);
                         _ufoInt = World.CreateProp(m, interiorPos, Vector3.Zero, false, false);
 
@@ -522,6 +522,11 @@ namespace DefaultMissions
         public override void OnEnded(bool success)
         {
             CleanUp(!success);
+
+            if (!success) return;
+            GtsLib.InitCredits();
+            Script.Wait(40000);
+            GtsLib.EndCredits();
         }
 
         public override void OnAborted()

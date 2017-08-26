@@ -9,7 +9,7 @@ namespace GTS.Library
     ///     Full Credits: Unknown Modder (c) 2017
     ///     GTSLib.asi, NoBoundaryLimits.asi, RespawnFix.asi
     /// </summary>
-    internal static class GtsLib
+    public static class GtsLib
     {
         private static readonly Dictionary<string, uint> ScriptStackSizes = new Dictionary<string, uint>();
 

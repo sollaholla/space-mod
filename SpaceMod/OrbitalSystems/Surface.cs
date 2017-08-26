@@ -58,7 +58,7 @@ namespace GTS.OrbitalSystems
             {
                 var nearestX = (float) Math.Round(playerPos.X / _tileSize, MidpointRounding.AwayFromZero) * _tileSize;
                 var nearestY = (float) Math.Round(playerPos.Y / _tileSize, MidpointRounding.AwayFromZero) * _tileSize;
-                RePositionTerrainTiles(new Vector3(nearestX, nearestY, 0));
+                RePositionTerrainTiles(new Vector3(nearestX, nearestY, Position.Z));
                 return;
             }
 
