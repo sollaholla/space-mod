@@ -1013,9 +1013,9 @@ namespace GTS.Library
 
     public class TimecycleModChanger
     {
-        private readonly Timer _t;
         private const string TimecycleModPath = ".\\scripts\\Space\\TimecycleMods.txt";
         private readonly string[] _mods = new string[0];
+        private readonly Timer _t;
         private int _timecycleModIndex;
 
         public TimecycleModChanger()

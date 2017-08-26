@@ -12,6 +12,7 @@ namespace GTS.Shuttle
     {
         // TODO: Convert some of these to settings.
         private readonly string _astronautModel = "s_m_m_movspace_01";
+
         private readonly float _enterOrbitHeight;
         private readonly float _shuttleHeading = 95;
         private readonly float _shuttleInteractDistance = 75;
@@ -76,7 +77,7 @@ namespace GTS.Shuttle
 
             // Get the model for the player.
             var modelName = _astronautModel;
-            switch ((PedHash)playerPed.Model.Hash)
+            switch ((PedHash) playerPed.Model.Hash)
             {
                 case PedHash.Michael:
                     modelName = "player_zero(spacesuit)";

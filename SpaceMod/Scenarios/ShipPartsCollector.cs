@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -12,12 +11,14 @@ namespace DefaultMissions
     public class ShipPartsCollector : Scenario
     {
         private const int MaxParts = 15;
+        private readonly List<Entity> _entites = new List<Entity>();
+        private readonly List<SpaceShipPart> _spaceShipParts = new List<SpaceShipPart>();
 
         public override bool BlockOrbitLanding => false;
-        private readonly List<SpaceShipPart> _spaceShipParts = new List<SpaceShipPart>();
-        private readonly List<Entity> _entites = new List<Entity>();
 
-        public override void OnAwake() { }
+        public override void OnAwake()
+        {
+        }
 
         public override void OnStart()
         {

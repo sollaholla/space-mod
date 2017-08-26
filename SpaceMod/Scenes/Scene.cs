@@ -66,13 +66,13 @@ namespace GTS.Scenes
         private readonly object _updateLock;
         private readonly List<Vehicle> _vehicles;
         private List<AttachedOrbital> _attachedOrbitals;
+        private bool _didDeleteScene;
         private bool _didJump;
         private bool _didRaiseGears;
         private bool _didSetAreaTimecycle;
         private bool _didSetSpaceAudio;
         private bool _didSetTimecycle;
         private bool _didSpaceWalkTut;
-        private bool _didDeleteScene;
         private bool _enteringVehicle;
         private bool _isSpaceVehicleInOrbit;
         private Vector3 _lastMinePos;
@@ -81,8 +81,8 @@ namespace GTS.Scenes
         private DateTime _mineTimeout;
         private List<Orbital> _orbitals;
         private float _pitchSpeed;
-        private float _rollSpeed;
         private ZeroGTask _playerTask;
+        private float _rollSpeed;
         private SpaceVehicleInfo _spaceVehicles;
         private Vehicle _spaceWalkObj;
 
@@ -319,7 +319,6 @@ namespace GTS.Scenes
         {
             var position = Info.GalaxyCenter;
             if (Info.SurfaceScene)
-            {
                 if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding() || _isSpaceVehicleInOrbit)
                 {
                     var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
@@ -338,7 +337,6 @@ namespace GTS.Scenes
                 {
                     return;
                 }
-            }
             PlayerPosition = position;
         }
 
@@ -1676,7 +1674,7 @@ namespace GTS.Scenes
                     Game.LastFrameTime);
             }
         }
-        
+
         private void UpdateWormHoles()
         {
             foreach (var wormhole in WormHoles)

@@ -249,7 +249,7 @@ public class SceneInfo : NextSceneInfo
     [Category("Surface.Weather")]
     [Description("The cloud type.")]
     public string CloudType { get; set; }
-    
+
     [Category("Surface.Player")]
     [Description("Use leave surface prompt when in a new vehicle.")]
     public bool LeaveSurfacePrompt { get; set; } = false;

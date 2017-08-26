@@ -19,9 +19,9 @@ namespace GTS.Shuttle
         private readonly Entity _extTank;
         private readonly Entity _srbL;
         private readonly Entity _srbR;
+        private Vector3 _currentForce;
 
         private DetachSequence _currentSequence = Shuttle.DetachSequence.Attached;
-        private Vector3 _currentForce;
         private Vector3 _flipRotation;
         private float _forceMult;
         private bool _launching;

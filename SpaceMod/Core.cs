@@ -22,6 +22,25 @@ namespace GTS
     /// </summary>
     internal class Core : Script
     {
+        /// <summary>
+        ///     Our standard constructor.
+        /// </summary>
+        public Core()
+        {
+            _tickLock = new object();
+            Instance = this;
+            KeyUp += OnKeyUp;
+            Tick += OnTick;
+            Aborted += OnAborted;
+
+            ReadSettings();
+            SaveSettings();
+            CreateCustomMenu();
+            RequestModels();
+
+            Debug.Log("Initialized!");
+        }
+
         #region Variables
 
         #region Misc
@@ -31,7 +50,7 @@ namespace GTS
         private UIMenu _mainMenu;
         private bool _didAbort;
         private readonly object _tickLock;
-        private TimecycleModChanger _tcChanger = new TimecycleModChanger();
+        private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
 
         #endregion
 
@@ -68,25 +87,6 @@ namespace GTS
         #endregion
 
         #endregion
-
-        /// <summary>
-        ///     Our standard constructor.
-        /// </summary>
-        public Core()
-        {
-            _tickLock = new object();
-            Instance = this;
-            KeyUp += OnKeyUp;
-            Tick += OnTick;
-            Aborted += OnAborted;
-
-            ReadSettings();
-            SaveSettings();
-            CreateCustomMenu();
-            RequestModels();
-
-            Debug.Log("Initialized!");
-        }
 
         #region Properties
 
@@ -644,7 +644,8 @@ namespace GTS
             }
         }
 
-        private void CurrentSceneOnExited(Scene scene, string nextSceneFileName, Vector3 nextSceneOffset, Vector3 nextSceneRotation)
+        private void CurrentSceneOnExited(Scene scene, string nextSceneFileName, Vector3 nextSceneOffset,
+            Vector3 nextSceneRotation)
         {
             lock (_tickLock)
             {
