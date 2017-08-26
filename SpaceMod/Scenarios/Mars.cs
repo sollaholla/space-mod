@@ -88,11 +88,11 @@ namespace DefaultMissions
         private int _enemyCount = 15;
         private float _aiWeaponDamage = 0.05f;
         private bool _noSlowMoFlag;
-        private Vector3 _marsBaseEnterPos = new Vector3(-10000.83f, -9997.221f, 10001.71f);
+        private Vector3 _marsBaseEnterPos = new Vector3(-10000.83f, -9997.221f, 1001.71f);
         private Vector3 _marsBaseExitPos = new Vector3(-1966.821f, 3197.156f, 33.30999f);
         private Vector3 _marsBasePos = new Vector3(-1993.502f, 3206.331f, 32.81033f);
-        private Vector3 _marsEngineerSpawn = new Vector3(-10047.26f, -8959.026f, 10000.87f);
-        private Vector3 _marsEngineerRoverSpawn = new Vector3(-10000.36f, -9985.202f, 10001f);
+        private Vector3 _marsEngineerSpawn = new Vector3(-10047.26f, -8959.026f, 1000.87f);
+        private Vector3 _marsEngineerRoverSpawn = new Vector3(-10000.36f, -9985.202f, 1001f);
         private Vector3 _marsEngineerConvoPosition = new Vector3(-2015.388f, 3196.188f, 32.82997f);
         private float _marsEngineerConvoHeading = 358.7166f;
         private float _marsEngineerRoverHeading = 73.19151f;

@@ -31,6 +31,7 @@ namespace GTS
         private UIMenu _mainMenu;
         private bool _didAbort;
         private readonly object _tickLock;
+        private TimecycleModChanger _tcChanger = new TimecycleModChanger();
 
         #endregion
 
@@ -139,7 +140,7 @@ namespace GTS
 
         #region Events
 
-        private void OnAborted(object sender, EventArgs eventArgs)
+        internal void OnAborted(object sender, EventArgs eventArgs)
         {
             // This tells the dispose method not to abort if we already did.
             _didAbort = true;
@@ -181,6 +182,7 @@ namespace GTS
             // endMission?.OnAborted();
 
             _shuttleManager?.Abort();
+            _tcChanger?.Stop();
 
             ///////////////////////////////////////////////////////////
             // NOTE: Putting this on the bottom since it uses some
@@ -629,7 +631,7 @@ namespace GTS
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
                 else PlayerPed.Rotation = Vector3.Zero;
 
-                ClearAllEntities();
+                ClearAllEntities(PlayerPosition, 10000);
 
                 _currentScene = new Scene(scene) {FileName = fileName};
                 _currentScene.Start();
@@ -642,13 +644,12 @@ namespace GTS
             }
         }
 
-        private void CurrentSceneOnExited(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset)
+        private void CurrentSceneOnExited(Scene scene, string nextSceneFileName, Vector3 nextSceneOffset, Vector3 nextSceneRotation)
         {
             lock (_tickLock)
             {
-                var isActualScene = newSceneFile != "cmd_earth";
-                var newScene = DeserializeFileAsScene(newSceneFile);
-
+                var isActualScene = nextSceneFileName != "cmd_earth";
+                var newScene = DeserializeFileAsScene(nextSceneFileName);
                 if (isActualScene && newScene == null)
                 {
                     OnAborted(this, new EventArgs());
@@ -663,31 +664,28 @@ namespace GTS
 
                 Game.FadeScreenOut(1000);
                 Wait(1000);
-
-                _currentScene?.Delete();
-                _currentScene = null;
-
                 ResetWeather();
-                ClearAllEntities();
+                ClearAllEntities(PlayerPosition, 10000);
 
-                if (newSceneFile != "cmd_earth")
+                if (nextSceneFileName != "cmd_earth")
                 {
-                    CreateScene(newScene, newSceneFile);
-                    if (exitOffset != Vector3.Zero)
-                        PlayerPosition = newScene.GalaxyCenter + exitOffset;
+                    CreateScene(newScene, nextSceneFileName);
+                    if (nextSceneOffset != Vector3.Zero)
+                        PlayerPosition = newScene.GalaxyCenter + nextSceneOffset;
                     if (PlayerPed.IsInVehicle())
-                        PlayerPed.CurrentVehicle.Rotation = exitRotation;
-                    else PlayerPed.Rotation = exitRotation;
+                        PlayerPed.CurrentVehicle.Rotation = nextSceneRotation;
+                    else PlayerPed.Rotation = nextSceneRotation;
                 }
                 else
                 {
+                    _currentScene.Delete();
+                    _currentScene = null;
                     Function.Call(Hash.PAUSE_CLOCK, false);
                     GiveSpawnControlToGame();
                     EnterAtmosphere();
                     PlayerPed.HasGravity = true;
                     GtsLibNet.SetGravityLevel(9.81f);
                 }
-
                 Wait(1000);
                 Game.FadeScreenIn(1000);
             }
@@ -713,9 +711,9 @@ namespace GTS
             }
         }
 
-        private static void ClearAllEntities()
+        private static void ClearAllEntities(Vector3 position, float radius)
         {
-            Function.Call(Hash.CLEAR_AREA, 0, 0, 0, 100000, true, false, false, false);
+            Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, radius, false, false, false, false);
         }
 
         private static void OpenMilitaryGates()

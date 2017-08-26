@@ -4,9 +4,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using Control = GTA.Control;
 
 namespace GTS.Library
 {
@@ -590,7 +592,7 @@ namespace GTS.Library
         }
     }
 
-    public static class TimeCycleModifier
+    public static class TimecycleModifier
     {
         public static void Set(string name, float strength)
         {
@@ -1006,6 +1008,44 @@ namespace GTS.Library
         public static bool IsActive(ScreenEffect screenEffect)
         {
             return Function.Call<bool>(Hash._GET_SCREEN_EFFECT_IS_ACTIVE, EffectToString(screenEffect));
+        }
+    }
+
+    public class TimecycleModChanger
+    {
+        private readonly Timer _t;
+        private const string TimecycleModPath = ".\\scripts\\Space\\TimecycleMods.txt";
+        private readonly string[] _mods = new string[0];
+        private int _timecycleModIndex;
+
+        public TimecycleModChanger()
+        {
+            _t = new Timer {Interval = 1};
+            _t.Start();
+            _t.Tick += OnTick;
+
+            if (!File.Exists(TimecycleModPath)) return;
+            _mods = new[] {string.Empty}.Concat(File.ReadAllLines(TimecycleModPath)).ToArray();
+        }
+
+        private void OnTick(object o, EventArgs eventArgs)
+        {
+            if (_mods.Length <= 0)
+            {
+                Stop();
+                return;
+            }
+            if (!GtsLib.IsRockstarEditorActive()) return;
+            TimecycleModifier.Set(_mods[_timecycleModIndex], 1.0f);
+            if (!Game.IsControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
+            _timecycleModIndex = (_timecycleModIndex + 1) % _mods.Length;
+        }
+
+        public void Stop()
+        {
+            if (_t != null) _t.Tick -= OnTick;
+            _t?.Stop();
+            _t?.Dispose();
         }
     }
 }

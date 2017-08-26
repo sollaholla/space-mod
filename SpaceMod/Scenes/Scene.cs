@@ -35,7 +35,7 @@ namespace GTS.Scenes
     /// <param name="newSceneFile"></param>
     /// <param name="exitRotation"></param>
     /// <param name="exitOffset"></param>
-    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile, Vector3 exitRotation, Vector3 exitOffset);
+    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile, Vector3 exitOffset, Vector3 exitRotation);
 
     /// <summary>
     ///     A Scene controls in-game logic for player movement, and referential game variables pertaining to
@@ -319,6 +319,7 @@ namespace GTS.Scenes
         {
             var position = Info.GalaxyCenter;
             if (Info.SurfaceScene)
+            {
                 if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding() || _isSpaceVehicleInOrbit)
                 {
                     var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
@@ -337,6 +338,7 @@ namespace GTS.Scenes
                 {
                     return;
                 }
+            }
             PlayerPosition = position;
         }
 
@@ -382,8 +384,8 @@ namespace GTS.Scenes
         public void RefreshTimecycle()
         {
             if (!string.IsNullOrEmpty(Info.TimecycleModifier) && Info.TimecycleModifierStrength > 0)
-                TimeCycleModifier.Set(Info.TimecycleModifier, Info.TimecycleModifierStrength);
-            else TimeCycleModifier.Clear();
+                TimecycleModifier.Set(Info.TimecycleModifier, Info.TimecycleModifierStrength);
+            else TimecycleModifier.Clear();
         }
 
         /// <summary>
@@ -570,7 +572,7 @@ namespace GTS.Scenes
 
         private void ExitSceneFromSurface()
         {
-            Exited?.Invoke(this, Info.NextScene, Info.NextSceneRotation, Info.NextScenePosition);
+            Exited?.Invoke(this, Info.NextScene, Info.NextScenePosition, Info.NextSceneRotation);
         }
 
         private bool CanDoOrbitLanding()
@@ -605,14 +607,14 @@ namespace GTS.Scenes
                 if (type == null || type.BaseType != typeof(Scenario))
                     continue;
 
-                Debug.Log("Creating Scenario: " + type.Name);
-
                 var instance = (Scenario) Activator.CreateInstance(type);
 
                 instance.OnAwake();
 
                 if (instance.IsScenarioComplete())
                     continue;
+
+                Debug.Log("Creating Scenario: " + type.Name);
 
                 Scenarios.Add(instance);
             }
@@ -814,6 +816,7 @@ namespace GTS.Scenes
                                  vehicle.Model.Hash)) == null)
                     if (CanDoOrbitLanding())
                     {
+                        Debug.Log("Doing orbital Landing...");
                         vehicle.Rotation = Info.OrbitLandingRotation;
                         vehicle.Position = Info.GalaxyCenter + Info.OrbitLandingPosition;
                         Function.Call(Hash.SET_VEHICLE_FORWARD_SPEED, vehicle, Info.OrbitLandingSpeed);
@@ -1112,7 +1115,7 @@ namespace GTS.Scenes
                         Color.FromArgb(150, 255, 0, 0));
 
                 if (!(distance <= orbital.TriggerDistance * orbital.TriggerDistance)) continue;
-                Exited?.Invoke(this, orbital.NextScene, orbital.NextSceneRotation, orbital.NextScenePosition);
+                Exited?.Invoke(this, orbital.NextScene, orbital.NextScenePosition, orbital.NextSceneRotation);
                 break;
             }
 
@@ -1130,14 +1133,14 @@ namespace GTS.Scenes
                         Color.FromArgb(150, 255, 255, 0));
 
                 if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
-                Exited?.Invoke(this, link.NextScene, link.NextSceneRotation, link.NextScenePosition);
+                Exited?.Invoke(this, link.NextScene, link.NextScenePosition, link.NextSceneRotation);
                 break;
             }
         }
 
         private void UpdateTimecycleAreas()
         {
-            var area = Info.TimeCycleAreas.FirstOrDefault(
+            var area = Info.TimecycleAreas.FirstOrDefault(
                 x => Game.Player.Character.Position.DistanceTo(x.Location) <= x.TriggerDistance);
             if (area == null)
             {
@@ -1150,7 +1153,7 @@ namespace GTS.Scenes
             }
 
             if (_didSetAreaTimecycle) return;
-            TimeCycleModifier.Set(area.TimeCycleModifier, area.TimeCycleModifierStrength);
+            TimecycleModifier.Set(area.TimeCycleModifier, area.TimeCycleModifierStrength);
             if (!string.IsNullOrEmpty(area.WeatherName))
                 Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, area.WeatherName);
             Function.Call(Hash.SET_CLOCK_TIME, area.Time, area.TimeMinutes);
@@ -1675,193 +1678,7 @@ namespace GTS.Scenes
                     Game.LastFrameTime);
             }
         }
-
-        //private void SpaceWalk_CreateWeldingProp(Ped ped)
-        //{
-        //    if (Entity.Exists(_weldingProp))
-        //        return;
-
-        //    _weldingProp = World.CreateProp("prop_weld_torch", ped.Position, false, false);
-        //    _weldingProp.AttachTo(ped, ped.GetBoneIndex(Bone.SKEL_R_Hand), new Vector3(0.14f, 0.06f, 0f),
-        //        new Vector3(28.0f, -170f, -5.0f));
-        //    _weldPtfx = new LoopedPtfx("core", "ent_anim_welder");
-        //    _weldPtfx.Start(_weldingProp, 1.0f, new Vector3(-0.2f, 0.15f, 0), Vector3.Zero, null);
-        //}
-
-        //private void SpaceWalk_RemoveWeldingProp()
-        //{
-        //    if (!Entity.Exists(_weldingProp))
-        //        return;
-
-        //    _weldPtfx.Remove();
-        //    _weldingProp.Delete();
-        //}
-
-        //private void SpaceWalk_MineAsteroids(Ped ped, Vehicle vehicle, float maxDistanceFromObject)
-        //{
-        //    // make sure the ped isn't in a vehicle. which he shouldn't be, but just in case.
-        //    if (Entity.Exists(vehicle) && ped.IsInVehicle(vehicle)) return;
-
-        //    // let's start our raycast.
-        //    var ray = World.Raycast(ped.Position, ped.ForwardVector, maxDistanceFromObject, IntersectOptions.Everything,
-        //        ped);
-        //    if (!ray.DitHitEntity) return;
-
-        //    // now that we have the hit entity, lets check to see if it's a designated mineable object.
-        //    var entHit = ray.HitEntity;
-
-        //    // this is a registered mineable object.
-        //    if (!_minableProps.Contains(entHit)) return;
-
-        //    // let's start mining!
-        //    GtsLibNet.DisplayHelpTextWithGxt("SW_MINE");
-        //    Game.DisableControlThisFrame(2, Control.Context);
-        //    if (Game.IsDisabledControlJustPressed(2, Control.Context))
-        //    {
-        //        _minableObject = entHit as Prop;
-        //        _lastMinePos = ray.HitCoords;
-        //        _playerTask = ZeroGTask.Mine;
-        //    }
-        //}
-
-        //private void SpaceWalk_RepairVehicle(Ped ped, Vehicle vehicle, float maxDistFromVehicle)
-        //{
-        //    if (ped.IsInVehicle(vehicle)) return;
-
-        //    var ray = World.Raycast(ped.Position, ped.ForwardVector, maxDistFromVehicle, IntersectOptions.Everything,
-        //        ped);
-
-        //    if (!ray.DitHitEntity) return;
-        //    var entHit = ray.HitEntity;
-        //    if (entHit.GetType() != typeof(Vehicle))
-        //        return;
-
-        //    var entVeh = (Vehicle)entHit;
-        //    if (entVeh != vehicle) return;
-
-        //    GtsLibNet.DisplayHelpTextWithGxt("SW_REPAIR");
-        //    Game.DisableControlThisFrame(2, Control.Context);
-
-        //    if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
-
-        //    _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 0, 5000);
-        //    _vehicleRepairPos = ray.HitCoords;
-        //    _vehicleRepairNormal = ray.SurfaceNormal;
-        //    _playerTask = ZeroGTask.Repair;
-        //}
-
-        //private void SpaceWalk_EnterVehicle(Ped ped, Vehicle vehicle)
-        //{
-        //    if (ped.IsInVehicle(vehicle)) return;
-        //    if (_spaceWalkDummy == null)
-        //    {
-        //        if (_enteringVehicle) EnterVehicle_Reset(vehicle);
-        //        return;
-        //    }
-
-        //    var doorPos = vehicle.HasBone("door_dside_f") ? vehicle.GetBoneCoord("door_dside_f") : vehicle.Position;
-
-        //    var dist = ped.Position.DistanceTo(doorPos);
-
-        //    var dir = doorPos - _spaceWalkDummy.Position;
-
-        //    if (!_enteringVehicle)
-        //    {
-        //        if (!(dist < 10f)) return;
-
-        //        Game.DisableControlThisFrame(2, Control.Enter);
-        //        if (Game.IsDisabledControlJustPressed(2, Control.Enter))
-        //            _enteringVehicle = true;
-        //    }
-        //    else
-        //    {
-        //        if (Game.IsControlJustPressed(2, Control.VehicleAccelerate) ||
-        //            Game.IsControlJustPressed(2, Control.MoveLeft) ||
-        //            Game.IsControlJustPressed(2, Control.MoveRight) ||
-        //            Game.IsControlJustPressed(2, Control.VehicleBrake))
-        //        {
-        //            _enteringVehicle = false;
-        //            return;
-        //        }
-
-        //        // I removed your DateTime code since there is no point for it
-        //        // since that code is never run if you are in a vehicle and 
-        //        // _enteringVehicle is false.
-
-        //        var lookRotation = Quaternion.FromToRotation(_spaceWalkDummy.ForwardVector, dir.Normalized) *
-        //                           _spaceWalkDummy.Quaternion;
-
-        //        _spaceWalkDummy.Quaternion = Quaternion.Lerp(_spaceWalkDummy.Quaternion, lookRotation,
-        //            Game.LastFrameTime * 15);
-
-        //        _spaceWalkDummy.Velocity = dir.Normalized * 1.5f;
-
-        //        if (!(ped.Position.DistanceTo(doorPos) < 1.5f) && vehicle.HasBone("door_dside_f")) return;
-
-        //        EnterVehicle_Reset(vehicle);
-        //    }
-        //}
-
-        //private void EnterVehicle_Reset(Vehicle vehicle)
-        //{
-        //    PlayerPed.Detach();
-        //    _spaceWalkDummy?.Delete();
-        //    _spaceWalkDummy = null;
-        //    PlayerPed.Task.ClearAllImmediately();
-        //    PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
-        //    _enteringVehicle = false;
-        //}
-
-        //private void SpaceWalk_Toggle()
-        //{
-        //    if (_spaceWalkDummy == null)
-        //    {
-        //        if (Entity.Exists(PlayerVehicle))
-        //            PlayerVehicle.IsInvincible = true;
-        //        _spaceWalkDummy = World.CreateVehicle(VehicleHash.Panto, Vector3.Zero, PlayerPed.Heading);
-        //        if (_spaceWalkDummy == null) return;
-        //        var lastPosition = PlayerPed.Position;
-        //        _spaceWalkDummy.HasCollision = false;
-        //        _spaceWalkDummy.IsVisible = false;
-        //        _spaceWalkDummy.HasGravity = false;
-        //        Function.Call(Hash.SET_VEHICLE_GRAVITY, _spaceWalkDummy, false);
-        //        PlayerPed.Task.ClearAllImmediately();
-        //        PlayerPed.AttachTo(_spaceWalkDummy, 0);
-        //        _spaceWalkDummy.Position = lastPosition;
-        //        _spaceWalkDummy.Velocity = Vector3.Zero;
-        //    }
-        //    else // and this is when we're floating
-        //    {
-        //        // we always want to be unarmed, because animations don't look right.
-        //        if (PlayerPed.Weapons.Current.Hash != WeaponHash.Unarmed)
-        //            PlayerPed.Weapons.Select(WeaponHash.Unarmed);
-
-        //        const string swimmingAnimDict = "swimming@first_person";
-        //        const string swimmingAnimName = "idle";
-
-        //        if (!PlayerPed.IsPlayingAnim(swimmingAnimDict, swimmingAnimName))
-        //        {
-        //            PlayerPed.Task.ClearAllImmediately();
-        //            PlayerPed.Task.PlayAnimation(swimmingAnimDict, swimmingAnimName, 8.0f, -8.0f, -1,
-        //                (AnimationFlags)15,
-        //                0.0f);
-        //        }
-
-        //        PlayerPed.SetAnimSpeed(swimmingAnimDict, swimmingAnimName, 0.1f);
-
-        //        if (!_didSpaceWalkTut)
-        //        {
-        //            GtsLibNet.DisplayHelpTextThisFrame(
-        //                "~BLIP_INFO_ICON~ To rotate your character:~n~Use ~INPUT_VEH_FLY_YAW_LEFT~ ~INPUT_VEH_FLY_YAW_RIGHT~ for left and right.~n~Use ~INPUT_VEH_FLY_ROLL_LR~ for roll.~n~Use ~INPUT_VEH_FLY_PITCH_UD~ for up-down pitch.",
-        //                "CELL_EMAIL_BCON");
-        //            Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", _didSpaceWalkTut = true);
-        //            Core.Instance.Settings.Save();
-        //        }
-
-        //        EntityFlightControl(_spaceWalkDummy, 1.5f, 1.5f, !ArtificialCollision(PlayerPed, _spaceWalkDummy));
-        //    }
-        //}
-
+        
         private void UpdateWormHoles()
         {
             foreach (var wormhole in WormHoles)
@@ -1886,7 +1703,7 @@ namespace GTS.Scenes
 
             if (distanceToWormHole <= orbitalData.TriggerDistance)
             {
-                Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextSceneRotation, Vector3.Zero);
+                Exited?.Invoke(this, orbitalData.NextScene, Vector3.Zero, orbitalData.NextSceneRotation);
             }
             else
             {
@@ -1922,8 +1739,8 @@ namespace GTS.Scenes
                         else PlayerPed.Velocity = targetVelocity;
                         Script.Yield();
                     }
-                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextSceneRotation,
-                        orbitalData.NextScenePosition);
+                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextScenePosition,
+                        orbitalData.NextSceneRotation);
                 }
             }
         }

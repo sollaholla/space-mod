@@ -222,7 +222,7 @@ namespace DefaultMissions
                         _camera.PointAt(playerCharacter);
 
                         World.RenderingCamera = _camera;
-                        TimeCycleModifier.Set("heliGunCam", 1.0f);
+                        TimecycleModifier.Set("heliGunCam", 1.0f);
                         Script.Wait(500);
                         Game.FadeScreenIn(1000);
                         _endTimer = DateTime.UtcNow + new TimeSpan(0, 0, 0, 7);
@@ -306,11 +306,11 @@ namespace DefaultMissions
 
         #region Settings
 
-        private Vector3 _explosionCoord = new Vector3(-9878.711f, -10012.36f, 9998.317f);
-        private Vector3 _fireCoord = new Vector3(-9879.087f, -10014.16f, 10001.34f);
-        private Vector3 _extinguisherPickupCoord = new Vector3(-9881.714f, -10016.63f, 9998.117f);
-        private Vector3 _alienSpawn = new Vector3(-9979.049f, -10014.52f, 9998.44f);
-        private Vector3 _generatorPosition = new Vector3(-9881.372f, -10013.74f, 9998.136f);
+        private Vector3 _explosionCoord = new Vector3(-9878.711f, -10012.36f, 998.317f);
+        private Vector3 _fireCoord = new Vector3(-9879.087f, -10014.16f, 1001.34f);
+        private Vector3 _extinguisherPickupCoord = new Vector3(-9881.714f, -10016.63f, 998.117f);
+        private Vector3 _alienSpawn = new Vector3(-9979.049f, -10014.52f, 998.44f);
+        private Vector3 _generatorPosition = new Vector3(-9881.372f, -10013.74f, 998.136f);
         private float _generatorHeading = 283.4291f;
         private float _aiWeaponDamage = 0.04f;
 
@@ -440,7 +440,7 @@ namespace DefaultMissions
                     }
                     while (true)
                     {
-                        TimeCycleModifier.Set("Drug_deadman", 1.0f);
+                        TimecycleModifier.Set("Drug_deadman", 1.0f);
                         var position = playerCharacter.Position;
                         Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, 500, true, false, false,
                             false);

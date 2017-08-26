@@ -42,13 +42,7 @@ namespace GTS.Scenarios
         /// </returns>
         internal bool IsScenarioComplete()
         {
-            if (Settings.GetValue("scenario_config", "complete", false))
-                return true;
-
-            Settings.SetValue("scenario_config", "complete", false);
-            Settings.Save();
-
-            return false;
+            return Settings.GetValue("scenario_config", "complete", false);
         }
 
         /// <summary>

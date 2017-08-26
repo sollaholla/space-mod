@@ -189,7 +189,7 @@ namespace DefaultMissions
         private Prop _laptop;
         private ICutScene _cutscene;
         private readonly Random _random = new Random();
-        private Vector3 _laptopSpawnPosition = new Vector3(-9997.60f, -10012.47f, 10001.20f);
+        private Vector3 _laptopSpawnPosition = new Vector3(-9997.60f, -10012.47f, 1001.20f);
         private Vector3 _laptopSpawnRotation = new Vector3(0, 0, -65.32f);
 
         #region Settings

@@ -122,7 +122,7 @@ public class SceneInfo : NextSceneInfo
         Scenarios = new List<ScenarioInfo>();
         Teleports = new List<TeleportPoint>();
         Billboards = new List<Billboard>();
-        TimeCycleAreas = new List<TimeCycleArea>();
+        TimecycleAreas = new List<TimecycleArea>();
     }
 
     [Category("Collections")]
@@ -159,135 +159,123 @@ public class SceneInfo : NextSceneInfo
 
     [Category("Collections")]
     [RefreshProperties(RefreshProperties.All)]
-    public List<TimeCycleArea> TimeCycleAreas { get; set; }
+    public List<TimecycleArea> TimecycleAreas { get; set; }
 
     [Description("The model name of the skybox.")]
-    [Category("Core Settings")]
+    [Category("Core.Models")]
     [RefreshProperties(RefreshProperties.All)]
     public string SkyboxModel { get; set; }
 
     [Description("Time time of day in hours that we will use for the scene.")]
-    [Category("Core Settings")]
+    [Category("Core.Weather")]
     [RefreshProperties(RefreshProperties.All)]
     public int Time { get; set; }
 
     [Description("Time time of day in minutes that we will use for the scene.")]
-    [Category("Core Settings")]
+    [Category("Core.Weather")]
     [RefreshProperties(RefreshProperties.All)]
     public int TimeMinutes { get; set; }
 
     [Description("True if you want to use gravity for this scene.")]
-    [Category("Core Settings")]
+    [Category("Core.Physics")]
     [RefreshProperties(RefreshProperties.All)]
     public bool UseGravity { get; set; }
 
     [Description("Gravity in m/s^2")]
-    [Category("Core Settings")]
+    [Category("Core.Physics")]
     [RefreshProperties(RefreshProperties.All)]
     public float GravityLevel { get; set; }
 
     [Description(
         "The force (newt) that will be applied to the player when jumping. Remember that gravity will affect the force.")]
-    [Category("Core Settings")]
+    [Category("Core.Physics")]
     public float JumpForceOverride { get; set; } = 10.0f;
 
     [Description("The position to spawn the vehicle on the surface. NOTE: May be removed in a later version.")]
-    [Category("Core Settings")]
-    public XVector3 VehicleSurfaceSpawn { get; set; } = new XVector3(-10029.57f, -10016.75f, 10001f);
+    [Category("Core.Positions")]
+    public XVector3 VehicleSurfaceSpawn { get; set; } = new XVector3(-10025, -10025, 1000f);
 
     [Description("The name of the timecycle modifier to use.")]
-    [Category("Core Settings")]
+    [Category("Core.Rendering")]
     public string TimecycleModifier { get; set; }
 
     [Description("The strength of the timecycle modifier.")]
-    [Category("Core Settings")]
+    [Category("Core.Rendering")]
     public float TimecycleModifierStrength { get; set; } = 1.0f;
 
     [Description("The weather index to use for this scene.")]
-    [Category("Core Settings")]
+    [Category("Core.Weather")]
     public string WeatherName { get; set; } = "EXTRASUNNY";
 
     [Description("The origin of the skybox, and all props.")]
-    [Category("Core Settings")]
+    [Category("Core.Positioning")]
     [RefreshProperties(RefreshProperties.All)]
     public XVector3 GalaxyCenter { get; set; } = new XVector3(-10000, -10000, 30000);
 
-    [Category("Surface Settings")]
+    [Category("Surface.Scenes")]
     [Description("The filename of the next scene that will load once we leave the surface.")]
     [RefreshProperties(RefreshProperties.All)]
     public override string NextScene { get; set; }
 
-    [Category("Surface Settings")]
+    [Category("Surface.Positioning")]
     [Description("The rotation of our player when the next scene loads.")]
     [RefreshProperties(RefreshProperties.All)]
     public override XVector3 NextSceneRotation { get; set; }
 
-    [Category("Surface Settings")]
+    [Category("Surface.Positioning")]
     [Description("The position of the player, offsetted from the center of space, when the next scene loads.")]
     [RefreshProperties(RefreshProperties.All)]
     public override XVector3 NextScenePosition { get; set; }
 
-    [Category("Surface Settings")]
+    [Category("Surface.Weather")]
     [Description("Set the puddle intensity on this planet. Only works for puddles that 'don't' already exist.")]
     [RefreshProperties(RefreshProperties.All)]
     public float PuddleIntensity { get; set; } = 0.0f;
 
-    [Category("Surface Settings")]
+    [Category("Surface.Weather")]
     [Description("Set the water wave strength.")]
     [RefreshProperties(RefreshProperties.All)]
     public float WaveStrength { get; set; }
 
-    [Category("Surface Settings")]
+    [Category("Surface.Weather")]
     [Description("Set the wind speed.")]
     [RefreshProperties(RefreshProperties.All)]
     public float WindSpeed { get; set; }
 
-    [Category("Surface Settings")]
+    [Category("Surface.Weather")]
     [Description("Don't draw 3D clouds.")]
     public bool CloudsEnabled { get; set; }
 
-    [Category("Surface Settings")]
+    [Category("Surface.Weather")]
     [Description("The cloud type.")]
     public string CloudType { get; set; }
-
-    //[Category("Surface Settings")]
-    //[Description("The minimum depth (distance from Galaxy Center Z) that we will begin to damage the player.")]
-    //public float CrushMinDepth { get; set; }
-
-    //[Category("Surface Settings")]
-    //[Description("The maximum crush depth (distance from Galaxy Center Z), if reached will kill the player.")]
-    //public float CrushMaxDepth { get; set; }
-
-    //[Category("Surface Settings")]
-    //[Description("This is the damage multiplier for Min Max crush depth.")]
-    //public float CrushDamageMultiplier { get; set; }
-
-    [Category("Surface Settings")]
+    
+    [Category("Surface.Player")]
     [Description("Use leave surface prompt when in a new vehicle.")]
     public bool LeaveSurfacePrompt { get; set; } = false;
 
-    [Category("Surface Settings")]
+    [Category("Surface.Player")]
     [Description("Allow orbit landing if no missions block it.")]
     public bool OrbitAllowLanding { get; set; } = true;
 
-    [Category("Surface Settings")]
+    [Category("Surface.Landing")]
     public XVector3 OrbitLandingPosition { get; set; } = new XVector3(0, 0, 500);
 
-    [Category("Surface Settings")]
+    [Category("Surface.Landing")]
     public XVector3 OrbitLandingRotation { get; set; } = new XVector3(-25, 0, 0);
 
-    [Category("Surface Settings")]
-    public float OrbitLandingSpeed { get; set; } = 150f;
+    [Category("Surface.Landing")]
+    public float OrbitLandingSpeed { get; set; } = 150;
 
-    [Category("Surface Settings")]
+    [Category("Surface.Landing")]
     [Description("The height above the galaxy center the player must be to exit the surface.")]
     [RefreshProperties(RefreshProperties.All)]
-    public float OrbitLeaveHeight { get; set; } = 750f;
+    public float OrbitLeaveHeight { get; set; } = 750;
 
-    [Category("Surface Settings")]
+    [Category("Surface.Positioning")]
     [Description("The position (offset) that non-landable vehicle's will be located after landing.")]
     [RefreshProperties(RefreshProperties.All)]
-    public XVector3 OrbitalVehicleOffset { get; set; } = new XVector3(250, 190, 750);
+    public XVector3 OrbitalVehicleOffset { get; set; } = new XVector3(500, 500, 750);
 
     [Category("Audio")]
     [Description(
@@ -295,6 +283,7 @@ public class SceneInfo : NextSceneInfo
     public bool UseSound { get; set; }
 
     [XmlIgnore]
+    [Category("Core.Internal")]
     public bool SurfaceScene => Surfaces.Any();
 }
 
@@ -522,7 +511,7 @@ public class NextSceneInfo
 }
 
 [Serializable]
-public class TimeCycleArea : ITrigger
+public class TimecycleArea : ITrigger
 {
     [Category("General")]
     public int Time { get; set; } = 23;

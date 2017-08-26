@@ -13,6 +13,7 @@ namespace DefaultMissions
     {
         private const int MaxParts = 15;
 
+        public override bool BlockOrbitLanding => false;
         private readonly List<SpaceShipPart> _spaceShipParts = new List<SpaceShipPart>();
         private readonly List<Entity> _entites = new List<Entity>();
 
