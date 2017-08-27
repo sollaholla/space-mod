@@ -524,13 +524,19 @@ namespace GTS.Scenes
                 return default(Surface);
             }
 
-            Debug.Log($"Successfully loaded model: {data.Model}");
-            var prop = GtsLibNet.CreatePropNoOffset(model, Info.GalaxyCenter + data.Position, false);
+            Debug.Log($"Successfully loaded model: {data.Model}{Environment.NewLine}Bounds: {model.GetDimensions().Length() / 2}");
+            var pos = Info.GalaxyCenter + data.Position;
+            var prop = World.CreateProp(model, pos, Vector3.Zero, false, false) ?? new Prop(0);
+            prop.PositionNoOffset = pos;
 
             prop.FreezePosition = true;
             prop.LodDistance = data.LodDistance;
 
-            var surface = new Surface(prop, data.TileSize, data.Dimensions) {CanUpdate = data.Tile};
+            var surface = new Surface(prop, data.TileSize, data.Dimensions)
+            {
+                CanUpdate = data.Tile,
+                Offset = data.Position
+            };
             surface.GenerateNeighbors();
             model.MarkAsNoLongerNeeded();
 

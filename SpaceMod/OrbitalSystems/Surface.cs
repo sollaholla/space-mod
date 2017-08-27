@@ -31,6 +31,8 @@ namespace GTS.OrbitalSystems
 
         public bool CanUpdate { get; set; }
 
+        public Vector3 Offset { get; set; }
+
         public void Update()
         {
             if (!CanUpdate) return;
@@ -48,16 +50,16 @@ namespace GTS.OrbitalSystems
             {
                 var tile = _tiles[i + _dimensions, j + _dimensions];
                 var tilePos = tile.Position;
-                if (!(playerPos.X < tilePos.X + div) || !(playerPos.X > tilePos.X - div)) continue;
-                if (!(playerPos.Y < tilePos.Y + div) || !(playerPos.Y > tilePos.Y - div)) continue;
+                if (!(playerPos.X < (tilePos.X - Offset.X) + div) || !(playerPos.X > (tilePos.X - Offset.X) - div)) continue;
+                if (!(playerPos.Y < (tilePos.Y - Offset.Y) + div) || !(playerPos.Y > (tilePos.Y - Offset.Y) - div)) continue;
                 newTile = tile;
                 isInBounds = true;
             }
 
             if (!isInBounds)
             {
-                var nearestX = (float) Math.Round(playerPos.X / _tileSize, MidpointRounding.AwayFromZero) * _tileSize;
-                var nearestY = (float) Math.Round(playerPos.Y / _tileSize, MidpointRounding.AwayFromZero) * _tileSize;
+                var nearestX = Convert.ToSingle(Math.Round(Convert.ToDouble(playerPos.X / Position.X)) * Position.X);
+                var nearestY = Convert.ToSingle(Math.Round(Convert.ToDouble(playerPos.Y / Position.Y)) * Position.Y);
                 RePositionTerrainTiles(new Vector3(nearestX, nearestY, Position.Z));
                 return;
             }
@@ -73,9 +75,11 @@ namespace GTS.OrbitalSystems
             for (var i = -_dimensions; i <= _dimensions; i++)
             for (var j = -_dimensions; j <= _dimensions; j++)
             {
-                var obj = GtsLibNet.CreatePropNoOffset(Model.Hash, Position + new Vector3(i, j, 0) * _tileSize, true);
+                var pos = Position + new Vector3(i, j, 0) * _tileSize;
+                var obj = World.CreateProp(Model.Hash, pos, Vector3.Zero, false, false) ?? new Prop(0);
                 obj.FreezePosition = true;
                 obj.Quaternion = Quaternion;
+                obj.PositionNoOffset = pos;
                 _tiles[i + _dimensions, j + _dimensions] = obj;
             }
             LastTile = this;
@@ -92,10 +96,14 @@ namespace GTS.OrbitalSystems
 
         public new void Delete()
         {
+            if (_tiles != null)
+            {
+                for (var i = 0; i < _tiles.GetLength(0); i++)
+                for (var j = 0; j < _tiles.GetLength(1); j++)
+                    _tiles[i, j].Delete();
+            }
+
             base.Delete();
-            for (var i = 0; i < _tiles.GetUpperBound(0); i++)
-            for (var j = 0; j < _tiles.GetUpperBound(1); j++)
-                _tiles[i, j].Delete();
         }
     }
 }
