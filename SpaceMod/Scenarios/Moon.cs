@@ -189,8 +189,8 @@ namespace DefaultMissions
         private Prop _laptop;
         private ICutScene _cutscene;
         private readonly Random _random = new Random();
-        private Vector3 _laptopSpawnPosition = new Vector3(-9997.60f, -10012.47f, 1001.20f);
-        private Vector3 _laptopSpawnRotation = new Vector3(0, 0, -65.32f);
+        private Vector3 _laptopSpawnPosition = new Vector3(-10027.98f, -9940.32f, 1002.52f);
+        private Vector3 _laptopSpawnRotation = Vector3.Zero;
 
         #region Settings
 
@@ -455,6 +455,7 @@ namespace DefaultMissions
                 var alien = GtsLibNet.CreateAlien(null, spawn, 90, WeaponHash.Railgun);
                 if (!Entity.Exists(alien)) continue;
                 alien.AddBlip().Scale = 0.5f;
+                alien.Position = new Vector3(alien.Position.X, alien.Position.Y, World.GetGroundHeight(alien.Position));
                 _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
             }
 
@@ -464,38 +465,33 @@ namespace DefaultMissions
             for (var i = 0; i < _pilotCount; i++)
             {
                 var randomDistance = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 25, 50);
-
                 var spawnPoint = vehicleSpawnArea.Around(randomDistance);
-
                 var vehicle = HelperFunctions.SpawnUfo(spawnPoint);
 
-                if (Entity.Exists(vehicle))
+                if (!Entity.Exists(vehicle)) continue;
+                var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+
+                if (Entity.Exists(pilot))
                 {
-                    var pilot = vehicle.CreatePedOnSeat(VehicleSeat.Driver, PedHash.MovAlien01);
+                    pilot.SetDefaultClothes();
+                    pilot.RelationshipGroup = Database.AlienRelationshipGroup;
 
-                    if (Entity.Exists(pilot))
-                    {
-                        pilot.SetDefaultClothes();
-                        pilot.RelationshipGroup = Database.AlienRelationshipGroup;
+                    Function.Call(Hash.TASK_PLANE_MISSION, pilot, vehicle, 0, Game.Player.Character, 0, 0, 0, 6, 0f,
+                        0f, 0f, 0f, maxZ + 150f);
+                    Function.Call(Hash._SET_PLANE_MIN_HEIGHT_ABOVE_TERRAIN, vehicle, maxZ + 150f);
 
-                        Function.Call(Hash.TASK_PLANE_MISSION, pilot, vehicle, 0, Game.Player.Character, 0, 0, 0, 6, 0f,
-                            0f, 0f, 0f, maxZ + 150f);
-                        Function.Call(Hash._SET_PLANE_MIN_HEIGHT_ABOVE_TERRAIN, vehicle, maxZ + 150f);
+                    pilot.AlwaysKeepTask = true;
+                    pilot.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
+                    _pilots.Add(pilot);
 
-                        pilot.AlwaysKeepTask = true;
-                        pilot.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
-                        _pilots.Add(pilot);
+                    vehicle.AddBlip().Scale = 0.8f;
+                    vehicle.MarkAsNoLongerNeeded();
+                    vehicle.Heading = Vector3.RelativeLeft.ToHeading();
+                    _vehicles.Add(vehicle);
 
-                        vehicle.AddBlip().Scale = 0.8f;
-                        vehicle.MarkAsNoLongerNeeded();
-                        vehicle.Heading = Vector3.RelativeLeft.ToHeading();
-                        _vehicles.Add(vehicle);
-
-                        continue;
-                    }
-
-                    vehicle.Delete();
+                    continue;
                 }
+                vehicle.Delete();
             }
         }
 
@@ -503,6 +499,7 @@ namespace DefaultMissions
         {
             var prop = World.CreateProp("bkr_prop_clubhouse_laptop_01a", _laptopSpawnPosition, _laptopSpawnRotation,
                 false, false);
+            prop.Heading = _laptopSpawnRotation.Z;
 
             if (!Entity.Exists(prop))
                 return;

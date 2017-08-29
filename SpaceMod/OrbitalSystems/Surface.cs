@@ -33,13 +33,9 @@ namespace GTS.OrbitalSystems
 
         public Vector3 Offset { get; set; }
 
-        public void Update()
+        public void Update(Vector3 playerPos)
         {
             if (!CanUpdate) return;
-
-            var player = Game.Player.Character;
-            if (player == null) return;
-            var playerPos = player.Position;
 
             Entity newTile = null;
             var isInBounds = false;

@@ -1036,7 +1036,6 @@ namespace GTS.Library
                 return;
             }
             if (!GtsLib.IsRockstarEditorActive()) return;
-            Script.Yield();
             TimecycleModifier.Set(_mods[_timecycleModIndex], 1.0f);
             if (!Game.IsControlJustPressed(2, Control.SpecialAbilitySecondary)) return;
             _timecycleModIndex = (_timecycleModIndex + 1) % _mods.Length;
