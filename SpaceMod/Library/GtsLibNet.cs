@@ -312,9 +312,9 @@ namespace GTS.Library
             return prop;
         }
 
-        public static float GetGroundHeight(this Entity entity)
+        public static float GetGroundZ(this Entity entity)
         {
-            return Vector3.Distance(entity.Position - entity.UpVector, GetGroundHeightRay(entity.Position, entity));
+            return GetGroundHeightRay(entity.Position, entity).Z;
         }
 
         public static void SetGravityLevel(float level)

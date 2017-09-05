@@ -988,9 +988,13 @@ namespace GTS.Scenes
                 return;
             }
 
-            if (PlayerPed.IsInVehicle())
+            if (PlayerPed.IsInVehicle() && CanDoOrbitLanding())
                 if (PlayerVehicle != PlayerPed.CurrentVehicle)
+                {
                     PlayerVehicle = PlayerPed.CurrentVehicle;
+                    if (PlayerPed.CurrentVehicle.Model.IsCar)
+                        GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
+                }
 
             ReturnToOrbit();
         }
@@ -1023,9 +1027,7 @@ namespace GTS.Scenes
             }
 
             if (!Info.LeaveSurfacePrompt)
-            {
                 return;
-            }
 
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance &&
                 !PlayerPed.IsInVehicle())
@@ -1044,12 +1046,6 @@ namespace GTS.Scenes
             {
                 GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT2");
                 Game.DisableControlThisFrame(2, Control.Context);
-                if (!PlayerPed.CurrentVehicle.IsPersistent)
-                {
-                    if (Entity.Exists(PlayerVehicle) && PlayerPed.CurrentVehicle.Model.IsCar)
-                        GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
-                    PlayerPed.CurrentVehicle.IsPersistent = true;
-                }
                 if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
                 _vehicles.Add(PlayerVehicle);
                 PlayerVehicle = PlayerPed.CurrentVehicle;

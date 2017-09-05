@@ -455,7 +455,13 @@ namespace DefaultMissions
                 var alien = GtsLibNet.CreateAlien(null, spawn, 90, WeaponHash.Railgun);
                 if (!Entity.Exists(alien)) continue;
                 alien.AddBlip().Scale = 0.5f;
-                alien.Position = new Vector3(alien.Position.X, alien.Position.Y, World.GetGroundHeight(alien.Position));
+                var z = alien.GetGroundZ();
+                while (Math.Abs(z) < 0.001f)
+                {
+                    z = alien.GetGroundZ();
+                    Script.Yield();
+                }
+                alien.Position = new Vector3(alien.Position.X, alien.Position.Y, z);
                 _aliens.Add(new OnFootCombatPed(alien) {Target = Game.Player.Character});
             }
 

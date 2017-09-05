@@ -468,8 +468,6 @@ namespace DefaultMissions
 
         private void MarsBase_DoScientistDialogue()
         {
-            CurrentScene.StopTile = true;
-
             var interior = CurrentScene.GetInterior("MarsInteriorPeds");
             var scientist = interior.Peds[0];
 
@@ -510,8 +508,6 @@ namespace DefaultMissions
             Function.Call(Hash.REMOVE_ANIM_DICT, animDict);
             Game.Player.Character.Task.ClearLookAt();
             _missionStep++;
-
-            CurrentScene.StopTile = false;
         }
 
         private bool CreateEngineerFireFight()
@@ -637,7 +633,6 @@ namespace DefaultMissions
 
         private void CleanUp(bool delete)
         {
-            if (CurrentScene != null) CurrentScene.StopTile = false;
             CleanUp_ResetGameChanges();
             CleanUpEntities(delete);
         }
