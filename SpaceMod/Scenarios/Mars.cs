@@ -369,6 +369,7 @@ namespace DefaultMissions
             roverModel.Request(5000);
             _rover = World.CreateVehicle(roverModel, vehicleSpawn);
             if (!Entity.Exists(_rover)) return;
+            _rover.IsPersistent = true;
             _rover.Heading = _marsEngineerRoverHeading;
             roverModel.MarkAsNoLongerNeeded();
         }

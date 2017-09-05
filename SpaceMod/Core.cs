@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using GTA;
@@ -793,6 +794,16 @@ namespace GTS
             _resetWantedLevel = false;
         }
 
+        const UInt32 WM_KEYDOWN = 0x0100;
+        const int VK_F5 = 0x2D;
+
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+
+        private static void ToggleAtmosphereScript()
+        {
+            
+        }
         #endregion
 
         #endregion

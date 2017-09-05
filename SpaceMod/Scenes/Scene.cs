@@ -158,8 +158,6 @@ namespace GTS.Scenes
 
         internal static Ped PlayerPed => Game.Player.Character ?? new Ped(0);
 
-        public bool StopTile { get; set; }
-
         internal Vector3 PlayerPosition
         {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
@@ -675,7 +673,6 @@ namespace GTS.Scenes
         private void UpdateSurfaceTiles()
         {
             if (!Info.SurfaceScene) return;
-            if (StopTile) return;
             var pos = Game.Player.Character.Position;
             foreach (var surface in Surfaces)
                 surface.Update(pos);
@@ -764,10 +761,9 @@ namespace GTS.Scenes
         private void ConfigureRendering()
         {
             UI.HideHudComponentThisFrame(HudComponent.AreaName);
-
             Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME);
 
-            if (Camera.Exists(World.RenderingCamera))
+            if (Camera.Exists(World.RenderingCamera) || FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
             {
                 _didSetTimecycle = false;
                 _didSetAreaTimecycle = false;
@@ -1027,7 +1023,9 @@ namespace GTS.Scenes
             }
 
             if (!Info.LeaveSurfacePrompt)
+            {
                 return;
+            }
 
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance &&
                 !PlayerPed.IsInVehicle())
@@ -1046,7 +1044,12 @@ namespace GTS.Scenes
             {
                 GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT2");
                 Game.DisableControlThisFrame(2, Control.Context);
-                PlayerPed.CurrentVehicle.IsPersistent = true;
+                if (!PlayerPed.CurrentVehicle.IsPersistent)
+                {
+                    if (Entity.Exists(PlayerVehicle) && PlayerPed.CurrentVehicle.Model.IsCar)
+                        GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
+                    PlayerPed.CurrentVehicle.IsPersistent = true;
+                }
                 if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
                 _vehicles.Add(PlayerVehicle);
                 PlayerVehicle = PlayerPed.CurrentVehicle;
@@ -1196,6 +1199,8 @@ namespace GTS.Scenes
                 if (Entity.Exists(PlayerPed.CurrentVehicle) && PlayerPed.CurrentVehicle != PlayerVehicle)
                 {
                     PlayerVehicle = PlayerPed.CurrentVehicle;
+                    if (Entity.Exists(PlayerVehicle) && PlayerVehicle.Model.IsCar)
+                        GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
                     PlayerVehicle.HasGravity = false;
                     Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerVehicle.Handle, false);
                 }
