@@ -826,15 +826,15 @@ namespace GTS.Scenes
                 PlayerPed.Task.ClearAllImmediately();
                 vehicle.Quaternion = Quaternion.Identity;
                 vehicle.Rotation = Vector3.Zero;
-                vehicle.Heading = 230f;
                 vehicle.Velocity = Vector3.Zero;
                 vehicle.Speed = 0;
 
                 if (spaceVehicle == null)
                 {
                     vehicle.PositionNoOffset = Info.VehicleSurfaceSpawn + Vector3.WorldUp;
-                    if (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f))
-                        Debug.Log("Couldn't place vehicle on ground properly.");
+                    var timeout = DateTime.Now + new TimeSpan(0, 0, 0, 2);
+                    while (!Function.Call<bool>(Hash._0x49733E92263139D1, vehicle.Handle, 5.0f) && DateTime.Now < timeout)
+                        Script.Yield();
                 }
                 else
                 {
@@ -1229,6 +1229,7 @@ namespace GTS.Scenes
                                 // since we're floating already or, "not in a vehicle" technically, we want to stop our vehicle
                                 // from moving and allow the payer to re-enter it.
                                 PlayerVehicle.LockStatus = VehicleLockStatus.None;
+                                PlayerVehicle.FreezePosition = true;
                                 SpaceWalk_EnterVehicle(PlayerPed, PlayerVehicle);
 
                                 // we also want to let the player mine stuff, repair stuff, etc.
