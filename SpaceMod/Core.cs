@@ -168,13 +168,14 @@ namespace GTS
             // Stop the current scene and reset the game
             // changes from that.
             _currentScene?.Delete(true);
-            if (_currentScene != default(Scene))
+            if (_currentScene != default(Scene) && _currentScene != null)
             {
                 GiveSpawnControlToGame();
                 if (!PlayerPed.IsDead)
                     PlayerPosition = Database.TrevorAirport;
                 ResetWeather();
             }
+            else GtsLibNet.RemoveAllIplsRegardless(false);
             _currentScene = null;
 
             // Quit the internal missions.
@@ -353,6 +354,15 @@ namespace GTS
                 };
                 scenesMenu.AddItem(menuItem);
             }
+            var earthItem = new UIMenuItem("Return To Earth");
+            earthItem.SetLeftBadge(UIMenuItem.BadgeStyle.Heart);
+            earthItem.Activated += (a1, a2) => {
+                if (_currentScene != null)
+                {
+                    OnAborted(null, new EventArgs());
+                    _didAbort = false;
+                } };
+            scenesMenu.AddItem(earthItem);
 
             #endregion
 
