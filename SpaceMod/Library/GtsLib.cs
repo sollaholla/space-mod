@@ -26,12 +26,6 @@ namespace GTS.Library
         private static extern void GTSLib_SetWorldGravity(float gravity);
 
         [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_RemoveWater();
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_RestoreWater();
-
-        [DllImport("GTSLib.asi")]
         private static extern byte GTSLib_IsRockstarEditorActive();
 
         [DllImport("GTSLib.asi")]
