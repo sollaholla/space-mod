@@ -1,7 +1,6 @@
 ﻿using System;
 using GTA;
 using GTA.Math;
-using GTS.Library;
 
 namespace GTS.OrbitalSystems
 {
@@ -46,8 +45,10 @@ namespace GTS.OrbitalSystems
             {
                 var tile = _tiles[i + _dimensions, j + _dimensions];
                 var tilePos = tile.Position;
-                if (!(playerPos.X < (tilePos.X - Offset.X) + div) || !(playerPos.X > (tilePos.X - Offset.X) - div)) continue;
-                if (!(playerPos.Y < (tilePos.Y - Offset.Y) + div) || !(playerPos.Y > (tilePos.Y - Offset.Y) - div)) continue;
+                if (!(playerPos.X < tilePos.X - Offset.X + div) ||
+                    !(playerPos.X > tilePos.X - Offset.X - div)) continue;
+                if (!(playerPos.Y < tilePos.Y - Offset.Y + div) ||
+                    !(playerPos.Y > tilePos.Y - Offset.Y - div)) continue;
                 newTile = tile;
                 isInBounds = true;
             }
@@ -93,11 +94,9 @@ namespace GTS.OrbitalSystems
         public new void Delete()
         {
             if (_tiles != null)
-            {
                 for (var i = 0; i < _tiles.GetLength(0); i++)
                 for (var j = 0; j < _tiles.GetLength(1); j++)
                     _tiles[i, j].Delete();
-            }
 
             base.Delete();
         }

@@ -791,16 +791,16 @@ namespace GTS
             _resetWantedLevel = false;
         }
 
-        const UInt32 WM_KEYDOWN = 0x0100;
-        const int VK_F5 = 0x2D;
+        private const uint WM_KEYDOWN = 0x0100;
+        private const int VK_F5 = 0x2D;
 
         [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
         private static void ToggleAtmosphereScript()
         {
-            
         }
+
         #endregion
 
         #endregion

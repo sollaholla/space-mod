@@ -522,7 +522,8 @@ namespace GTS.Scenes
                 return default(Surface);
             }
 
-            Debug.Log($"Successfully loaded model: {data.Model}{Environment.NewLine}Bounds: {model.GetDimensions().Length() / 2}");
+            Debug.Log(
+                $"Successfully loaded model: {data.Model}{Environment.NewLine}Bounds: {model.GetDimensions().Length() / 2}");
             var pos = Info.GalaxyCenter + data.Position;
             var prop = World.CreateProp(model, pos, Vector3.Zero, false, false) ?? new Prop(0);
             prop.PositionNoOffset = pos;
