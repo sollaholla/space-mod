@@ -161,7 +161,6 @@ namespace GTS
             World.RenderingCamera = null;
             GtsLibNet.SetGravityLevel(9.81f);
             GtsLib.EndCredits();
-            GtsLib.RestoreWater();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Game.MissionFlag = !_didSetMissionFlag;
             Effects.Stop();
@@ -317,7 +316,6 @@ namespace GTS
             DoEarthUpdate();
             if (_didRestartEarthUpdate) return;
             _didRestartEarthUpdate = true;
-            GtsLib.RestoreWater();
             GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
         }
 
@@ -326,7 +324,6 @@ namespace GTS
             Game.MissionFlag = _didSetMissionFlag = true;
             if (_currentScene.Info != null) DoSceneUpdate();
             if (!_didRestartEarthUpdate) return;
-            GtsLib.RemoveWater();
             GtsLibNet.TerminateScript("blip_controller");
             _didRestartEarthUpdate = false;
         }

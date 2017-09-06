@@ -152,23 +152,5 @@ namespace GTS.Library
         {
             return GTSLib_IsLibraryInitialized() && GTSLib_IsRockstarEditorActive() == 1;
         }
-
-        /// <summary>
-        ///     Remove the in-game water.
-        /// </summary>
-        public static void RemoveWater()
-        {
-            if (!GTSLib_IsLibraryInitialized()) return;
-            GTSLib_RemoveWater();
-        }
-
-        /// <summary>
-        ///     Restore the in-game water.
-        /// </summary>
-        public static void RestoreWater()
-        {
-            if (!GTSLib_IsLibraryInitialized()) return;
-            GTSLib_RestoreWater();
-        }
     }
 }
