@@ -14,9 +14,9 @@ namespace GTS.Shuttle
         private readonly string _astronautModel = "s_m_m_movspace_01";
 
         private readonly float _enterOrbitHeight;
-        private readonly float _shuttleHeading = 95;
+        private readonly float _shuttleHeading = 25;
         private readonly float _shuttleInteractDistance = 75;
-        private readonly Vector3 _shuttlePosition = new Vector3(-3548.056f, 3429.6123f, 43.4789f);
+        private readonly Vector3 _shuttlePosition = new Vector3(-6409.215f, -1336.180f, 50.8521f);
         private Vehicle _shuttleVehicle;
 
         public ShuttleManager(float enterOrbitHeight)
