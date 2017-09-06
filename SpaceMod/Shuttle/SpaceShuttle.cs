@@ -59,6 +59,9 @@ namespace GTS.Shuttle
 
             IsFireProof = true;
             FreezePosition = true;
+
+            AddBlip().Sprite = BlipSprite.Rockets;
+            CurrentBlip.Name = "Shuttle";
         }
 
         public void Control()
@@ -188,6 +191,7 @@ namespace GTS.Shuttle
         public void CleanUp()
         {
             Function.Call(Hash.REMOVE_PARTICLE_FX_FROM_ENTITY, Handle);
+            CurrentBlip?.Remove();
             _srbL?.Delete();
             _srbR?.Delete();
             _extTank?.Delete();
