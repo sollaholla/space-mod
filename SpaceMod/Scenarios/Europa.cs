@@ -7,6 +7,7 @@ using GTA.Math;
 using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
+using GTS.OrbitalSystems;
 using GTS.Particles;
 using GTS.Scenarios;
 
@@ -414,8 +415,8 @@ namespace DefaultMissions
                     break;
                 case 8:
                     GtsLibNet.RemoveAllIpls(false);
-                    playerCharacter.Position = new Vector3(453.5652f, 5566.424f, 780.1839f);
-                    playerCharacter.Heading = 90;
+                    playerCharacter.Position = new Vector3(2135.43f, 4775.88f, 40.97f);
+                    playerCharacter.Heading = 23;
                     playerCharacter.Task.ClearAllImmediately();
                     playerCharacter.Task.PlayAnimation("safe@trevor@ig_8", "ig_8_wake_up_right_player");
                     playerCharacter.Weapons.Select(WeaponHash.Unarmed);
@@ -425,6 +426,9 @@ namespace DefaultMissions
                     break;
                 case 9:
                     _entities.Clear();
+                    foreach (var currentSceneSurface in CurrentScene.Surfaces)
+                        currentSceneSurface.CanUpdate = false;
+                    Function.Call(Hash.STOP_AUDIO_SCENES);
                     for (var i = 0; i < 45; i++)
                     {
                         var spawn = playerCharacter.Position.Around(_random.Next(75, 150));
@@ -480,6 +484,8 @@ namespace DefaultMissions
                     _missionStep++;
                     break;
                 case 12:
+                    foreach (var currentSceneSurface in CurrentScene.Surfaces)
+                        currentSceneSurface.CanUpdate = false;
                     GtsLibNet.RemoveAllIpls(true);
                     playerCharacter.Position = CurrentScene.Info.GalaxyCenter + Vector3.WorldUp * 20;
                     playerCharacter.Task.ClearAll();
@@ -696,6 +702,10 @@ namespace DefaultMissions
             CurrentScene?.RefreshTimecycle();
             _europaMissileCutScene?.Stop();
             _abductionCutScene?.Stop();
+            if (delete) Function.Call(Hash.STOP_AUDIO_SCENES);
+            else Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+            foreach (var currentSceneSurface in CurrentScene?.Surfaces?? new List<Surface>())
+                currentSceneSurface.CanUpdate = true;
             Function.Call(Hash.RESET_AI_WEAPON_DAMAGE_MODIFIER);
         }
 

@@ -15,6 +15,7 @@ using GTS.Missions;
 using GTS.Scenes;
 using GTS.Shuttle;
 using NativeUI;
+using Control = GTA.Control;
 
 namespace GTS
 {
@@ -64,7 +65,7 @@ namespace GTS
         private bool _loadModelsAtStart;
         private bool _disableWantedStars = true;
         private bool _resetWantedLevel;
-        private float _enterOrbitHeight = 7500;
+        private float _enterOrbitHeight = 4950;
         private Keys _optionsMenuKey = Keys.NumPad9;
         private int _missionStatus;
         private bool _didSetMissionFlag;
@@ -184,15 +185,6 @@ namespace GTS
 
             _shuttleManager?.Abort();
             _tcChanger?.Stop();
-
-            ///////////////////////////////////////////////////////////
-            // NOTE: Putting this on the bottom since it uses some
-            // Wait() statements, that will stop anything else from 
-            // executing. Not sure how we can do this properly, because
-            // if the script no longer exists it won't be restarted
-            // when we abort. :/
-            ///////////////////////////////////////////////////////////
-            GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
@@ -276,6 +268,8 @@ namespace GTS
             GTS.Settings.EarthAtmosphereEnterRotation =
                 ParseVector3.Read(Settings.GetValue("mod", "earth_atmos_rot"),
                     GTS.Settings.EarthAtmosphereEnterRotation);
+            GTS.Settings.AlwaysUseSound =
+                Settings.GetValue("settings", "always_use_sound", GTS.Settings.AlwaysUseSound);
 
             _endMissionCanStart = CanStartEndMission;
         }
@@ -300,23 +294,21 @@ namespace GTS
             Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             Settings.SetValue("mod", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
             Settings.SetValue("mod", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
+            Settings.SetValue("settings", "always_use_sound", GTS.Settings.AlwaysUseSound);
             Settings.Save();
         }
 
         private void SetVarsDependantOnSceneNull()
         {
-            if (_currentScene != null)
-                SceneNotNull();
-            else
-                SceneNull();
+            if (_currentScene != null) SceneNotNull();
+            else SceneNull();
         }
 
         private void SceneNull()
         {
             Game.MissionFlag = _didSetMissionFlag = false;
             DoEarthUpdate();
-            if (_didRestartEarthUpdate) return;
-            _didRestartEarthUpdate = true;
+            DoWorkingElevator();
             GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
         }
 
@@ -414,9 +406,12 @@ namespace GTS
             useScenariosCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.UseScenarios = check; };
             var debugTriggerCheckbox = new UIMenuCheckboxItem("Debug Triggers", GTS.Settings.DebugTriggers);
             debugTriggerCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.DebugTriggers = check; };
+            var soundCheckbox = new UIMenuCheckboxItem("Always Use Sound", GTS.Settings.AlwaysUseSound);
+            soundCheckbox.CheckboxEvent += (sender, check) => { GTS.Settings.AlwaysUseSound = check; };
 
             sceneSettingsMenu.AddItem(useScenariosCheckbox);
             sceneSettingsMenu.AddItem(debugTriggerCheckbox);
+            sceneSettingsMenu.AddItem(soundCheckbox);
 
             #endregion
 
@@ -622,8 +617,7 @@ namespace GTS
         private void SetCurrentScene(SceneInfo scene, string fileName = default(string))
         {
             PlayerPed.IsInvincible = true;
-            Game.FadeScreenOut(500);
-            Wait(750);
+            Game.FadeScreenOut(1);
             CreateScene(scene, fileName);
             Game.FadeScreenIn(1000);
             PlayerPed.IsInvincible = false;
@@ -801,14 +795,58 @@ namespace GTS
             _resetWantedLevel = false;
         }
 
-        private const uint WM_KEYDOWN = 0x0100;
-        private const int VK_F5 = 0x2D;
-
-        [DllImport("user32.dll")]
-        private static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
-
-        private static void ToggleAtmosphereScript()
+        private static void DoWorkingElevator()
         {
+            var start = new Vector3(-2360.916f, 3249.298f, 31.81073f);
+            var end = new Vector3(-2360.835f, 3249.45f, 91.90375f);
+            const float startHeading = 320.1821f;
+            const float endHeading = 326.1702f;
+
+            var distStart = PlayerPed.Position.DistanceToSquared(start);
+            var distEnd = PlayerPed.Position.DistanceToSquared(end);
+            const float triggerDist = 0.4f;
+
+            World.DrawMarker(MarkerType.VerticalCylinder, start, Vector3.RelativeFront, Vector3.Zero,
+                new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
+            World.DrawMarker(MarkerType.VerticalCylinder, end, Vector3.RelativeFront, Vector3.Zero,
+                new Vector3(triggerDist, triggerDist, triggerDist), Color.Gold);
+
+            Camera cam;
+
+            if (distStart < 1.3f)
+            {
+                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+                if (!Game.IsControlJustPressed(2, Control.Context)) return;
+                PlayerPed.Task.StandStill(-1);
+                PlayerPed.Task.AchieveHeading(startHeading, -1);
+                cam = World.CreateCamera(PlayerPosition + Vector3.RelativeFront + PlayerPed.UpVector, Vector3.Zero, 60);
+                cam.PointAt(PlayerPed, PlayerPed.GetBoneIndex(Bone.SKEL_Head));
+                World.RenderingCamera = cam;
+                Wait(2000);
+                cam.Destroy();
+                World.RenderingCamera = null;
+                Game.FadeScreenOut(1);
+                PlayerPed.Position = end;
+                PlayerPed.Heading = endHeading;
+                Game.FadeScreenIn(1000);
+            }
+            else if (distEnd < 1.3f)
+            {
+                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+                if (!Game.IsControlJustPressed(2, Control.Context)) return;
+                PlayerPed.Task.StandStill(-1);
+                PlayerPed.Task.AchieveHeading(endHeading, -1);
+                cam = World.CreateCamera(PlayerPosition + Vector3.RelativeFront + PlayerPed.UpVector, Vector3.Zero, 60);
+                cam.PointAt(PlayerPed, PlayerPed.GetBoneIndex(Bone.SKEL_Head));
+                World.RenderingCamera = cam;
+                Wait(2000);
+                cam.Destroy();
+                World.RenderingCamera = null;
+                Game.FadeScreenOut(1);
+                PlayerPed.Position = start;
+                PlayerPed.Heading = startHeading;
+                Game.FadeScreenIn(1000);
+            }
         }
 
         #endregion

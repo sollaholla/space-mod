@@ -47,5 +47,9 @@ namespace GTS
         /// <summary>
         /// </summary>
         public static bool DebugTriggers = false;
+
+        /// <summary>
+        /// </summary>
+        public static bool AlwaysUseSound = false;
     }
 }

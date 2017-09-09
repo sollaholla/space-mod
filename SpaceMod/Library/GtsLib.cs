@@ -146,5 +146,17 @@ namespace GTS.Library
         {
             return GTSLib_IsLibraryInitialized() && GTSLib_IsRockstarEditorActive() == 1;
         }
+
+        public static void DisableAtmosphereScript()
+        {
+            if (!Function.Call<bool>(Hash.DECOR_GET_BOOL, Game.Player.Character, "enabled")) return;
+            Function.Call(Hash.DECOR_SET_BOOL, Game.Player.Character, "enabled", false);
+        }
+
+        public static void EnableAtmosphereScript()
+        {
+            if (Function.Call<bool>(Hash.DECOR_GET_BOOL, Game.Player.Character, "enabled")) return;
+            Function.Call(Hash.DECOR_SET_BOOL, Game.Player.Character, "enabled", true);
+        }
     }
 }

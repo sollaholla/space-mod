@@ -210,7 +210,7 @@ namespace GTS.Scenes
                 if (Entity.Exists(Skybox))
                     Skybox.Position = viewFinderPosition;
                 UpdateOrbitals(viewFinderPosition);
-                SpaceWalk();
+                SpaceWalkTask();
                 PilotVehicle();
                 HandleDeath();
                 TryToExitScene();
@@ -602,9 +602,6 @@ namespace GTS.Scenes
             {
                 var assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
 
-                if (assembly == null)
-                    continue;
-
                 var type = assembly.GetType(scenarioInfo.Namespace);
 
                 if (type == null || type.BaseType != typeof(Scenario))
@@ -643,6 +640,7 @@ namespace GTS.Scenes
         private void OnScenarioComplete(Scenario scenario, bool success)
         {
             Scenarios.Remove(scenario);
+            _didSetSpaceAudio = false;
         }
 
         private void UpdateBillboards(Vector3 viewFinderPosition)
@@ -906,7 +904,7 @@ namespace GTS.Scenes
         private void UpdateAudio()
         {
             if (Info.UseSound) return;
-            if (FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
+            if (FollowCam.ViewMode == FollowCamViewMode.FirstPerson || Settings.AlwaysUseSound)
             {
                 if (!_didSetSpaceAudio) return;
                 Function.Call(Hash.STOP_AUDIO_SCENES);
@@ -1028,7 +1026,10 @@ namespace GTS.Scenes
             }
 
             if (!Info.LeaveSurfacePrompt)
+            {
+                ChangePlayerVehicle();
                 return;
+            }
 
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance &&
                 !PlayerPed.IsInVehicle())
@@ -1045,6 +1046,8 @@ namespace GTS.Scenes
             }
             else if (PlayerPed.IsInVehicle())
             {
+                if (!PlayerPed.CurrentVehicle.Model.IsPlane)
+                    GtsLib.SetVehicleGravity(PlayerPed.CurrentVehicle, Info.GravityLevel);
                 GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT2");
                 Game.DisableControlThisFrame(2, Control.Context);
                 if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
@@ -1183,32 +1186,17 @@ namespace GTS.Scenes
                 !PlayerVehicle.IsOnAllWheels, v?.RotationMultiplier ?? 1);
         }
 
-        private void SpaceWalk()
+        private void SpaceWalkTask()
         {
-            if (Info.SurfaceScene)
-                return;
-
+            if (Info.SurfaceScene) return;
             if (PlayerPed.IsInVehicle())
             {
-                _spaceWalkObj?.Delete();
-                _spaceWalkObj = null;
-
-                if (Entity.Exists(PlayerPed.CurrentVehicle) && PlayerPed.CurrentVehicle != PlayerVehicle)
-                {
-                    PlayerVehicle = PlayerPed.CurrentVehicle;
-                    if (Entity.Exists(PlayerVehicle) && PlayerVehicle.Model.IsCar)
-                        GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
-                    PlayerVehicle.HasGravity = false;
-                    Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerVehicle.Handle, false);
-                }
-                else
-                {
-                    PlayerVehicle.IsInvincible = false;
-                    PlayerVehicle.FreezePosition = false;
-                }
-
-                PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
-                _enteringVehicle = false;
+                StopSpaceWalking();
+                Game.DisableControlThisFrame(2, Control.VehicleExit);
+                if (!Game.IsDisabledControlJustPressed(2, Control.VehicleExit)) return;
+                PlayerVehicle.FreezePosition = true;
+                PlayerVehicle.IsPersistent = true;
+                PlayerPed.Task.WarpOutOfVehicle(PlayerVehicle);
             }
             // here's where we're in space without a vehicle.
             else if (!PlayerPed.IsRagdoll && !PlayerPed.IsJumpingOutOfVehicle)
@@ -1217,34 +1205,7 @@ namespace GTS.Scenes
                 {
                     // this let's us float
                     case ZeroGTask.SpaceWalk:
-                        if (Settings.UseSpaceWalk)
-                        {
-                            // make sure that we're floating first!
-                            if (!_enteringVehicle)
-                                SpaceWalk_Toggle();
-
-                            // if the last vehicle is null, then there's nothing to do here.
-                            if (PlayerVehicle != null)
-                            {
-                                // since we're floating already or, "not in a vehicle" technically, we want to stop our vehicle
-                                // from moving and allow the payer to re-enter it.
-                                PlayerVehicle.LockStatus = VehicleLockStatus.None;
-                                PlayerVehicle.FreezePosition = true;
-                                SpaceWalk_EnterVehicle(PlayerPed, PlayerVehicle);
-
-                                // we also want to let the player mine stuff, repair stuff, etc.
-                                if (!_enteringVehicle)
-                                    if (PlayerVehicle.IsDamaged || PlayerVehicle.EngineHealth < 1000)
-                                        SpaceWalk_RepairVehicle(PlayerPed, PlayerVehicle, 8f);
-                            }
-
-                            // we also want to allow the player to mine asteroids!
-                            SpaceWalk_MineAsteroids(PlayerPed, PlayerVehicle, 5f);
-                        }
-                        else
-                        {
-                            PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
-                        }
+                        SpaceWalk();
                         break;
                     // this let's us mine asteroids.
                     case ZeroGTask.Mine:
@@ -1394,6 +1355,70 @@ namespace GTS.Scenes
             }
         }
 
+        private void SpaceWalk()
+        {
+            if (Settings.UseSpaceWalk)
+            {
+                // make sure that we're floating first!
+                if (!_enteringVehicle)
+                    SpaceWalk_Toggle();
+
+                // if the last vehicle is null, then there's nothing to do here.
+                if (PlayerVehicle != null)
+                {
+                    // since we're floating already or, "not in a vehicle" technically, we want to stop our vehicle
+                    // from moving and allow the payer to re-enter it.
+                    PlayerVehicle.LockStatus = VehicleLockStatus.None;
+                    PlayerVehicle.FreezePosition = true;
+                    SpaceWalk_EnterVehicle(PlayerPed, PlayerVehicle);
+
+                    // we also want to let the player mine stuff, repair stuff, etc.
+                    if (!_enteringVehicle)
+                        if (PlayerVehicle.IsDamaged || PlayerVehicle.EngineHealth < 1000)
+                            SpaceWalk_RepairVehicle(PlayerPed, PlayerVehicle, 8f);
+                }
+
+                // we also want to allow the player to mine asteroids!
+                SpaceWalk_MineAsteroids(PlayerPed, PlayerVehicle, 5f);
+            }
+            else
+            {
+                PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
+            }
+        }
+
+        private void StopSpaceWalking()
+        {
+            DeleteSpaceWalkObject();
+            ChangePlayerVehicle();
+
+            PlayerPed.Task.ClearAnimation("swimming@first_person", "idle");
+            _enteringVehicle = false;
+        }
+
+        private void ChangePlayerVehicle()
+        {
+            if (Entity.Exists(PlayerPed.CurrentVehicle) && PlayerPed.CurrentVehicle != PlayerVehicle)
+            {
+                PlayerVehicle = PlayerPed.CurrentVehicle;
+                if (Entity.Exists(PlayerVehicle) && !PlayerPed.CurrentVehicle.Model.IsPlane)
+                    GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
+                PlayerVehicle.HasGravity = false;
+                Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerVehicle.Handle, false);
+            }
+            else if (PlayerVehicle != null)
+            {
+                PlayerVehicle.IsInvincible = false;
+                PlayerVehicle.FreezePosition = false;
+            }
+        }
+
+        private void DeleteSpaceWalkObject()
+        {
+            _spaceWalkObj?.Delete();
+            _spaceWalkObj = null;
+        }
+
         private void SpaceWalk_CreateWeldingProp(Ped ped)
         {
             if (Entity.Exists(_weldingProp))
@@ -1532,7 +1557,7 @@ namespace GTS.Scenes
 
         private void SpaceWalk_Toggle()
         {
-            if (_spaceWalkObj == null)
+            if (_spaceWalkObj == null || !PlayerPed.IsAttachedTo(_spaceWalkObj))
             {
                 _spaceWalkObj = World.CreateVehicle(VehicleHash.Panto, Vector3.Zero, PlayerPed.Heading);
                 if (_spaceWalkObj == null) return;
