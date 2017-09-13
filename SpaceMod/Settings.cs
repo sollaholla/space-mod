@@ -20,9 +20,7 @@ namespace GTS
 
         public static int VehicleFlySpeed = 35;
 
-        public static Vector3 DefaultVehicleSpawn = new Vector3(-10015f, -10015f, 10001f);
-
-        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 7000);
+        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 4000);
 
         public static Vector3 EarthAtmosphereEnterRotation = new Vector3(-35, 0, 0);
 

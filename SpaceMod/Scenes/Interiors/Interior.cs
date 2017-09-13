@@ -100,7 +100,7 @@ namespace GTS.Scenes.Interiors
                     break;
                 case InteriorType.MapEditor:
                     _map = XmlSerializer.Deserialize<Map>(IsInteriorMap
-                        ? Database.PathToInteriors + "/" + Name + ".xml"
+                        ? Database.PathToInteriors + "\\" + Name + ".xml"
                         : Name);
                     if (_map != null && _map != default(Map) && !Loaded)
                     {

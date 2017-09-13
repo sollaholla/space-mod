@@ -8,7 +8,7 @@ namespace GTS
 {
     public class MapLoader
     {
-        private const string Path = Database.PathToScenes + "\\LoadOnStart\\";
+        private const string Path = Database.PathToInteriors + "\\LoadOnStart\\";
 
         private readonly List<Interior> _ints = new List<Interior>();
 
@@ -16,13 +16,13 @@ namespace GTS
         {
             try
             {
-                if (!File.Exists(Path)) return;
+                if (!Directory.Exists(Path)) return;
                 var files = Directory.GetFiles(Path).Where(x => x.EndsWith(".xml")).ToArray();
                 foreach (var file in files)
                 {
                     try
                     {
-                        var interior = new Interior(file, InteriorType.MapEditor);
+                        var interior = new Interior("LoadOnStart\\" + System.IO.Path.GetFileNameWithoutExtension(file), InteriorType.MapEditor);
                         interior.Request();
                         _ints.Add(interior);
                     }

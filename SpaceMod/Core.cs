@@ -26,7 +26,7 @@ namespace GTS
         private Scene _currentScene;
 
         private bool _resetWantedLevel;
-        private bool _disableWantedLevel;
+        private bool _disableWantedLevel = true;
         private int _missionStatus;
         private bool _didAbort;
 
@@ -76,20 +76,12 @@ namespace GTS
 
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
-            // This tells the dispose method not to abort if we already did.
-            _didAbort = true;
-
-            // If the game gets stuck loading then we need to get out of that.
             if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
                 Game.FadeScreenIn(0);
-
-            // Reset the player.
             PlayerPed.Task.ClearAll();
             PlayerPed.HasGravity = true;
             PlayerPed.FreezePosition = false;
             PlayerPed.CanRagdoll = true;
-
-            // Reset the game.
             Game.TimeScale = 1.0f;
             World.RenderingCamera = null;
             GtsLibNet.SetGravityLevel(9.81f);
@@ -97,9 +89,6 @@ namespace GTS
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Game.MissionFlag = false;
             Effects.Stop();
-
-            // Stop the current scene and reset the game
-            // changes from that.
             _currentScene?.Delete(true);
             if (_currentScene != null)
             {
@@ -110,13 +99,11 @@ namespace GTS
             }
             else GtsLibNet.RemoveAllIplsRegardless(false);
             _currentScene = null;
-
-            // Quit the internal missions.
             _introMission?.OnAborted();
-            // endMission?.OnAborted();
-
             _shuttleManager?.Abort();
             _tcChanger?.Stop();
+            _mapLoader?.RemoveMaps();
+            _didAbort = true;
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
@@ -169,7 +156,6 @@ namespace GTS
             GTS.Settings.UseScenarios = Settings.GetValue("core", "use_scenarios", GTS.Settings.UseScenarios);
             GTS.Settings.MoonJump = Settings.GetValue("core", "low_gravity_jumping", GTS.Settings.MoonJump);
             GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("core", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
-            GTS.Settings.DefaultVehicleSpawn = Settings.GetValue("core", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
             GTS.Settings.VehicleFlySpeed = Settings.GetValue("core", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             GTS.Settings.EarthAtmosphereEnterPosition = ParseVector3.Read(Settings.GetValue("core", "enter_atmos_pos"), GTS.Settings.EarthAtmosphereEnterPosition);
             GTS.Settings.EarthAtmosphereEnterRotation = ParseVector3.Read(Settings.GetValue("core", "earth_atmos_rot"), GTS.Settings.EarthAtmosphereEnterRotation);
@@ -190,7 +176,6 @@ namespace GTS
             Settings.SetValue("core", "use_scenarios", GTS.Settings.UseScenarios);
             Settings.SetValue("core", "low_gravity_jumping", GTS.Settings.MoonJump);
             Settings.SetValue("core", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
-            Settings.SetValue("core", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
             Settings.SetValue("core", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
             Settings.SetValue("core", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
             Settings.SetValue("core", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
