@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows.Forms;
 using GTA;
 using GTA.Math;
@@ -19,17 +17,26 @@ using Control = GTA.Control;
 
 namespace GTS
 {
-    /// <summary>
-    ///     This is the controller of all script threads.
-    /// </summary>
     internal class Core : Script
     {
-        /// <summary>
-        ///     Our standard constructor.
-        /// </summary>
+        private Keys _optionsMenuKey = Keys.NumPad9;
+        private bool _menuEnabled = true;
+        private UIMenu _mainMenu;
+        private MenuPool _menuPool;
+        private Scene _currentScene;
+
+        private bool _resetWantedLevel;
+        private bool _disableWantedLevel;
+        private int _missionStatus;
+        private bool _didAbort;
+
+        private MapLoader _mapLoader;
+        private IntroMission _introMission;
+        private ShuttleManager _shuttleManager;
+        private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
+
         public Core()
         {
-            _tickLock = new object();
             Instance = this;
             KeyUp += OnKeyUp;
             Tick += OnTick;
@@ -37,99 +44,21 @@ namespace GTS
 
             ReadSettings();
             SaveSettings();
-            CreateCustomMenu();
-            RequestModels();
+            CreateMainMenu();
 
             Debug.Log("Initialized!");
         }
 
-        #region Variables
-
-        #region Misc
-
-        private Scene _currentScene;
-        private MenuPool _menuPool;
-        private UIMenu _mainMenu;
-        private bool _didAbort;
-        private readonly object _tickLock;
-        private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
-
-        #endregion
-
-        #region Settings
-
-        private string _defaultSpaceScene = "EarthOrbit.space";
-        private Vector3 _defaultSpaceOffset = new Vector3(-2274.52f, 3298.333f, 39.02f);
-        private Vector3 _defaultSpaceRotation = new Vector3(0f, -69.22044f, 80.00073f);
-        private bool _menuEnabled = true;
-        private bool _loadModelsAtStart;
-        private bool _disableWantedStars = true;
-        private bool _resetWantedLevel;
-        private float _enterOrbitHeight = 4950;
-        private Keys _optionsMenuKey = Keys.NumPad9;
-        private int _missionStatus;
-        private bool _didSetMissionFlag;
-        private bool _didRestartEarthUpdate = true;
-
-        #endregion
-
-        #region Internal Missions
-
-        private IntroMission _introMission;
-
-        // private EndMission endMission = null;
-        private bool _endMissionCanStart;
-
-        #endregion
-
-        #region Shuttle Stuff
-
-        private ShuttleManager _shuttleManager;
-
-        #endregion
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        ///     The instance of the <see cref="Core" /> .cs script.
-        /// </summary>
         internal static Core Instance { get; private set; }
 
-        /// <summary>
-        ///     The players character/ped.
-        /// </summary>
         private static Ped PlayerPed => Game.Player.Character;
 
-        /// <summary>
-        ///     The position of the player in the game.
-        /// </summary>
-        private static Vector3 PlayerPosition
-        {
+        private static Vector3 PlayerPosition {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set
-            {
+            set {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
-        }
-
-        // TODO: Temp.
-        private static bool CanStartEndMission => false;
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     Get the currently active scene..
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        internal Scene GetCurrentScene()
-        {
-            return _currentScene;
         }
 
         protected override void Dispose(bool dispose)
@@ -140,7 +69,10 @@ namespace GTS
             base.Dispose(dispose);
         }
 
-        #region Events
+        internal Scene GetCurrentScene()
+        {
+            return _currentScene;
+        }
 
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
@@ -163,13 +95,13 @@ namespace GTS
             GtsLibNet.SetGravityLevel(9.81f);
             GtsLib.EndCredits();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-            Game.MissionFlag = !_didSetMissionFlag;
+            Game.MissionFlag = false;
             Effects.Stop();
 
             // Stop the current scene and reset the game
             // changes from that.
             _currentScene?.Delete(true);
-            if (_currentScene != default(Scene) && _currentScene != null)
+            if (_currentScene != null)
             {
                 GiveSpawnControlToGame();
                 if (!PlayerPed.IsDead)
@@ -200,35 +132,20 @@ namespace GTS
 
         private void OnTick(object sender, EventArgs eventArgs)
         {
-            if (!Monitor.TryEnter(_tickLock)) return;
             try
             {
-                try
-                {
-                    CreateShuttleMap();
-                    OpenMilitaryGates();
-                    ProcessMenus();
-                    SetVarsDependantOnSceneNull();
-                    DisableWantedStars();
-                    RunInternalMissions();
-                    OpenMilitaryGates();
-                }
-                // Locks our tick method so that if the last tick did 
-                // not finish we will wait until it does to exit this method.
-                finally
-                {
-                    Monitor.Exit(_tickLock);
-                }
+                CreateMaps();
+                ProcessMenus();
+                CheckSceneStatus();
+                RunInternalMissions();
+                DisableWantedStars();
+                OpenMilitaryGates();
             }
-            // Catch any exception in our mod, since this is our only script.
             catch (Exception ex)
             {
-                Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
-                Abort();
+                Debug.Log(ex.Message, DebugMessageType.Error);
             }
         }
-
-        #endregion
 
         private void ProcessMenus()
         {
@@ -238,67 +155,50 @@ namespace GTS
             UI.HideHudComponentThisFrame(HudComponent.HelpText);
         }
 
-        #region Initialize
-
         private void ReadSettings()
         {
-            _enterOrbitHeight = Settings.GetValue("mod", "enter_orbit_height", _enterOrbitHeight);
-            _optionsMenuKey = Settings.GetValue("mod", "options_menu_key", _optionsMenuKey);
-            _menuEnabled = Settings.GetValue("mod", "menu_enabled", _menuEnabled);
-            _loadModelsAtStart = Settings.GetValue("mod", "load_models_on_start", _loadModelsAtStart);
-            _defaultSpaceScene = Settings.GetValue("mod", "default_orbit_scene", _defaultSpaceScene);
-            _defaultSpaceOffset = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_offset"),
-                _defaultSpaceOffset);
-            _defaultSpaceRotation = ParseVector3.Read(Settings.GetValue("mod", "default_orbit_rotation"),
-                _defaultSpaceRotation);
-            _missionStatus = Settings.GetValue("main_mission", "mission_status", _missionStatus);
-            GTS.Settings.UseSpaceWalk = Settings.GetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
-            GTS.Settings.ShowCustomGui = Settings.GetValue("settings", "show_custom_Gui", GTS.Settings.ShowCustomGui);
-            GTS.Settings.UseScenarios = Settings.GetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
-            GTS.Settings.MoonJump = Settings.GetValue("settings", "low_gravity_jumping", GTS.Settings.MoonJump);
-            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("vehicle_settings",
-                "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
-            GTS.Settings.DefaultVehicleSpawn = Settings.GetValue("vehicle_settings", "vehicle_surface_spawn",
-                GTS.Settings.DefaultVehicleSpawn);
-            GTS.Settings.VehicleFlySpeed =
-                Settings.GetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            GTS.Settings.EarthAtmosphereEnterPosition =
-                ParseVector3.Read(Settings.GetValue("mod", "enter_atmos_pos"),
-                    GTS.Settings.EarthAtmosphereEnterPosition);
-            GTS.Settings.EarthAtmosphereEnterRotation =
-                ParseVector3.Read(Settings.GetValue("mod", "earth_atmos_rot"),
-                    GTS.Settings.EarthAtmosphereEnterRotation);
-            GTS.Settings.AlwaysUseSound =
-                Settings.GetValue("settings", "always_use_sound", GTS.Settings.AlwaysUseSound);
-
-            _endMissionCanStart = CanStartEndMission;
+            _optionsMenuKey = Settings.GetValue("core", "options_menu_key", _optionsMenuKey);
+            _menuEnabled = Settings.GetValue("core", "menu_enabled", _menuEnabled);
+            _missionStatus = Settings.GetValue("core", "mission_status", _missionStatus);
+            GTS.Settings.EnterOrbitHeight = Settings.GetValue("core", "enter_orbit_height", GTS.Settings.EnterOrbitHeight);
+            GTS.Settings.DefaultScene = Settings.GetValue("core", "default_orbit_scene", GTS.Settings.DefaultScene);
+            GTS.Settings.DefaultScenePosition = ParseVector3.Read(Settings.GetValue("core", "default_orbit_offset"), GTS.Settings.DefaultScenePosition);
+            GTS.Settings.DefaultSceneRotation = ParseVector3.Read(Settings.GetValue("core", "default_orbit_rotation"), GTS.Settings.DefaultSceneRotation);
+            GTS.Settings.UseSpaceWalk = Settings.GetValue("core", "use_spacewalk", GTS.Settings.UseSpaceWalk);
+            GTS.Settings.ShowCustomGui = Settings.GetValue("core", "show_custom_Gui", GTS.Settings.ShowCustomGui);
+            GTS.Settings.UseScenarios = Settings.GetValue("core", "use_scenarios", GTS.Settings.UseScenarios);
+            GTS.Settings.MoonJump = Settings.GetValue("core", "low_gravity_jumping", GTS.Settings.MoonJump);
+            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("core", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            GTS.Settings.DefaultVehicleSpawn = Settings.GetValue("core", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
+            GTS.Settings.VehicleFlySpeed = Settings.GetValue("core", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
+            GTS.Settings.EarthAtmosphereEnterPosition = ParseVector3.Read(Settings.GetValue("core", "enter_atmos_pos"), GTS.Settings.EarthAtmosphereEnterPosition);
+            GTS.Settings.EarthAtmosphereEnterRotation = ParseVector3.Read(Settings.GetValue("core", "earth_atmos_rot"), GTS.Settings.EarthAtmosphereEnterRotation);
+            GTS.Settings.AlwaysUseSound = Settings.GetValue("core", "always_use_sound", GTS.Settings.AlwaysUseSound);
         }
 
         private void SaveSettings()
         {
-            Settings.SetValue("mod", "enter_orbit_height", _enterOrbitHeight);
-            Settings.SetValue("mod", "options_menu_key", _optionsMenuKey);
-            Settings.SetValue("mod", "menu_enabled", _menuEnabled);
-            Settings.SetValue("mod", "load_models_on_start", _loadModelsAtStart);
-            Settings.SetValue("mod", "default_orbit_scene", _defaultSpaceScene);
-            Settings.SetValue("mod", "default_orbit_offset", _defaultSpaceOffset);
-            Settings.SetValue("mod", "default_orbit_rotation", _defaultSpaceRotation);
-            Settings.SetValue("main_mission", "mission_status", _missionStatus);
-            Settings.SetValue("settings", "use_spacewalk", GTS.Settings.UseSpaceWalk);
-            Settings.SetValue("settings", "show_custom_Gui", GTS.Settings.ShowCustomGui);
-            Settings.SetValue("settings", "use_scenarios", GTS.Settings.UseScenarios);
-            Settings.SetValue("settings", "low_gravity_jumping", GTS.Settings.MoonJump);
-            Settings.SetValue("vehicle_settings", "mouse_control_fly_sensitivity",
-                GTS.Settings.MouseControlFlySensitivity);
-            Settings.SetValue("vehicle_settings", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
-            Settings.SetValue("vehicle_settings", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            Settings.SetValue("mod", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
-            Settings.SetValue("mod", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
-            Settings.SetValue("settings", "always_use_sound", GTS.Settings.AlwaysUseSound);
+            Settings.SetValue("core", "options_menu_key", _optionsMenuKey);
+            Settings.SetValue("core", "menu_enabled", _menuEnabled);
+            Settings.SetValue("core", "mission_status", _missionStatus);
+            Settings.SetValue("core", "enter_orbit_height", GTS.Settings.EnterOrbitHeight);
+            Settings.SetValue("core", "default_orbit_scene", GTS.Settings.DefaultScene);
+            Settings.SetValue("core", "default_orbit_offset", GTS.Settings.DefaultScenePosition);
+            Settings.SetValue("core", "default_orbit_rotation", GTS.Settings.DefaultSceneRotation);
+            Settings.SetValue("core", "use_spacewalk", GTS.Settings.UseSpaceWalk);
+            Settings.SetValue("core", "show_custom_Gui", GTS.Settings.ShowCustomGui);
+            Settings.SetValue("core", "use_scenarios", GTS.Settings.UseScenarios);
+            Settings.SetValue("core", "low_gravity_jumping", GTS.Settings.MoonJump);
+            Settings.SetValue("core", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            Settings.SetValue("core", "vehicle_surface_spawn", GTS.Settings.DefaultVehicleSpawn);
+            Settings.SetValue("core", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
+            Settings.SetValue("core", "enter_atmos_pos", GTS.Settings.EarthAtmosphereEnterPosition);
+            Settings.SetValue("core", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
+            Settings.SetValue("core", "always_use_sound", GTS.Settings.AlwaysUseSound);
             Settings.Save();
         }
 
-        private void SetVarsDependantOnSceneNull()
+        private void CheckSceneStatus()
         {
             if (_currentScene != null) SceneNotNull();
             else SceneNull();
@@ -306,7 +206,7 @@ namespace GTS
 
         private void SceneNull()
         {
-            Game.MissionFlag = _didSetMissionFlag = false;
+            Game.MissionFlag = false;
             DoEarthUpdate();
             DoWorkingElevator();
             GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
@@ -314,14 +214,12 @@ namespace GTS
 
         private void SceneNotNull()
         {
-            Game.MissionFlag = _didSetMissionFlag = true;
+            Game.MissionFlag = true;
             if (_currentScene.Info != null) DoSceneUpdate();
-            if (!_didRestartEarthUpdate) return;
             GtsLibNet.TerminateScript("blip_controller");
-            _didRestartEarthUpdate = false;
         }
 
-        private void CreateCustomMenu()
+        private void CreateMainMenu()
         {
             if (!_menuEnabled)
                 return;
@@ -348,12 +246,14 @@ namespace GTS
             }
             var earthItem = new UIMenuItem("Return To Earth");
             earthItem.SetLeftBadge(UIMenuItem.BadgeStyle.Heart);
-            earthItem.Activated += (a1, a2) => {
+            earthItem.Activated += (a1, a2) =>
+            {
                 if (_currentScene != null)
                 {
                     OnAborted(null, new EventArgs());
                     _didAbort = false;
-                } };
+                }
+            };
             scenesMenu.AddItem(earthItem);
 
             #endregion
@@ -378,17 +278,17 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
                 GTS.Settings.VehicleFlySpeed = sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
+            var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic) i).ToList(), flySensitivity);
+                    .Select(i => (dynamic)i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
                 GTS.Settings.MouseControlFlySensitivity = sender.IndexToItem(index);
@@ -434,8 +334,8 @@ namespace GTS
             };
             settingsMenu.AddItem(saveSettingsItem);
 
-            var disableWantedLevelCheckbox = new UIMenuCheckboxItem("Disable Wanted Level", _disableWantedStars);
-            disableWantedLevelCheckbox.CheckboxEvent += (a, b) => { _disableWantedStars = b; };
+            var disableWantedLevelCheckbox = new UIMenuCheckboxItem("Disable Wanted Level", _disableWantedLevel);
+            disableWantedLevelCheckbox.CheckboxEvent += (a, b) => { _disableWantedLevel = b; };
             settingsMenu.AddItem(disableWantedLevelCheckbox);
 
             #endregion
@@ -456,39 +356,21 @@ namespace GTS
                 ColorTranslator.FromHtml("#8000ff")));
         }
 
-        private void RequestModels()
+        private void CreateMaps()
         {
-            // TODO FIXME: This seems to slow down the game, so it might be a good idea to just ditch this feature.
-            if (!_loadModelsAtStart)
-                return;
-
-            const string fileName = ".\\scripts\\Space\\RequestOnStart.txt";
-            if (!File.Exists(fileName))
-                return;
-
-            using (var sr = File.OpenText(fileName))
+            if (_mapLoader == null)
             {
-                string s;
-
-                while ((s = sr.ReadLine()) != null)
-                {
-                    s = s.Trim();
-                    var m = new Model(s);
-                    if (!m.IsLoaded)
-                        m.Request();
-                }
+                _mapLoader = new MapLoader();
+                _mapLoader.LoadMaps();
             }
-        }
 
-        private void CreateShuttleMap()
-        {
             if (_shuttleManager == null)
             {
                 while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
                     Yield();
                 var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
                 loadScaleform.Draw = true;
-                _shuttleManager = new ShuttleManager(_enterOrbitHeight);
+                _shuttleManager = new ShuttleManager(GTS.Settings.EnterOrbitHeight);
                 if (_missionStatus > 0)
                     _shuttleManager.CreateShuttle();
                 LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
@@ -496,23 +378,18 @@ namespace GTS
             _shuttleManager.Update();
         }
 
-        #endregion
-
-        #region Runtime Scene Updates
-
         private void DoEarthUpdate()
         {
             // Let's us go to space from earth.
             var height = PlayerPed.HeightAboveGround;
-            if (!(height > _enterOrbitHeight)) return;
+            if (!(height > GTS.Settings.EnterOrbitHeight)) return;
 
-            var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes,
-                _defaultSpaceScene));
-            SetCurrentScene(scene, _defaultSpaceScene);
+            var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes, GTS.Settings.DefaultScene));
+            SetCurrentScene(scene, GTS.Settings.DefaultScene);
 
-            PlayerPosition += _defaultSpaceOffset;
-            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = _defaultSpaceRotation;
-            else PlayerPed.Rotation = _defaultSpaceRotation;
+            PlayerPosition += GTS.Settings.DefaultScenePosition;
+            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = GTS.Settings.DefaultSceneRotation;
+            else PlayerPed.Heading = GTS.Settings.DefaultSceneRotation.Z;
 
             if (PlayerPed.CurrentVehicle != _shuttleManager.Shuttle)
             {
@@ -539,31 +416,21 @@ namespace GTS
             if (_currentScene != null)
             {
                 _introMission?.OnAborted();
-                // endMission?.OnAborted();
                 return;
             }
-            if (!_endMissionCanStart && _missionStatus == 0)
-            {
-                if (_introMission != null)
-                {
-                    _introMission.Update();
-                }
-                else
-                {
-                    _introMission = new IntroMission();
-                    _introMission.OnStart();
 
-                    _introMission.Completed += (scenario, success) =>
-                    {
-                        SetMissionStatus(1);
-                        _shuttleManager.CreateShuttle();
-                        _introMission = null;
-                    };
-                }
-            }
-            else if (_endMissionCanStart && _missionStatus == 1)
+            if (_missionStatus != 0) return;
+            if (_introMission != null) _introMission.Update();
+            else
             {
-                // TODO: Make end mission start.
+                _introMission = new IntroMission();
+                _introMission.OnStart();
+                _introMission.Completed += (scenario, success) =>
+                {
+                    SetMissionStatus(1);
+                    _shuttleManager.CreateShuttle();
+                    _introMission = null;
+                };
             }
         }
 
@@ -576,7 +443,7 @@ namespace GTS
 
         private void DisableWantedStars()
         {
-            if (!_disableWantedStars)
+            if (!_disableWantedLevel)
             {
                 StartWantedLevelScripts();
                 return;
@@ -593,28 +460,16 @@ namespace GTS
             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
         }
 
-        #endregion
-
-        #region Scene Management
-
         private static SceneInfo DeserializeFileAsScene(string fileName)
         {
-            if (fileName == "cmd_earth")
-                return null;
-
+            if (fileName == "cmd_earth") return null;
             var newScene = XmlSerializer.Deserialize<SceneInfo>(Database.PathToScenes + "\\" + fileName);
-
-            if (newScene == default(SceneInfo))
-            {
-                UI.Notify(Database.NotifyHeader + "Scene file " + fileName + " couldn't be read, or doesn't exist.");
-
-                return null;
-            }
-
-            return newScene;
+            if (newScene != null) return newScene;
+            UI.Notify(Database.NotifyHeader + "Scene file " + fileName + " couldn't be read, or doesn't exist.");
+            return null;
         }
 
-        private void SetCurrentScene(SceneInfo scene, string fileName = default(string))
+        private void SetCurrentScene(SceneInfo scene, string fileName = "")
         {
             PlayerPed.IsInvincible = true;
             Game.FadeScreenOut(1);
@@ -623,80 +478,55 @@ namespace GTS
             PlayerPed.IsInvincible = false;
         }
 
-        private void CreateScene(SceneInfo scene, string fileName = default(string))
+        private void CreateScene(SceneInfo scene, string fileName = "")
         {
-            lock (_tickLock)
-            {
-                if (_currentScene != null && _currentScene != default(Scene))
-                    _currentScene.Delete();
-
-                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
-                else PlayerPed.Rotation = Vector3.Zero;
-
-                ClearAllEntities(PlayerPosition, 10000);
-
-                _currentScene = new Scene(scene) {FileName = fileName};
-                _currentScene.Start();
-
-                Function.Call(Hash.SET_CLOCK_TIME, _currentScene.Info.Time, _currentScene.Info.TimeMinutes, 0);
-                Function.Call(Hash.PAUSE_CLOCK, true);
-                Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, _currentScene.Info.WeatherName);
-
-                _currentScene.Exited += CurrentSceneOnExited;
-            }
+            _currentScene?.Delete();
+            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
+            else PlayerPed.Rotation = Vector3.Zero;
+            ClearAllEntities(PlayerPosition);
+            _currentScene = new Scene(scene) { FileName = fileName };
+            _currentScene.Start();
+            _currentScene.Exited += CurrentSceneOnExited;
         }
 
-        private void CurrentSceneOnExited(Scene scene, string nextSceneFileName, Vector3 nextSceneOffset,
-            Vector3 nextSceneRotation)
+        private void CurrentSceneOnExited(Scene scene, string nextScene, Vector3 offset, Vector3 rotation)
         {
-            lock (_tickLock)
+            var isActualScene = nextScene != "cmd_earth";
+            var newScene = DeserializeFileAsScene(nextScene);
+            if (isActualScene && newScene == null)
             {
-                var isActualScene = nextSceneFileName != "cmd_earth";
-                var newScene = DeserializeFileAsScene(nextSceneFileName);
-                if (isActualScene && newScene == null)
-                {
-                    OnAborted(this, new EventArgs());
-                    _didAbort = false;
-                    return;
-                }
-
-                if (isActualScene && newScene.SurfaceScene)
-                    RaiseLandingGear();
-                else if (!isActualScene)
-                    _endMissionCanStart = CanStartEndMission;
-
-                Game.FadeScreenOut(1000);
-                Wait(1000);
-                ResetWeather();
-                ClearAllEntities(PlayerPosition, 10000);
-
-                if (nextSceneFileName != "cmd_earth")
-                {
-                    CreateScene(newScene, nextSceneFileName);
-                    if (nextSceneOffset != Vector3.Zero)
-                        PlayerPosition = newScene.GalaxyCenter + nextSceneOffset;
-                    if (PlayerPed.IsInVehicle())
-                        PlayerPed.CurrentVehicle.Rotation = nextSceneRotation;
-                    else PlayerPed.Rotation = nextSceneRotation;
-                }
-                else
-                {
-                    _currentScene.Delete();
-                    _currentScene = null;
-                    Function.Call(Hash.PAUSE_CLOCK, false);
-                    GiveSpawnControlToGame();
-                    EnterAtmosphere();
-                    PlayerPed.HasGravity = true;
-                    GtsLibNet.SetGravityLevel(9.81f);
-                }
-                Wait(1000);
-                Game.FadeScreenIn(1000);
+                OnAborted(this, new EventArgs());
+                _didAbort = false;
+                return;
             }
+
+            if (isActualScene && newScene.SurfaceScene)
+                RaiseLandingGear();
+
+            const int wait = 1000;
+            Game.FadeScreenOut(wait);
+            Wait(wait);
+            ResetWeather();
+            ClearAllEntities(PlayerPosition);
+            if (nextScene != "cmd_earth")
+            {
+                CreateScene(newScene, nextScene);
+                if (offset != Vector3.Zero) PlayerPosition = newScene.GalaxyCenter + offset;
+                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = rotation;
+                else PlayerPed.Rotation = rotation;
+            }
+            else
+            {
+                _currentScene.Delete();
+                _currentScene = null;
+                GiveSpawnControlToGame();
+                EnterAtmosphere();
+                PlayerPed.HasGravity = true;
+                GtsLibNet.SetGravityLevel(9.81f);
+            }
+            Wait(wait);
+            Game.FadeScreenIn(wait);
         }
-
-        #endregion
-
-        #region Utility
 
         private static void EnterAtmosphere()
         {
@@ -714,7 +544,7 @@ namespace GTS
             }
         }
 
-        private static void ClearAllEntities(Vector3 position, float radius)
+        private static void ClearAllEntities(Vector3 position, float radius = 10000)
         {
             Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, radius, false, false, false, false);
         }
@@ -848,9 +678,5 @@ namespace GTS
                 Game.FadeScreenIn(1000);
             }
         }
-
-        #endregion
-
-        #endregion
     }
 }

@@ -5,16 +5,15 @@ namespace GTS.Extensions
 {
     public static class XmlSerializer
     {
-        public static T Deserialize<T>(string path)
+        public static T Deserialize<T>(string path) where T : class
         {
-            var obj = default(T);
-
+            T obj = null;
             Debug.Log("Attempting to deserialize: " + Path.GetFileName(path));
 
             if (!File.Exists(path))
             {
                 Debug.Log($"Deserialize - File {Path.GetFileName(path)} does not exist!");
-                return obj;
+                return null;
             }
             try
             {
@@ -30,7 +29,7 @@ namespace GTS.Extensions
             return obj;
         }
 
-        public static void Serialize<T>(string path, T obj)
+        public static void Serialize<T>(string path, T obj) where T : class
         {
             try
             {

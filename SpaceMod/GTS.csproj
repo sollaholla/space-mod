@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioController.cs" />
+    <Compile Include="MapLoader.cs" />
     <Compile Include="Shuttle\LoadScaleform.cs" />
     <Compile Include="Missions\IntroMission.cs" />
     <Compile Include="Extensions\VectorParse.cs" />

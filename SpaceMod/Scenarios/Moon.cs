@@ -143,8 +143,7 @@ namespace DefaultMissions
                 Function.Call(Hash.SET_TEXT_JUSTIFICATION, 1);
                 Function.Call(Hash.SET_TEXT_WRAP, 0, width);
                 Function.Call(Hash._SET_TEXT_ENTRY, "CELL_EMAIL_BCON");
-                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING,
-                    "MARS SAT CAM 11~n~" + World.CurrentDate.ToShortDateString());
+                Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, "MARS SAT CAM 11~n~");
                 Function.Call(Hash._DRAW_TEXT, 0.15f, 0.075f);
                 /////////////////////////////////////////////////////////////
 
