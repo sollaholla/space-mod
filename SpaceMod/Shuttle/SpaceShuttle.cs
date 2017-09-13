@@ -60,8 +60,9 @@ namespace GTS.Shuttle
             IsFireProof = true;
             FreezePosition = true;
 
-            AddBlip().Sprite = BlipSprite.Rockets;
-            CurrentBlip.Name = "Shuttle";
+            var b = AddBlip();
+            b.Sprite = BlipSprite.Rockets;
+            b.Name = "Shuttle";
         }
 
         public void Control()

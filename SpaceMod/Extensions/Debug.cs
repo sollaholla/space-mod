@@ -52,7 +52,7 @@ namespace GTS.Extensions
             File.WriteAllText(Path,
                 $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
                 $"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
-                $"[{DateTime.Now.ToString("MM-dd-yyyy")}] [{DateTime.Now.ToString("hh:mm:ss")}] {nmspc} => {message}");
+                $"[{DateTime.Now:MM-dd-yyyy}] [{DateTime.Now:hh:mm:ss}] {nmspc} => {message}");
 
             if (type == DebugMessageType.Error)
                 UI.Notify(Database.NotifyHeader + "An error has occured. You can find more information in Space.log");
@@ -61,7 +61,8 @@ namespace GTS.Extensions
         public static void LogEntityData(Entity entity)
         {
             Log($"Logging entity data:{Environment.NewLine}" +
-                $"\tPosition: {entity.Position - (Core.Instance.GetCurrentScene() != null ? Core.Instance.GetCurrentScene().Info.GalaxyCenter : (XVector3) Vector3.Zero)}{Environment.NewLine}" +
+                $"\tRelative Position: {entity.Position - (Core.Instance.GetCurrentScene() != null ? Core.Instance.GetCurrentScene().Info.GalaxyCenter : (XVector3) Vector3.Zero)}{Environment.NewLine}" +
+                $"\tWorld Position: {entity.Position}{Environment.NewLine}" +
                 $"\tHeading: {entity.Heading}{Environment.NewLine}" +
                 $"\tRotation: {entity.Rotation}{Environment.NewLine}" +
                 $"\tQuaternion: {entity.Quaternion}{Environment.NewLine}" +

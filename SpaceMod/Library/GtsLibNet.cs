@@ -225,24 +225,18 @@ namespace GTS.Library
 
         public static void TerminateScript(string name)
         {
-            if (!Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
-            GtsLib.GetScriptStackSize(name); // cache the stack size before termination.
+            GtsLib.GetScriptStackSize(name);
             Function.Call(Hash.TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME, name);
         }
 
         public static void StartScript(string name, uint stackSize)
         {
-            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
-            RequestScript(name);
+            Function.Call(Hash.REQUEST_SCRIPT, name);
+            while (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name))
+                Script.Yield();
             if (!Function.Call<bool>(Hash.HAS_SCRIPT_LOADED, name)) return;
             Function.Call(Hash.START_NEW_SCRIPT, name, stackSize);
             Function.Call(Hash.SET_SCRIPT_AS_NO_LONGER_NEEDED, name);
-        }
-
-        public static void RequestScript(string name)
-        {
-            if (Function.Call<bool>(Hash.DOES_SCRIPT_EXIST, name)) return;
-            Function.Call(Hash.REQUEST_SCRIPT, name);
         }
 
         public static bool IsPlayingAnim(this Entity entity, string animDict, string animName)

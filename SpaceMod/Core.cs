@@ -27,6 +27,7 @@ namespace GTS
 
         private bool _resetWantedLevel;
         private bool _disableWantedLevel = true;
+        private bool _initializedScripts;
         private int _missionStatus;
         private bool _didAbort;
 
@@ -191,17 +192,14 @@ namespace GTS
 
         private void SceneNull()
         {
-            Game.MissionFlag = false;
             DoEarthUpdate();
             DoWorkingElevator();
-            GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
         }
 
         private void SceneNotNull()
         {
-            Game.MissionFlag = true;
-            if (_currentScene.Info != null) DoSceneUpdate();
-            GtsLibNet.TerminateScript("blip_controller");
+            if (_currentScene.Info != null)
+                DoSceneUpdate();
         }
 
         private void CreateMainMenu()
@@ -365,6 +363,9 @@ namespace GTS
 
         private void DoEarthUpdate()
         {
+            if (_introMission == null || !_introMission.DidStart) StartScripts();
+            else StopScripts();
+
             // Let's us go to space from earth.
             var height = PlayerPed.HeightAboveGround;
             if (!(height > GTS.Settings.EnterOrbitHeight)) return;
@@ -381,10 +382,6 @@ namespace GTS
                 _shuttleManager.Shuttle?.CleanUp();
                 _shuttleManager.Shuttle?.Delete();
             }
-
-            if (_introMission == null /*&& _endMission == null*/)
-                StartMissionScripts();
-            else StopMissionScripts();
         }
 
         private void DoSceneUpdate()
@@ -393,7 +390,7 @@ namespace GTS
                 PlayerPed.CurrentVehicle.HasGravity = _currentScene.Info.UseGravity;
             else PlayerPed.HasGravity = _currentScene.Info.UseGravity;
             _currentScene.Update();
-            StopMissionScripts();
+            StopScripts();
         }
 
         private void RunInternalMissions()
@@ -568,20 +565,28 @@ namespace GTS
             Function.Call(Hash.IGNORE_NEXT_RESTART, false);
         }
 
-        private static void StopMissionScripts()
+        private void StopScripts()
         {
+            if (!_initializedScripts) return;
             GtsLibNet.TerminateScript("mission_triggerer_a");
             GtsLibNet.TerminateScript("mission_triggerer_b");
             GtsLibNet.TerminateScript("mission_triggerer_c");
             GtsLibNet.TerminateScript("mission_triggerer_d");
+            GtsLibNet.TerminateScript("blip_controller");
+            Game.MissionFlag = true;
+            _initializedScripts = false;
         }
 
-        private static void StartMissionScripts()
+        private void StartScripts()
         {
+            if (_initializedScripts) return;
             GtsLibNet.StartScript("mission_triggerer_a", GtsLib.GetScriptStackSize("mission_triggerer_a"));
             GtsLibNet.StartScript("mission_triggerer_b", GtsLib.GetScriptStackSize("mission_triggerer_b"));
             GtsLibNet.StartScript("mission_triggerer_c", GtsLib.GetScriptStackSize("mission_triggerer_c"));
             GtsLibNet.StartScript("mission_triggerer_d", GtsLib.GetScriptStackSize("mission_triggerer_d"));
+            GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
+            Game.MissionFlag = false;
+            _initializedScripts = true;
         }
 
         private void StartWantedLevelScripts()
@@ -599,6 +604,7 @@ namespace GTS
 
         private void StopWantedLevelScripts()
         {
+            if (!_resetWantedLevel) return;
             GtsLibNet.TerminateScript("re_prison");
             GtsLibNet.TerminateScript("re_prisonlift");
             GtsLibNet.TerminateScript("am_prison");

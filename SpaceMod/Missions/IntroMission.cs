@@ -46,6 +46,7 @@ namespace GTS.Missions
         private static Ped PlayerPed => Game.Player.Character;
         private List<Ped> Peds { get; }
         private List<Vehicle> Vehicles { get; }
+        public bool DidStart { get; set; }
 
         public override void OnAwake()
         {
@@ -100,6 +101,7 @@ namespace GTS.Missions
                     }
                     break;
                 case 1:
+                    DidStart = true;
                     if (!_isSatelliteMessageShown)
                     {
                         GtsLibNet.ShowSubtitleWithGxt("INTRO_LABEL_5", 5000);
