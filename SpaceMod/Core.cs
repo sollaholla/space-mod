@@ -422,7 +422,7 @@ namespace GTS
         private void SetMissionStatus(int value)
         {
             _missionStatus = value;
-            Settings.SetValue("main_mission", "mission_status", _missionStatus);
+            Settings.SetValue("core", "mission_status", _missionStatus);
             Settings.Save();
         }
 
