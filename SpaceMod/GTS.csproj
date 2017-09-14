@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GTS</RootNamespace>
     <AssemblyName>GTS</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -37,16 +37,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
     </Reference>
-    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Games\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
-    </Reference>
     <Reference Include="NAudio, Version=1.8.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NAudio.1.8.2\lib\net35\NAudio.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet2, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceUI">
+      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SpaceUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -61,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioController.cs" />
+    <Compile Include="HeliTransport.cs" />
     <Compile Include="MapLoader.cs" />
     <Compile Include="Shuttle\LoadScaleform.cs" />
     <Compile Include="Missions\IntroMission.cs" />

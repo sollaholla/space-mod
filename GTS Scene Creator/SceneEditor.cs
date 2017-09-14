@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using GTSCommon;
 
 namespace GTS_Scene_Creator
 {

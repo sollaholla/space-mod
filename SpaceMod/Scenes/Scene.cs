@@ -14,6 +14,7 @@ using GTS.OrbitalSystems;
 using GTS.Scenarios;
 using GTS.Scenes.Interiors;
 using GTS.Vehicles;
+using GTSCommon;
 using Font = GTA.Font;
 
 namespace GTS.Scenes
@@ -193,6 +194,7 @@ namespace GTS.Scenes
                 Function.Call(Hash.SET_CLOCK_TIME, Info.Time, Info.TimeMinutes, 0);
                 Function.Call(Hash.PAUSE_CLOCK, true);
                 Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
+                Game.MissionFlag = true;
             }
         }
 
@@ -274,6 +276,7 @@ namespace GTS.Scenes
             Function.Call(Hash.PAUSE_CLOCK, false);
             Function.Call(Hash._LOWER_MAP_PROP_DENSITY, false);
             GtsLibNet.RemoveAllIpls(false);
+            Game.MissionFlag = false;
         }
 
         private void ClearLists(bool aborted)

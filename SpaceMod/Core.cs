@@ -12,6 +12,7 @@ using GTS.Library;
 using GTS.Missions;
 using GTS.Scenes;
 using GTS.Shuttle;
+using GTSCommon;
 using NativeUI;
 using Control = GTA.Control;
 
@@ -25,7 +26,7 @@ namespace GTS
         private MenuPool _menuPool;
         private Scene _currentScene;
 
-        private bool _resetWantedLevel;
+        private bool _resetWantedLevel = true;
         private bool _disableWantedLevel = true;
         private bool _initializedScripts;
         private int _missionStatus;
@@ -34,6 +35,7 @@ namespace GTS
         private MapLoader _mapLoader;
         private IntroMission _introMission;
         private ShuttleManager _shuttleManager;
+        private HeliTransport _heliTransport;
         private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
 
         public Core()
@@ -75,6 +77,33 @@ namespace GTS
             return _currentScene;
         }
 
+        private void OnTick(object sender, EventArgs eventArgs)
+        {
+            try
+            {
+                CreateMaps();
+                ProcessMenus();
+                CheckSceneStatus();
+                RunInternalMissions();
+                DisableWantedStars();
+            }
+            catch (Exception ex)
+            {
+                Debug.Log(ex.Message, DebugMessageType.Error);
+            }
+        }
+
+        private void OnKeyUp(object sender, KeyEventArgs e)
+        {
+            if (_menuPool?.IsAnyMenuOpen() ?? false)
+                return;
+
+            if (e.KeyCode != _optionsMenuKey)
+                return;
+
+            _mainMenu.Visible = !_mainMenu.Visible;
+        }
+
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
             if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
@@ -88,7 +117,6 @@ namespace GTS
             GtsLibNet.SetGravityLevel(9.81f);
             GtsLib.EndCredits();
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-            Game.MissionFlag = false;
             Effects.Stop();
             _currentScene?.Delete(true);
             if (_currentScene != null)
@@ -104,35 +132,8 @@ namespace GTS
             _shuttleManager?.Abort();
             _tcChanger?.Stop();
             _mapLoader?.RemoveMaps();
+            _heliTransport?.Delete();
             _didAbort = true;
-        }
-
-        private void OnKeyUp(object sender, KeyEventArgs e)
-        {
-            if (_menuPool?.IsAnyMenuOpen() ?? false)
-                return;
-
-            if (e.KeyCode != _optionsMenuKey)
-                return;
-
-            _mainMenu.Visible = !_mainMenu.Visible;
-        }
-
-        private void OnTick(object sender, EventArgs eventArgs)
-        {
-            try
-            {
-                CreateMaps();
-                ProcessMenus();
-                CheckSceneStatus();
-                RunInternalMissions();
-                DisableWantedStars();
-                OpenMilitaryGates();
-            }
-            catch (Exception ex)
-            {
-                Debug.Log(ex.Message, DebugMessageType.Error);
-            }
         }
 
         private void ProcessMenus()
@@ -265,7 +266,7 @@ namespace GTS
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.VehicleFlySpeed = sender.IndexToItem(index);
+                GTS.Settings.VehicleFlySpeed = (int) sender.IndexToItem(index);
             };
 
             var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
@@ -274,7 +275,7 @@ namespace GTS
                     .Select(i => (dynamic)i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.MouseControlFlySensitivity = sender.IndexToItem(index);
+                GTS.Settings.MouseControlFlySensitivity = (float) sender.IndexToItem(index);
             };
 
             vehicleSettingsMenu.AddItem(vehicleSpeedList);
@@ -341,6 +342,12 @@ namespace GTS
 
         private void CreateMaps()
         {
+            if (_heliTransport == null)
+            {
+                _heliTransport = new HeliTransport();
+                _heliTransport.Load();
+            }
+
             if (_mapLoader == null)
             {
                 _mapLoader = new MapLoader();
@@ -531,13 +538,6 @@ namespace GTS
             Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, radius, false, false, false, false);
         }
 
-        private static void OpenMilitaryGates()
-        {
-            var doorHash = Game.GenerateHash("prop_sec_barrier_ld_01a");
-            Function.Call(Hash._DOOR_CONTROL, doorHash, -1589.582f, 2793.6707f, 16.8591f, false, 0.0f, 45.0f, 0.0f);
-            Function.Call(Hash._DOOR_CONTROL, doorHash, -1588.267f, 2793.2126f, 16.8472f, false, 0.0f, 45.0f, 0.0f);
-        }
-
         private static void RaiseLandingGear()
         {
             var vehicle = PlayerPed.CurrentVehicle;
@@ -573,7 +573,6 @@ namespace GTS
             GtsLibNet.TerminateScript("mission_triggerer_c");
             GtsLibNet.TerminateScript("mission_triggerer_d");
             GtsLibNet.TerminateScript("blip_controller");
-            Game.MissionFlag = true;
             _initializedScripts = false;
         }
 
@@ -585,32 +584,32 @@ namespace GTS
             GtsLibNet.StartScript("mission_triggerer_c", GtsLib.GetScriptStackSize("mission_triggerer_c"));
             GtsLibNet.StartScript("mission_triggerer_d", GtsLib.GetScriptStackSize("mission_triggerer_d"));
             GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
-            Game.MissionFlag = false;
             _initializedScripts = true;
         }
 
         private void StartWantedLevelScripts()
         {
             if (_resetWantedLevel) return;
-            GtsLibNet.StartScript("re_prison", GtsLib.GetScriptStackSize("re_prison"));
-            GtsLibNet.StartScript("re_prisonlift", GtsLib.GetScriptStackSize("re_prisonlift"));
-            GtsLibNet.StartScript("am_prison", GtsLib.GetScriptStackSize("am_prison"));
-            GtsLibNet.StartScript("re_lossantosintl", GtsLib.GetScriptStackSize("re_lossantosintl"));
-            GtsLibNet.StartScript("re_armybase", GtsLib.GetScriptStackSize("re_armybase"));
             GtsLibNet.StartScript("restrictedareas", GtsLib.GetScriptStackSize("restrictedareas"));
-            Game.MaxWantedLevel = 5;
+            GtsLibNet.StartScript("re_lossantosintl", GtsLib.GetScriptStackSize("re_lossantosintl"));
+            GtsLibNet.StartScript("re_prison", GtsLib.GetScriptStackSize("re_prison"));
+            GtsLibNet.StartScript("re_prisonvanbreak", GtsLib.GetScriptStackSize("re_prisonvanbreak"));
+            GtsLibNet.StartScript("re_armybase", GtsLib.GetScriptStackSize("re_armybase"));
+            GtsLibNet.StartScript("am_armybase", GtsLib.GetScriptStackSize("am_armybase"));
+            GtsLibNet.StartScript("building_controller", GtsLib.GetScriptStackSize("building_controller"));
             _resetWantedLevel = true;
         }
 
         private void StopWantedLevelScripts()
         {
             if (!_resetWantedLevel) return;
-            GtsLibNet.TerminateScript("re_prison");
-            GtsLibNet.TerminateScript("re_prisonlift");
-            GtsLibNet.TerminateScript("am_prison");
-            GtsLibNet.TerminateScript("re_lossantosintl");
-            GtsLibNet.TerminateScript("re_armybase");
             GtsLibNet.TerminateScript("restrictedareas");
+            GtsLibNet.TerminateScript("re_lossantosintl");
+            GtsLibNet.TerminateScript("re_prison");
+            GtsLibNet.TerminateScript("re_prisonvanbreak");
+            GtsLibNet.TerminateScript("re_armybase");
+            GtsLibNet.TerminateScript("am_armybase");
+            GtsLibNet.TerminateScript("building_controller");
             Game.Player.WantedLevel = 0;
             Game.MaxWantedLevel = 0;
             _resetWantedLevel = false;
@@ -618,10 +617,10 @@ namespace GTS
 
         private static void DoWorkingElevator()
         {
-            var start = new Vector3(-2360.916f, 3249.298f, 31.81073f);
-            var end = new Vector3(-2360.835f, 3249.45f, 91.90375f);
-            const float startHeading = 320.1821f;
-            const float endHeading = 326.1702f;
+            var start = new Vector3(-6542.53f, -1394.774f, 87.49376f);
+            var end = new Vector3(-6542.53f, -1394.774f, 27.40076f);
+            const float startHeading = 105.8469f;
+            const float endHeading = 105.8555f;
 
             var distStart = PlayerPed.Position.DistanceToSquared(start);
             var distEnd = PlayerPed.Position.DistanceToSquared(end);
@@ -640,7 +639,7 @@ namespace GTS
                 if (!Game.IsControlJustPressed(2, Control.Context)) return;
                 PlayerPed.Task.StandStill(-1);
                 PlayerPed.Task.AchieveHeading(startHeading, -1);
-                cam = World.CreateCamera(PlayerPosition + Vector3.RelativeFront + PlayerPed.UpVector, Vector3.Zero, 60);
+                cam = World.CreateCamera(PlayerPosition + Vector3.RelativeLeft + PlayerPed.UpVector, Vector3.Zero, 60);
                 cam.PointAt(PlayerPed, PlayerPed.GetBoneIndex(Bone.SKEL_Head));
                 World.RenderingCamera = cam;
                 Wait(2000);
@@ -657,7 +656,7 @@ namespace GTS
                 if (!Game.IsControlJustPressed(2, Control.Context)) return;
                 PlayerPed.Task.StandStill(-1);
                 PlayerPed.Task.AchieveHeading(endHeading, -1);
-                cam = World.CreateCamera(PlayerPosition + Vector3.RelativeFront + PlayerPed.UpVector, Vector3.Zero, 60);
+                cam = World.CreateCamera(PlayerPosition + Vector3.RelativeLeft + PlayerPed.UpVector, Vector3.Zero, 60);
                 cam.PointAt(PlayerPed, PlayerPed.GetBoneIndex(Bone.SKEL_Head));
                 World.RenderingCamera = cam;
                 Wait(2000);

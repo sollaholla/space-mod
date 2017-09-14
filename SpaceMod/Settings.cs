@@ -20,7 +20,7 @@ namespace GTS
 
         public static int VehicleFlySpeed = 35;
 
-        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 4000);
+        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 6000);
 
         public static Vector3 EarthAtmosphereEnterRotation = new Vector3(-35, 0, 0);
 
@@ -28,20 +28,12 @@ namespace GTS
 
         public static bool AlwaysUseSound = false;
 
-        public static float EnterOrbitHeight = 4500f;
+        public static float EnterOrbitHeight = 6500f;
 
         public static Vector3 DefaultSceneRotation = new Vector3();
 
         public static Vector3 DefaultScenePosition = new Vector3();
 
         public static string DefaultScene = "EarthOrbit.space";
-
-        public static void LoadSettings()
-        {
-        }
-
-        public static void SaveSettings()
-        {
-        }
     }
 }

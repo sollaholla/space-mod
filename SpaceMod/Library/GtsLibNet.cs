@@ -1048,7 +1048,6 @@ namespace GTS.Library
 
         public void Stop()
         {
-            if (_t != null) _t.Tick -= OnTick;
             _t?.Stop();
             _t?.Dispose();
         }

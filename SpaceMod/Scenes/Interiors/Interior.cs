@@ -6,6 +6,7 @@ using GTA.Math;
 using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
+using GTSCommon;
 
 namespace GTS.Scenes.Interiors
 {

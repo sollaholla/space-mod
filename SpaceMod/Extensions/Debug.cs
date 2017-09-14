@@ -5,6 +5,7 @@ using System.IO;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTSCommon;
 
 namespace GTS.Extensions
 {

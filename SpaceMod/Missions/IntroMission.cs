@@ -14,8 +14,8 @@ namespace GTS.Missions
 {
     internal class IntroMission : Scenario
     {
-        private readonly float _colonelHeading = 313.5386f;
-        private readonly Vector3 _colonelSpawn = new Vector3(-2356.895f, 3248.412f, 101.4508f);
+        private readonly float _colonelHeading = 53.71681f;
+        private readonly Vector3 _colonelSpawn = new Vector3(-6543.538f, -1395.759f, 97.04076f);
 
         private readonly List<SatelliteDish> _dishes = new List<SatelliteDish>
         {
@@ -62,6 +62,10 @@ namespace GTS.Missions
 
         public override void OnUpdate()
         {
+            if (PlayerPed.IsDead)
+                EndScenario(false);
+
+
             switch (_missionStep)
             {
                 case 0:
@@ -146,7 +150,7 @@ namespace GTS.Missions
                                 groundZ.GetResult<float>());
 
                             PlayerPed.Task.PlayAnimation("missbigscore2aswitch", "switch_mic_car_fra_laptop_hacker",
-                                8f, -1, AnimationFlags.None);
+                                4f, -1, AnimationFlags.None);
 
                             Script.Wait(3000);
 
