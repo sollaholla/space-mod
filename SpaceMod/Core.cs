@@ -106,6 +106,17 @@ namespace GTS
 
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
+            Reset();
+            _introMission?.OnAborted();
+            _shuttleManager?.Abort();
+            _tcChanger?.Stop();
+            _mapLoader?.RemoveMaps();
+            _heliTransport?.Delete();
+            _didAbort = true;
+        }
+
+        private void Reset()
+        {
             if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
                 Game.FadeScreenIn(0);
             PlayerPed.Task.ClearAll();
@@ -128,12 +139,6 @@ namespace GTS
             }
             else GtsLibNet.RemoveAllIplsRegardless(false);
             _currentScene = null;
-            _introMission?.OnAborted();
-            _shuttleManager?.Abort();
-            _tcChanger?.Stop();
-            _mapLoader?.RemoveMaps();
-            _heliTransport?.Delete();
-            _didAbort = true;
         }
 
         private void ProcessMenus()
@@ -232,10 +237,8 @@ namespace GTS
             earthItem.SetLeftBadge(UIMenuItem.BadgeStyle.Heart);
             earthItem.Activated += (a1, a2) =>
             {
-                if (_currentScene != null)
-                {
-                    OnAborted(null, new EventArgs());
-                    _didAbort = false;
+                if (_currentScene != null) {
+                    Reset();
                 }
             };
             scenesMenu.AddItem(earthItem);

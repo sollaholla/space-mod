@@ -53,7 +53,7 @@ namespace GTS.Shuttle
             m2.MarkAsNoLongerNeeded();
             m3.MarkAsNoLongerNeeded();
 
-            _extTank.AttachTo(this, 0, new Vector3(0, -1, 0), new Vector3());
+            _extTank.AttachTo(this, 0, new Vector3(0, 0.5f, 0), new Vector3());
             _srbL.AttachTo(_extTank, 0, new Vector3(), new Vector3());
             _srbR.AttachTo(_extTank, 0, new Vector3(), new Vector3());
 

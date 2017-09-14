@@ -229,6 +229,7 @@ namespace DefaultMissions
                     playerCharacter.Heading = _marsEngineerConvoHeading;
                     GameplayCamera.RelativeHeading = 0;
                     _engineer.PositionNoOffset = playerCharacter.Position + playerCharacter.ForwardVector * 2;
+                    _engineer.Heading = -Game.Player.Character.Heading;
                     _missionStep++;
                     Game.FadeScreenIn(1000);
                     break;

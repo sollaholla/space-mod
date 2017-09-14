@@ -10,14 +10,13 @@ namespace GTS.Shuttle
 {
     public class ShuttleManager
     {
-        // TODO: Convert some of these to settings.
-        private readonly string _astronautModel = "s_m_m_movspace_01";
+        private const string AstronautModel = "s_m_m_movspace_01";
+        private const float ShuttleHeading = 25;
+        private const float ShuttleInteractDistance = 40;
 
-        private readonly float _enterOrbitHeight;
-        private readonly float _shuttleHeading = 25;
-        private readonly float _shuttleInteractDistance = 75;
-        private readonly Vector3 _shuttlePosition = new Vector3(-6409.215f, -1336.180f, 50.8521f);
         private Vehicle _shuttleVehicle;
+        private readonly Vector3 _shuttlePosition = new Vector3(-6412.1f, -1345.5f, 58f);
+        private readonly float _enterOrbitHeight;
 
         public ShuttleManager(float enterOrbitHeight)
         {
@@ -38,7 +37,7 @@ namespace GTS.Shuttle
             else
             {
                 var dist = Game.Player.Character.Position.DistanceTo(_shuttlePosition);
-                if (dist > _shuttleInteractDistance) return;
+                if (dist > ShuttleInteractDistance) return;
                 Game.DisableControlThisFrame(2, Control.Enter);
                 GtsLibNet.DisplayHelpTextWithGxt("SHUT_ENTER");
                 if (!Game.IsDisabledControlJustPressed(2, Control.Enter)) return;
@@ -64,7 +63,7 @@ namespace GTS.Shuttle
             m.Request();
             while (!m.IsLoaded)
                 Script.Yield();
-            _shuttleVehicle = World.CreateVehicle(m, _shuttlePosition, _shuttleHeading);
+            _shuttleVehicle = World.CreateVehicle(m, _shuttlePosition, ShuttleHeading);
             _shuttleVehicle.Rotation = _shuttleVehicle.Rotation + new Vector3(90, 0, 0); // Rotate the shuttle upwards.
             _shuttleVehicle.HasCollision = false;
             _shuttleVehicle.FreezePosition = true;
@@ -76,7 +75,7 @@ namespace GTS.Shuttle
             var playerPed = Game.Player.Character;
 
             // Get the model for the player.
-            var modelName = _astronautModel;
+            var modelName = AstronautModel;
             switch ((PedHash) playerPed.Model.Hash)
             {
                 case PedHash.Michael:

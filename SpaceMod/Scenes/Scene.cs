@@ -992,13 +992,13 @@ namespace GTS.Scenes
                 return;
             }
 
-            if (PlayerPed.IsInVehicle() && CanDoOrbitLanding())
-                if (PlayerVehicle != PlayerPed.CurrentVehicle)
-                {
-                    PlayerVehicle = PlayerPed.CurrentVehicle;
-                    if (PlayerPed.CurrentVehicle.Model.IsCar)
-                        GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
-                }
+            //if (PlayerPed.IsInVehicle() && CanDoOrbitLanding())
+            //    if (PlayerVehicle != PlayerPed.CurrentVehicle)
+            //    {
+            //        PlayerVehicle = PlayerPed.CurrentVehicle;
+            //        if (!PlayerPed.CurrentVehicle.Model.IsPlane)
+            //            GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
+            //    }
 
             ReturnToOrbit();
         }
@@ -1051,8 +1051,7 @@ namespace GTS.Scenes
             }
             else if (PlayerPed.IsInVehicle())
             {
-                if (!PlayerPed.CurrentVehicle.Model.IsPlane)
-                    GtsLib.SetVehicleGravity(PlayerPed.CurrentVehicle, Info.GravityLevel);
+                ChangePlayerVehicle();
                 GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT2");
                 Game.DisableControlThisFrame(2, Control.Context);
                 if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
@@ -1406,10 +1405,8 @@ namespace GTS.Scenes
             if (Entity.Exists(PlayerPed.CurrentVehicle) && PlayerPed.CurrentVehicle != PlayerVehicle)
             {
                 PlayerVehicle = PlayerPed.CurrentVehicle;
-                if (Entity.Exists(PlayerVehicle) && !PlayerPed.CurrentVehicle.Model.IsPlane)
-                    GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
-                PlayerVehicle.HasGravity = false;
-                Function.Call(Hash.SET_VEHICLE_GRAVITY, PlayerVehicle.Handle, false);
+                if (!PlayerPed.CurrentVehicle.Model.IsPlane)
+                    GtsLib.SetVehicleGravity(PlayerVehicle, Info.UseGravity ? Info.GravityLevel : 0f);
             }
             else if (PlayerVehicle != null)
             {
