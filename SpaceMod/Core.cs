@@ -35,7 +35,6 @@ namespace GTS
         private MapLoader _mapLoader;
         private IntroMission _introMission;
         private ShuttleManager _shuttleManager;
-        private HeliTransport _heliTransport;
         private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
 
         public Core()
@@ -63,6 +62,8 @@ namespace GTS
                 else PlayerPed.Position = value;
             }
         }
+
+        internal static HeliTransport HeliTransport { get; private set; }
 
         protected override void Dispose(bool dispose)
         {
@@ -111,7 +112,7 @@ namespace GTS
             _shuttleManager?.Abort();
             _tcChanger?.Stop();
             _mapLoader?.RemoveMaps();
-            _heliTransport?.Delete();
+            HeliTransport?.Delete();
             _didAbort = true;
         }
 
@@ -345,10 +346,10 @@ namespace GTS
 
         private void CreateMaps()
         {
-            if (_heliTransport == null)
+            if (HeliTransport == null)
             {
-                _heliTransport = new HeliTransport();
-                _heliTransport.Load();
+                HeliTransport = new HeliTransport();
+                HeliTransport.Load();
             }
 
             if (_mapLoader == null)
@@ -373,8 +374,10 @@ namespace GTS
 
         private void DoEarthUpdate()
         {
-            if (_introMission == null || !_introMission.DidStart) StartScripts();
+            if (_introMission == null || !_introMission.DidStart)
+                StartScripts();
             else StopScripts();
+            HeliTransport?.Update();
 
             // Let's us go to space from earth.
             var height = PlayerPed.HeightAboveGround;
@@ -387,11 +390,9 @@ namespace GTS
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = GTS.Settings.DefaultSceneRotation;
             else PlayerPed.Heading = GTS.Settings.DefaultSceneRotation.Z;
 
-            if (PlayerPed.CurrentVehicle != _shuttleManager.Shuttle)
-            {
-                _shuttleManager.Shuttle?.CleanUp();
-                _shuttleManager.Shuttle?.Delete();
-            }
+            if (PlayerPed.CurrentVehicle == _shuttleManager.Shuttle) return;
+            _shuttleManager.Shuttle?.CleanUp();
+            _shuttleManager.Shuttle?.Delete();
         }
 
         private void DoSceneUpdate()

@@ -65,7 +65,6 @@ namespace GTS.Missions
             if (PlayerPed.IsDead)
                 EndScenario(false);
 
-
             switch (_missionStep)
             {
                 case 0:
@@ -98,9 +97,7 @@ namespace GTS.Missions
                         Script.Wait(1000);
                         Game.FadeScreenIn(1000);
                         Script.Wait(1000);
-                        var m = new Model("crusader");
-                        m.Request(5000);
-                        Vehicles.Add(World.CreateVehicle(m, new Vector3(-2327.254f, 3265.089f, 31.82764f), 331.297f));
+                        Core.HeliTransport?.ShowHelp();
                         _missionStep++;
                     }
                     break;
@@ -115,13 +112,13 @@ namespace GTS.Missions
                     {
                         if (!Blip.Exists(_dishesAreaBlip))
                         {
-                            _dishesAreaBlip = World.CreateBlip(_dishesArea, 150);
+                            _dishesAreaBlip = World.CreateBlip(_dishesArea, 200);
                             _dishesAreaBlip.ShowRoute = true;
                             _dishesAreaBlip.Alpha = 155;
                             _dishesAreaBlip.Color = BlipColor.Yellow;
                         }
                         var dist = PlayerPed.Position.DistanceToSquared(_dishesArea);
-                        if (dist > 400) return;
+                        if (dist > 40000) return;
                         _dishesAreaBlip?.Remove();
                         _dishes.ForEach(dish =>
                         {
@@ -292,81 +289,6 @@ namespace GTS.Missions
                     }
                     break;
                 case 8:
-                    if (PlayerPed.Position.DistanceTo(_humaneLabsEnterance) > 200)
-                    {
-                        Peds.Clear();
-                        for (var i = 0; i < 4; i++)
-                        {
-                            var spawn = World.GetNextPositionOnStreet(PlayerPed.Position.Around(100), true);
-                            if (spawn == Vector3.Zero || spawn.IsOnScreen()) continue;
-                            var v = World.CreateVehicle(VehicleHash.Paradise, spawn);
-                            Function.Call(Hash.SET_VEHICLE_ON_GROUND_PROPERLY, v);
-                            if (v == null) continue;
-                            for (var j = 0; j < 2; j++)
-                            {
-                                var p = v.CreatePedOnSeat(j == 0 ? VehicleSeat.Driver : VehicleSeat.Passenger,
-                                    PedHash.Hippy01AMY);
-                                if (p == null) continue;
-                                p.IsEnemy = true;
-                                p.Weapons.Give(WeaponHash.Pistol, 10, true, true);
-                                if (v.Driver == p)
-                                    p.Task.VehicleChase(PlayerPed);
-                                p.RelationshipGroup = Game.GenerateHash("HATES_PLAYER");
-                                p.AddBlip().Scale = 0.7f;
-                                Peds.Add(p);
-                            }
-                            v.AddBlip();
-                            Vehicles.Add(v);
-                        }
-                        if (_colonel?.CurrentBlip != null)
-                        {
-                            _colonel.CurrentBlip.Alpha = 0;
-                            _colonel.CurrentBlip.ShowRoute = false;
-                        }
-                        _missionStep++;
-                    }
-                    break;
-                case 9:
-                    Vehicles.ForEach(v =>
-                    {
-                        if (v == null || !v.Exists() || v.IsDead) return;
-                        v.CurrentBlip.Alpha = v.Passengers.Length > 0 && v.Passengers.All(x => !x.IsDead) ? 255 : 0;
-                        if (!(v.Position.DistanceTo(PlayerPed.Position) > 300)) return;
-                        var list = v.Passengers.ToList();
-                        list.ForEach(p => p?.Delete());
-                        v.Driver?.Delete();
-                        v.Delete();
-                    });
-                    Peds.ForEach(p =>
-                    {
-                        if (!Entity.Exists(p)) return;
-                        if (p.IsDead)
-                        {
-                            if (Blip.Exists(p.CurrentBlip))
-                                p.CurrentBlip.Remove();
-                            return;
-                        }
-                        if (!p.IsInVehicle() && p.Position.DistanceTo(PlayerPed.Position) > 300)
-                        {
-                            p.Delete();
-                            return;
-                        }
-                        p.CurrentBlip.Alpha = p.IsInVehicle() || p.IsDead ? 0 : 255;
-                    });
-                    if (Peds.All(p => p?.IsDead ?? true))
-                    {
-                        if (_colonel?.CurrentBlip != null)
-                        {
-                            _colonel.CurrentBlip.Alpha = 255;
-                            _colonel.CurrentBlip.ShowRoute = true;
-                        }
-                        Peds.ForEach(p => p?.CurrentBlip?.Remove());
-                        Vehicles.ForEach(v => v?.CurrentBlip?.Remove());
-
-                        _missionStep++;
-                    }
-                    break;
-                case 10:
                     distance = PlayerPed.Position.DistanceToSquared(_colonel.Position);
                     if (distance > 3f) return;
                     World.DrawMarker(MarkerType.UpsideDownCone, _colonel.Position + Vector3.WorldUp * 1.5f,
