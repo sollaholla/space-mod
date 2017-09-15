@@ -28,11 +28,11 @@ namespace GTS
                 if (!(dist < 4)) continue;
                 GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
                 if (!Game.IsControlJustPressed(2, Control.Context)) continue;
-                var ped = (Ped)pilot;
                 Function.Call(Hash._PLAY_AMBIENT_SPEECH1, pilot, "GENERIC_HI", "Speech_Params_Force_Shouted_Critical");
                 Script.Wait(1200);
                 Game.FadeScreenOut(1000);
                 Script.Wait(1000);
+                World.CurrentDayTime += new TimeSpan(0, 0, 20);
                 Game.Player.Character.Position = pilot.Destination - Vector3.WorldUp;
                 Game.Player.Character.Heading = pilot.DestHeading;
                 Game.FadeScreenIn(2000);
@@ -47,9 +47,9 @@ namespace GTS
         {
             var positions = new[]
             {
-                new Vector3(-6546.155f, -1332.292f, 30.23943f),
-                new Vector3(-6573.748f,-1342.227f,30.23943f),
-                new Vector3(-1168.388f, -1719.005f, 4.231533f)
+                new Vector3(-6546.155f, -1332.292f, 31.23943f),
+                new Vector3(-6573.748f,-1342.227f,31.23943f),
+                new Vector3(-1168.388f, -1719.005f, 5.231533f)
             };
 
             var model = new Model("buzzard");
@@ -78,7 +78,7 @@ namespace GTS
             World.RenderingCamera = cam;
             Effects.Start(ScreenEffect.CamPushInNeutral);
             GtsLibNet.DisplayHelpTextWithGxt("HELI_INFO1");
-            var timout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+            var timout = DateTime.Now + new TimeSpan(0, 0, 0, 10);
             while (DateTime.Now < timout)
             {
                 Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
@@ -95,7 +95,7 @@ namespace GTS
             model.Request();
             while (!model.IsLoaded)
                 Script.Yield();
-            var ped = World.CreatePed(model, new Vector3(-6543.132f, -1331.071f, 29.23944f), 282.5533f);
+            var ped = World.CreatePed(model, new Vector3(-6543.132f, -1331.071f, 29.23944f), 283.5533f);
             ped.TaskStartScenarioInPlace("world_human_smoking");
             ped.SetDefaultClothes();
             var b = ped.AddBlip();
@@ -105,7 +105,7 @@ namespace GTS
             b.Color = Scene.MarkerBlipColor;
             _pilots.Add(new Pilot(ped.Handle, new Vector3(-1163.048f, -1713.792f, 4.236674f), 137.986f));
 
-            var ped2 = World.CreatePed(model, new Vector3(-1165.701f, -1715.857f, 3.237385f), 305.5582f);
+            var ped2 = World.CreatePed(model, new Vector3(-1165.701f, -1715.857f, 3.237385f), 306.5582f);
             ped2.SetDefaultClothes();
             ped2.TaskStartScenarioInPlace("world_human_guard_stand");
             var b2 = ped2.AddBlip();
