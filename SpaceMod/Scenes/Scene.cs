@@ -991,15 +991,6 @@ namespace GTS.Scenes
                 _didRaiseGears = true;
                 return;
             }
-
-            //if (PlayerPed.IsInVehicle() && CanDoOrbitLanding())
-            //    if (PlayerVehicle != PlayerPed.CurrentVehicle)
-            //    {
-            //        PlayerVehicle = PlayerPed.CurrentVehicle;
-            //        if (!PlayerPed.CurrentVehicle.Model.IsPlane)
-            //            GtsLib.SetVehicleGravity(PlayerVehicle, Info.GravityLevel);
-            //    }
-
             ReturnToOrbit();
         }
 
@@ -1405,8 +1396,7 @@ namespace GTS.Scenes
             if (Entity.Exists(PlayerPed.CurrentVehicle) && PlayerPed.CurrentVehicle != PlayerVehicle)
             {
                 PlayerVehicle = PlayerPed.CurrentVehicle;
-                if (!PlayerPed.CurrentVehicle.Model.IsPlane)
-                    GtsLib.SetVehicleGravity(PlayerVehicle, Info.UseGravity ? Info.GravityLevel : 0f);
+                GtsLib.SetVehicleGravity(PlayerVehicle, Info.UseGravity ? Info.GravityLevel : 0f);
             }
             else if (PlayerVehicle != null)
             {

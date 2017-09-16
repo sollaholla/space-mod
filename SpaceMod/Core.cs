@@ -346,6 +346,9 @@ namespace GTS
 
         private void CreateMaps()
         {
+            while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
+                Yield();
+
             if (HeliTransport == null)
             {
                 HeliTransport = new HeliTransport();
@@ -360,8 +363,6 @@ namespace GTS
 
             if (_shuttleManager == null)
             {
-                while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
-                    Yield();
                 var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
                 loadScaleform.Draw = true;
                 _shuttleManager = new ShuttleManager(GTS.Settings.EnterOrbitHeight);
