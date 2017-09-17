@@ -96,6 +96,9 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
+            if (e.KeyCode == Keys.K)
+                Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
+
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 

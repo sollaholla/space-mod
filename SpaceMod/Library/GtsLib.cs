@@ -164,8 +164,8 @@ namespace GTS.Library
 
         public static void SetAirDragMultForVehicle(this Player player, float value)
         {
-            //if (!GTSLib_IsLibraryInitialized()) return;
-            //GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
+            if (!GTSLib_IsLibraryInitialized()) return;
+            GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
         }
     }
 }
