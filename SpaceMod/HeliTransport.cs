@@ -22,70 +22,70 @@ namespace GTS
 
         public void Update()
         {
-            foreach (var pilot in _pilots)
-            {
-                var dist = pilot.Position.DistanceToSquared(Game.Player.Character.Position);
-                if (!(dist < 4)) continue;
-                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
-                if (!Game.IsControlJustPressed(2, Control.Context)) continue;
-                Function.Call(Hash._PLAY_AMBIENT_SPEECH1, pilot, "GENERIC_HI", "Speech_Params_Force_Shouted_Critical");
-                Script.Wait(1200);
-                Game.FadeScreenOut(1000);
-                Script.Wait(1000);
-                World.CurrentDayTime += new TimeSpan(0, 0, 20);
-                Game.Player.Character.Position = pilot.Destination - Vector3.WorldUp;
-                Game.Player.Character.Heading = pilot.DestHeading;
-                Game.FadeScreenIn(2000);
-                Script.Wait(2000);
-                Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "GENERIC_THANKS", "Speech_Params_Force_Shouted_Critical");
-                Script.Wait(1000);
-                Game.Player.Money -= 15;
-            }
+            //foreach (var pilot in _pilots)
+            //{
+            //    var dist = pilot.Position.DistanceToSquared(Game.Player.Character.Position);
+            //    if (!(dist < 4)) continue;
+            //    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+            //    if (!Game.IsControlJustPressed(2, Control.Context)) continue;
+            //    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, pilot, "GENERIC_HI", "Speech_Params_Force_Shouted_Critical");
+            //    Script.Wait(1200);
+            //    Game.FadeScreenOut(1000);
+            //    Script.Wait(1000);
+            //    World.CurrentDayTime += new TimeSpan(0, 0, 20);
+            //    Game.Player.Character.Position = pilot.Destination - Vector3.WorldUp;
+            //    Game.Player.Character.Heading = pilot.DestHeading;
+            //    Game.FadeScreenIn(2000);
+            //    Script.Wait(2000);
+            //    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, Game.Player.Character, "GENERIC_THANKS", "Speech_Params_Force_Shouted_Critical");
+            //    Script.Wait(1000);
+            //    Game.Player.Money -= 15;
+            //}
         }
 
         public void Load()
         {
-            var positions = new[]
-            {
-                new Vector3(-6546.155f, -1332.292f, 31.23943f),
-                new Vector3(-6573.748f,-1342.227f,31.23943f),
-                new Vector3(-1168.388f, -1719.005f, 5.231533f)
-            };
+            //var positions = new[]
+            //{
+            //    new Vector3(-6546.155f, -1332.292f, 31.23943f),
+            //    new Vector3(-6573.748f,-1342.227f,31.23943f),
+            //    new Vector3(-1168.388f, -1719.005f, 5.231533f)
+            //};
 
-            var model = new Model("buzzard");
-            model.Request();
-            while (!model.IsLoaded)
-                Script.Yield();
+            //var model = new Model("buzzard");
+            //model.Request();
+            //while (!model.IsLoaded)
+            //    Script.Yield();
 
-            foreach (var position in positions)
-            {
-                var veh = World.CreateVehicle(model, position);
-                _helis.Add(veh);
-            }
+            //foreach (var position in positions)
+            //{
+            //    var veh = World.CreateVehicle(model, position);
+            //    _helis.Add(veh);
+            //}
 
-            CreatePeds();
+            //CreatePeds();
         }
 
         public void ShowHelp()
         {
-            if (!_pilots.Any())
-                return;
+            //if (!_pilots.Any())
+            //    return;
 
-            Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-            var cam = World.CreateCamera(_pilots[0].Position + _pilots[0].ForwardVector * 2, Vector3.Zero, 60);
-            cam.PointAt(_pilots[0]);
-            cam.Shake(CameraShake.Hand, 0.5f);
-            World.RenderingCamera = cam;
-            Effects.Start(ScreenEffect.CamPushInNeutral);
-            GtsLibNet.DisplayHelpTextWithGxt("HELI_INFO1");
-            var timout = DateTime.Now + new TimeSpan(0, 0, 0, 10);
-            while (DateTime.Now < timout)
-            {
-                Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-                Script.Yield();
-            }
-            World.RenderingCamera = null;
-            Effects.Start(ScreenEffect.CamPushInNeutral);
+            //Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
+            //var cam = World.CreateCamera(_pilots[0].Position + _pilots[0].ForwardVector * 2, Vector3.Zero, 60);
+            //cam.PointAt(_pilots[0]);
+            //cam.Shake(CameraShake.Hand, 0.5f);
+            //World.RenderingCamera = cam;
+            //Effects.Start(ScreenEffect.CamPushInNeutral);
+            //GtsLibNet.DisplayHelpTextWithGxt("HELI_INFO1");
+            //var timout = DateTime.Now + new TimeSpan(0, 0, 0, 10);
+            //while (DateTime.Now < timout)
+            //{
+            //    Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
+            //    Script.Yield();
+            //}
+            //World.RenderingCamera = null;
+            //Effects.Start(ScreenEffect.CamPushInNeutral);
         }
 
         private void CreatePeds()
@@ -118,11 +118,11 @@ namespace GTS
 
         public void Delete()
         {
-            foreach (var vehicle in _helis)
-                vehicle.Delete();
+            //foreach (var vehicle in _helis)
+            //    vehicle.Delete();
 
-            foreach (var ped in _pilots)
-                ped.Delete();
+            //foreach (var ped in _pilots)
+            //    ped.Delete();
         }
 
         private class Pilot : Entity

@@ -62,6 +62,7 @@
     <Compile Include="Audio\AudioController.cs" />
     <Compile Include="HeliTransport.cs" />
     <Compile Include="MapLoader.cs" />
+    <Compile Include="PlayerInfo.cs" />
     <Compile Include="Shuttle\LoadScaleform.cs" />
     <Compile Include="Missions\IntroMission.cs" />
     <Compile Include="Extensions\VectorParse.cs" />

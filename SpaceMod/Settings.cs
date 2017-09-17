@@ -22,11 +22,11 @@ namespace GTS
 
         public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000, 4000, 6000);
 
-        public static Vector3 EarthAtmosphereEnterRotation = new Vector3(-35, 0, 0);
+        public static Vector3 EarthAtmosphereEnterRotation = new Vector3(-35, 0, 90);
 
         public static bool DebugTriggers = false;
 
-        public static bool AlwaysUseSound = false;
+        public static bool AlwaysUseSound = true;
 
         public static float EnterOrbitHeight = 6500f;
 

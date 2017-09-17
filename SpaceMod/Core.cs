@@ -466,9 +466,11 @@ namespace GTS
         private void SetCurrentScene(SceneInfo scene, string fileName = "")
         {
             PlayerPed.IsInvincible = true;
-            Game.FadeScreenOut(1);
+            Game.FadeScreenOut(100);
+            Wait(100);
             CreateScene(scene, fileName);
-            Game.FadeScreenIn(1000);
+            Wait(100);
+            Game.FadeScreenIn(100);
             PlayerPed.IsInvincible = false;
         }
 
@@ -493,6 +495,12 @@ namespace GTS
                 _didAbort = false;
                 return;
             }
+
+            var cam = World.CreateCamera(PlayerPosition + Vector3.WorldUp * 15, Vector3.Zero, 60);
+            cam.PointAt(PlayerPed.Position);
+            cam.Shake(CameraShake.Hand, 0.5f);
+            World.RenderingCamera = cam;
+            Effects.Start(ScreenEffect.CamPushInNeutral);
 
             if (isActualScene && newScene.SurfaceScene)
                 RaiseLandingGear();
@@ -520,6 +528,9 @@ namespace GTS
             }
             Wait(wait);
             Game.FadeScreenIn(wait);
+
+            World.RenderingCamera = null;
+            Effects.Start(ScreenEffect.CamPushInNeutral);
         }
 
         private static void EnterAtmosphere()

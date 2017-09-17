@@ -38,6 +38,9 @@ namespace GTS.Library
         [DllImport("GTSLib.asi")]
         private static extern void GTSLib_SetVehicleGravity(int vehicle, float gravity);
 
+        [DllImport("GTSLib.asi")]
+        private static extern void GTSLib_SetAirDragMultiplierForPlayersVehicle(float multiplier);
+
         /// <summary>
         ///     Run the custom in-game credits for Grand Theft Space.
         /// </summary>
@@ -157,6 +160,12 @@ namespace GTS.Library
         {
             if (Function.Call<bool>(Hash.DECOR_GET_BOOL, Game.Player.Character, "enabled")) return;
             Function.Call(Hash.DECOR_SET_BOOL, Game.Player.Character, "enabled", true);
+        }
+
+        public static void SetAirDragMultForVehicle(this Player player, float value)
+        {
+            //if (!GTSLib_IsLibraryInitialized()) return;
+            //GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
         }
     }
 }

@@ -188,6 +188,16 @@ namespace GTSCommon
         [RefreshProperties(RefreshProperties.All)]
         public List<TimecycleArea> TimecycleAreas { get; set; }
 
+        [Description("A value indicating whether or not you wish to use atmosphere.asi (if applicable) in this scene.")]
+        [Category("VisualV.Integrations")]
+        [RefreshProperties(RefreshProperties.All)]
+        public bool AtmosphereEnabled { get; set; } = true;
+
+        [Description("The file index of the atmosphere.ini's (1 / 2 / etc).")]
+        [Category("VisualV.Integrations")]
+        [RefreshProperties(RefreshProperties.All)]
+        public int AtmosphereIndex { get; set; } = 1;
+
         [Description("The model name of the skybox.")]
         [Category("Core.Models")]
         [RefreshProperties(RefreshProperties.All)]
@@ -216,7 +226,7 @@ namespace GTSCommon
         [Description(
             "The force (newt) that will be applied to the player when jumping. Remember that gravity will affect the force.")]
         [Category("Core.Physics")]
-        public float JumpForceOverride { get; set; } = 10.0f;
+        public float JumpForceOverride { get; set; } = 15.0f;
 
         [Description("The position to spawn the vehicle on the surface. NOTE: May be removed in a later version.")]
         [Category("Core.Positions")]
