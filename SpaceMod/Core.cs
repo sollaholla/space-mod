@@ -96,9 +96,6 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.K)
-                Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
-
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
@@ -143,6 +140,8 @@ namespace GTS
             }
             else GtsLibNet.RemoveAllIplsRegardless(false);
             _currentScene = null;
+            //Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", 1);
+            //Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
         }
 
         private void ProcessMenus()

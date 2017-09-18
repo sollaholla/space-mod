@@ -291,11 +291,11 @@ namespace GTS.Scenes
                 return;
             Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
             GtsLibNet.RemoveAllIpls(true);
+            //EnabledDisableAtmoshphere();
             GetSpaceVehicles();
             CreateSpace();
             CreateInteriors();
             CreateTeleports();
-            RefreshTimecycle();
             GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
             CreateScenarios();
             ConfigureVehicleForScene();
@@ -308,10 +308,27 @@ namespace GTS.Scenes
             Function.Call(Hash.PAUSE_CLOCK, true);
             Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
             Game.MissionFlag = true;
-Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "enabled", Info.AtmosphereEnabled);
-Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", Info.AtmosphereIndex);
-Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
             Update();
+        }
+
+        private static void EnabledDisableAtmoshphere()
+        {
+            //if (Function.Call<bool>(Hash.DECOR_EXIST_ON, PlayerPed, "enabled") &&
+            //    Function.Call<bool>(Hash.DECOR_EXIST_ON, PlayerPed, "fileindex") &&
+            //    Function.Call<bool>(Hash.DECOR_EXIST_ON, PlayerPed, "reload") && Info.AtmosphereEnabled)
+            //{
+            //    Function.Call(Hash.DECOR_SET_INT, PlayerPed, "enabled", true);
+            //    Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", Info.AtmosphereIndex);
+            //    Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
+            //    while (Function.Call<bool>(Hash.DECOR_GET_BOOL, PlayerPed, "reload"))
+            //        Script.Yield();
+            //    Debug.Log("Initialized Atmosphere.asi");
+            //}
+            //else
+            //{
+            //    Function.Call(Hash.DECOR_SET_INT, PlayerPed, "enabled", false);
+            //    Debug.Log("Atmoshphere.asi NOT Initialized");
+            //}
         }
 
         internal void Update()
@@ -348,7 +365,6 @@ Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
                 ResetPlayerVehicle();
                 ClearLists(aborted);
                 ResetGameData();
-                Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", 1);
             }
             catch (Exception e)
             {
@@ -468,6 +484,8 @@ Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
             Function.Call(Hash._LOWER_MAP_PROP_DENSITY, false);
             GtsLibNet.RemoveAllIpls(false);
             Game.MissionFlag = false;
+            Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", 1);
+            Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
         }
 
         private void GetSpaceVehicles()

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using GTA;
 using GTA.Native;
@@ -40,6 +41,41 @@ namespace GTS.Library
 
         [DllImport("GTSLib.asi")]
         private static extern void GTSLib_SetAirDragMultiplierForPlayersVehicle(float multiplier);
+
+        // ReSharper disable InconsistentNaming
+        private enum EDecorType
+        {
+            DECOR_TYPE_FLOAT = 1,
+            DECOR_TYPE_BOOL = 2,
+            DECOR_TYPE_INT,
+            DECOR_TYPE_UNK,
+            DECOR_TYPE_TIME
+        };
+
+        static GtsLib()
+        {
+            if (!File.Exists(".\\atmosphere.asi"))
+                return;
+            if (Function.Call<bool>(Hash.DECOR_EXIST_ON, Game.Player.Character, "enabled") ||
+                Function.Call<bool>(Hash.DECOR_EXIST_ON, Game.Player.Character, "fileindex") ||
+                Function.Call<bool>(Hash.DECOR_EXIST_ON, Game.Player.Character, "reload"))
+                return;
+            
+                unsafe
+            {
+                Function.Call(Hash.DECOR_REGISTER, "enabled", 3);
+                Function.Call(Hash.DECOR_REGISTER, "debug", 2);
+                Function.Call(Hash.DECOR_REGISTER, "reload", 2);
+                Function.Call(Hash.DECOR_REGISTER, "fileindex", 3);
+
+                var pattern =
+                    new MemoryAccess.Pattern(
+                        "\x40\x53\x48\x83\xEC\x20\x80\x3D\x00\x00\x00\x00\x00\x8B\xDA\x75\x29",
+                        "xxxxxxxx????xxxxx");
+                var address = pattern.Get().ToInt64();
+                *(sbyte*)(address + *(int*)(address + 8) + 13) = 0;
+            }
+        }
 
         /// <summary>
         ///     Run the custom in-game credits for Grand Theft Space.
