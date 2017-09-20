@@ -511,7 +511,7 @@ namespace GTSCommon
         [Description(
             "The namespace directory to the class. Example 'MyNamespace.MyClassName' NOTE: This class must derive from CustomScenario.")]
         [RefreshProperties(RefreshProperties.All)]
-        public string Namespace { get; set; }
+        public string TypeName { get; set; }
     }
 
     [Serializable]

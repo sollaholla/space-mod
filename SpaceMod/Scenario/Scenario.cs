@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 using System.Threading;
 using GTA;
 using GTS.Scenes;
@@ -22,9 +23,10 @@ namespace GTS.Scenarios
 
         /// <summary>
         /// </summary>
-        public ScriptSettings Settings => _settings ?? (_settings =
-                                              ScriptSettings.Load(Path.ChangeExtension(
-                                                  Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
+        public ScriptSettings Settings => 
+            _settings ?? (_settings =
+            ScriptSettings.Load(Path.ChangeExtension(
+            Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
 
         /// <summary>
         /// </summary>
@@ -55,50 +57,19 @@ namespace GTS.Scenarios
 
         /// <summary>
         /// </summary>
-        internal void Update()
+        internal void Tick()
         {
             if (!Monitor.TryEnter(_updateLock)) return;
 
             try
             {
-                OnUpdate();
+                SendMessage("Update");
             }
             finally
             {
                 Monitor.Exit(_updateLock);
             }
         }
-
-        /// <summary>
-        ///     This is where you spawn entities or setup variables.
-        /// </summary>
-        public abstract void OnStart();
-
-        /// <summary>
-        ///     This is where your code will be updated.
-        /// </summary>
-        public abstract void OnUpdate();
-
-        /// <summary>
-        ///     This is where you can clean up some excess entities, and / or
-        ///     objects.
-        /// </summary>
-        public abstract void OnEnded(bool success);
-
-        /// <summary>
-        ///     <para>
-        ///         This is executed when the space mod scripts are aborted or reloaded.
-        ///         This function can be used like the <see cref="Scenario.OnEnded" />
-        ///     </para>
-        ///     <para>function to clean up any remaining objects / entities.</para>
-        /// </summary>
-        public abstract void OnAborted();
-
-        /// <summary>
-        ///     Called whenever you enter the specified scene. It is called even if
-        ///     you have completed the mission.
-        /// </summary>
-        public abstract void OnAwake();
 
         /// <summary>
         ///     End's this scenario.
@@ -108,11 +79,16 @@ namespace GTS.Scenarios
         {
             lock (_updateLock)
             {
-                if (success)
-                    SetScenarioComplete();
+                if (success) SetScenarioComplete();
                 Completed?.Invoke(this, success);
-                OnEnded(success);
+                SendMessage("OnDisable", success);
             }
+        }
+
+        public void SendMessage(string name, params object[] args)
+        {
+            var m = GetType().GetMethod(name);
+            m?.Invoke(m.IsStatic ? null : this, args);
         }
     }
 }

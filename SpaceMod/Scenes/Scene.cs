@@ -291,7 +291,6 @@ namespace GTS.Scenes
                 return;
             Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
             GtsLibNet.RemoveAllIpls(true);
-            //EnabledDisableAtmoshphere();
             GetSpaceVehicles();
             CreateSpace();
             CreateInteriors();
@@ -351,7 +350,7 @@ namespace GTS.Scenes
             UpdateBillboards(viewFinderPosition);
             UpdateWormHoles();
             LowerPedAndVehicleDensity();
-            Scenarios?.ForEach(scenario => scenario.Update());
+            Scenarios?.ForEach(scenario => scenario.Tick());
         }
 
         internal void Delete(bool aborted = false)
@@ -440,10 +439,10 @@ namespace GTS.Scenes
             {
                 if (aborted)
                 {
-                    scenario?.OnAborted();
+                    scenario?.SendMessage("OnAborted");
                     continue;
                 }
-                scenario?.OnEnded(false);
+                scenario?.SendMessage("OnDisable", false);
             }
 
             foreach (var b in Blips)
@@ -562,6 +561,32 @@ namespace GTS.Scenes
             }
         }
 
+        private void CreateScenariosForSceneInfo(SceneInfo scene)
+        {
+            foreach (var scenarioInfo in scene.Scenarios)
+            {
+                var assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
+                var types = assembly.GetTypes();
+                foreach (var type in types)
+                {
+                    if (type == null || type.BaseType != typeof(Scenario)) continue;
+                    if (type.Name != scenarioInfo.TypeName)
+                        continue;
+                    var instance = (Scenario)Activator.CreateInstance(type);
+                    instance.SendMessage("Awake");
+                    if (instance.IsScenarioComplete()) continue;
+                    Debug.Log("Created Scenario: " + type.Name);
+                    Scenarios.Add(instance);
+                }
+            }
+
+            foreach (var scenario in Scenarios)
+            {
+                scenario.SendMessage("Start");
+                scenario.Completed += OnScenarioComplete;
+            }
+        }
+
         private void UpdateBillboards(Vector3 viewFinderPosition)
         {
             foreach (var billboardable in Billboards)
@@ -585,37 +610,6 @@ namespace GTS.Scenes
                     bDir.Normalize();
                 billboardable.Quaternion = Quaternion.Lerp(billboardable.Quaternion,
                     Quaternion.FromToRotation(aDir, bDir) * billboardable.Quaternion, Game.LastFrameTime * 5);
-            }
-        }
-
-        private void CreateScenariosForSceneInfo(SceneInfo scene)
-        {
-            foreach (var scenarioInfo in scene.Scenarios)
-            {
-                var assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
-
-                var type = assembly.GetType(scenarioInfo.Namespace);
-
-                if (type == null || type.BaseType != typeof(Scenario))
-                    continue;
-
-                var instance = (Scenario)Activator.CreateInstance(type);
-
-                instance.OnAwake();
-
-                if (instance.IsScenarioComplete())
-                    continue;
-
-                Debug.Log("Creating Scenario: " + type.Name);
-
-                Scenarios.Add(instance);
-            }
-
-            foreach (var scenario in Scenarios)
-            {
-                scenario.OnStart();
-
-                scenario.Completed += OnScenarioComplete;
             }
         }
 
@@ -1584,7 +1578,7 @@ namespace GTS.Scenes
 
                 if (!_didSpaceWalkTut)
                 {
-                    GtsLibNet.DisplayHelpTextWithGxt("");
+                    GtsLibNet.DisplayHelpTextWithGxt("SPACEWALK_INFO");
                     Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", _didSpaceWalkTut = true);
                     Core.Instance.Settings.Save();
                 }

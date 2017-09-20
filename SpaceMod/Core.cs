@@ -416,11 +416,11 @@ namespace GTS
             }
 
             if (_missionStatus != 0) return;
-            if (_introMission != null) _introMission.Update();
+            if (_introMission != null) _introMission.Tick();
             else
             {
                 _introMission = new IntroMission();
-                _introMission.OnStart();
+                _introMission.Start();
                 _introMission.Completed += (scenario, success) =>
                 {
                     SetMissionStatus(1);
@@ -529,10 +529,8 @@ namespace GTS
                 GtsLibNet.SetGravityLevel(9.81f);
             }
             Wait(wait);
-            Game.FadeScreenIn(wait);
-
             World.RenderingCamera = null;
-            Effects.Start(ScreenEffect.CamPushInNeutral);
+            Game.FadeScreenIn(wait);
         }
 
         private static void EnterAtmosphere()

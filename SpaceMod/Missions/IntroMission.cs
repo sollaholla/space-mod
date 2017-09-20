@@ -12,6 +12,9 @@ using GTS.Scenes;
 
 namespace GTS.Missions
 {
+    /// <summary>
+    /// Credits: AHK1221
+    /// </summary>
     internal class IntroMission : Scenario
     {
         private readonly float _colonelHeading = 53.71681f;
@@ -40,19 +43,17 @@ namespace GTS.Missions
         public IntroMission()
         {
             Peds = new List<Ped>();
-            Vehicles = new List<Vehicle>();
         }
 
         private static Ped PlayerPed => Game.Player.Character;
         private List<Ped> Peds { get; }
-        private List<Vehicle> Vehicles { get; }
         public bool DidStart { get; set; }
 
-        public override void OnAwake()
+        public void Awake()
         {
         }
 
-        public override void OnStart()
+        public void Start()
         {
             while (Game.IsLoading)
                 Script.Yield();
@@ -60,7 +61,7 @@ namespace GTS.Missions
             CreateColonel();
         }
 
-        public override void OnUpdate()
+        public void Update()
         {
             if (PlayerPed.IsDead)
                 EndScenario(false);
@@ -339,14 +340,13 @@ namespace GTS.Missions
             Function.Call(Hash.TASK_START_SCENARIO_IN_PLACE, ped, name, -1, false);
         }
 
-        public override void OnAborted() => CleanUp();
-        public override void OnEnded(bool success) => CleanUp();
+        public void OnAborted() => CleanUp();
+        public void OnDisable(bool success) => CleanUp();
 
         private void CleanUp()
         {
             _dishes?.ForEach(x => x?.Aborted());
             _dishesAreaBlip?.Remove();
-            Vehicles?.ForEach(v => v?.Delete());
             _humaneLabsBlip?.Remove();
             _colonel?.Delete();
             DeletePeds();

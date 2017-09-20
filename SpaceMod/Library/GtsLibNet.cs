@@ -196,17 +196,17 @@ namespace GTS.Library
         /// <param name="model"></param>
         /// <param name="position"></param>
         /// <param name="heading"></param>
-        /// <param name="weapon"></param>
         /// <returns>
         /// </returns>
-        public static Ped CreateAlien(Model model, Vector3 position, float heading, WeaponHash weapon)
+        public static Ped CreateAlien(Model model, Vector3 position, float heading)
         {
             if (model == null)
                 model = new Model(GetAlienModel());
-
-            if (!model.IsPed || !model.Request(5000))
+            if (!model.IsPed)
                 return new Ped(0);
-
+            model.Request();
+            while (!model.IsLoaded)
+                Script.Yield();
             var p = new Ped(Function.Call<int>(Hash.CREATE_PED, 26, model.Hash, position.X, position.Y, position.Z,
                 heading, false, false))
             {
@@ -215,9 +215,7 @@ namespace GTS.Library
                 RelationshipGroup = Database.AlienRelationshipGroup
             };
             p.SetDefaultClothes();
-            p.Weapons.Give(weapon, 50, true, true);
             p.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
-            p.SetCombatAttributes(CombatAttributes.CanLeaveVehicle, false);
             p.SetCombatAttributes(CombatAttributes.CanFightArmedPedsWhenNotArmed, true);
             Function.Call(Hash.DISABLE_PED_PAIN_AUDIO, p, true);
             return p;
