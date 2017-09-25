@@ -19,6 +19,6 @@ namespace GTS.Vehicles
         public float Drag { get; set; } = 0.001f;
         [XmlArrayItem("Item")]
         public List<VehicleDoor> OpenDoorsSpaceWalk { get; set; } = new List<VehicleDoor>();
-        public float RopeLength { get; set; } = 50f;
+        public float RopeLength { get; set; } = 25f;
     }
 }

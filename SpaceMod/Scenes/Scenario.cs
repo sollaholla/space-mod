@@ -1,10 +1,8 @@
 ﻿using System.IO;
-using System.Reflection;
 using System.Threading;
 using GTA;
-using GTS.Scenes;
 
-namespace GTS.Scenarios
+namespace GTS.Scenes
 {
     /// <summary>
     ///     Called when the <paramref name="scenario" /> is completed.
@@ -20,43 +18,27 @@ namespace GTS.Scenarios
     {
         private readonly object _updateLock = new object();
         private ScriptSettings _settings;
-
-        /// <summary>
-        /// </summary>
         public ScriptSettings Settings => 
             _settings ?? (_settings =
             ScriptSettings.Load(Path.ChangeExtension(
             Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
 
-        /// <summary>
-        /// </summary>
-        public Scene CurrentScene => Core.Instance.GetCurrentScene();
-
-        public virtual bool BlockOrbitLanding { get; set; } = true;
-
-        /// <summary>
-        /// </summary>
+        public Ped PlayerPed => Core.PlayerPed;
+        public Scene CurrentScene { get; internal set; }
+        public virtual bool BlockOrbitLanding { get; set; }
         internal event OnScenarioCompleted Completed;
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
         internal bool IsScenarioComplete()
         {
             return Settings.GetValue("scenario_config", "complete", false);
         }
 
-        /// <summary>
-        /// </summary>
         internal void SetScenarioComplete()
         {
             Settings.SetValue("scenario_config", "complete", true);
             Settings.Save();
         }
 
-        /// <summary>
-        /// </summary>
         internal void Tick()
         {
             if (!Monitor.TryEnter(_updateLock)) return;

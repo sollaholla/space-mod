@@ -7,7 +7,6 @@ using GTA.Math;
 using GTA.Native;
 using GTS.Library;
 using GTS.Missions.Types;
-using GTS.Scenarios;
 using GTS.Scenes;
 
 namespace GTS.Missions
@@ -45,7 +44,6 @@ namespace GTS.Missions
             Peds = new List<Ped>();
         }
 
-        private static Ped PlayerPed => Game.Player.Character;
         private List<Ped> Peds { get; }
         public bool DidStart { get; set; }
 

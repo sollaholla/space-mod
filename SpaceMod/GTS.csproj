@@ -72,7 +72,7 @@
     <Compile Include="Library\GtsLib.cs" />
     <Compile Include="OrbitalSystems\Billboardable.cs" />
     <Compile Include="OrbitalSystems\Surface.cs" />
-    <Compile Include="Scenario\Scenario.cs" />
+    <Compile Include="Scenes\Scenario.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="Scenes\Interiors\Interior.cs" />
     <Compile Include="Scenes\Interiors\Map.cs" />
@@ -94,6 +94,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scenario\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

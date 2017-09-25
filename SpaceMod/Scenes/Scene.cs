@@ -10,7 +10,6 @@ using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
 using GTS.OrbitalSystems;
-using GTS.Scenarios;
 using GTS.Scenes.Interiors;
 using GTS.Vehicles;
 using GTSCommon;
@@ -128,17 +127,14 @@ namespace GTS.Scenes
 
         public string FileName { get; internal set; }
 
-        internal Vehicle PlayerVehicle { get; private set; }
+        private Vehicle PlayerVehicle { get; set; }
 
-        internal static Ped PlayerPed => Game.Player.Character ?? new Ped(0);
+        private static Ped PlayerPed => Core.PlayerPed;
 
-        internal Vector3 PlayerPosition {
-            get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set {
-                if (PlayerPed.IsInVehicle())
-                    PlayerPed.CurrentVehicle.Position = value;
-                else PlayerPed.Position = value;
-            }
+        private static Vector3 PlayerPosition
+        {
+            get => Core.PlayerPosition;
+            set => Core.PlayerPosition = value;
         }
 
         public event OnSceneExitEvent Exited;
@@ -285,31 +281,6 @@ namespace GTS.Scenes
             return model;
         }
 
-        internal void Start()
-        {
-            if (_didDeleteScene)
-                return;
-            Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
-            GtsLibNet.RemoveAllIpls(true);
-            GetSpaceVehicles();
-            CreateSpace();
-            CreateInteriors();
-            CreateTeleports();
-            GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
-            CreateScenarios();
-            ConfigureVehicleForScene();
-            ResetPlayerPosition();
-            _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
-            Function.Call(Hash.STOP_AUDIO_SCENES);
-            Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
-            GameplayCamera.RelativeHeading = 0;
-            Function.Call(Hash.SET_CLOCK_TIME, Info.Time, Info.TimeMinutes, 0);
-            Function.Call(Hash.PAUSE_CLOCK, true);
-            Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
-            Game.MissionFlag = true;
-            Update();
-        }
-
         private static void EnabledDisableAtmoshphere()
         {
             //if (Function.Call<bool>(Hash.DECOR_EXIST_ON, PlayerPed, "enabled") &&
@@ -328,6 +299,34 @@ namespace GTS.Scenes
             //    Function.Call(Hash.DECOR_SET_INT, PlayerPed, "enabled", false);
             //    Debug.Log("Atmoshphere.asi NOT Initialized");
             //}
+        }
+
+        public Interior GetInterior(string name)
+        {
+            return Interiors.FirstOrDefault(x => x.Name == name);
+        }
+
+        internal void Start()
+        {
+            if (_didDeleteScene) return;
+            Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
+            GtsLibNet.RemoveAllIplsRegardless(true);
+            GetSpaceVehicles();
+            CreateSpace();
+            CreateInteriors();
+            CreateTeleports();
+            GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
+            CreateScenarios();
+            ConfigureVehicleForScene();
+            ResetPlayerPosition();
+            _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
+            Function.Call(Hash.STOP_AUDIO_SCENES);
+            Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+            GameplayCamera.RelativeHeading = 0;
+            Function.Call(Hash.SET_CLOCK_TIME, Info.Time, Info.TimeMinutes, 0);
+            Function.Call(Hash.PAUSE_CLOCK, true);
+            Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
+            Game.MissionFlag = true;
         }
 
         internal void Update()
@@ -390,11 +389,6 @@ namespace GTS.Scenes
             else TimecycleModifier.Clear();
         }
 
-        public Interior GetInterior(string name)
-        {
-            return Interiors.FirstOrDefault(x => x.Name == name);
-        }
-
         public void DrawMarkerAt(Vector3 position, string name, Color? col = null)
         {
             if (string.IsNullOrEmpty(name))
@@ -447,19 +441,14 @@ namespace GTS.Scenes
 
             foreach (var b in Blips)
                 b?.Remove();
-
             foreach (var interior in Interiors)
                 interior?.Remove();
-
             foreach (var s in Surfaces)
                 s?.Delete();
-
             foreach (var billboard in Billboards)
                 billboard?.Delete();
-
             foreach (var orbital in Orbitals)
                 orbital?.Delete();
-
             foreach (var lOrbital in AttachedOrbitals)
                 lOrbital?.Delete();
         }
@@ -573,6 +562,7 @@ namespace GTS.Scenes
                     if (type.Name != scenarioInfo.TypeName)
                         continue;
                     var instance = (Scenario)Activator.CreateInstance(type);
+                    instance.CurrentScene = this;
                     instance.SendMessage("Awake");
                     if (instance.IsScenarioComplete()) continue;
                     Debug.Log("Created Scenario: " + type.Name);
@@ -640,6 +630,7 @@ namespace GTS.Scenes
         private void CreateSpace()
         {
             var skybox = CreateProp(PlayerPed.Position, Info.SkyboxModel);
+            Function.Call(Hash.SET_ENTITY_ALWAYS_PRERENDER, skybox, true);
 
             Orbitals = Info.Orbitals?.Select(CreateOrbital).Where(o => o != default(Orbital)).ToList();
 
@@ -1536,14 +1527,14 @@ namespace GTS.Scenes
 
                 if (Entity.Exists(PlayerVehicle))
                 {
-                    var veh = _spaceVehicles.VehicleData.Find(x => Game.GenerateHash(x.Model) == PlayerVehicle.Model.Hash);
+                    var veh = _spaceVehicles.VehicleData.Find(x => Game.GenerateHash(x.Model) == PlayerVehicle.Model.Hash) ?? new SpaceVehicle();
                     _spaceWalkRope = World.AddRope(RopeType.Normal, PlayerVehicle.Position, Vector3.Zero, veh.RopeLength,
                         0f, false);
                     var attachmentOffset =
                         _spaceWalkObj.Position -
                         _spaceWalkObj.ForwardVector * 0.2f +
                         _spaceWalkObj.UpVector * 0.2f;
-                    _spaceWalkRope.AttachEntities(_spaceWalkObj, attachmentOffset, PlayerVehicle, PlayerVehicle.Position, 0f);
+                    _spaceWalkRope.AttachEntities(_spaceWalkObj, attachmentOffset, PlayerVehicle, PlayerVehicle.Position, veh.RopeLength);
                     _spaceWalkRope.ResetLength(true);
                     _spaceWalkRope.ActivatePhysics();
 

@@ -35,5 +35,7 @@ namespace GTS
         public static Vector3 DefaultScenePosition = new Vector3(-1539.895f, 3385.976f, 62.89648f);
 
         public static string DefaultScene = "EarthOrbit.space";
+
+        public static bool DisableWantedLevel = true;
     }
 }

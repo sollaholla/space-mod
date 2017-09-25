@@ -208,17 +208,21 @@ namespace GTS.Library
             while (!model.IsLoaded)
                 Script.Yield();
             var p = new Ped(Function.Call<int>(Hash.CREATE_PED, 26, model.Hash, position.X, position.Y, position.Z,
-                heading, false, false))
-            {
-                Accuracy = 50,
-                Voice = "ALIENS",
-                RelationshipGroup = Database.AlienRelationshipGroup
-            };
+                heading, false, false));
+            GivePedAlienAttributes(p);
+            model.MarkAsNoLongerNeeded();
+            return p;
+        }
+
+        public static void GivePedAlienAttributes(Ped p)
+        {
+            p.Accuracy = 50;
+            p.Voice = "ALIENS";
+            p.RelationshipGroup = Database.AlienRelationshipGroup;
             p.SetDefaultClothes();
             p.SetCombatAttributes(CombatAttributes.AlwaysFight, true);
             p.SetCombatAttributes(CombatAttributes.CanFightArmedPedsWhenNotArmed, true);
             Function.Call(Hash.DISABLE_PED_PAIN_AUDIO, p, true);
-            return p;
         }
 
         public static void TerminateScript(string name)
