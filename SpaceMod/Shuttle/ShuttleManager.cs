@@ -13,10 +13,10 @@ namespace GTS.Shuttle
         private const string AstronautModel = "s_m_m_movspace_01";
         private const float ShuttleHeading = 25;
         private const float ShuttleInteractDistance = 40;
+        private readonly float _enterOrbitHeight;
+        private readonly Vector3 _shuttlePosition = new Vector3(-6412.1f, -1345.5f, 58f);
 
         private Vehicle _shuttleVehicle;
-        private readonly Vector3 _shuttlePosition = new Vector3(-6412.1f, -1345.5f, 58f);
-        private readonly float _enterOrbitHeight;
 
         public ShuttleManager(float enterOrbitHeight)
         {

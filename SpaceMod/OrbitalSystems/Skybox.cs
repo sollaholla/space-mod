@@ -59,10 +59,10 @@ namespace GTS.OrbitalSystems
         {
             base.Delete();
         }
-        /////     length.
-        /////     Returns all planets positions and rotations in the array order 0 to
 
         ///// <summary>
+        /////     Returns all planets positions and rotations in the array order 0 to
+        /////     length.
         ///// </summary>
         ///// <returns>
         ///// </returns>

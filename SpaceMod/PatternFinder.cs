@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace GTS
 {
     /// <summary>
-    /// Credits to CamxxCore. IQ 195
+    ///     Credits to CamxxCore. IQ 195
     /// </summary>
     internal static class MemoryAccess
     {
@@ -34,12 +34,8 @@ namespace GTS
                 var end = address + module.SizeOfImage;
 
                 for (; address < end; address++)
-                {
-                    if (BCompare((byte*)address, _bytes.ToCharArray(), _mask.ToCharArray()))
-                    {
+                    if (BCompare((byte*) address, _bytes.ToCharArray(), _mask.ToCharArray()))
                         return new IntPtr(address);
-                    }
-                }
 
                 return IntPtr.Zero;
             }
@@ -64,7 +60,8 @@ namespace GTS
             public static extern IntPtr GetModuleHandle(string lpModuleName);
 
             [DllImport("psapi.dll", SetLastError = true)]
-            public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, int cb);
+            public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo,
+                int cb);
 
             [StructLayout(LayoutKind.Sequential)]
             // ReSharper disable once InconsistentNaming

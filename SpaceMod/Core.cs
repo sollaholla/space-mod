@@ -9,33 +9,34 @@ using GTA.Math;
 using GTA.Native;
 using GTS.Extensions;
 using GTS.Library;
-//using GTS.Missions;
 using GTS.Scenes;
 using GTS.Shuttle;
 using GTSCommon;
 using NativeUI;
 using Control = GTA.Control;
+//using GTS.Missions;
 
 namespace GTS
 {
     internal class Core : Script
     {
         private const string LSReturnScene = "Earth";
-        private Keys _optionsMenuKey = Keys.NumPad9;
-        private bool _menuEnabled = true;
-        private UIMenu _mainMenu;
-        private MenuPool _menuPool;
-
-        private bool _resetWantedLevel = true;
-        private bool _initializedScripts;
-        private bool _initializedGts;
-        private int _missionStatus;
+        private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
         private bool _didAbort;
+        private bool _initializedGts;
+        private bool _initializedScripts;
+        private UIMenu _mainMenu;
 
         private MapLoader _mapLoader;
+        private bool _menuEnabled = true;
+        private MenuPool _menuPool;
+        private int _missionStatus;
+        private Keys _optionsMenuKey = Keys.NumPad9;
+
+        private bool _resetWantedLevel = true;
+
         //private IntroMission _introMission;
         private ShuttleManager _shuttleManager;
-        private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
 
         public Core()
         {
@@ -57,9 +58,11 @@ namespace GTS
 
         public static Scene CurrentScene { get; private set; }
 
-        public static Vector3 PlayerPosition {
+        public static Vector3 PlayerPosition
+        {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set {
+            set
+            {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
@@ -135,7 +138,10 @@ namespace GTS
                     PlayerPosition = Database.TrevorAirport;
                 ResetWeather();
             }
-            else GtsLibNet.RemoveAllIplsRegardless(false);
+            else
+            {
+                GtsLibNet.RemoveAllIplsRegardless(false);
+            }
             CurrentScene = null;
             //Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", 1);
             //Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
@@ -154,20 +160,27 @@ namespace GTS
             _optionsMenuKey = Settings.GetValue("core", "options_menu_key", _optionsMenuKey);
             _menuEnabled = Settings.GetValue("core", "menu_enabled", _menuEnabled);
             _missionStatus = Settings.GetValue("core", "mission_status", _missionStatus);
-            GTS.Settings.EnterOrbitHeight = Settings.GetValue("core", "enter_orbit_height", GTS.Settings.EnterOrbitHeight);
+            GTS.Settings.EnterOrbitHeight =
+                Settings.GetValue("core", "enter_orbit_height", GTS.Settings.EnterOrbitHeight);
             GTS.Settings.DefaultScene = Settings.GetValue("core", "default_orbit_scene", GTS.Settings.DefaultScene);
-            GTS.Settings.DefaultScenePosition = ParseVector3.Read(Settings.GetValue("core", "default_orbit_offset"), GTS.Settings.DefaultScenePosition);
-            GTS.Settings.DefaultSceneRotation = ParseVector3.Read(Settings.GetValue("core", "default_orbit_rotation"), GTS.Settings.DefaultSceneRotation);
+            GTS.Settings.DefaultScenePosition = ParseVector3.Read(Settings.GetValue("core", "default_orbit_offset"),
+                GTS.Settings.DefaultScenePosition);
+            GTS.Settings.DefaultSceneRotation = ParseVector3.Read(Settings.GetValue("core", "default_orbit_rotation"),
+                GTS.Settings.DefaultSceneRotation);
             GTS.Settings.UseSpaceWalk = Settings.GetValue("core", "use_spacewalk", GTS.Settings.UseSpaceWalk);
             GTS.Settings.ShowCustomGui = Settings.GetValue("core", "show_custom_Gui", GTS.Settings.ShowCustomGui);
             GTS.Settings.UseScenarios = Settings.GetValue("core", "use_scenarios", GTS.Settings.UseScenarios);
             GTS.Settings.MoonJump = Settings.GetValue("core", "low_gravity_jumping", GTS.Settings.MoonJump);
-            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("core", "mouse_control_fly_sensitivity", GTS.Settings.MouseControlFlySensitivity);
+            GTS.Settings.MouseControlFlySensitivity = Settings.GetValue("core", "mouse_control_fly_sensitivity",
+                GTS.Settings.MouseControlFlySensitivity);
             GTS.Settings.VehicleFlySpeed = Settings.GetValue("core", "vehicle_fly_speed", GTS.Settings.VehicleFlySpeed);
-            GTS.Settings.EarthAtmosphereEnterPosition = ParseVector3.Read(Settings.GetValue("core", "enter_atmos_pos"), GTS.Settings.EarthAtmosphereEnterPosition);
-            GTS.Settings.EarthAtmosphereEnterRotation = ParseVector3.Read(Settings.GetValue("core", "earth_atmos_rot"), GTS.Settings.EarthAtmosphereEnterRotation);
+            GTS.Settings.EarthAtmosphereEnterPosition = ParseVector3.Read(Settings.GetValue("core", "enter_atmos_pos"),
+                GTS.Settings.EarthAtmosphereEnterPosition);
+            GTS.Settings.EarthAtmosphereEnterRotation = ParseVector3.Read(Settings.GetValue("core", "earth_atmos_rot"),
+                GTS.Settings.EarthAtmosphereEnterRotation);
             GTS.Settings.AlwaysUseSound = Settings.GetValue("core", "always_use_sound", GTS.Settings.AlwaysUseSound);
-            GTS.Settings.DisableWantedLevel = Settings.GetValue("core", "disable_wanted_level", GTS.Settings.DisableWantedLevel);
+            GTS.Settings.DisableWantedLevel =
+                Settings.GetValue("core", "disable_wanted_level", GTS.Settings.DisableWantedLevel);
         }
 
         private void SaveSettings()
@@ -240,9 +253,7 @@ namespace GTS
             earthItem.Activated += (a1, a2) =>
             {
                 if (CurrentScene != null)
-                {
                     Reset();
-                }
             };
             scenesMenu.AddItem(earthItem);
 
@@ -268,20 +279,20 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.VehicleFlySpeed = (int)sender.IndexToItem(index);
+                GTS.Settings.VehicleFlySpeed = (int) sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
+            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic)i).ToList(), flySensitivity);
+                    .Select(i => (dynamic) i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.MouseControlFlySensitivity = (float)sender.IndexToItem(index);
+                GTS.Settings.MouseControlFlySensitivity = (float) sender.IndexToItem(index);
             };
 
             vehicleSettingsMenu.AddItem(vehicleSpeedList);
@@ -324,7 +335,8 @@ namespace GTS
             };
             settingsMenu.AddItem(saveSettingsItem);
 
-            var disableWantedLevelCheckbox = new UIMenuCheckboxItem("Disable Wanted Level", GTS.Settings.DisableWantedLevel);
+            var disableWantedLevelCheckbox =
+                new UIMenuCheckboxItem("Disable Wanted Level", GTS.Settings.DisableWantedLevel);
             disableWantedLevelCheckbox.CheckboxEvent += (a, b) => { GTS.Settings.DisableWantedLevel = b; };
             settingsMenu.AddItem(disableWantedLevelCheckbox);
 
@@ -363,7 +375,6 @@ namespace GTS
                     _shuttleManager = new ShuttleManager(GTS.Settings.EnterOrbitHeight);
                     //if (_missionStatus > 0)
                     _shuttleManager.CreateShuttle();
-
                 }
                 if (_mapLoader == null)
                 {
@@ -394,7 +405,8 @@ namespace GTS
             var height = PlayerPed.HeightAboveGround;
             if (!(height > GTS.Settings.EnterOrbitHeight)) return;
 
-            var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes, GTS.Settings.DefaultScene));
+            var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Database.PathToScenes,
+                GTS.Settings.DefaultScene));
             SetCurrentScene(scene, GTS.Settings.DefaultScene);
 
             PlayerPosition += GTS.Settings.DefaultScenePosition;
@@ -490,7 +502,7 @@ namespace GTS
             CurrentScene?.Delete();
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
             else PlayerPed.Rotation = Vector3.Zero;
-            CurrentScene = new Scene(scene) { FileName = fileName };
+            CurrentScene = new Scene(scene) {FileName = fileName};
             CurrentScene.Start();
             CurrentScene.Exited += CurrentSceneOnExited;
         }
@@ -514,6 +526,8 @@ namespace GTS
             Game.FadeScreenOut(100);
             Wait(100);
             CurrentScene?.Delete();
+            CurrentScene = null;
+            ResetWeather();
             if (PlayerPed.IsInVehicle())
             {
                 var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
@@ -522,10 +536,7 @@ namespace GTS
                 playerPedCurrentVehicle.HasGravity = true;
                 playerPedCurrentVehicle.Speed = 1000;
             }
-            else
-            {
-                PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
-            }
+            else PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
             Game.FadeScreenIn(100);
         }
 

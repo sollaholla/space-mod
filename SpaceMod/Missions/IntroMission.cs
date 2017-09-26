@@ -12,7 +12,7 @@ using GTS.Scenes;
 namespace GTS.Missions
 {
     /// <summary>
-    /// Credits: AHK1221
+    ///     Credits: AHK1221
     /// </summary>
     internal class IntroMission : Scenario
     {
@@ -21,9 +21,12 @@ namespace GTS.Missions
 
         private readonly List<SatelliteDish> _dishes = new List<SatelliteDish>
         {
-            new SatelliteDish(new Vector3(1965.244f, 2917.519f, 56.16845f), new Vector3(1964.9550f, 2916.5950f, 56.3010f), new Vector3(0, 0, 164.8802f), 155.5288f),
-            new SatelliteDish(new Vector3(2049.844f, 2946.026f, 57.51732f),  new Vector3(2050.7747f, 2945.7986f, 57.673f), new Vector3(0, 0, -110.9965f), 252.0444f),
-            new SatelliteDish(new Vector3(2106.831f, 2923.428f, 57.42712f), new Vector3(2106.5571f, 2922.5295f, 57.5847f), new Vector3(0, 0, 155.5398f), 159.3203f),
+            new SatelliteDish(new Vector3(1965.244f, 2917.519f, 56.16845f),
+                new Vector3(1964.9550f, 2916.5950f, 56.3010f), new Vector3(0, 0, 164.8802f), 155.5288f),
+            new SatelliteDish(new Vector3(2049.844f, 2946.026f, 57.51732f),
+                new Vector3(2050.7747f, 2945.7986f, 57.673f), new Vector3(0, 0, -110.9965f), 252.0444f),
+            new SatelliteDish(new Vector3(2106.831f, 2923.428f, 57.42712f),
+                new Vector3(2106.5571f, 2922.5295f, 57.5847f), new Vector3(0, 0, 155.5398f), 159.3203f)
         };
 
         private readonly Vector3 _dishesArea = new Vector3(1965.244f, 2917.519f, 56.16845f);
@@ -338,8 +341,15 @@ namespace GTS.Missions
             Function.Call(Hash.TASK_START_SCENARIO_IN_PLACE, ped, name, -1, false);
         }
 
-        public void OnAborted() => CleanUp();
-        public void OnDisable(bool success) => CleanUp();
+        public void OnAborted()
+        {
+            CleanUp();
+        }
+
+        public void OnDisable(bool success)
+        {
+            CleanUp();
+        }
 
         private void CleanUp()
         {
@@ -371,6 +381,9 @@ namespace GTS.Missions
             m.MarkAsNoLongerNeeded();
         }
 
-        private void DeletePeds() => Peds?.ForEach(p => p?.Delete()); // delete the other peds.
+        private void DeletePeds()
+        {
+            Peds?.ForEach(p => p?.Delete());
+        }
     }
 }

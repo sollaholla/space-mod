@@ -18,8 +18,10 @@ namespace GTS.OrbitalSystems
             _dimensions = dimensions;
         }
 
-        private Entity LastTile {
-            set {
+        private Entity LastTile
+        {
+            set
+            {
                 if (_lastTile != value)
                     RePositionTerrainTiles(value.Position);
                 _lastTile = value;
@@ -39,17 +41,17 @@ namespace GTS.OrbitalSystems
             var div = _tileSize / 2;
 
             for (var i = -_dimensions; i <= _dimensions; i++)
-                for (var j = -_dimensions; j <= _dimensions; j++)
-                {
-                    var tile = _tiles[i + _dimensions, j + _dimensions];
-                    var tilePos = tile.Position;
-                    if (!(playerPos.X < tilePos.X - Offset.X + div) ||
-                        !(playerPos.X > tilePos.X - Offset.X - div)) continue;
-                    if (!(playerPos.Y < tilePos.Y - Offset.Y + div) ||
-                        !(playerPos.Y > tilePos.Y - Offset.Y - div)) continue;
-                    newTile = tile;
-                    isInBounds = true;
-                }
+            for (var j = -_dimensions; j <= _dimensions; j++)
+            {
+                var tile = _tiles[i + _dimensions, j + _dimensions];
+                var tilePos = tile.Position;
+                if (!(playerPos.X < tilePos.X - Offset.X + div) ||
+                    !(playerPos.X > tilePos.X - Offset.X - div)) continue;
+                if (!(playerPos.Y < tilePos.Y - Offset.Y + div) ||
+                    !(playerPos.Y > tilePos.Y - Offset.Y - div)) continue;
+                newTile = tile;
+                isInBounds = true;
+            }
 
             if (!isInBounds)
             {
@@ -68,21 +70,21 @@ namespace GTS.OrbitalSystems
 
             _tiles = new Entity[_dimensions * 2 + 1, _dimensions * 2 + 1];
             for (var i = -_dimensions; i <= _dimensions; i++)
-                for (var j = -_dimensions; j <= _dimensions; j++)
+            for (var j = -_dimensions; j <= _dimensions; j++)
+            {
+                if (!Model.IsLoaded)
                 {
-                    if (!Model.IsLoaded)
-                    {
-                        Model.Request();
-                        while (!Model.IsLoaded)
-                            Script.Yield();
-                    }
-                    var pos = Position + new Vector3(i, j, 0) * _tileSize;
-                    var obj = World.CreateProp(Model, pos, Vector3.Zero, false, false) ?? new Prop(0);
-                    obj.FreezePosition = true;
-                    obj.Quaternion = Quaternion;
-                    obj.PositionNoOffset = pos;
-                    _tiles[i + _dimensions, j + _dimensions] = obj;
+                    Model.Request();
+                    while (!Model.IsLoaded)
+                        Script.Yield();
                 }
+                var pos = Position + new Vector3(i, j, 0) * _tileSize;
+                var obj = World.CreateProp(Model, pos, Vector3.Zero, false, false) ?? new Prop(0);
+                obj.FreezePosition = true;
+                obj.Quaternion = Quaternion;
+                obj.PositionNoOffset = pos;
+                _tiles[i + _dimensions, j + _dimensions] = obj;
+            }
             LastTile = this;
         }
 
@@ -91,16 +93,16 @@ namespace GTS.OrbitalSystems
             if (!CanUpdate) return;
 
             for (var i = -_dimensions; i <= _dimensions; i++)
-                for (var j = -_dimensions; j <= _dimensions; j++)
-                    _tiles[i + _dimensions, j + _dimensions].Position = rootTilePosition + new Vector3(i, j, 0) * _tileSize;
+            for (var j = -_dimensions; j <= _dimensions; j++)
+                _tiles[i + _dimensions, j + _dimensions].Position = rootTilePosition + new Vector3(i, j, 0) * _tileSize;
         }
 
         public new void Delete()
         {
             if (_tiles != null)
                 for (var i = 0; i < _tiles.GetLength(0); i++)
-                    for (var j = 0; j < _tiles.GetLength(1); j++)
-                        _tiles[i, j].Delete();
+                for (var j = 0; j < _tiles.GetLength(1); j++)
+                    _tiles[i, j].Delete();
 
             base.Delete();
         }

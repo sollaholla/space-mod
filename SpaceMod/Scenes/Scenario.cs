@@ -18,10 +18,11 @@ namespace GTS.Scenes
     {
         private readonly object _updateLock = new object();
         private ScriptSettings _settings;
-        public ScriptSettings Settings => 
+
+        public ScriptSettings Settings =>
             _settings ?? (_settings =
-            ScriptSettings.Load(Path.ChangeExtension(
-            Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
+                ScriptSettings.Load(Path.ChangeExtension(
+                    Path.Combine(Database.PathToScenarios, GetType().Name), "ini")));
 
         public Ped PlayerPed => Core.PlayerPed;
         public Scene CurrentScene { get; internal set; }

@@ -320,7 +320,7 @@ namespace GTS.Library
 
         public static void Ragdoll(this Ped ped, int duration, RagdollType type)
         {
-            Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int)type, false, false, false);
+            Function.Call(Hash.SET_PED_TO_RAGDOLL, ped, duration, 0, (int) type, false, false, false);
         }
 
         public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angle)
@@ -343,7 +343,7 @@ namespace GTS.Library
 
         public static void SetCombatAttributes(this Ped ped, CombatAttributes attribute, bool enabled)
         {
-            Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, (int)attribute, enabled);
+            Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, (int) attribute, enabled);
         }
 
         public static void NotifyWithGxt(string text, bool blinking = false)
@@ -443,12 +443,14 @@ namespace GTS.Library
         public string AssetName { get; }
         public string FxName { get; }
 
-        public Color Color {
+        public Color Color
+        {
             set => Function.Call(Hash.SET_PARTICLE_FX_LOOPED_COLOUR, Handle, value.R / 255, value.G / 255,
                 value.B / 255, false);
         }
 
-        public int Alpha {
+        public int Alpha
+        {
             set => Function.Call(Hash.SET_PARTICLE_FX_LOOPED_ALPHA, Handle, value / 255);
         }
 
@@ -490,7 +492,7 @@ namespace GTS.Library
                 ? Function.Call<int>(Hash.START_PARTICLE_FX_LOOPED_ON_ENTITY, FxName,
                     entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, scale, 0, 0, 1)
                 : Function.Call<int>(Hash._START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE, FxName,
-                    entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, (int)bone, scale, 0, 0,
+                    entity, offset.X, offset.Y, offset.Z, rotation.X, rotation.Y, rotation.Z, (int) bone, scale, 0, 0,
                     0);
         }
 
@@ -558,7 +560,7 @@ namespace GTS.Library
         public void Unload()
         {
             if (IsLoaded)
-                Function.Call((Hash)0x5F61EBBE1A00F96D, AssetName);
+                Function.Call((Hash) 0x5F61EBBE1A00F96D, AssetName);
         }
     }
 
@@ -572,19 +574,22 @@ namespace GTS.Library
 
     public static class FollowCam
     {
-        public static FollowCamViewMode ViewMode {
-            get {
+        public static FollowCamViewMode ViewMode
+        {
+            get
+            {
                 if (IsFollowingVehicle)
-                    return (FollowCamViewMode)Function.Call<int>(Hash.GET_FOLLOW_VEHICLE_CAM_VIEW_MODE);
-                return (FollowCamViewMode)Function.Call<int>(Hash.GET_FOLLOW_PED_CAM_VIEW_MODE);
+                    return (FollowCamViewMode) Function.Call<int>(Hash.GET_FOLLOW_VEHICLE_CAM_VIEW_MODE);
+                return (FollowCamViewMode) Function.Call<int>(Hash.GET_FOLLOW_PED_CAM_VIEW_MODE);
             }
-            set {
+            set
+            {
                 if (IsFollowingVehicle)
                 {
-                    Function.Call(Hash.SET_FOLLOW_VEHICLE_CAM_VIEW_MODE, (int)value);
+                    Function.Call(Hash.SET_FOLLOW_VEHICLE_CAM_VIEW_MODE, (int) value);
                     return;
                 }
-                Function.Call(Hash.SET_FOLLOW_PED_CAM_VIEW_MODE, (int)value);
+                Function.Call(Hash.SET_FOLLOW_PED_CAM_VIEW_MODE, (int) value);
             }
         }
 
@@ -651,7 +656,7 @@ namespace GTS.Library
         {
             Load();
             _start = Game.GameTime;
-            _sc.CallFunction("SHOW_SHARD_CENTERED_MP_MESSAGE", msg, desc, (int)bgColor, (int)textColor);
+            _sc.CallFunction("SHOW_SHARD_CENTERED_MP_MESSAGE", msg, desc, (int) bgColor, (int) textColor);
             _timer = time;
         }
 
@@ -675,7 +680,7 @@ namespace GTS.Library
         {
             Load();
             _start = Game.GameTime;
-            _sc.CallFunction("SHOW_WEAPON_PURCHASED", msg, weaponName, unchecked((int)weapon), "", 100);
+            _sc.CallFunction("SHOW_WEAPON_PURCHASED", msg, weaponName, unchecked((int) weapon), "", 100);
             _timer = time;
         }
 
@@ -992,8 +997,8 @@ namespace GTS.Library
 
         private static string EffectToString(ScreenEffect screenEffect)
         {
-            if (screenEffect >= 0 && (int)screenEffect <= Eff.Length)
-                return Eff[(int)screenEffect];
+            if (screenEffect >= 0 && (int) screenEffect <= Eff.Length)
+                return Eff[(int) screenEffect];
             return "INVALID";
         }
 
@@ -1027,12 +1032,12 @@ namespace GTS.Library
 
         public TimecycleModChanger()
         {
-            _t = new Timer { Interval = 1 };
+            _t = new Timer {Interval = 1};
             _t.Start();
             _t.Tick += OnTick;
 
             if (!File.Exists(TimecycleModPath)) return;
-            _mods = new[] { string.Empty }.Concat(File.ReadAllLines(TimecycleModPath)).ToArray();
+            _mods = new[] {string.Empty}.Concat(File.ReadAllLines(TimecycleModPath)).ToArray();
         }
 
         private void OnTick(object o, EventArgs eventArgs)

@@ -20,10 +20,10 @@ namespace GTS
                 if (!Directory.Exists(Path)) return;
                 var files = Directory.GetFiles(Path).Where(x => x.EndsWith(".xml")).ToArray();
                 foreach (var file in files)
-                {
                     try
                     {
-                        var interior = new Interior("LoadOnStart\\" + System.IO.Path.GetFileNameWithoutExtension(file), InteriorType.MapEditor);
+                        var interior = new Interior("LoadOnStart\\" + System.IO.Path.GetFileNameWithoutExtension(file),
+                            InteriorType.MapEditor);
                         interior.Request();
                         _ints.Add(interior);
                     }
@@ -31,7 +31,6 @@ namespace GTS
                     {
                         // ignored
                     }
-                }
             }
             catch (Exception)
             {

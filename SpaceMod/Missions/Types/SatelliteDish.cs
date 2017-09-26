@@ -110,7 +110,8 @@ namespace GTS.Missions.Types
             }
 
             if (Game.IsLoading) return;
-            World.DrawMarker(MarkerType.VerticalCylinder, Position - Vector3.WorldUp, Vector3.Zero, Vector3.Zero, new Vector3(1, 1, 1),
+            World.DrawMarker(MarkerType.VerticalCylinder, Position - Vector3.WorldUp, Vector3.Zero, Vector3.Zero,
+                new Vector3(1, 1, 1),
                 Color.Yellow);
         }
 
