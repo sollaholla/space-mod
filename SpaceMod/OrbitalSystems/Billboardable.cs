@@ -11,7 +11,7 @@ namespace GTS.OrbitalSystems
             Rotation = Vector3.Zero;
         }
 
-        public Vector3 StartPosition { get; }
+        public Vector3 StartPosition { get; set; }
 
         public float ParallaxAmount { get; set; }
 

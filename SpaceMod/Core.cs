@@ -20,6 +20,7 @@ namespace GTS
 {
     internal class Core : Script
     {
+        private const string LSReturnScene = "Earth";
         private Keys _optionsMenuKey = Keys.NumPad9;
         private bool _menuEnabled = true;
         private UIMenu _mainMenu;
@@ -465,7 +466,7 @@ namespace GTS
 
         private static SceneInfo DeserializeFileAsScene(string fileName)
         {
-            if (fileName == "cmd_earth") return null;
+            if (fileName == LSReturnScene) return null;
             var newScene = XmlSerializer.Deserialize<SceneInfo>(Database.PathToScenes + "\\" + fileName);
             if (newScene != null) return newScene;
             UI.Notify(Database.NotifyHeader + "Scene file " + fileName + " couldn't be read, or doesn't exist.");
@@ -485,10 +486,10 @@ namespace GTS
 
         private void CreateScene(SceneInfo scene, string fileName = "")
         {
+            ClearAllEntities(PlayerPosition);
             CurrentScene?.Delete();
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
             else PlayerPed.Rotation = Vector3.Zero;
-            ClearAllEntities(PlayerPosition);
             CurrentScene = new Scene(scene) { FileName = fileName };
             CurrentScene.Start();
             CurrentScene.Exited += CurrentSceneOnExited;
@@ -496,52 +497,23 @@ namespace GTS
 
         private void CurrentSceneOnExited(Scene scene, string nextScene, Vector3 offset, Vector3 rotation)
         {
-            var isActualScene = nextScene != "cmd_earth";
-            var newScene = DeserializeFileAsScene(nextScene);
-            if (isActualScene && newScene == null)
+            if (nextScene == LSReturnScene)
             {
-                OnAborted(this, new EventArgs());
-                _didAbort = false;
+                EnterAtmosphere();
                 return;
             }
-
-            var cam = World.CreateCamera(PlayerPosition + Vector3.WorldUp * 15, Vector3.Zero, 60);
-            cam.PointAt(PlayerPed.Position);
-            cam.Shake(CameraShake.Hand, 0.5f);
-            World.RenderingCamera = cam;
-            Effects.Start(ScreenEffect.CamPushInNeutral);
-
-            if (isActualScene && newScene.SurfaceScene)
-                RaiseLandingGear();
-
-            const int wait = 1000;
-            Game.FadeScreenOut(wait);
-            Wait(wait);
-            ResetWeather();
-            ClearAllEntities(PlayerPosition);
-            if (nextScene != "cmd_earth")
-            {
-                CreateScene(newScene, nextScene);
-                if (offset != Vector3.Zero) PlayerPosition = newScene.GalaxyCenter + offset;
-                if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = rotation;
-                else PlayerPed.Rotation = rotation;
-            }
-            else
-            {
-                CurrentScene.Delete();
-                CurrentScene = null;
-                GiveSpawnControlToGame();
-                EnterAtmosphere();
-                PlayerPed.HasGravity = true;
-                GtsLibNet.SetGravityLevel(9.81f);
-            }
-            Wait(wait);
-            World.RenderingCamera = null;
-            Game.FadeScreenIn(wait);
+            var sceneInfo = DeserializeFileAsScene(nextScene);
+            SetCurrentScene(sceneInfo, nextScene);
+            if (sceneInfo.SurfaceScene) return;
+            PlayerPosition = sceneInfo.GalaxyCenter + offset;
+            PlayerPed.Rotation = rotation;
         }
 
         private static void EnterAtmosphere()
         {
+            Game.FadeScreenOut(100);
+            Wait(100);
+            CurrentScene?.Delete();
             if (PlayerPed.IsInVehicle())
             {
                 var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
@@ -554,6 +526,7 @@ namespace GTS
             {
                 PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
             }
+            Game.FadeScreenIn(100);
         }
 
         private static void ClearAllEntities(Vector3 position, float radius = 10000)
@@ -564,16 +537,14 @@ namespace GTS
         private static void RaiseLandingGear()
         {
             var vehicle = PlayerPed.CurrentVehicle;
-            if (PlayerPed.IsInVehicle() && Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle))
+            if (!PlayerPed.IsInVehicle() || !Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle)) return;
+            Function.Call(Hash._0xCFC8BE9A5E1FE575, vehicle.Handle, 0);
+            var landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
+            while (Function.Call<int>(Hash._0x9B0F3DCA3DB0F4CD, vehicle.Handle) != 0)
             {
-                Function.Call(Hash._0xCFC8BE9A5E1FE575, vehicle.Handle, 0);
-                var landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
-                while (Function.Call<int>(Hash._0x9B0F3DCA3DB0F4CD, vehicle.Handle) != 0)
-                {
-                    if (DateTime.UtcNow > landingGrearTimeout)
-                        break;
-                    Yield();
-                }
+                if (DateTime.UtcNow > landingGrearTimeout)
+                    break;
+                Yield();
             }
         }
 

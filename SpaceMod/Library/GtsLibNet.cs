@@ -403,7 +403,7 @@ namespace GTS.Library
             var codebase = Assembly.GetExecutingAssembly().CodeBase;
             var path = Path.GetDirectoryName(new Uri(codebase).LocalPath);
             if (string.IsNullOrEmpty(path)) return new string[0];
-            var fileName = Path.Combine(path, "Space\\GAME_IPLS.txt");
+            var fileName = Path.Combine(path, "Space\\GameIpls.txt");
             if (!File.Exists(fileName)) return new string[0];
             var lines = File.ReadAllLines(fileName);
             return lines;

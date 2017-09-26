@@ -57,6 +57,11 @@ namespace GTS.Scenes
         /// </summary>
         public const string ReticleTexture = "hud_lock";
 
+        /// <summary>
+        /// Unfortunately the max distance you can be from a dynamic object before it dissapears. (in gta)
+        /// </summary>
+        public const float MaxStreamingDist = 15990f;
+
         private bool _didDeleteScene;
         private bool _didJump;
         private bool _didRaiseGears;
@@ -197,10 +202,8 @@ namespace GTS.Scenes
             prop.FreezePosition = true;
             prop.LodDistance = data.LodDistance;
 
-            var orbital = new Orbital(prop, data.Name, data.RotationSpeed)
-            {
-                WormHole = data.WormHole
-            };
+            var orbital = new Orbital(prop, data.Name, data.RotationSpeed, data.WormHole, data.TriggerDistance,
+                data.NextScene, data.NextScenePosition, data.NextSceneRotation);
 
             if (!string.IsNullOrEmpty(data.Name))
             {
@@ -309,24 +312,25 @@ namespace GTS.Scenes
         internal void Start()
         {
             if (_didDeleteScene) return;
-            Function.Call(Hash._LOWER_MAP_PROP_DENSITY, true);
+            ConfigureRendering();
+            GameplayCamera.RelativeHeading = 0;
             GtsLibNet.RemoveAllIplsRegardless(true);
+            GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
+            Function.Call(Hash.STOP_AUDIO_SCENES);
+            Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
+            Function.Call(Hash.SET_CLOCK_TIME, Info.Time, Info.TimeMinutes, 0);
+            Function.Call(Hash.PAUSE_CLOCK, true);
+            Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
+            Function.Call(Hash.SET_ENTITY_ALWAYS_PRERENDER, Skybox?.Handle ?? 0, true);
             GetSpaceVehicles();
             CreateSpace();
             CreateInteriors();
             CreateTeleports();
-            GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
             CreateScenarios();
             ConfigureVehicleForScene();
             ResetPlayerPosition();
-            _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
-            Function.Call(Hash.STOP_AUDIO_SCENES);
-            Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
-            GameplayCamera.RelativeHeading = 0;
-            Function.Call(Hash.SET_CLOCK_TIME, Info.Time, Info.TimeMinutes, 0);
-            Function.Call(Hash.PAUSE_CLOCK, true);
-            Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
             Game.MissionFlag = true;
+            _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
         }
 
         internal void Update()
@@ -337,12 +341,10 @@ namespace GTS.Scenes
             ConfigureWeather();
             UpdateAudio();
             SettingsUpdate();
-            if (Entity.Exists(Skybox)) Skybox.Position = viewFinderPosition;
             UpdateOrbitals(viewFinderPosition);
             SpaceWalkTask();
             PilotVehicle();
             HandleDeath();
-            TryToExitScene();
             HandlePlayerVehicle();
             UpdateInteriorTeleports();
             UpdateSurfaceTiles();
@@ -350,6 +352,9 @@ namespace GTS.Scenes
             UpdateWormHoles();
             LowerPedAndVehicleDensity();
             Scenarios?.ForEach(scenario => scenario.Tick());
+            TryToExitScene();
+            if (Entity.Exists(Skybox)) Skybox.Position = viewFinderPosition;
+            KeepInSafeZone(viewFinderPosition);
         }
 
         internal void Delete(bool aborted = false)
@@ -461,19 +466,11 @@ namespace GTS.Scenes
             Function.Call(Hash.STOP_AUDIO_SCENES);
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, ReticleTextureDict);
-            Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-            Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-            Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-            Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
-            Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 1.0f);
             Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, false);
-            Function.Call(Hash._CLEAR_CLOUD_HAT);
             Function.Call(Hash.PAUSE_CLOCK, false);
-            Function.Call(Hash._LOWER_MAP_PROP_DENSITY, false);
+            Function.Call(Hash._CLEAR_CLOUD_HAT);
             GtsLibNet.RemoveAllIpls(false);
             Game.MissionFlag = false;
-            Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", 1);
-            Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
         }
 
         private void GetSpaceVehicles()
@@ -824,7 +821,7 @@ namespace GTS.Scenes
                     o.Quaternion = Quaternion.Lerp(o.Quaternion,
                         Quaternion.FromToRotation(o.ForwardVector, o.RightVector) * o.Quaternion,
                         Game.LastFrameTime * o.RotationSpeed);
-
+                
                 if (!Settings.ShowCustomGui)
                     continue;
 
@@ -1048,37 +1045,28 @@ namespace GTS.Scenes
 
         private void TryToExitScene()
         {
-            foreach (var orbital in Info.Orbitals)
+            foreach (var orbital in Orbitals)
             {
-                if (string.IsNullOrEmpty(orbital?.NextScene))
-                    continue;
-
-                var position = Info.GalaxyCenter + orbital.Position;
+                if (string.IsNullOrEmpty(orbital?.NextScene)) continue;
+                var position = orbital.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
-
                 if (Settings.DebugTriggers)
                     World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero,
                         new Vector3(orbital.TriggerDistance, orbital.TriggerDistance, orbital.TriggerDistance),
                         Color.FromArgb(150, 255, 0, 0));
-
                 if (!(distance <= orbital.TriggerDistance * orbital.TriggerDistance)) continue;
                 Exited?.Invoke(this, orbital.NextScene, orbital.NextScenePosition, orbital.NextSceneRotation);
                 break;
             }
-
             foreach (var link in Info.SceneLinks)
             {
-                if (string.IsNullOrEmpty(link?.NextScene))
-                    continue;
-
+                if (string.IsNullOrEmpty(link?.NextScene)) continue;
                 var position = Info.GalaxyCenter + link.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
-
                 if (Settings.DebugTriggers)
                     World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero,
                         new Vector3(link.TriggerDistance, link.TriggerDistance, link.TriggerDistance),
                         Color.FromArgb(150, 255, 255, 0));
-
                 if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
                 Exited?.Invoke(this, link.NextScene, link.NextScenePosition, link.NextSceneRotation);
                 break;
@@ -1351,6 +1339,7 @@ namespace GTS.Scenes
         {
             if (Entity.Exists(PlayerPed.CurrentVehicle) && PlayerPed.CurrentVehicle != PlayerVehicle)
             {
+                _spaceWalkRope?.Delete();
                 PlayerVehicle = PlayerPed.CurrentVehicle;
                 if (!checkModel || !PlayerVehicle.Model.IsCar)
                     GtsLib.SetVehicleGravity(PlayerVehicle, Info.UseGravity ? Info.GravityLevel : 0f);
@@ -1751,6 +1740,33 @@ namespace GTS.Scenes
                         orbitalData.NextSceneRotation);
                 }
             }
+        }
+
+        private void KeepInSafeZone(Vector3 viewFinderPosition)
+        {
+            if (Info.SurfaceScene) return;
+            if (viewFinderPosition == Vector3.Zero) return;
+            var dist = viewFinderPosition.DistanceTo(Info.GalaxyCenter);
+            if (dist < 5000) return;
+            var offset = Info.GalaxyCenter - viewFinderPosition;
+            var speed = PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Velocity : PlayerPed.Velocity;
+            var camHeading = GameplayCamera.RelativeHeading;
+            var camPitch = GameplayCamera.RelativePitch;
+            PlayerPosition = Info.GalaxyCenter;
+            foreach (var orbital in Orbitals)
+                orbital.Position += offset;
+            foreach (var billboardable in Billboards)
+            {
+                billboardable.Position += offset;
+                billboardable.StartPosition += offset;
+            }
+            foreach (var infoSceneLink in Info.SceneLinks)
+                infoSceneLink.Position += offset;
+            GameplayCamera.RelativePitch = camPitch;
+            GameplayCamera.RelativeHeading = camHeading;
+            if (PlayerPed.IsInVehicle())
+                PlayerPed.CurrentVehicle.Velocity = speed;
+            else PlayerPed.Velocity = speed;
         }
     }
 }

@@ -400,7 +400,7 @@ namespace GTSCommon
         [Description("True if you wish for this object to act like a wormhole, and suck the player in.")]
         [RefreshProperties(RefreshProperties.All)]
         public bool WormHole { get; set; }
-
+        
         [Category("Other")]
         [Description("The starting rotation of the object.")]
         [RefreshProperties(RefreshProperties.All)]
