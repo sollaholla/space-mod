@@ -326,12 +326,12 @@ namespace GTS.Scenes
             Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
             Function.Call(Hash.SET_ENTITY_ALWAYS_PRERENDER, Skybox?.Handle ?? 0, true);
             GetSpaceVehicles();
+            ConfigureVehicleForScene();
+            ResetPlayerPosition();
             CreateSpace();
             CreateInteriors();
             CreateTeleports();
             CreateScenarios();
-            ConfigureVehicleForScene();
-            ResetPlayerPosition();
             Game.MissionFlag = true;
             _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
             Debug.Log("Scene initialized.");
@@ -1641,7 +1641,7 @@ namespace GTS.Scenes
         {
             if (_spaceWalkObj == null || !PlayerPed.IsAttachedTo(_spaceWalkObj))
             {
-                _spaceWalkObj = World.CreateVehicle(VehicleHash.Panto, Vector3.Zero, PlayerPed.Heading);
+                _spaceWalkObj = World.CreateVehicle(VehicleHash.Panto, PlayerPosition, PlayerPed.Heading);
                 if (_spaceWalkObj == null) return;
                 var lastPosition = PlayerPed.Position;
                 _spaceWalkObj.HasCollision = false;
