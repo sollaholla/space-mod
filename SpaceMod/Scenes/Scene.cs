@@ -449,7 +449,7 @@ namespace GTS.Scenes
                 Game.Player.CanControlCharacter = false;
             }
             World.RenderingCamera = FollowCam.ViewMode == FollowCamViewMode.FirstPerson ? null : _warpCamera;
-            PlayerPosition += PlayerPed.CurrentVehicle.ForwardVector * (VehicleData?.WarpSpeed ?? 500f) * Game.LastFrameTime;
+            PlayerPosition += PlayerPed.CurrentVehicle.ForwardVector * ((float) VehicleData?.WarpSpeed) * Game.LastFrameTime;
             PlayerPed.CurrentVehicle.Rotation = _rotationBeforeWarp;
             _warpStars.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset;
             _warpShell.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset * 5;
