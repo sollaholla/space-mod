@@ -42,7 +42,6 @@ namespace GTS
         {
             Instance = this;
             KeyUp += OnKeyUp;
-            KeyDown += OnKeyDown;
             Tick += OnTick;
             Aborted += OnAborted;
 
@@ -81,8 +80,6 @@ namespace GTS
         {
             try
             {
-                if (CurrentScene != null)
-                    CurrentScene.DebugWarp = _warpDown;
                 CreateMaps();
                 ProcessMenus();
                 CheckSceneStatus();
@@ -91,17 +88,12 @@ namespace GTS
             }
             catch (Exception ex)
             {
-                Debug.Log(ex.Message, DebugMessageType.Error);
+                Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
             }
         }
-
-        private bool _warpDown;
-
+        
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.X)
-                _warpDown = false;
-
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
@@ -110,13 +102,7 @@ namespace GTS
 
             _mainMenu.Visible = !_mainMenu.Visible;
         }
-
-        private void OnKeyDown(object o, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.X)
-                _warpDown = true;
-        }
-
+        
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
             Reset();
@@ -421,7 +407,7 @@ namespace GTS
                 GTS.Settings.DefaultScene));
             SetCurrentScene(scene, GTS.Settings.DefaultScene);
 
-            PlayerPosition += GTS.Settings.DefaultScenePosition;
+            PlayerPosition = scene.GalaxyCenter + GTS.Settings.DefaultScenePosition;
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = GTS.Settings.DefaultSceneRotation;
             else PlayerPed.Heading = GTS.Settings.DefaultSceneRotation.Z;
 
@@ -529,7 +515,7 @@ namespace GTS
             var sceneInfo = DeserializeFileAsScene(nextScene);
             SetCurrentScene(sceneInfo, nextScene);
             if (sceneInfo.SurfaceScene) return;
-            PlayerPosition += offset;
+            PlayerPosition = sceneInfo.GalaxyCenter + offset;
             PlayerPed.Rotation = rotation;
         }
 

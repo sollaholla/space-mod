@@ -17,6 +17,10 @@ namespace GTS.Vehicles
         public float RotationMultiplier { get; set; }
         public bool NewtonianPhysics { get; set; } = true;
         public float Drag { get; set; } = 0.001f;
+        public bool CanWarp { get; set; }
+        public string WarpModel1 { get; set; }
+        public string WarpModel2 { get; set; }
+        public float WarpSpeed { get; set; }
 
         [XmlArrayItem("Item")]
         public List<VehicleDoor> OpenDoorsSpaceWalk { get; set; } = new List<VehicleDoor>();
