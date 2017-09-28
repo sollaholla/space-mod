@@ -113,7 +113,8 @@ namespace GTSCommon
             {
                 var s = (string) value;
                 if (s == null) return null;
-                var tokens = s.Split(';');
+                s = s.Replace("X:", "").Replace("Y:", "").Replace("Z:", "");
+                var tokens = s.Split(' ');
                 return new XVector3(float.Parse(tokens[0]), float.Parse(tokens[1]), float.Parse(tokens[2]));
             }
             catch
@@ -128,7 +129,7 @@ namespace GTSCommon
         {
             var p = (XVector3) value;
 
-            return "(" + p.X + ", " + p.Y + ", " + p.Z + ")";
+            return "X:" + p.X + " Y:" + p.Y + " Z:" + p.Z;
         }
     }
 
@@ -346,6 +347,11 @@ namespace GTSCommon
         [Description("This is the distance that will trigger the next scene to load.")]
         [RefreshProperties(RefreshProperties.All)]
         public float TriggerDistance { get; set; }
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(Name) ? base.ToString() : Name;
+        }
     }
 
     [Serializable]
@@ -355,6 +361,24 @@ namespace GTSCommon
         [Description("The starting rotation of the object.")]
         [RefreshProperties(RefreshProperties.All)]
         public XVector3 Rotation { get; set; }
+
+        [Category("Other")]
+        [Description(
+            "Will cause the attached orbital to slightly shift it's position the further from the 'GalaxyCenter' the player goes.")]
+        [RefreshProperties(RefreshProperties.All)]
+        public float ShiftAmount { get; set; }
+
+        [Category("Other.Shift")]
+        [RefreshProperties(RefreshProperties.All)]
+        public bool ShiftX { get; set; }
+
+        [Category("Other.Shift")]
+        [RefreshProperties(RefreshProperties.All)]
+        public bool ShiftY { get; set; }
+
+        [Category("Other.Shift")]
+        [RefreshProperties(RefreshProperties.All)]
+        public bool ShiftZ { get; set; }
 
         [Category("Optional")]
         [Description("Stop this object from moving on the X axis.")]
@@ -379,6 +403,11 @@ namespace GTSCommon
         public XVector3 Position { get; set; }
 
         public int LodDistance { get; set; } = -1;
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(Model) ? base.ToString() : Model;
+        }
     }
 
     [Serializable]
@@ -422,6 +451,11 @@ namespace GTSCommon
         [Description("This is the distance that will trigger the next scene to load.")]
         [RefreshProperties(RefreshProperties.All)]
         public float TriggerDistance { get; set; }
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(Name) ? string.IsNullOrEmpty(Model) ? base.ToString() : Model : Name;
+        }
     }
 
     [Serializable]
@@ -453,6 +487,11 @@ namespace GTSCommon
 
         [Category("Settings")]
         public int LodDistance { get; set; } = -1;
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(Model) ? base.ToString() : Model;
+        }
     }
 
     [Serializable]
@@ -499,6 +538,11 @@ namespace GTSCommon
         [Description("Set the heading of the player after going from 'Start' to 'End'.")]
         [RefreshProperties(RefreshProperties.All)]
         public float EndHeading { get; set; }
+
+        public override string ToString()
+        {
+            return "Start=" + Start + " End=" + End;
+        }
     }
 
     [Serializable]
@@ -530,6 +574,11 @@ namespace GTSCommon
         public XVector3 Position { get; set; }
 
         public int LodDistance { get; set; } = -1;
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(Model) ? base.ToString() : Model;
+        }
     }
 
     [Serializable]

@@ -20,7 +20,7 @@ namespace GTS
 {
     internal class Core : Script
     {
-        private const string LSReturnScene = "Earth";
+        private const string LsReturnScene = "Earth";
         private readonly TimecycleModChanger _tcChanger = new TimecycleModChanger();
         private bool _didAbort;
         private bool _initializedGts;
@@ -42,6 +42,7 @@ namespace GTS
         {
             Instance = this;
             KeyUp += OnKeyUp;
+            KeyDown += OnKeyDown;
             Tick += OnTick;
             Aborted += OnAborted;
 
@@ -58,11 +59,9 @@ namespace GTS
 
         public static Scene CurrentScene { get; private set; }
 
-        public static Vector3 PlayerPosition
-        {
+        public static Vector3 PlayerPosition {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set
-            {
+            set {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
@@ -82,6 +81,8 @@ namespace GTS
         {
             try
             {
+                if (CurrentScene != null)
+                    CurrentScene.DebugWarp = _warpDown;
                 CreateMaps();
                 ProcessMenus();
                 CheckSceneStatus();
@@ -94,8 +95,13 @@ namespace GTS
             }
         }
 
+        private bool _warpDown;
+
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
+            if (e.KeyCode == Keys.X)
+                _warpDown = false;
+
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
@@ -103,6 +109,12 @@ namespace GTS
                 return;
 
             _mainMenu.Visible = !_mainMenu.Visible;
+        }
+
+        private void OnKeyDown(object o, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.X)
+                _warpDown = true;
         }
 
         internal void OnAborted(object sender, EventArgs eventArgs)
@@ -279,20 +291,20 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.VehicleFlySpeed = (int) sender.IndexToItem(index);
+                GTS.Settings.VehicleFlySpeed = (int)sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
+            var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic) i).ToList(), flySensitivity);
+                    .Select(i => (dynamic)i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.MouseControlFlySensitivity = (float) sender.IndexToItem(index);
+                GTS.Settings.MouseControlFlySensitivity = (float)sender.IndexToItem(index);
             };
 
             vehicleSettingsMenu.AddItem(vehicleSpeedList);
@@ -478,7 +490,7 @@ namespace GTS
 
         private static SceneInfo DeserializeFileAsScene(string fileName)
         {
-            if (fileName == LSReturnScene) return null;
+            if (fileName == LsReturnScene) return null;
             var newScene = XmlSerializer.Deserialize<SceneInfo>(Database.PathToScenes + "\\" + fileName);
             if (newScene != null) return newScene;
             UI.Notify(Database.NotifyHeader + "Scene file " + fileName + " couldn't be read, or doesn't exist.");
@@ -498,18 +510,18 @@ namespace GTS
 
         private void CreateScene(SceneInfo scene, string fileName = "")
         {
-            ClearAllEntities(PlayerPosition);
             CurrentScene?.Delete();
+            ClearAllEntities(PlayerPosition);
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
             else PlayerPed.Rotation = Vector3.Zero;
-            CurrentScene = new Scene(scene) {FileName = fileName};
+            CurrentScene = new Scene(scene) { FileName = fileName };
             CurrentScene.Start();
             CurrentScene.Exited += CurrentSceneOnExited;
         }
 
         private void CurrentSceneOnExited(Scene scene, string nextScene, Vector3 offset, Vector3 rotation)
         {
-            if (nextScene == LSReturnScene)
+            if (nextScene == LsReturnScene)
             {
                 EnterAtmosphere();
                 return;
@@ -517,7 +529,7 @@ namespace GTS
             var sceneInfo = DeserializeFileAsScene(nextScene);
             SetCurrentScene(sceneInfo, nextScene);
             if (sceneInfo.SurfaceScene) return;
-            PlayerPosition = sceneInfo.GalaxyCenter + offset;
+            PlayerPosition += offset;
             PlayerPed.Rotation = rotation;
         }
 

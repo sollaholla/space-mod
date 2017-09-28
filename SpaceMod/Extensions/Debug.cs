@@ -64,11 +64,11 @@ namespace GTS.Extensions
             Log($"Logging entity data:{Environment.NewLine}" +
                 $"\tRelative Position: {entity.Position - (Core.CurrentScene != null ? Core.CurrentScene.Info.GalaxyCenter : (XVector3) Vector3.Zero)}{Environment.NewLine}" +
                 $"\tWorld Position: {entity.Position}{Environment.NewLine}" +
+                $"\tSimulated Position: {(Core.CurrentScene != null ? Core.CurrentScene.SimulatedPosition : Vector3.Zero)}{Environment.NewLine}" +
                 $"\tHeading: {entity.Heading}{Environment.NewLine}" +
                 $"\tRotation: {entity.Rotation}{Environment.NewLine}" +
                 $"\tQuaternion: {entity.Quaternion}{Environment.NewLine}" +
                 $"\tHash: {entity.Model.Hash}{Environment.NewLine}");
-
             UI.Notify(Database.NotifyHeader + "Logged entity position rotation etc...");
         }
     }
