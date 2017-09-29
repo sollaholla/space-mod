@@ -28,9 +28,9 @@ namespace GTS
         private UIMenu _mainMenu;
 
         private MapLoader _mapLoader;
-        private bool _menuEnabled = true;
         private MenuPool _menuPool;
         private int _missionStatus;
+        private bool _menuEnabled = true;
         private Keys _optionsMenuKey = Keys.NumPad9;
 
         private bool _resetWantedLevel = true;
@@ -41,8 +41,8 @@ namespace GTS
         public Core()
         {
             Instance = this;
-            KeyUp += OnKeyUp;
             Tick += OnTick;
+            KeyUp += OnKeyUp;
             Aborted += OnAborted;
 
             ReadSettings();
