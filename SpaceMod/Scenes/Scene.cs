@@ -422,19 +422,20 @@ namespace GTS.Scenes
             }
             if (!PlayerPed.IsInVehicle()) return;
             _warpFlag = true;
+
             Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
             if (!Entity.Exists(_warpStars))
             {
                 var model1 = new Model(VehicleData?.WarpModel1 ?? "warp_tube_01");
-                var model2 = new Model(VehicleData?.WarpModel2 ?? "warp_tube_02");
+                //var model2 = new Model(VehicleData?.WarpModel2 ?? "warp_tube_02");
                 model1.Request();
-                model2.Request();
-                while (!model1.IsLoaded || !model2.IsLoaded)
+                //model2.Request();
+                while (!model1.IsLoaded/* || !model2.IsLoaded*/)
                     Script.Yield();
                 _warpStars = World.CreateProp(model1, PlayerPosition, PlayerPed.Rotation, false, false);
-                _warpShell = World.CreateProp(model2, PlayerPosition, PlayerPed.Rotation, false, false);
+                //_warpShell = World.CreateProp(model2, PlayerPosition, PlayerPed.Rotation, false, false);
                 model1.MarkAsNoLongerNeeded();
-                model2.MarkAsNoLongerNeeded();
+                //model2.MarkAsNoLongerNeeded();
             }
             if (!Camera.Exists(_warpCamera))
             {
@@ -452,9 +453,9 @@ namespace GTS.Scenes
             PlayerPosition += PlayerPed.CurrentVehicle.ForwardVector * ((float) VehicleData?.WarpSpeed) * Game.LastFrameTime;
             PlayerPed.CurrentVehicle.Rotation = _rotationBeforeWarp;
             _warpStars.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset;
-            _warpShell.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset * 5;
-            var quaternion = Quaternion.FromToRotation(_warpShell.RightVector, _warpShell.UpVector) * _warpShell.Quaternion;
-            _warpShell.Quaternion = Quaternion.Lerp(_warpShell.Quaternion, quaternion, Game.LastFrameTime * 5);
+            //_warpShell.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset * 5;
+            //var quaternion = Quaternion.FromToRotation(_warpShell.RightVector, _warpShell.UpVector) * _warpShell.Quaternion;
+            //_warpShell.Quaternion = Quaternion.Lerp(_warpShell.Quaternion, quaternion, Game.LastFrameTime * 5);
             _warpModelOffset += Game.LastFrameTime * 500f;
             _warpEnergy -= Game.LastFrameTime * 0.07f;
             if (!(_warpModelOffset > 250)) return;
