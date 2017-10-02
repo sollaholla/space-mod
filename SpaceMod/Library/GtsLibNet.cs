@@ -214,6 +214,28 @@ namespace GTS.Library
             return p;
         }
 
+        public static Quaternion AngleAxis(float angle, Vector3 axis)
+        {
+            return AngleAxis(angle, ref axis);
+        }
+
+        private static Quaternion AngleAxis(float degress, ref Vector3 axis)
+        {
+            if (Math.Abs(axis.LengthSquared()) < 0.00001)
+                return Quaternion.Identity;
+            const float degToRad = (float)(Math.PI / 180.0);
+            Quaternion result = Quaternion.Identity;
+            var radians = degress * degToRad;
+            radians *= 0.5f;
+            axis.Normalize();
+            axis = axis * (float)Math.Sin(radians);
+            result.X = axis.X;
+            result.Y = axis.Y;
+            result.Z = axis.Z;
+            result.W = (float)Math.Cos(radians);
+            return Quaternion.Normalize(result);
+        }
+
         public static void GivePedAlienAttributes(Ped p)
         {
             p.Accuracy = 50;
@@ -364,7 +386,7 @@ namespace GTS.Library
             Function.Call(Hash._DISPLAY_HELP_TEXT_FROM_STRING_LABEL, 0, 0, 1, -1);
         }
 
-        public static void RemoveAllIplsRegardless(bool remove)
+        public static void ToggleAllIplsUnchecked(bool remove)
         {
             var lines = GetIplsToLoad(true);
             foreach (var line in lines)
@@ -379,7 +401,7 @@ namespace GTS.Library
             }
         }
 
-        public static void RemoveAllIpls(bool remove)
+        public static void ToggleAllIpls(bool remove)
         {
             var lines = AllIpls ?? new string[0];
             foreach (var line in lines)

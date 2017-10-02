@@ -136,13 +136,8 @@ namespace GTS
                     PlayerPosition = Database.TrevorAirport;
                 ResetWeather();
             }
-            else
-            {
-                GtsLibNet.RemoveAllIplsRegardless(false);
-            }
+            else GtsLibNet.ToggleAllIpls(false);
             CurrentScene = null;
-            //Function.Call(Hash.DECOR_SET_INT, PlayerPed, "fileindex", 1);
-            //Function.Call(Hash.DECOR_SET_BOOL, PlayerPed, "reload", true);
         }
 
         private void ProcessMenus()
