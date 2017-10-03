@@ -14,6 +14,7 @@ using GTS.Shuttle;
 using GTSCommon;
 using NativeUI;
 using Control = GTA.Control;
+
 //using GTS.Missions;
 
 namespace GTS
@@ -26,15 +27,12 @@ namespace GTS
         private bool _initializedGts;
         private bool _initializedScripts;
         private UIMenu _mainMenu;
-
         private MapLoader _mapLoader;
+        private bool _menuEnabled = true;
         private MenuPool _menuPool;
         private int _missionStatus;
-        private bool _menuEnabled = true;
         private Keys _optionsMenuKey = Keys.NumPad9;
-
         private bool _resetWantedLevel = true;
-
         private ShuttleManager _shuttleManager;
 
         public Core()
@@ -57,9 +55,11 @@ namespace GTS
 
         public static Scene CurrentScene { get; private set; }
 
-        public static Vector3 PlayerPosition {
+        public static Vector3 PlayerPosition
+        {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set {
+            set
+            {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
@@ -100,7 +100,7 @@ namespace GTS
 
             _mainMenu.Visible = !_mainMenu.Visible;
         }
-        
+
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
             Reset();
@@ -133,7 +133,10 @@ namespace GTS
                     PlayerPosition = Database.TrevorAirport;
                 ResetWeather();
             }
-            else GtsLibNet.ToggleAllIpls(false);
+            else
+            {
+                GtsLibNet.ToggleAllIpls(false);
+            }
             CurrentScene = null;
         }
 
@@ -275,20 +278,20 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GTS.Settings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.VehicleFlySpeed = (int)sender.IndexToItem(index);
+                GTS.Settings.VehicleFlySpeed = (int) sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int)GTS.Settings.MouseControlFlySensitivity;
+            var flySensitivity = (int) GTS.Settings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic)i).ToList(), flySensitivity);
+                    .Select(i => (dynamic) i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
-                GTS.Settings.MouseControlFlySensitivity = (float)sender.IndexToItem(index);
+                GTS.Settings.MouseControlFlySensitivity = (float) sender.IndexToItem(index);
             };
 
             vehicleSettingsMenu.AddItem(vehicleSpeedList);
@@ -323,10 +326,7 @@ namespace GTS
             #endregion
 
             var respawnShuttleItem = new UIMenuItem("Respawn Shuttle", "Respawns the nasa shuttle on the gantry.");
-            respawnShuttleItem.Activated += (sender, item) =>
-            {
-                _shuttleManager?.CreateShuttle();
-            };
+            respawnShuttleItem.Activated += (sender, item) => { _shuttleManager?.CreateShuttle(); };
 
             var saveSettingsItem = new UIMenuItem("Save Settings");
             saveSettingsItem.SetLeftBadge(UIMenuItem.BadgeStyle.Star);
@@ -465,7 +465,7 @@ namespace GTS
             ClearAllEntities(PlayerPosition);
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
             else PlayerPed.Rotation = Vector3.Zero;
-            CurrentScene = new Scene(scene) { FileName = fileName };
+            CurrentScene = new Scene(scene) {FileName = fileName};
             CurrentScene.Start();
             CurrentScene.Exited += CurrentSceneOnExited;
         }
@@ -500,7 +500,10 @@ namespace GTS
                 playerPedCurrentVehicle.HasGravity = true;
                 playerPedCurrentVehicle.Speed = 1000;
             }
-            else PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
+            else
+            {
+                PlayerPosition = GTS.Settings.EarthAtmosphereEnterPosition;
+            }
             Game.FadeScreenIn(100);
         }
 

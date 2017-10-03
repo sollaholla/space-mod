@@ -22,6 +22,7 @@ namespace GTS.DataClasses
 
         [XmlArrayItem("Item")]
         public List<WarpModelInfo> WarpModels { get; set; } = new List<WarpModelInfo>();
+
         [XmlArrayItem("Item")]
         public List<VehicleDoor> OpenDoorsSpaceWalk { get; set; } = new List<VehicleDoor>();
 

@@ -429,7 +429,7 @@ namespace GTSCommon
         [Description("True if you wish for this object to act like a wormhole, and suck the player in.")]
         [RefreshProperties(RefreshProperties.All)]
         public bool WormHole { get; set; }
-        
+
         [Category("Other")]
         [Description("The starting rotation of the object.")]
         [RefreshProperties(RefreshProperties.All)]
@@ -472,7 +472,8 @@ namespace GTSCommon
         public float TileSize { get; set; } = 1024;
 
         [Category("Settings")]
-        [Description("The dimensions of the terrain e.g. 1x1 makes 7 tiles ([0,0][1,0][0,1][1,1][-1,0][0,-1][-1,-1]) etc.")]
+        [Description(
+            "The dimensions of the terrain e.g. 1x1 makes 7 tiles ([0,0][1,0][0,1][1,1][-1,0][0,-1][-1,-1]) etc.")]
         public int Dimensions { get; set; } = 4;
 
         [Category("Required")]

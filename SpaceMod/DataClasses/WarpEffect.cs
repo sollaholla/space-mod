@@ -4,7 +4,8 @@ namespace GTS.DataClasses
 {
     public class WarpEffect : Entity
     {
-        public WarpEffect(int handle, float movementOffset, float rotationOffset, float movementSpeed, float rotationSpeed) : base(handle)
+        public WarpEffect(int handle, float movementOffset, float rotationOffset, float movementSpeed,
+            float rotationSpeed) : base(handle)
         {
             MovementOffset = movementOffset;
             RotationOffset = rotationOffset;

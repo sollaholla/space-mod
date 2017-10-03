@@ -223,16 +223,16 @@ namespace GTS.Library
         {
             if (Math.Abs(axis.LengthSquared()) < 0.00001)
                 return Quaternion.Identity;
-            const float degToRad = (float)(Math.PI / 180.0);
-            Quaternion result = Quaternion.Identity;
+            const float degToRad = (float) (Math.PI / 180.0);
+            var result = Quaternion.Identity;
             var radians = degress * degToRad;
             radians *= 0.5f;
             axis.Normalize();
-            axis = axis * (float)Math.Sin(radians);
+            axis = axis * (float) Math.Sin(radians);
             result.X = axis.X;
             result.Y = axis.Y;
             result.Z = axis.Z;
-            result.W = (float)Math.Cos(radians);
+            result.W = (float) Math.Cos(radians);
             return Quaternion.Normalize(result);
         }
 

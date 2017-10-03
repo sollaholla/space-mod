@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using GTA;
 using GTA.Math;
-using GTS.Library;
 using GTS.Particles;
 
 namespace GTS.Shuttle
@@ -10,13 +9,15 @@ namespace GTS.Shuttle
     public class SpaceShuttle : Entity
     {
         private readonly List<Prop> _attachments = new List<Prop>();
+        private readonly PtfxLooped _gantrySmoke = new PtfxLooped("exp_grd_grenade_smoke", "core");
         private readonly PtfxLooped _srblFx = new PtfxLooped("exp_sht_flame", "core");
         private readonly PtfxLooped _srbrFx = new PtfxLooped("exp_sht_flame", "core");
-        private readonly PtfxLooped _gantrySmoke = new PtfxLooped("exp_grd_grenade_smoke", "core");
-        private DateTime _gantrySmokeTime;
         private bool _finishedLaunch;
+        private DateTime _gantrySmokeTime;
 
-        public SpaceShuttle(int handle) : base(handle) { }
+        public SpaceShuttle(int handle) : base(handle)
+        {
+        }
 
         public void SpawnAttachments()
         {
@@ -34,8 +35,8 @@ namespace GTS.Shuttle
             srbl.AttachTo(this, 0);
             srbr.AttachTo(this, 0);
             extTank.AttachTo(this, 0);
-            _attachments.AddRange(new[] { srbl, srbr, extTank });
-            ((Vehicle)this).LandingGear = VehicleLandingGear.Retracted;
+            _attachments.AddRange(new[] {srbl, srbr, extTank});
+            ((Vehicle) this).LandingGear = VehicleLandingGear.Retracted;
         }
 
         public void RemoveAttachments()
@@ -51,11 +52,9 @@ namespace GTS.Shuttle
         public void Launch()
         {
             if (Game.Player.Character.IsDead)
-            {
                 return;
-            }
 
-            if (IsDead || IsInWater || !Exists(((Vehicle)this).Driver) || _finishedLaunch)
+            if (IsDead || IsInWater || !Exists(((Vehicle) this).Driver) || _finishedLaunch)
                 return;
 
             _srblFx.Play(_attachments[0], 0, new Vector3(-6.5f, -17, -7), new Vector3(85, 0, 0), 20.0f);
@@ -79,9 +78,9 @@ namespace GTS.Shuttle
                     break;
                 }
 
-                if (IsDead || IsInWater || !Exists(((Vehicle)this).Driver))
+                if (IsDead || IsInWater || !Exists(((Vehicle) this).Driver))
                 {
-                    ((Vehicle)this).Explode();
+                    ((Vehicle) this).Explode();
                     _attachments[0].Detach();
                     _attachments[1].Detach();
                     _attachments[2].Detach();
@@ -95,7 +94,8 @@ namespace GTS.Shuttle
                 speed = Math.Min(speed, 50);
                 ApplyForce(ForwardVector * speed, new Vector3(0, 0, 0.2f));
 
-                if (HeightAboveGround > Settings.ShutStage1Height && (_attachments[0].IsAttached() || _attachments[1].IsAttached()))
+                if (HeightAboveGround > Settings.ShutStage1Height &&
+                    (_attachments[0].IsAttached() || _attachments[1].IsAttached()))
                 {
                     _attachments[0].Detach();
                     _attachments[1].Detach();

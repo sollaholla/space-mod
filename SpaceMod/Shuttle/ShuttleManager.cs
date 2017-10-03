@@ -27,7 +27,10 @@ namespace GTS.Shuttle
                 if (Game.IsControlJustPressed(2, Control.Jump))
                     Shuttle.Launch();
             }
-            else EnterShuttle();
+            else
+            {
+                EnterShuttle();
+            }
             if (Shuttle.HeightAboveGround <= Settings.EnterOrbitHeight) return;
             Shuttle.RemoveAttachments();
             Shuttle.HasCollision = true;
@@ -72,7 +75,7 @@ namespace GTS.Shuttle
         {
             var playerPed = PlayerPed;
             var modelName = AstronautModel;
-            switch ((PedHash)playerPed.Model.Hash)
+            switch ((PedHash) playerPed.Model.Hash)
             {
                 case PedHash.Michael:
                     modelName = "player_zero(spacesuit)";
@@ -100,7 +103,7 @@ namespace GTS.Shuttle
             Function.Call(Hash.CHANGE_PLAYER_PED, Game.Player, newPlayer, true, true);
             playerPed.Delete();
             playerPed = Game.Player.Character;
-            var v = new Vehicle(Shuttle.Handle) { LockStatus = VehicleLockStatus.None };
+            var v = new Vehicle(Shuttle.Handle) {LockStatus = VehicleLockStatus.None};
             playerPed.SetIntoVehicle(v, VehicleSeat.Driver);
             v.LockStatus = VehicleLockStatus.Locked;
         }
@@ -121,10 +124,10 @@ namespace GTS.Shuttle
 
         private static IEnumerable<Weapon> GetWeapons(Ped ped)
         {
-            var weaponHashes = (WeaponHash[])Enum.GetValues(typeof(WeaponHash));
+            var weaponHashes = (WeaponHash[]) Enum.GetValues(typeof(WeaponHash));
             return (from weaponHash in weaponHashes
-                    where ped.Weapons.HasWeapon(weaponHash)
-                    select ped.Weapons[weaponHash]).ToArray();
+                where ped.Weapons.HasWeapon(weaponHash)
+                select ped.Weapons[weaponHash]).ToArray();
         }
     }
 }
