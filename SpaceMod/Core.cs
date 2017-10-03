@@ -15,8 +15,6 @@ using GTSCommon;
 using NativeUI;
 using Control = GTA.Control;
 
-//using GTS.Missions;
-
 namespace GTS
 {
     internal class Core : Script
