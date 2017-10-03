@@ -35,7 +35,6 @@ namespace GTS
 
         private bool _resetWantedLevel = true;
 
-        //private IntroMission _introMission;
         private ShuttleManager _shuttleManager;
 
         public Core()
@@ -80,10 +79,9 @@ namespace GTS
         {
             try
             {
-                CreateMaps();
+                LoadGts();
                 ProcessMenus();
                 CheckSceneStatus();
-                RunInternalMissions();
                 DisableWantedStars();
             }
             catch (Exception ex)
@@ -91,7 +89,7 @@ namespace GTS
                 Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
             }
         }
-        
+
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
             if (_menuPool?.IsAnyMenuOpen() ?? false)
@@ -106,11 +104,10 @@ namespace GTS
         internal void OnAborted(object sender, EventArgs eventArgs)
         {
             Reset();
-            //_introMission?.OnAborted();
+            HeliTransport?.Delete();
             _shuttleManager?.Abort();
             _tcChanger?.Stop();
             _mapLoader?.RemoveMaps();
-            HeliTransport?.Delete();
             _didAbort = true;
         }
 
@@ -319,6 +316,12 @@ namespace GTS
 
             #endregion
 
+            var respawnShuttleItem = new UIMenuItem("Respawn Shuttle", "Respawns the nasa shuttle on the gantry.");
+            respawnShuttleItem.Activated += (sender, item) =>
+            {
+                _shuttleManager?.CreateShuttle();
+            };
+
             var saveSettingsItem = new UIMenuItem("Save Settings");
             saveSettingsItem.SetLeftBadge(UIMenuItem.BadgeStyle.Star);
             saveSettingsItem.Activated += (sender, item) =>
@@ -351,7 +354,7 @@ namespace GTS
                 ColorTranslator.FromHtml("#8000ff")));
         }
 
-        private void CreateMaps()
+        private void LoadGts()
         {
             while (Game.IsLoading || Game.IsScreenFadedOut || Game.IsScreenFadingIn)
                 Yield();
@@ -365,8 +368,7 @@ namespace GTS
 
                 if (_shuttleManager == null)
                 {
-                    _shuttleManager = new ShuttleManager(GTS.Settings.EnterOrbitHeight);
-                    //if (_missionStatus > 0)
+                    _shuttleManager = new ShuttleManager();
                     _shuttleManager.CreateShuttle();
                 }
                 if (_mapLoader == null)
@@ -388,13 +390,9 @@ namespace GTS
 
         private void DoEarthUpdate()
         {
-            //if (_introMission == null || !_introMission.DidStart)
-            //    StartScripts();
-            //else 
-            StopScripts();
+            StartScripts();
             HeliTransport?.Update();
 
-            // Let's us go to space from earth.
             var height = PlayerPed.HeightAboveGround;
             if (!(height > GTS.Settings.EnterOrbitHeight)) return;
 
@@ -405,10 +403,6 @@ namespace GTS
             PlayerPosition = scene.GalaxyCenter + GTS.Settings.DefaultScenePosition;
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = GTS.Settings.DefaultSceneRotation;
             else PlayerPed.Heading = GTS.Settings.DefaultSceneRotation.Z;
-
-            if (PlayerPed.CurrentVehicle == _shuttleManager.Shuttle) return;
-            _shuttleManager.Shuttle?.CleanUp();
-            _shuttleManager.Shuttle?.Delete();
         }
 
         private void DoSceneUpdate()
@@ -419,36 +413,6 @@ namespace GTS
             CurrentScene.Update();
             StopScripts();
         }
-
-        private void RunInternalMissions()
-        {
-            //if (CurrentScene != null)
-            //{
-            //    _introMission?.OnAborted();
-            //    return;
-            //}
-
-            //if (_missionStatus != 0) return;
-            //if (_introMission != null) _introMission.Tick();
-            //else
-            //{
-            //    _introMission = new IntroMission();
-            //    _introMission.Start();
-            //    _introMission.Completed += (scenario, success) =>
-            //    {
-            //        SetMissionStatus(1);
-            //        //_shuttleManager.CreateShuttle();
-            //        _introMission = null;
-            //    };
-            //}
-        }
-
-        //private void SetMissionStatus(int value)
-        //{
-        //    _missionStatus = value;
-        //    Settings.SetValue("core", "mission_status", _missionStatus);
-        //    Settings.Save();
-        //}
 
         private void DisableWantedStars()
         {
@@ -505,6 +469,7 @@ namespace GTS
             if (nextScene == LsReturnScene)
             {
                 EnterAtmosphere();
+                _shuttleManager?.CreateShuttle();
                 return;
             }
             var sceneInfo = DeserializeFileAsScene(nextScene);
@@ -538,20 +503,6 @@ namespace GTS
             Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, radius, false, false, false, false);
         }
 
-        private static void RaiseLandingGear()
-        {
-            var vehicle = PlayerPed.CurrentVehicle;
-            if (!PlayerPed.IsInVehicle() || !Function.Call<bool>(Hash._0x4198AB0022B15F87, vehicle.Handle)) return;
-            Function.Call(Hash._0xCFC8BE9A5E1FE575, vehicle.Handle, 0);
-            var landingGrearTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 5);
-            while (Function.Call<int>(Hash._0x9B0F3DCA3DB0F4CD, vehicle.Handle) != 0)
-            {
-                if (DateTime.UtcNow > landingGrearTimeout)
-                    break;
-                Yield();
-            }
-        }
-
         private static void GiveSpawnControlToGame()
         {
             if (Game.Globals[4].GetInt() == 0) return;
@@ -574,16 +525,16 @@ namespace GTS
             _initializedScripts = false;
         }
 
-        //private void StartScripts()
-        //{
-        //    if (_initializedScripts) return;
-        //    GtsLibNet.StartScript("mission_triggerer_a", GtsLib.GetScriptStackSize("mission_triggerer_a"));
-        //    GtsLibNet.StartScript("mission_triggerer_b", GtsLib.GetScriptStackSize("mission_triggerer_b"));
-        //    GtsLibNet.StartScript("mission_triggerer_c", GtsLib.GetScriptStackSize("mission_triggerer_c"));
-        //    GtsLibNet.StartScript("mission_triggerer_d", GtsLib.GetScriptStackSize("mission_triggerer_d"));
-        //    GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
-        //    _initializedScripts = true;
-        //}
+        private void StartScripts()
+        {
+            if (_initializedScripts) return;
+            GtsLibNet.StartScript("mission_triggerer_a", GtsLib.GetScriptStackSize("mission_triggerer_a"));
+            GtsLibNet.StartScript("mission_triggerer_b", GtsLib.GetScriptStackSize("mission_triggerer_b"));
+            GtsLibNet.StartScript("mission_triggerer_c", GtsLib.GetScriptStackSize("mission_triggerer_c"));
+            GtsLibNet.StartScript("mission_triggerer_d", GtsLib.GetScriptStackSize("mission_triggerer_d"));
+            GtsLibNet.StartScript("blip_controller", GtsLib.GetScriptStackSize("blip_controller"));
+            _initializedScripts = true;
+        }
 
         private void StartWantedLevelScripts()
         {

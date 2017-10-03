@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioController.cs" />
+    <Compile Include="DataClasses\WarpEffect.cs" />
     <Compile Include="HeliTransport.cs" />
     <Compile Include="MapLoader.cs" />
     <Compile Include="PatternFinder.cs" />
@@ -90,7 +91,7 @@
     <Compile Include="Library\GtsLibNet.cs" />
     <Compile Include="Shuttle\ShuttleManager.cs" />
     <Compile Include="Shuttle\SpaceShuttle.cs" />
-    <Compile Include="Vehicles\SpaceVehicleInfo.cs" />
+    <Compile Include="DataClasses\SpaceVehicleInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
