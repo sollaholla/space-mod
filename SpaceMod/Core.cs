@@ -171,6 +171,10 @@ namespace GTS
             GTS.Settings.AlwaysUseSound = Settings.GetValue("core", "always_use_sound", GTS.Settings.AlwaysUseSound);
             GTS.Settings.DisableWantedLevel =
                 Settings.GetValue("core", "disable_wanted_level", GTS.Settings.DisableWantedLevel);
+            GTS.Settings.ShutStage1Height =
+                Settings.GetValue("core", "shut_stage1_height", GTS.Settings.ShutStage1Height);
+            GTS.Settings.ShutStage2Height =
+                Settings.GetValue("core", "shut_stage_2_height", GTS.Settings.ShutStage2Height);
         }
 
         private void SaveSettings()
@@ -192,6 +196,8 @@ namespace GTS
             Settings.SetValue("core", "earth_atmos_rot", GTS.Settings.EarthAtmosphereEnterRotation);
             Settings.SetValue("core", "always_use_sound", GTS.Settings.AlwaysUseSound);
             Settings.SetValue("core", "disable_wanted_level", GTS.Settings.DisableWantedLevel);
+            Settings.SetValue("core", "shut_stage1_height", GTS.Settings.ShutStage1Height);
+            Settings.SetValue("core", "shut_stage_2_height", GTS.Settings.ShutStage2Height);
             Settings.Save();
         }
 

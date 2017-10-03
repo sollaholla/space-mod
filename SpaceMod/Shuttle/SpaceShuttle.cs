@@ -14,7 +14,7 @@ namespace GTS.Shuttle
         private readonly PtfxLooped _srbrFx = new PtfxLooped("exp_sht_flame", "core");
         private readonly PtfxLooped _gantrySmoke = new PtfxLooped("exp_grd_grenade_smoke", "core");
         private DateTime _gantrySmokeTime;
-        private bool _detached;
+        private bool _finishedLaunch;
 
         public SpaceShuttle(int handle) : base(handle) { }
 
@@ -50,7 +50,12 @@ namespace GTS.Shuttle
 
         public void Launch()
         {
-            if (IsDead || IsInWater || !Exists(((Vehicle)this).Driver) || _detached)
+            if (Game.Player.Character.IsDead)
+            {
+                return;
+            }
+
+            if (IsDead || IsInWater || !Exists(((Vehicle)this).Driver) || _finishedLaunch)
                 return;
 
             _srblFx.Play(_attachments[0], 0, new Vector3(-6.5f, -17, -7), new Vector3(85, 0, 0), 20.0f);
@@ -63,6 +68,16 @@ namespace GTS.Shuttle
             while (true)
             {
                 Script.Yield();
+
+                Game.DisableControlThisFrame(2, Control.VehicleExit);
+                Game.DisableControlThisFrame(2, Control.VehicleFlyRollLeftRight);
+                Game.DisableControlThisFrame(2, Control.VehicleFlyPitchUpDown);
+
+                if (Game.Player.Character.IsDead)
+                {
+                    RemoveAttachments();
+                    break;
+                }
 
                 if (IsDead || IsInWater || !Exists(((Vehicle)this).Driver))
                 {
@@ -78,32 +93,21 @@ namespace GTS.Shuttle
 
                 speed += Game.LastFrameTime * 0.7f;
                 speed = Math.Min(speed, 50);
-                ApplyForce(ForwardVector * speed,
-                    new Vector3(0, 0, _attachments[0].IsAttached() || _attachments[1].IsAttached() ? 0.12f : 0.2f));
+                ApplyForce(ForwardVector * speed, new Vector3(0, 0, 0.2f));
 
-                GtsLibNet.DisplayHelpTextWithGxt("SHUT_STAGE");
-                if (Game.IsControlJustPressed(2, Control.ParachuteSmoke))
+                if (HeightAboveGround > Settings.ShutStage1Height && (_attachments[0].IsAttached() || _attachments[1].IsAttached()))
                 {
-                    if (_attachments[0].IsAttached() || _attachments[1].IsAttached())
-                    {
-                        _attachments[0].Detach();
-                        _attachments[1].Detach();
-                        _srblFx?.Stop();
-                        _srbrFx?.Stop();
-                    }
-                    else
-                    {
-                        _attachments[2].Detach();
-                        _detached = true;
-                        break;
-                    }
+                    _attachments[0].Detach();
+                    _attachments[1].Detach();
                 }
 
-                if (HeightAboveGround > GTS.Settings.EnterOrbitHeight)
-                {
-                    _detached = true;
-                    break;
-                }
+                if (HeightAboveGround > Settings.ShutStage2Height && _attachments[2].IsAttached())
+                    _attachments[2].Detach();
+
+                if (HeightAboveGround <= Settings.EnterOrbitHeight) continue;
+                _finishedLaunch = true;
+
+                break;
             }
         }
 

@@ -37,5 +37,9 @@ namespace GTS
         public static string DefaultScene = "EarthOrbit.space";
 
         public static bool DisableWantedLevel = true;
+
+        public static float ShutStage1Height = 5000f;
+
+        public static float ShutStage2Height = 7000f;
     }
 }
