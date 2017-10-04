@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using GTA;
 using GTA.Math;
+using GTA.Native;
 using GTS.Particles;
 
 namespace GTS.Shuttle
 {
     public class SpaceShuttle : Entity
     {
-        private readonly List<Prop> _attachments = new List<Prop>();
+        private readonly List<Entity> _attachments = new List<Entity>();
         private readonly PtfxLooped _gantrySmoke = new PtfxLooped("exp_grd_grenade_smoke", "core");
         private readonly PtfxLooped _srblFx = new PtfxLooped("exp_sht_flame", "core");
         private readonly PtfxLooped _srbrFx = new PtfxLooped("exp_sht_flame", "core");
+        private readonly PtfxLooped _afterBurner1 = new PtfxLooped("veh_exhaust_afterburner", "core");
+        private readonly PtfxLooped _afterBurner2 = new PtfxLooped("veh_exhaust_afterburner", "core");
+        private readonly PtfxLooped _afterBurner3 = new PtfxLooped("veh_exhaust_afterburner", "core");
         private bool _finishedLaunch;
         private DateTime _gantrySmokeTime;
 
@@ -29,9 +33,9 @@ namespace GTS.Shuttle
             model3.Request();
             while (!model1.IsLoaded || !model2.IsLoaded || !model3.IsLoaded)
                 Script.Yield();
-            var srbl = World.CreateProp(model1, Position, Rotation, false, false);
-            var srbr = World.CreateProp(model2, Position, Rotation, false, false);
-            var extTank = World.CreateProp(model3, Position, Rotation, false, false);
+            var srbl = World.CreateVehicle(model1, Position);
+            var srbr = World.CreateVehicle(model2, Position);
+            var extTank = World.CreateVehicle(model3, Position);
             srbl.AttachTo(this, 0);
             srbr.AttachTo(this, 0);
             extTank.AttachTo(this, 0);
@@ -46,6 +50,9 @@ namespace GTS.Shuttle
             _srblFx?.Stop();
             _srbrFx?.Stop();
             _gantrySmoke?.Stop();
+            _afterBurner1?.Stop();
+            _afterBurner2?.Stop();
+            _afterBurner3?.Stop();
             CurrentBlip?.Remove();
         }
 
@@ -56,10 +63,18 @@ namespace GTS.Shuttle
 
             if (IsDead || IsInWater || !Exists(((Vehicle) this).Driver) || _finishedLaunch)
                 return;
-
-            _srblFx.Play(_attachments[0], 0, new Vector3(-6.5f, -17, -7), new Vector3(85, 0, 0), 20.0f);
-            _srbrFx.Play(_attachments[1], 0, new Vector3(6.5f, -17, -7), new Vector3(85, 0, 0), 20.0f);
+            _srblFx.Play(_attachments[0], "exhaust", Vector3.Zero, new Vector3(90, 0, 0), 20.0f);
+            _srbrFx.Play(_attachments[1], "exhaust", Vector3.Zero, new Vector3(90, 0, 0), 20.0f);
             _gantrySmoke.Play(new Vector3(-6414.427f, -1338.617f, 39.4514f), new Vector3(180, 0, 0), 20);
+            _afterBurner1.Play(this, "exhaust", Vector3.Zero, Vector3.Zero, 2.0f);
+            _afterBurner1.SetEvolution("LOD", 1f);
+            _afterBurner1.SetEvolution("throttle", 0.5f);
+            _afterBurner2.Play(this, "exhaust_2", Vector3.Zero, Vector3.Zero, 2.0f);
+            _afterBurner2.SetEvolution("LOD", 1f);
+            _afterBurner2.SetEvolution("throttle", 0.5f);
+            _afterBurner3.Play(this, "exhaust_3", Vector3.Zero, Vector3.Zero, 2.0f);
+            _afterBurner3.SetEvolution("LOD", 1f);
+            _afterBurner3.SetEvolution("throttle", 0.5f);
             _gantrySmokeTime = DateTime.Now + new TimeSpan(0, 0, 0, 10);
             FreezePosition = false;
             float speed = 0;
@@ -67,6 +82,8 @@ namespace GTS.Shuttle
             while (true)
             {
                 Script.Yield();
+
+                Function.Call(Hash.SET_WIND_SPEED, 0f);
 
                 Game.DisableControlThisFrame(2, Control.VehicleExit);
                 Game.DisableControlThisFrame(2, Control.VehicleFlyRollLeftRight);
@@ -90,9 +107,9 @@ namespace GTS.Shuttle
                 if (_gantrySmoke.Exists() && DateTime.Now > _gantrySmokeTime)
                     _gantrySmoke.Stop();
 
-                speed += Game.LastFrameTime * 0.7f;
-                speed = Math.Min(speed, 50);
-                ApplyForce(ForwardVector * speed, new Vector3(0, 0, 0.2f));
+                speed += Game.LastFrameTime * Settings.ShuttleThrustInterpolation;
+                speed = Math.Min(speed, Settings.ShuttleNewtonsOfForce);
+                ApplyForce(ForwardVector * speed, new Vector3(0, 0, Settings.ShuttleGimbalFront));
 
                 if (HeightAboveGround > Settings.ShutStage1Height &&
                     (_attachments[0].IsAttached() || _attachments[1].IsAttached()))
@@ -118,6 +135,9 @@ namespace GTS.Shuttle
             _srblFx?.Stop();
             _srbrFx?.Stop();
             _gantrySmoke?.Stop();
+            _afterBurner1?.Stop();
+            _afterBurner2?.Stop();
+            _afterBurner3?.Stop();
             base.Delete();
         }
 

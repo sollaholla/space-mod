@@ -10,22 +10,6 @@ namespace GTS
     {
         /// <summary>
         /// </summary>
-        internal const string PathToInteriors = ".\\scripts\\Space\\Interiors";
-
-        /// <summary>
-        /// </summary>
-        internal const string PathToScenes = ".\\scripts\\Space\\Scenes";
-
-        /// <summary>
-        /// </summary>
-        internal const string PathToScenarios = ".\\scripts\\Space\\Scenarios";
-
-        /// <summary>
-        /// </summary>
-        internal const string PathToAudio = ".\\scripts\\Space\\Audio";
-
-        /// <summary>
-        /// </summary>
         internal const string NotifyHeader = "~p~~h~Grand Theft Space~h~~n~~s~";
 
         static Database()

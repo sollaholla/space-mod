@@ -9,16 +9,14 @@ namespace GTS
 {
     public class MapLoader
     {
-        private const string Path = Database.PathToInteriors + "\\LoadOnStart\\";
-
         private readonly List<Interior> _ints = new List<Interior>();
 
         public void LoadMaps()
         {
             try
             {
-                if (!Directory.Exists(Path)) return;
-                var files = Directory.GetFiles(Path).Where(x => x.EndsWith(".xml")).ToArray();
+                if (!Directory.Exists(GTS.Settings.InteriorsFolder + "\\LoadOnStart")) return;
+                var files = Directory.GetFiles(GTS.Settings.InteriorsFolder + "\\LoadOnStart").Where(x => x.EndsWith(".xml")).ToArray();
                 foreach (var file in files)
                     try
                     {

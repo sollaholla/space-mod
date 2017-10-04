@@ -69,5 +69,12 @@ namespace GTS.Particles
             Function.Call(Hash._REMOVE_NAMED_PTFX_ASSET, Asset);
             Handle = -1;
         }
+
+        public void SetEvolution(string property, float amount)
+        {
+            if (Handle == -1)
+                return;
+            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, Handle, property, amount, 0);
+        }
     }
 }

@@ -1047,7 +1047,6 @@ namespace GTS.Library
 
     public class TimecycleModChanger
     {
-        private const string TimecycleModPath = ".\\scripts\\Space\\TimecycleMods.txt";
         private readonly string[] _mods = new string[0];
         private readonly Timer _t;
         private int _timecycleModIndex;
@@ -1057,9 +1056,8 @@ namespace GTS.Library
             _t = new Timer {Interval = 1};
             _t.Start();
             _t.Tick += OnTick;
-
-            if (!File.Exists(TimecycleModPath)) return;
-            _mods = new[] {string.Empty}.Concat(File.ReadAllLines(TimecycleModPath)).ToArray();
+            if (!File.Exists(Settings.TimecycleModifierPath)) return;
+            _mods = new[] {string.Empty}.Concat(File.ReadAllLines(Settings.TimecycleModifierPath)).ToArray();
         }
 
         private void OnTick(object o, EventArgs eventArgs)
