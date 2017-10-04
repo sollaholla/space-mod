@@ -16,7 +16,7 @@ namespace GTS.Audio
 
         public static void PlayAudio(AudioType type, float volume)
         {
-            var path = GTS.Settings.AudioFolder + "\\" + type + ".wav";
+            var path = Settings.AudioFolder + "\\" + type + ".wav";
             if (!File.Exists(path)) return;
 
             _wave = new WaveFileReader(path);

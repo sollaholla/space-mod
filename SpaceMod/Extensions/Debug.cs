@@ -36,19 +36,19 @@ namespace GTS.Extensions
 
         public static void ClearLog()
         {
-            if (File.Exists(GTS.Settings.LogPath))
-                File.WriteAllText(GTS.Settings.LogPath, string.Empty);
+            if (File.Exists(Settings.LogPath))
+                File.WriteAllText(Settings.LogPath, string.Empty);
         }
 
         public static void Log(object message, DebugMessageType type = DebugMessageType.Debug)
         {
-            var originalText = File.Exists(GTS.Settings.LogPath) ? File.ReadAllText(GTS.Settings.LogPath) : string.Empty;
+            var originalText = File.Exists(Settings.LogPath) ? File.ReadAllText(Settings.LogPath) : string.Empty;
 
             var t = new StackTrace().GetFrame(1).GetMethod().ReflectedType;
             var nmspc = t.Namespace + "." + t.Name;
 
 
-            File.WriteAllText(GTS.Settings.LogPath,
+            File.WriteAllText(Settings.LogPath,
                 $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
                 $"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
                 $"[{DateTime.Now:MM-dd-yyyy}] [{DateTime.Now:hh:mm:ss}] {nmspc} => {message}");

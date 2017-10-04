@@ -27,7 +27,10 @@ namespace GTS.Shuttle
                 if (Game.IsControlJustPressed(2, Control.Jump))
                     Shuttle.Launch();
             }
-            else EnterShuttle();
+            else
+            {
+                EnterShuttle();
+            }
             if (Shuttle.HeightAboveGround <= Settings.EnterOrbitHeight) return;
             Shuttle.RemoveAttachments();
             Shuttle.HasCollision = true;

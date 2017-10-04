@@ -101,7 +101,7 @@ namespace GTS.Scenes.Interiors
                     break;
                 case InteriorType.MapEditor:
                     _map = XmlSerializer.Deserialize<Map>(IsInteriorMap
-                        ? GTS.Settings.InteriorsFolder + "\\" + Name + ".xml"
+                        ? Settings.InteriorsFolder + "\\" + Name + ".xml"
                         : Name);
                     if (_map != null && _map != default(Map) && !Loaded)
                     {
@@ -110,7 +110,7 @@ namespace GTS.Scenes.Interiors
                     }
                     else
                     {
-                        Debug.Log($"Failed To Create {GTS.Settings.InteriorsFolder + "\\" + Name + ".xml"}",
+                        Debug.Log($"Failed To Create {Settings.InteriorsFolder + "\\" + Name + ".xml"}",
                             DebugMessageType.Error);
                     }
                     Loaded = true;

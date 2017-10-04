@@ -156,7 +156,8 @@ namespace GTS
             _missionStatus = Settings.GetValue("core", "mission_status", _missionStatus);
             GTS.Settings.EnterOrbitHeight =
                 Settings.GetValue("core", "enter_orbit_height", GTS.Settings.EnterOrbitHeight);
-            GTS.Settings.DefaultOrbitScene = Settings.GetValue("core", "default_orbit_scene", GTS.Settings.DefaultOrbitScene);
+            GTS.Settings.DefaultOrbitScene =
+                Settings.GetValue("core", "default_orbit_scene", GTS.Settings.DefaultOrbitScene);
             GTS.Settings.DefaultOrbitOffset = VectorParse.Read(Settings.GetValue("core", "default_orbit_offset"),
                 GTS.Settings.DefaultOrbitOffset);
             GTS.Settings.DefaultOrbitRotation = VectorParse.Read(Settings.GetValue("core", "default_orbit_rotation"),
@@ -264,7 +265,8 @@ namespace GTS
             #region Scenes
 
             var scenesMenu = _menuPool.AddSubMenu(_mainMenu, "Scenes");
-            var filePaths = Directory.GetFiles(GTS.Settings.ScenesFolder).Where(file => file.EndsWith(".space")).ToArray();
+            var filePaths = Directory.GetFiles(GTS.Settings.ScenesFolder).Where(file => file.EndsWith(".space"))
+                .ToArray();
             foreach (var path in filePaths)
             {
                 var fileName = Path.GetFileName(path);
@@ -380,7 +382,10 @@ namespace GTS
 
             var debugButton = new UIMenuItem("Debug Player", "Log the player's position rotation and heading.");
             debugButton.SetLeftBadge(UIMenuItem.BadgeStyle.Alert);
-            debugButton.Activated += (sender, item) => { Debug.LogEntityData(PlayerPed.IsInVehicle() ? (Entity)PlayerPed.CurrentVehicle : (Entity)PlayerPed); };
+            debugButton.Activated += (sender, item) =>
+            {
+                Debug.LogEntityData(PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle : (Entity) PlayerPed);
+            };
 
             _mainMenu.AddItem(debugButton);
 
@@ -436,7 +441,8 @@ namespace GTS
 
             var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(GTS.Settings.ScenesFolder,
                 GTS.Settings.DefaultOrbitScene));
-            SetCurrentScene(scene, GTS.Settings.DefaultOrbitScene, scene.GalaxyCenter + GTS.Settings.DefaultOrbitOffset, GTS.Settings.DefaultOrbitRotation);
+            SetCurrentScene(scene, GTS.Settings.DefaultOrbitScene, scene.GalaxyCenter + GTS.Settings.DefaultOrbitOffset,
+                GTS.Settings.DefaultOrbitRotation);
         }
 
         private void DoSceneUpdate()
@@ -476,7 +482,8 @@ namespace GTS
             return null;
         }
 
-        private void SetCurrentScene(SceneInfo scene, string fileName = "", Vector3 position = default(Vector3), Vector3 rotation = default(Vector3))
+        private void SetCurrentScene(SceneInfo scene, string fileName = "", Vector3 position = default(Vector3),
+            Vector3 rotation = default(Vector3))
         {
             PlayerPed.IsInvincible = true;
             Game.FadeScreenOut(100);
@@ -529,7 +536,10 @@ namespace GTS
                 playerPedCurrentVehicle.Rotation = GTS.Settings.EarthAtmosphereEnterRotation;
                 playerPedCurrentVehicle.Speed = GTS.Settings.VehicleReentrySpeed;
             }
-            else PlayerPed.Position = GTS.Settings.EarthAtmosphereEnterPosition;
+            else
+            {
+                PlayerPed.Position = GTS.Settings.EarthAtmosphereEnterPosition;
+            }
             Game.FadeScreenIn(100);
         }
 

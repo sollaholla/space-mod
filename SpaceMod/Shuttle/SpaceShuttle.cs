@@ -9,13 +9,13 @@ namespace GTS.Shuttle
 {
     public class SpaceShuttle : Entity
     {
+        private readonly PtfxLooped _afterBurner1 = new PtfxLooped("veh_exhaust_afterburner", "core");
+        private readonly PtfxLooped _afterBurner2 = new PtfxLooped("veh_exhaust_afterburner", "core");
+        private readonly PtfxLooped _afterBurner3 = new PtfxLooped("veh_exhaust_afterburner", "core");
         private readonly List<Entity> _attachments = new List<Entity>();
         private readonly PtfxLooped _gantrySmoke = new PtfxLooped("exp_grd_grenade_smoke", "core");
         private readonly PtfxLooped _srblFx = new PtfxLooped("exp_sht_flame", "core");
         private readonly PtfxLooped _srbrFx = new PtfxLooped("exp_sht_flame", "core");
-        private readonly PtfxLooped _afterBurner1 = new PtfxLooped("veh_exhaust_afterburner", "core");
-        private readonly PtfxLooped _afterBurner2 = new PtfxLooped("veh_exhaust_afterburner", "core");
-        private readonly PtfxLooped _afterBurner3 = new PtfxLooped("veh_exhaust_afterburner", "core");
         private bool _finishedLaunch;
         private DateTime _gantrySmokeTime;
 
@@ -68,13 +68,13 @@ namespace GTS.Shuttle
             _gantrySmoke.Play(new Vector3(-6414.427f, -1338.617f, 39.4514f), new Vector3(180, 0, 0), 20);
             _afterBurner1.Play(this, "exhaust", Vector3.Zero, Vector3.Zero, 2.0f);
             _afterBurner1.SetEvolution("LOD", 1f);
-            _afterBurner1.SetEvolution("throttle", 0.5f);
+            _afterBurner1.SetEvolution("throttle", 1f);
             _afterBurner2.Play(this, "exhaust_2", Vector3.Zero, Vector3.Zero, 2.0f);
             _afterBurner2.SetEvolution("LOD", 1f);
-            _afterBurner2.SetEvolution("throttle", 0.5f);
+            _afterBurner2.SetEvolution("throttle", 1f);
             _afterBurner3.Play(this, "exhaust_3", Vector3.Zero, Vector3.Zero, 2.0f);
             _afterBurner3.SetEvolution("LOD", 1f);
-            _afterBurner3.SetEvolution("throttle", 0.5f);
+            _afterBurner3.SetEvolution("throttle", 1f);
             _gantrySmokeTime = DateTime.Now + new TimeSpan(0, 0, 0, 10);
             FreezePosition = false;
             float speed = 0;
