@@ -66,13 +66,13 @@ namespace GTS.Shuttle
             _srblFx.Play(_attachments[0], "exhaust", Vector3.Zero, new Vector3(90, 0, 0), 20.0f);
             _srbrFx.Play(_attachments[1], "exhaust", Vector3.Zero, new Vector3(90, 0, 0), 20.0f);
             _gantrySmoke.Play(new Vector3(-6414.427f, -1338.617f, 39.4514f), new Vector3(180, 0, 0), 20);
-            _afterBurner1.Play(this, "exhaust", Vector3.Zero, Vector3.Zero, 2.0f);
+            _afterBurner1.Play(this, "exhaust", Vector3.Zero, new Vector3(-15, 0, 0), 2.0f);
             _afterBurner1.SetEvolution("LOD", 1f);
             _afterBurner1.SetEvolution("throttle", 1f);
-            _afterBurner2.Play(this, "exhaust_2", Vector3.Zero, Vector3.Zero, 2.0f);
+            _afterBurner2.Play(this, "exhaust_2", Vector3.Zero, new Vector3(-15, 0, 0), 2.0f);
             _afterBurner2.SetEvolution("LOD", 1f);
             _afterBurner2.SetEvolution("throttle", 1f);
-            _afterBurner3.Play(this, "exhaust_3", Vector3.Zero, Vector3.Zero, 2.0f);
+            _afterBurner3.Play(this, "exhaust_3", Vector3.Zero, new Vector3(-15, 0, 0), 2.0f);
             _afterBurner3.SetEvolution("LOD", 1f);
             _afterBurner3.SetEvolution("throttle", 1f);
             _gantrySmokeTime = DateTime.Now + new TimeSpan(0, 0, 0, 10);

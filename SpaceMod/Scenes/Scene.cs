@@ -1972,6 +1972,8 @@ namespace GTS.Scenes
             GameplayCamera.RelativeHeading = camHeading;
             foreach (var orbital in Orbitals)
                 orbital.Position = orbital.Position + offset;
+            foreach (var attachedOrbital in AttachedOrbitals)
+                attachedOrbital.Position += offset;
             foreach (var billboardable in Billboards)
             {
                 billboardable.Position = billboardable.Position + offset;

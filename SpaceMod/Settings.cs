@@ -20,11 +20,11 @@ namespace GTS
 
         public static int VehicleFlySpeed = 35;
 
-        public static float VehicleReentrySpeed = 500f;
+        public static float VehicleReentrySpeed = 150f;
 
-        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-5000f, 5000f, 1000f);
+        public static Vector3 EarthAtmosphereEnterPosition = new Vector3(-4000f, 2000f, 5000f);
 
-        public static Vector3 EarthAtmosphereEnterRotation = new Vector3(35f, 0f, 180f);
+        public static Vector3 EarthAtmosphereEnterRotation = new Vector3(-30, 0f, -100f);
 
         public static bool DebugTriggers = false;
 
@@ -34,7 +34,7 @@ namespace GTS
 
         public static Vector3 DefaultOrbitOffset = new Vector3(-1710.931f, 3930.234f, 69.25195f);
 
-        public static Vector3 DefaultOrbitRotation = new Vector3(37.83031f, -74.92153f, 61.03346f);
+        public static Vector3 DefaultOrbitRotation = new Vector3(-2.672431f, -74.77677f, 99.60223f);
 
         public static string DefaultOrbitScene = "1FullSolarSystem.space";
 
