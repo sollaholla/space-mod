@@ -273,7 +273,7 @@ namespace GTS
                 var menuItem = new UIMenuItem(fileName);
                 menuItem.Activated += (sender, item) =>
                 {
-                    var newScene = DeserializeFileAsScene(fileName);
+                    var newScene = DeserializeSceneInfoFile(fileName);
                     SetCurrentScene(newScene, fileName);
                     UI.Notify($"{Database.NotifyHeader}Loaded: {fileName}");
                     _menuPool.CloseAllMenus();
@@ -473,7 +473,7 @@ namespace GTS
             World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
         }
 
-        private static SceneInfo DeserializeFileAsScene(string fileName)
+        private static SceneInfo DeserializeSceneInfoFile(string fileName)
         {
             if (fileName == LsReturnScene) return null;
             var newScene = XmlSerializer.Deserialize<SceneInfo>(GTS.Settings.ScenesFolder + "\\" + fileName);
@@ -482,13 +482,13 @@ namespace GTS
             return null;
         }
 
-        private void SetCurrentScene(SceneInfo scene, string fileName = "", Vector3 position = default(Vector3),
+        private void SetCurrentScene(SceneInfo sceneInfo, string fileName = "", Vector3 position = default(Vector3),
             Vector3 rotation = default(Vector3))
         {
             PlayerPed.IsInvincible = true;
             Game.FadeScreenOut(100);
             Wait(100);
-            CreateScene(scene, fileName);
+            CreateScene(sceneInfo, fileName);
             if (position != default(Vector3)) PlayerPosition = position;
             if (rotation != default(Vector3) && PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = rotation;
             Game.FadeScreenIn(100);
@@ -506,19 +506,46 @@ namespace GTS
             CurrentScene.Exited += CurrentSceneOnExited;
         }
 
-        private void CurrentSceneOnExited(Scene scene, string nextScene, Vector3 offset, Vector3 rotation)
+        private void CurrentSceneOnExited(Scene scene, string nextScene)
         {
             if (nextScene == LsReturnScene)
             {
+                Scene.ResetLastSceneInfo();
                 EnterAtmosphere();
                 _shuttleManager?.CreateShuttle();
                 return;
             }
-            var sceneInfo = DeserializeFileAsScene(nextScene);
+
+            var sceneInfo = DeserializeSceneInfoFile(nextScene);
+            var lastSceneInfo = Scene.GetLastSceneInfo();
+            var offset = Vector3.Zero;
+            var heading = 0f;
+            if (!sceneInfo.SurfaceScene)
+            {
+                if (lastSceneInfo != null)
+                {
+                    var orbital = sceneInfo.Orbitals.Find(x => x.Name == lastSceneInfo.OrbitalName);
+                    if (orbital != null && nextScene == lastSceneInfo.Scene)
+                    {
+                        var dir = lastSceneInfo.DirToPlayer * lastSceneInfo.ModelDimensions;
+                        offset = orbital.Position + dir;
+                        foreach (var sceneInfoOrbital in sceneInfo.Orbitals)
+                            sceneInfoOrbital.Position -= offset;
+                        foreach (var sceneInfoBillboard in sceneInfo.Billboards)
+                            sceneInfoBillboard.Position -= offset;
+                        foreach (var sceneInfoSceneLink in sceneInfo.SceneLinks)
+                            sceneInfoSceneLink.Position -= offset;
+                        if (PlayerPed.IsInVehicle())
+                            heading = lastSceneInfo.DirToPlayer.ToHeading();
+                    }
+                    Scene.ResetLastSceneInfo();
+                }
+            }
+
             SetCurrentScene(sceneInfo, nextScene);
-            if (sceneInfo.SurfaceScene) return;
-            PlayerPosition = sceneInfo.GalaxyCenter + offset;
-            PlayerPed.Rotation = rotation;
+            CurrentScene.SimulatedPosition = offset;
+            if (PlayerPed.IsInVehicle() && Math.Abs(heading) > 0.00001)
+                PlayerPed.CurrentVehicle.Heading = heading;
         }
 
         private static void EnterAtmosphere()

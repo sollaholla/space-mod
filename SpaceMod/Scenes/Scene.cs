@@ -35,7 +35,7 @@ namespace GTS.Scenes
     /// <param name="newSceneFile"></param>
     /// <param name="exitRotation"></param>
     /// <param name="exitOffset"></param>
-    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile, Vector3 exitOffset, Vector3 exitRotation);
+    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile);
 
     /// <summary>
     ///     A Scene controls in-game logic for player movement, and referential game variables pertaining to
@@ -60,6 +60,10 @@ namespace GTS.Scenes
 
         public const float MinWarpDetectDist = 10000;
 
+        // 1 = scene name
+        // 2 = orbital name
+        // 3 = player dirToPlayer from orbital
+        private static PreviousSceneInfo _lastInfo;
         private readonly List<WarpEffect> _warpEffects = new List<WarpEffect>();
         private Orbital _currentWarpOrbital;
         private bool _didDeleteScene;
@@ -149,7 +153,11 @@ namespace GTS.Scenes
 
         public bool DebugWarp { get; set; }
 
-        public Vector3 SimulatedPosition => PlayerPosition - Info.GalaxyCenter + _playerSimulatedOffset;
+        public Vector3 SimulatedPosition
+        {
+            get => PlayerPosition - Info. GalaxyCenter + _playerSimulatedOffset;
+            set => _playerSimulatedOffset = value;
+        }
 
         private Vehicle PlayerVehicle { get; set; }
 
@@ -218,8 +226,7 @@ namespace GTS.Scenes
             prop.FreezePosition = true;
             prop.LodDistance = data.LodDistance;
 
-            var orbital = new Orbital(prop, data.Name, data.RotationSpeed, data.WormHole, data.TriggerDistance,
-                data.NextScene, data.NextScenePosition, data.NextSceneRotation);
+            var orbital = new Orbital(prop.Handle, data.Name, data.RotationSpeed, data.WormHole, data.TriggerSizeMultiplier, data.NextScene);
 
             if (!string.IsNullOrEmpty(data.Name))
             {
@@ -303,6 +310,16 @@ namespace GTS.Scenes
         public Interior GetInterior(string name)
         {
             return Interiors.FirstOrDefault(x => x.Name == name);
+        }
+
+        public static PreviousSceneInfo GetLastSceneInfo()
+        {
+            return _lastInfo;
+        }
+
+        public static void ResetLastSceneInfo()
+        {
+            _lastInfo = null;
         }
 
         internal void Start()
@@ -546,11 +563,11 @@ namespace GTS.Scenes
                     warpEffect.MovementOffset = 0f;
             }
 
-            _warpCamera.FieldOfView = 170;
+            _warpCamera.FieldOfView = 180;
 
             PlayerPosition += directionToTarget * Game.LastFrameTime * (VehicleData?.WarpSpeed ?? 10000f);
             var dist = PlayerPosition.DistanceTo(_currentWarpOrbital.Position);
-            if (dist >= MinWarpDetectDist) return;
+            if (dist >= _currentWarpOrbital.Model.GetDimensions().Length() * _currentWarpOrbital.TriggerSizeMult) return;
             GameplayCamera.Shake(CameraShake.SmallExplosion, 1f);
             World.AddExplosion(GameplayCamera.Position, ExplosionType.Grenade, 0f, 0f, true, true);
             ResetWarpSystems();
@@ -602,7 +619,8 @@ namespace GTS.Scenes
             Game.Player.CanControlCharacter = true;
             _warpCamera?.Destroy();
             World.RenderingCamera = null;
-            PlayerVehicle.FreezePosition = false;
+            if (Entity.Exists(PlayerVehicle))
+                PlayerVehicle.FreezePosition = false;
             Effects.Stop();
             PlayerPed.Task.ClearAll();
         }
@@ -720,7 +738,7 @@ namespace GTS.Scenes
 
         private void ExitSceneFromSurface()
         {
-            Exited?.Invoke(this, Info.NextScene, Info.NextScenePosition, Info.NextSceneRotation);
+            Exited?.Invoke(this, Info.NextScene);
         }
 
         private bool CanDoOrbitLanding()
@@ -1030,17 +1048,14 @@ namespace GTS.Scenes
                     Script.Yield();
             }
 
-            foreach (var o in Orbitals)
+            foreach (var orbital in Orbitals)
             {
-                if (Math.Abs(o.RotationSpeed) > 0.00001f)
-                    o.Quaternion = Quaternion.Lerp(o.Quaternion,
-                        Quaternion.FromToRotation(o.ForwardVector, o.RightVector) * o.Quaternion,
-                        Game.LastFrameTime * o.RotationSpeed);
-
-                if (!Settings.ShowCustomGui)
-                    continue;
-
-                DrawMarkerAt(o.Position, o.Name);
+                if (Math.Abs(orbital.RotationSpeed) > 0.00001f)
+                    orbital.Quaternion = Quaternion.Lerp(orbital.Quaternion,
+                        Quaternion.FromToRotation(orbital.ForwardVector, orbital.RightVector) * orbital.Quaternion,
+                        Game.LastFrameTime * orbital.RotationSpeed);
+                if (!Settings.ShowCustomGui) continue;
+                DrawMarkerAt(orbital.Position, orbital.Name);
             }
 
             foreach (var a in AttachedOrbitals)
@@ -1231,7 +1246,7 @@ namespace GTS.Scenes
                 Function.Call(Hash.NETWORK_RESURRECT_LOCAL_PLAYER, spawn.X, spawn.Y, spawn.Z, 0, false, false);
                 Function.Call(Hash._RESET_LOCALPLAYER_STATE);
                 Function.Call(Hash.STOP_AUDIO_SCENE, "DEATH_SCENE");
-                Exited?.Invoke(this, FileName, Vector3.Zero, Vector3.Zero);
+                Exited?.Invoke(this, FileName);
                 Script.Wait(500);
                 Game.FadeScreenIn(1000);
                 Game.TimeScale = 1.0f;
@@ -1262,12 +1277,18 @@ namespace GTS.Scenes
                 if (string.IsNullOrEmpty(orbital?.NextScene)) continue;
                 var position = orbital.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
+                var trigDist = orbital.Model.GetDimensions().Length() / 3.5f;
+                trigDist = trigDist * orbital.TriggerSizeMult;
                 if (Settings.DebugTriggers)
                     World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero,
-                        new Vector3(orbital.TriggerDistance, orbital.TriggerDistance, orbital.TriggerDistance),
+                        new Vector3(trigDist, trigDist, trigDist),
                         Color.FromArgb(150, 255, 0, 0));
-                if (!(distance <= orbital.TriggerDistance * orbital.TriggerDistance)) continue;
-                Exited?.Invoke(this, orbital.NextScene, orbital.NextScenePosition, orbital.NextSceneRotation);
+                if (!(distance <= trigDist * trigDist)) continue;
+                var dir = PlayerPosition - orbital.Position;
+                if (dir.Length() > 1)
+                    dir.Normalize();
+                _lastInfo = new PreviousSceneInfo(dir, orbital.Name, FileName, orbital.Model.GetDimensions().Length() / 2);
+                Exited?.Invoke(this, orbital.NextScene);
                 _stopUpdate = true;
                 break;
             }
@@ -1281,7 +1302,7 @@ namespace GTS.Scenes
                         new Vector3(link.TriggerDistance, link.TriggerDistance, link.TriggerDistance),
                         Color.FromArgb(150, 255, 255, 0));
                 if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
-                Exited?.Invoke(this, link.NextScene, link.NextScenePosition, link.NextSceneRotation);
+                Exited?.Invoke(this, link.NextScene);
                 _stopUpdate = true;
                 break;
             }
@@ -1910,12 +1931,12 @@ namespace GTS.Scenes
         private void EnterWormHole(Vector3 wormHolePosition, OrbitalInfo orbitalData)
         {
             var distanceToWormHole = PlayerPosition.DistanceTo(wormHolePosition);
-            var escapeDistance = orbitalData.TriggerDistance * 20f;
-            var gravitationalPullDistance = orbitalData.TriggerDistance * 15f;
+            var escapeDistance = orbitalData.TriggerSizeMultiplier * 20f;
+            var gravitationalPullDistance = orbitalData.TriggerSizeMultiplier * 15f;
 
-            if (distanceToWormHole <= orbitalData.TriggerDistance)
+            if (distanceToWormHole <= orbitalData.TriggerSizeMultiplier)
             {
-                Exited?.Invoke(this, orbitalData.NextScene, Vector3.Zero, orbitalData.NextSceneRotation);
+                Exited?.Invoke(this, orbitalData.NextScene);
             }
             else
             {
@@ -1951,8 +1972,7 @@ namespace GTS.Scenes
                         else PlayerPed.Velocity = targetVelocity;
                         Script.Yield();
                     }
-                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextScenePosition,
-                        orbitalData.NextSceneRotation);
+                    Exited?.Invoke(this, orbitalData.NextScene);
                 }
             }
         }
@@ -1967,25 +1987,46 @@ namespace GTS.Scenes
             var speed = PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Velocity : PlayerPed.Velocity;
             var camHeading = GameplayCamera.RelativeHeading;
             var camPitch = GameplayCamera.RelativeHeading;
+            MoveWorld(offset);
             PlayerPosition = Info.GalaxyCenter;
             GameplayCamera.RelativePitch = camPitch;
             GameplayCamera.RelativeHeading = camHeading;
+            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Velocity = speed;
+            else PlayerPed.Velocity = speed;
+        }
+
+        private void MoveWorld(Vector3 offset)
+        {
             foreach (var orbital in Orbitals)
                 orbital.Position = orbital.Position + offset;
             foreach (var attachedOrbital in AttachedOrbitals)
                 attachedOrbital.Position += offset;
             foreach (var billboardable in Billboards)
             {
-                billboardable.Position = billboardable.Position + offset;
-                billboardable.StartPosition = billboardable.StartPosition + offset;
+                billboardable.Position += offset;
+                billboardable.StartPosition += offset;
             }
             foreach (var registeredVehicle in RegisteredVehicles)
                 if (Entity.Exists(registeredVehicle) && !PlayerPed.IsInVehicle(registeredVehicle))
                     registeredVehicle.Position += offset;
             foreach (var infoSceneLink in Info.SceneLinks)
                 infoSceneLink.Position += offset;
-            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Velocity = speed;
-            else PlayerPed.Velocity = speed;
         }
+    }
+
+    public class PreviousSceneInfo
+    {
+        public PreviousSceneInfo(Vector3 dirToPlayer, string orbitalName, string scene, float modelDimensions)
+        {
+            DirToPlayer = dirToPlayer;
+            OrbitalName = orbitalName;
+            Scene = scene;
+            ModelDimensions = modelDimensions;
+        }
+
+        public Vector3 DirToPlayer { get; set; }
+        public string OrbitalName { get; set; }
+        public string Scene { get; set; }
+        public float ModelDimensions { get; set; }
     }
 }
