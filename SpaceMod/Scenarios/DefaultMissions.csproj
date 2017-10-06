@@ -32,8 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GTS, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="GTS">
       <HintPath>..\bin\Debug\GTS.dll</HintPath>
     </Reference>
     <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
@@ -44,9 +43,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
-    <Reference Include="SpaceUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SpaceUI.dll</HintPath>
+    <Reference Include="SpaceUI">
+      <HintPath>..\..\..\Games\Grand Theft Auto V\scripts\GrandTheftSpace\SpaceUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -62,9 +60,12 @@
     <Compile Include="Moon.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"
-COPY "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"
+COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
