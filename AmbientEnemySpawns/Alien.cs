@@ -54,6 +54,16 @@ namespace AmbientEnemySpawns
                 {
                     _isGoingToEnemy = false;
                 }
+
+                if(_isGoingToEnemy)
+                {
+                    Vector3 _lastImpactCoords = Enemy.GetLastWeaponImpactCoords();
+                    if(Position.DistanceToSquared(_lastImpactCoords) < 5*5)
+                    {
+                        _parent.Task.ShootAt(Enemy);
+                        _parent.Task.RunTo(Enemy.Position, true, -1);
+                    }
+                }
             }
             else
             {

@@ -47,46 +47,6 @@ namespace AmbientEnemySpawns
 
         private void HandleShooting()
         {
-            //if (!_isCombatInProgress)
-            //{
-            //    var lastShotCoord = PlayerPed.GetLastWeaponImpactCoords();
-            //    var found = _alienPeds.Any(x => x.Ped.IsInCombatAgainst(PlayerPed));
-            //    foreach (var hostile in _alienPeds)
-            //    {
-            //        var hPos = hostile.Position;
-            //        var dist = Function.Call<float>(Hash.VDIST2, hPos.X, hPos.Y, hPos.Z,
-            //            lastShotCoord.X,
-            //            lastShotCoord.Y,
-            //            lastShotCoord.Z);
-            //        const float maxDist = 125 * 125;
-            //        if (dist > maxDist) continue;
-            //        found = true;
-            //    }
-            //    if (!found) return;
-            //    foreach (var hostile in _alienPeds)
-            //        if (!hostile.Ped.IsInCombat)
-            //            if (hostile.Ped.IsInVehicle())
-            //                hostile.Ped.Task.FightAgainst(PlayerPed);
-            //            else hostile.Ped.Task.ShootAt(PlayerPed);
-
-            //    _isCombatInProgress = true;
-            //}
-            //else
-            //{
-            //    foreach (var hostile in _alienPeds)
-            //    {
-            //        if (!Blip.Exists(hostile.CurrentBlip)) continue;
-            //        if (!hostile.IsDead) continue;
-            //        hostile.CurrentBlip.Remove();
-            //    }
-
-            //    if (_alienPeds.All(x => x.IsDead))
-            //    {
-
-            //        _isCombatInProgress = false;
-            //    }
-            //}
-
             _alienPeds.ForEach(alien => {
                 alien.Update();
                 if (Blip.Exists(alien.CurrentBlip) && alien.IsDead)
@@ -127,8 +87,11 @@ namespace AmbientEnemySpawns
         private Alien SpawnAlienPed(Vector3 spawnPos, float ground, Random rand)
         {
             var ped = GtsLibNet.CreateAlien(null, spawnPos, rand.Next(20, 180));
-            var alien = new Alien(ped.Handle, 25*25);
+            ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
+            ped.Accuracy = rand.Next(1, 5);
 
+            var alien = new Alien(ped.Handle, 25);
+            alien.Enemy = Game.Player.Character;
             alien.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
             alien.AddBlip();
             alien.IsVisible = false;
@@ -140,7 +103,7 @@ namespace AmbientEnemySpawns
                 Script.Yield();
             }
 
-            ptfx.Play(ped.Position, ped.Rotation, 1f);
+            ptfx.Play(ped.Position, ped.Rotation, 2f);
 
             alien.IsVisible = true;
 
