@@ -20,9 +20,16 @@ namespace AmbientEnemySpawns
 
         private bool _isCombatInProgress;
 
-        private bool _isInFightWithAliens;
+        private bool _isInFightWithAliens = false;
 
         private DateTime _timeout;
+        private bool startedTimeout;
+
+        public Main()
+        {
+            _alienPeds = new List<Ped>();
+            _alienVehicles = new List<Vehicle>();
+        }
 
         public void Update()
         {
@@ -64,26 +71,34 @@ namespace AmbientEnemySpawns
                 if (_alienPeds.All(x => x.IsDead))
                 {
                     _isInFightWithAliens = false;
+
                     _isCombatInProgress = false;
                 }
             }
 
-            _timeout = DateTime.UtcNow + new TimeSpan(0, 0, 20); //gonna change later.
-            if (DateTime.UtcNow < _timeout) return;
-
             _onSurface = CurrentScene.Surfaces.Count > 0;
             if(!_isInFightWithAliens)
             {
-                bool shouldSpawn = new Random().Next(5) < 2;
-                if (!shouldSpawn) return;
+                if(!startedTimeout)
+                {
+                    _timeout = DateTime.UtcNow + new TimeSpan(0, 0, 20); //gonna change later.
+                    startedTimeout = true;
+                }
+
+                UI.ShowSubtitle(_timeout.ToLongTimeString());
+
+                if (DateTime.UtcNow < _timeout) return;
 
                 if (_onSurface)
                     SpawnEnemiesOnSurface();
                 else
                     SpawnEnemiesInSpace();
 
-                _isCombatInProgress = true;
+                _isInFightWithAliens = true;
+                startedTimeout = false;
             }
+
+            Script.Yield();
         }
 
         private void SpawnEnemiesOnSurface()

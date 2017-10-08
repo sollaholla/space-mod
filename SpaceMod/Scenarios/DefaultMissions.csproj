@@ -68,4 +68,8 @@
     <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"
 COPY "$(TargetDir)$(TargetName).pdb" "D:\Games\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"</PostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
 </Project>

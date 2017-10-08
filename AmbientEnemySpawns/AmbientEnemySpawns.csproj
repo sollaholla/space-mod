@@ -51,6 +51,12 @@
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GTSCommon\GTSCommon.csproj">
+      <Project>{821106BB-F827-4D10-B7C5-A135B45F33BE}</Project>
+      <Name>GTSCommon</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"

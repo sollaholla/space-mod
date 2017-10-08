@@ -73,6 +73,7 @@ namespace GTS
             Debug.Log("Thread disposed...");
             if (!_didAbort) OnAborted(null, new EventArgs());
             base.Dispose(dispose);
+
         }
 
         private void OnTick(object sender, EventArgs eventArgs)
