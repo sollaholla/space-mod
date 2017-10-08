@@ -15,8 +15,8 @@ namespace GTS.Utility
         {
             try
             {
-                if (!Directory.Exists(Settings.InteriorsFolder + "\\LoadOnStart")) return;
-                var files = Directory.GetFiles(Settings.InteriorsFolder + "\\LoadOnStart")
+                if (!Directory.Exists(GtsSettings.InteriorsFolder + "\\LoadOnStart")) return;
+                var files = Directory.GetFiles(GtsSettings.InteriorsFolder + "\\LoadOnStart")
                     .Where(x => x.EndsWith(".xml")).ToArray();
                 foreach (var file in files)
                     try

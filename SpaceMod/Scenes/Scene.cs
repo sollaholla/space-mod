@@ -675,7 +675,7 @@ namespace GTS.Scenes
 
         private void GetSpaceVehicles()
         {
-            var path = Settings.SpaceVehiclesPath;
+            var path = GtsSettings.SpaceVehiclesPath;
             if (!File.Exists(path))
                 return;
             _spaceVehicles = XmlSerializer.Deserialize<SpaceVehicleInfo>(path);
@@ -736,7 +736,7 @@ namespace GTS.Scenes
 
         private void CreateScenarios()
         {
-            if (!Settings.UseScenarios) return;
+            if (!GtsSettings.UseScenarios) return;
             try
             {
                 CreateScenariosForSceneInfo(Info);
@@ -751,7 +751,7 @@ namespace GTS.Scenes
         {
             foreach (var scenarioInfo in scene.Scenarios)
             {
-                var assembly = Assembly.LoadFrom(Path.Combine(Settings.ScenariosFolder, scenarioInfo.Dll));
+                var assembly = Assembly.LoadFrom(Path.Combine(GtsSettings.ScenariosFolder, scenarioInfo.Dll));
                 var types = assembly.GetTypes();
                 foreach (var type in types)
                 {
@@ -891,7 +891,7 @@ namespace GTS.Scenes
 
         private void SettingsUpdate()
         {
-            if (Settings.MoonJump && Info.SurfaceScene)
+            if (GtsSettings.MoonJump && Info.SurfaceScene)
             {
                 if (!_didJump && PlayerPed.IsJumping)
                 {
@@ -915,7 +915,7 @@ namespace GTS.Scenes
             UI.HideHudComponentThisFrame(HudComponent.AreaName);
             Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME);
 
-            if (Settings.ShowCustomGui && (VehicleData?.CanWarp ?? false) && !Info.SurfaceScene)
+            if (GtsSettings.ShowCustomGui && (VehicleData?.CanWarp ?? false) && !Info.SurfaceScene)
             {
                 //if (!Function.Call<bool>(Hash.IS_HUD_HIDDEN) || _warpFlag || GtsLibNet.IsHelpMessageBeingDisplayed() && !Info.SurfaceScene)
                 //{
@@ -1042,7 +1042,7 @@ namespace GTS.Scenes
                     orbital.Quaternion = Quaternion.Lerp(orbital.Quaternion,
                         Quaternion.FromToRotation(orbital.ForwardVector, orbital.RightVector) * orbital.Quaternion,
                         Game.LastFrameTime * orbital.RotationSpeed);
-                if (!Settings.ShowCustomGui) continue;
+                if (!GtsSettings.ShowCustomGui) continue;
                 DrawMarkerAt(orbital.Position, orbital.Name);
             }
 
@@ -1067,7 +1067,7 @@ namespace GTS.Scenes
 
             foreach (var l in Info.SceneLinks)
             {
-                if (!Settings.ShowCustomGui)
+                if (!GtsSettings.ShowCustomGui)
                     continue;
 
                 DrawMarkerAt(Info.GalaxyCenter + l.Position, l.Name);
@@ -1077,7 +1077,7 @@ namespace GTS.Scenes
         private void UpdateAudio()
         {
             if (Info.UseSound) return;
-            if (FollowCam.ViewMode == FollowCamViewMode.FirstPerson || Settings.AlwaysUseSound)
+            if (FollowCam.ViewMode == FollowCamViewMode.FirstPerson || GtsSettings.AlwaysUseSound)
             {
                 if (!_didSetSpaceAudio) return;
                 Function.Call(Hash.STOP_AUDIO_SCENES);
@@ -1265,7 +1265,7 @@ namespace GTS.Scenes
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
                 var trigDist = orbital.Model.GetDimensions().Length() / 3.5f;
                 trigDist = trigDist * orbital.TriggerSizeMult;
-                if (Settings.DebugTriggers)
+                if (GtsSettings.DebugTriggers)
                     World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero,
                         new Vector3(trigDist, trigDist, trigDist),
                         Color.FromArgb(150, 255, 0, 0));
@@ -1284,7 +1284,7 @@ namespace GTS.Scenes
                 if (string.IsNullOrEmpty(link?.NextScene)) continue;
                 var position = Info.GalaxyCenter + link.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
-                if (Settings.DebugTriggers)
+                if (GtsSettings.DebugTriggers)
                     World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero,
                         new Vector3(link.TriggerDistance, link.TriggerDistance, link.TriggerDistance),
                         Color.FromArgb(150, 255, 255, 0));
@@ -1326,14 +1326,14 @@ namespace GTS.Scenes
             if (!PlayerPed.IsInVehicle(PlayerVehicle))
                 return;
 
-            float speed = Settings.VehicleFlySpeed;
+            float speed = GtsSettings.VehicleFlySpeed;
             var v = _spaceVehicles?.VehicleData.Find(
                 x => Game.GenerateHash(x.Model) == PlayerVehicle.Model.Hash);
 
             if (v != null)
                 speed = v.Speed;
 
-            EntityFlightControl(PlayerVehicle, speed, Settings.MouseControlFlySensitivity,
+            EntityFlightControl(PlayerVehicle, speed, GtsSettings.MouseControlFlySensitivity,
                 !PlayerVehicle.IsOnAllWheels, v?.RotationMultiplier ?? 1, VehicleData?.NewtonianPhysics ?? false);
 
             SetVehicleDrag();
@@ -1518,7 +1518,7 @@ namespace GTS.Scenes
 
         private void SpaceWalk()
         {
-            if (Settings.UseSpaceWalk)
+            if (GtsSettings.UseSpaceWalk)
             {
                 // make sure that we're floating first!
                 if (!_enteringVehicle)

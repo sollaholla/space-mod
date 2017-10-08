@@ -32,7 +32,7 @@ namespace GTS.Shuttle
             {
                 EnterShuttle();
             }
-            if (Shuttle.HeightAboveGround <= Settings.EnterOrbitHeight) return;
+            if (Shuttle.HeightAboveGround <= GtsSettings.EnterOrbitHeight) return;
             Shuttle.RemoveAttachments();
             Shuttle.HasCollision = true;
             Shuttle = null;

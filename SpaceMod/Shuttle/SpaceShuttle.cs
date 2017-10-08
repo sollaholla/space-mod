@@ -108,21 +108,21 @@ namespace GTS.Shuttle
                 if (_gantrySmoke.Exists() && DateTime.Now > _gantrySmokeTime)
                     _gantrySmoke.Stop();
 
-                speed += Game.LastFrameTime * Settings.ShuttleThrustInterpolation;
-                speed = Math.Min(speed, Settings.ShuttleNewtonsOfForce);
-                ApplyForce(ForwardVector * speed, new Vector3(0, 0, Settings.ShuttleGimbalFront));
+                speed += Game.LastFrameTime * GtsSettings.ShuttleThrustInterpolation;
+                speed = Math.Min(speed, GtsSettings.ShuttleNewtonsOfForce);
+                ApplyForce(ForwardVector * speed, new Vector3(0, 0, GtsSettings.ShuttleGimbalFront));
 
-                if (HeightAboveGround > Settings.ShutStage1Height &&
+                if (HeightAboveGround > GtsSettings.ShutStage1Height &&
                     (_attachments[0].IsAttached() || _attachments[1].IsAttached()))
                 {
                     _attachments[0].Detach();
                     _attachments[1].Detach();
                 }
 
-                if (HeightAboveGround > Settings.ShutStage2Height && _attachments[2].IsAttached())
+                if (HeightAboveGround > GtsSettings.ShutStage2Height && _attachments[2].IsAttached())
                     _attachments[2].Detach();
 
-                if (HeightAboveGround <= Settings.EnterOrbitHeight) continue;
+                if (HeightAboveGround <= GtsSettings.EnterOrbitHeight) continue;
                 _finishedLaunch = true;
 
                 break;

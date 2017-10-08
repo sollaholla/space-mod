@@ -112,7 +112,7 @@
     <Compile Include="Library\PtfxLooped.cs" />
     <Compile Include="Library\PtfxNonLooped.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utility\Settings.cs" />
+    <Compile Include="Utility\GtsSettings.cs" />
     <Compile Include="Library\GtsLibNet.cs" />
     <Compile Include="Shuttle\ShuttleManager.cs" />
     <Compile Include="Shuttle\SpaceShuttle.cs" />

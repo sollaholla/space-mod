@@ -6,7 +6,7 @@ namespace GTS.Utility
     ///     Holds setting variables used in certain parts of the mod that need to be
     ///     accessed.
     /// </summary>
-    internal static class Settings
+    internal static class GtsSettings
     {
         public static bool ShowCustomGui = true;
 

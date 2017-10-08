@@ -19,8 +19,8 @@ namespace GTS.Library
             _t = new Timer {Interval = 1};
             _t.Start();
             _t.Tick += OnTick;
-            if (!File.Exists(Settings.TimecycleModifierPath)) return;
-            _mods = new[] {string.Empty}.Concat(File.ReadAllLines(Settings.TimecycleModifierPath)).ToArray();
+            if (!File.Exists(GtsSettings.TimecycleModifierPath)) return;
+            _mods = new[] {string.Empty}.Concat(File.ReadAllLines(GtsSettings.TimecycleModifierPath)).ToArray();
         }
 
         private void OnTick(object o, EventArgs eventArgs)

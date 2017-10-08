@@ -15,7 +15,7 @@ namespace GTS.Scenes
         public ScriptSettings Settings =>
             _settings ?? (_settings =
                 ScriptSettings.Load(Path.ChangeExtension(
-                    Path.Combine(Utility.Settings.ScenariosFolder, GetType().Name), "ini")));
+                    Path.Combine(Utility.GtsSettings.ScenariosFolder, GetType().Name), "ini")));
 
         public Ped PlayerPed => Core.PlayerPed;
         public Scene CurrentScene { get; internal set; }
