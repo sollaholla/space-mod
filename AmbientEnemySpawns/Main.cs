@@ -35,6 +35,12 @@ namespace AmbientEnemySpawns
         {
             UI.ShowSubtitle(_isInFightWithAliens.ToString());
 
+            HandleShooting();
+            UpdateTimer();
+        }
+
+        private void HandleShooting()
+        {
             if (!_isCombatInProgress)
             {
                 var lastShotCoord = PlayerPed.GetLastWeaponImpactCoords();
@@ -75,11 +81,14 @@ namespace AmbientEnemySpawns
                     _isCombatInProgress = false;
                 }
             }
-
+        }
+        
+        private void UpdateTimer()
+        {
             _onSurface = CurrentScene.Surfaces.Count > 0;
-            if(!_isInFightWithAliens)
+            if (!_isInFightWithAliens)
             {
-                if(!startedTimeout)
+                if (!startedTimeout)
                 {
                     _timeout = DateTime.UtcNow + new TimeSpan(0, 0, 20); //gonna change later.
                     startedTimeout = true;
@@ -97,8 +106,29 @@ namespace AmbientEnemySpawns
                 _isInFightWithAliens = true;
                 startedTimeout = false;
             }
+        }
 
-            Script.Yield();
+        private Ped SpawnAlienPed(Vector3 spawnPos, float ground, Random rand)
+        {
+            var ped = GtsLibNet.CreateAlien(null, spawnPos, rand.Next(20, 180));
+            ped.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
+            ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
+            ped.AddBlip();
+            ped.IsOnlyDamagedByPlayer = true;
+            ped.IsVisible = false;
+
+            PtfxNonLooped ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
+            ptfx.Request();
+            while (!ptfx.IsLoaded)
+            {
+                Script.Yield();
+            }
+
+            ptfx.Play(ped.Position, ped.Rotation, 3.5f);
+
+            ped.IsVisible = true;
+
+            return ped;
         }
 
         private void SpawnEnemiesOnSurface()
@@ -114,12 +144,7 @@ namespace AmbientEnemySpawns
                 var ground = World.GetGroundHeight(spawnPoint + Vector3.WorldUp);
                 if (ground == 0) continue;
 
-                var ped = GtsLibNet.CreateAlien(null, spawnPoint, random.Next(20, 180));
-                ped.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
-                ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
-                ped.AddBlip();
-                ped.IsOnlyDamagedByPlayer = true;
-                _alienPeds.Add(ped);
+                _alienPeds.Add(SpawnAlienPed(spawnPoint, ground, random));
                 Script.Yield();
             }
         }
@@ -127,6 +152,15 @@ namespace AmbientEnemySpawns
         private void SpawnEnemiesInSpace()
         {
 
+        }
+
+        public void OnAborted()
+        {
+            foreach (var ent in _alienPeds)
+                ent?.Delete();
+
+            foreach (var veh in _alienVehicles)
+                veh?.Delete();
         }
     }
 }
