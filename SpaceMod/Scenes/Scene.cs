@@ -1143,7 +1143,7 @@ namespace GTS.Scenes
 
                 if (distanceStart < distance)
                 {
-                    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+                    GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.INPUT_CONTEXT_GENERIC);
 
                     if (Game.IsControlJustReleased(2, Control.Context))
                     {
@@ -1161,7 +1161,7 @@ namespace GTS.Scenes
                 var distanceEnd = (t.End - PlayerPosition).LengthSquared();
 
                 if (!(distanceEnd < distance)) continue;
-                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+                GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.INPUT_CONTEXT_GENERIC);
 
                 if (!Game.IsControlJustPressed(2, Control.Context)) continue;
                 Game.FadeScreenOut(750);
@@ -1208,7 +1208,7 @@ namespace GTS.Scenes
                 var dist = PlayerPed.Position.DistanceToSquared(_vehicleLeavePos);
                 if (dist < 4)
                 {
-                    GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT");
+                    GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.RETURN_TO_ORBIT);
                     Game.DisableControlThisFrame(2, Control.Enter);
                     if (Game.IsDisabledControlJustPressed(2, Control.Enter))
                         ExitSceneFromSurface();
@@ -1224,7 +1224,7 @@ namespace GTS.Scenes
             if (PlayerVehicle != null && PlayerPosition.DistanceToSquared(PlayerVehicle.Position) < distance &&
                 !PlayerPed.IsInVehicle())
             {
-                GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT");
+                GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.RETURN_TO_ORBIT);
                 Game.DisableControlThisFrame(2, Control.Enter);
                 if (Game.IsDisabledControlJustPressed(2, Control.Enter))
                     PlayerPed.SetIntoVehicle(PlayerVehicle, VehicleSeat.Driver);
@@ -1237,7 +1237,7 @@ namespace GTS.Scenes
             else if (PlayerPed.IsInVehicle())
             {
                 ChangePlayerVehicle();
-                GtsLibNet.DisplayHelpTextWithGxt("RET_ORBIT2");
+                GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.LEAVE_TO_ORBIT_W_VEHICLE);
                 Game.DisableControlThisFrame(2, Control.Context);
                 if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
                 RegisteredVehicles.Add(PlayerVehicle);
@@ -1653,7 +1653,7 @@ namespace GTS.Scenes
             if (!MiningProps.Contains(entHit)) return;
 
             // let's start mining!
-            GtsLibNet.DisplayHelpTextWithGxt("SW_MINE");
+            GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.SPACE_WALK_MINE);
             Game.DisableControlThisFrame(2, Control.Context);
             if (Game.IsDisabledControlJustPressed(2, Control.Context))
             {
@@ -1678,7 +1678,7 @@ namespace GTS.Scenes
             var entVeh = (Vehicle) entHit;
             if (entVeh != vehicle) return;
 
-            GtsLibNet.DisplayHelpTextWithGxt("SW_REPAIR");
+            GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.SPACE_WALK_REPAIR);
             Game.DisableControlThisFrame(2, Control.Context);
 
             if (!Game.IsDisabledControlJustPressed(2, Control.Context)) return;
@@ -1809,7 +1809,7 @@ namespace GTS.Scenes
 
                 if (!_didSpaceWalkTut)
                 {
-                    GtsLibNet.DisplayHelpTextWithGxt("SPACEWALK_INFO");
+                    GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.SPACE_WALK_TUTORIAL);
                     Core.Instance.Settings.SetValue("tutorial_info", "did_float_info", _didSpaceWalkTut = true);
                     Core.Instance.Settings.Save();
                 }

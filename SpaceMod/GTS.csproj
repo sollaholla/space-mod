@@ -16,7 +16,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -81,6 +81,7 @@
     <Compile Include="Library\TimecycleModChanger.cs" />
     <Compile Include="Library\TimecycleModifier.cs" />
     <Compile Include="Library\WeaponInfo.cs" />
+    <Compile Include="Utility\GtsLabels.cs" />
     <Compile Include="Utility\MapLoader.cs" />
     <Compile Include="Utility\MemoryAccess.cs" />
     <Compile Include="Scenes\Interiors\DynamicPickup.cs" />
@@ -92,7 +93,7 @@
     <Compile Include="Scenes\ZeroGTask.cs" />
     <Compile Include="Utility\DebugMessageType.cs" />
     <Compile Include="Utility\LoadScaleform.cs" />
-    <Compile Include="Events\IntroMission.cs" />
+    <Compile Include="Events\SandersBriefing.cs" />
     <Compile Include="Utility\LoadScaleformDrawer.cs" />
     <Compile Include="Utility\VectorParse.cs" />
     <Compile Include="Events\DataClasses\SatelliteDish.cs" />

@@ -24,7 +24,7 @@ namespace GTS.Events
             //{
             //    var dist = pilot.Position.DistanceToSquared(Game.Player.Character.Position);
             //    if (!(dist < 4)) continue;
-            //    GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+            //    GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.INPUT_CONTEXT_GENERIC);
             //    if (!Game.IsControlJustPressed(2, Control.Context)) continue;
             //    Function.Call(Hash._PLAY_AMBIENT_SPEECH1, pilot, "GENERIC_HI", "Speech_Params_Force_Shouted_Critical");
             //    Script.Wait(1200);

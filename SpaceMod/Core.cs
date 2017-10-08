@@ -680,7 +680,7 @@ namespace GTS
 
             if (distStart < 1.3f)
             {
-                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+                GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.INPUT_CONTEXT_GENERIC);
                 if (!Game.IsControlJustPressed(2, Control.Context)) return;
                 PlayerPed.Task.StandStill(-1);
                 PlayerPed.Task.AchieveHeading(startHeading, -1);
@@ -697,7 +697,7 @@ namespace GTS
             }
             else if (distEnd < 1.3f)
             {
-                GtsLibNet.DisplayHelpTextWithGxt("PRESS_E");
+                GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.INPUT_CONTEXT_GENERIC);
                 if (!Game.IsControlJustPressed(2, Control.Context)) return;
                 PlayerPed.Task.StandStill(-1);
                 PlayerPed.Task.AchieveHeading(endHeading, -1);

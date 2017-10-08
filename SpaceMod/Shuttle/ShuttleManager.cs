@@ -43,7 +43,7 @@ namespace GTS.Shuttle
             var dist = PlayerPed.Position.DistanceTo(_shuttlePosition);
             if (dist > ShuttleInteractDistance) return;
             Game.DisableControlThisFrame(2, Control.Enter);
-            GtsLibNet.DisplayHelpTextWithGxt("SHUT_ENTER");
+            GtsLibNet.DisplayHelpTextWithGxt(GtsLabels.ENTER_SHUTTLE);
             if (!Game.IsDisabledControlJustPressed(2, Control.Enter)) return;
             PlacePlayerInShuttle();
         }
