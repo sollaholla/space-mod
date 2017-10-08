@@ -406,6 +406,8 @@ namespace GTS
             {
                 _menuPool.CloseAllMenus();
 
+                Function.Call(Hash._0x0888C3502DBBEEF5);
+
                 var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
                 loadScaleform.Draw = true;
 
@@ -424,6 +426,7 @@ namespace GTS
                     HeliTransport = new HeliTransport();
                     HeliTransport.Load();
                 }
+
                 LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
                 _initializedGts = true;
             }
