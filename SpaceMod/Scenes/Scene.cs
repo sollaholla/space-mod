@@ -45,6 +45,7 @@ namespace GTS.Scenes
         // 2 = orbital name
         // 3 = player dirToPlayer from orbital
         private static PreviousSceneInfo _lastInfo;
+
         private readonly List<WarpEffect> _warpEffects = new List<WarpEffect>();
         private Orbital _currentWarpOrbital;
         private bool _didDeleteScene;
@@ -136,7 +137,7 @@ namespace GTS.Scenes
 
         public Vector3 SimulatedPosition
         {
-            get => PlayerPosition - Info. GalaxyCenter + _playerSimulatedOffset;
+            get => PlayerPosition - Info.GalaxyCenter + _playerSimulatedOffset;
             set => _playerSimulatedOffset = value;
         }
 
@@ -207,7 +208,8 @@ namespace GTS.Scenes
             prop.FreezePosition = true;
             prop.LodDistance = data.LodDistance;
 
-            var orbital = new Orbital(prop.Handle, data.Name, data.RotationSpeed, data.WormHole, data.TriggerSizeMultiplier, data.NextScene);
+            var orbital = new Orbital(prop.Handle, data.Name, data.RotationSpeed, data.WormHole,
+                data.TriggerSizeMultiplier, data.NextScene);
 
             if (!string.IsNullOrEmpty(data.Name))
             {
@@ -548,7 +550,8 @@ namespace GTS.Scenes
 
             PlayerPosition += directionToTarget * Game.LastFrameTime * (VehicleData?.WarpSpeed ?? 10000f);
             var dist = PlayerPosition.DistanceTo(_currentWarpOrbital.Position);
-            if (dist >= _currentWarpOrbital.Model.GetDimensions().Length() * _currentWarpOrbital.TriggerSizeMult) return;
+            if (dist >= _currentWarpOrbital.Model.GetDimensions().Length() *
+                _currentWarpOrbital.TriggerSizeMult) return;
             GameplayCamera.Shake(CameraShake.SmallExplosion, 1f);
             World.AddExplosion(GameplayCamera.Position, ExplosionType.Grenade, 0f, 0f, true, true);
             ResetWarpSystems();
@@ -1268,7 +1271,8 @@ namespace GTS.Scenes
                 var dir = PlayerPosition - orbital.Position;
                 if (dir.Length() > 1)
                     dir.Normalize();
-                _lastInfo = new PreviousSceneInfo(dir, orbital.Name, FileName, orbital.Model.GetDimensions().Length() / 2);
+                _lastInfo = new PreviousSceneInfo(dir, orbital.Name, FileName,
+                    orbital.Model.GetDimensions().Length() / 2);
                 Exited?.Invoke(this, orbital.NextScene);
                 _stopUpdate = true;
                 break;

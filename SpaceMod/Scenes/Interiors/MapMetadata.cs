@@ -4,7 +4,7 @@ using GTA.Math;
 namespace GTS.Scenes.Interiors
 {
     /// <summary>
-    /// All credits to GuadMaz for this script.
+    ///     All credits to GuadMaz for this script.
     /// </summary>
     public class MapMetadata
     {

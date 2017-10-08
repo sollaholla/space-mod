@@ -1,5 +1,4 @@
 ﻿using GTA;
-using GTA.Math;
 
 namespace GTS.OrbitalSystems
 {

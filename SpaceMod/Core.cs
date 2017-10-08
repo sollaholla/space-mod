@@ -161,22 +161,28 @@ namespace GTS
                 Settings.GetValue("core", "default_orbit_scene", Utility.Settings.DefaultOrbitScene);
             Utility.Settings.DefaultOrbitOffset = VectorParse.Read(Settings.GetValue("core", "default_orbit_offset"),
                 Utility.Settings.DefaultOrbitOffset);
-            Utility.Settings.DefaultOrbitRotation = VectorParse.Read(Settings.GetValue("core", "default_orbit_rotation"),
+            Utility.Settings.DefaultOrbitRotation = VectorParse.Read(
+                Settings.GetValue("core", "default_orbit_rotation"),
                 Utility.Settings.DefaultOrbitRotation);
             Utility.Settings.UseSpaceWalk = Settings.GetValue("core", "use_spacewalk", Utility.Settings.UseSpaceWalk);
-            Utility.Settings.ShowCustomGui = Settings.GetValue("core", "show_custom_Gui", Utility.Settings.ShowCustomGui);
+            Utility.Settings.ShowCustomGui =
+                Settings.GetValue("core", "show_custom_Gui", Utility.Settings.ShowCustomGui);
             Utility.Settings.UseScenarios = Settings.GetValue("core", "use_scenarios", Utility.Settings.UseScenarios);
             Utility.Settings.MoonJump = Settings.GetValue("core", "low_gravity_jumping", Utility.Settings.MoonJump);
             Utility.Settings.MouseControlFlySensitivity = Settings.GetValue("core", "mouse_control_fly_sensitivity",
                 Utility.Settings.MouseControlFlySensitivity);
-            Utility.Settings.VehicleFlySpeed = Settings.GetValue("core", "vehicle_fly_speed", Utility.Settings.VehicleFlySpeed);
+            Utility.Settings.VehicleFlySpeed =
+                Settings.GetValue("core", "vehicle_fly_speed", Utility.Settings.VehicleFlySpeed);
             Utility.Settings.VehicleReentrySpeed =
                 Settings.GetValue("core", "vehicle_reentry_speed", Utility.Settings.VehicleReentrySpeed);
-            Utility.Settings.EarthAtmosphereEnterPosition = VectorParse.Read(Settings.GetValue("core", "enter_atmos_pos"),
+            Utility.Settings.EarthAtmosphereEnterPosition = VectorParse.Read(
+                Settings.GetValue("core", "enter_atmos_pos"),
                 Utility.Settings.EarthAtmosphereEnterPosition);
-            Utility.Settings.EarthAtmosphereEnterRotation = VectorParse.Read(Settings.GetValue("core", "earth_atmos_rot"),
+            Utility.Settings.EarthAtmosphereEnterRotation = VectorParse.Read(
+                Settings.GetValue("core", "earth_atmos_rot"),
                 Utility.Settings.EarthAtmosphereEnterRotation);
-            Utility.Settings.AlwaysUseSound = Settings.GetValue("core", "always_use_sound", Utility.Settings.AlwaysUseSound);
+            Utility.Settings.AlwaysUseSound =
+                Settings.GetValue("core", "always_use_sound", Utility.Settings.AlwaysUseSound);
             Utility.Settings.DisableWantedLevel =
                 Settings.GetValue("core", "disable_wanted_level", Utility.Settings.DisableWantedLevel);
             Utility.Settings.ShutStage1Height =
@@ -190,8 +196,10 @@ namespace GTS
             Utility.Settings.ShuttleGimbalFront =
                 Settings.GetValue("shuttle", "shut_front_gimbal", Utility.Settings.ShuttleGimbalFront);
             Utility.Settings.ScenesFolder = Settings.GetValue("paths", "scenes_folder", Utility.Settings.ScenesFolder);
-            Utility.Settings.InteriorsFolder = Settings.GetValue("paths", "interiors_folder", Utility.Settings.InteriorsFolder);
-            Utility.Settings.ScenariosFolder = Settings.GetValue("paths", "scenarios_folder", Utility.Settings.ScenariosFolder);
+            Utility.Settings.InteriorsFolder =
+                Settings.GetValue("paths", "interiors_folder", Utility.Settings.InteriorsFolder);
+            Utility.Settings.ScenariosFolder =
+                Settings.GetValue("paths", "scenarios_folder", Utility.Settings.ScenariosFolder);
             Utility.Settings.AudioFolder = Settings.GetValue("paths", "audio_folder", Utility.Settings.AudioFolder);
             Utility.Settings.LogPath = Settings.GetValue("paths", "log_file_path", Utility.Settings.LogPath);
             Utility.Settings.SpaceVehiclesPath =
@@ -445,7 +453,8 @@ namespace GTS
 
             var scene = XmlSerializer.Deserialize<SceneInfo>(Path.Combine(Utility.Settings.ScenesFolder,
                 Utility.Settings.DefaultOrbitScene));
-            SetCurrentScene(scene, Utility.Settings.DefaultOrbitScene, scene.GalaxyCenter + Utility.Settings.DefaultOrbitOffset,
+            SetCurrentScene(scene, Utility.Settings.DefaultOrbitScene,
+                scene.GalaxyCenter + Utility.Settings.DefaultOrbitOffset,
                 Utility.Settings.DefaultOrbitRotation);
         }
 
@@ -525,7 +534,6 @@ namespace GTS
             var offset = Vector3.Zero;
             var heading = 0f;
             if (!sceneInfo.SurfaceScene)
-            {
                 if (lastSceneInfo != null)
                 {
                     var orbital = sceneInfo.Orbitals.Find(x => x.Name == lastSceneInfo.OrbitalName);
@@ -544,7 +552,6 @@ namespace GTS
                     }
                     Scene.ResetLastSceneInfo();
                 }
-            }
 
             SetCurrentScene(sceneInfo, nextScene);
             CurrentScene.SimulatedPosition = offset;

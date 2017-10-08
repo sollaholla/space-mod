@@ -6,7 +6,7 @@ using GTA.Native;
 namespace GTS.Scenes.Interiors
 {
     /// <summary>
-    /// All credits to Guad for this script.
+    ///     All credits to Guad for this script.
     /// </summary>
     public class DynamicPickup
     {
