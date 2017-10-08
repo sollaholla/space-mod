@@ -530,8 +530,10 @@ namespace GTS
             CurrentScene.Exited += CurrentSceneOnExited;
         }
 
-        private void CurrentSceneOnExited(Scene scene, string nextScene)
+        private void CurrentSceneOnExited(object sender, SceneExitEventArgs sceneExitEventArgs)
         {
+            var nextScene = sceneExitEventArgs.NewSceneFile;
+
             if (nextScene == LsReturnScene)
             {
                 Scene.ResetLastSceneInfo();

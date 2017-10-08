@@ -24,11 +24,11 @@ namespace GTS.Utility
 
             private unsafe IntPtr FindPattern(string moduleName)
             {
-                Win32Native.GetModuleInformation(
-                    Win32Native.GetCurrentProcess(),
-                    Win32Native.GetModuleHandle(moduleName),
-                    out Win32Native.MODULEINFO module,
-                    sizeof(Win32Native.MODULEINFO));
+                NativeMethods.GetModuleInformation(
+                    NativeMethods.GetCurrentProcess(),
+                    NativeMethods.GetModuleHandle(moduleName),
+                    out NativeMethods.MODULEINFO module,
+                    sizeof(NativeMethods.MODULEINFO));
 
                 var address = module.lpBaseOfDll.ToInt64();
                 var end = address + module.SizeOfImage;
@@ -51,12 +51,12 @@ namespace GTS.Utility
             }
         }
 
-        public static class Win32Native
+        public static class NativeMethods
         {
             [DllImport("kernel32.dll")]
             public static extern IntPtr GetCurrentProcess();
 
-            [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
             public static extern IntPtr GetModuleHandle(string lpModuleName);
 
             [DllImport("psapi.dll", SetLastError = true)]

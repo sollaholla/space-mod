@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using GTA;
 using GTA.Native;
+using GTS.Library.Security;
 
 namespace GTS.Library
 {
@@ -13,42 +13,14 @@ namespace GTS.Library
     {
         private static readonly Dictionary<string, uint> ScriptStackSizes = new Dictionary<string, uint>();
 
-        [DllImport("GTSLib.asi")]
-        private static extern bool GTSLib_IsLibraryInitialized();
-
-        [DllImport("GTSLib.asi")]
-        private static extern bool GTSLib_InitCredits();
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_EndCredits();
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetWorldGravity(float gravity);
-
-        [DllImport("GTSLib.asi")]
-        private static extern byte GTSLib_IsRockstarEditorActive();
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetScriptCanBePaused([MarshalAs(UnmanagedType.LPStr)] string name,
-            bool toggle);
-
-        [DllImport("GTSLib.asi")]
-        private static extern uint GTSLib_GetScriptAllocatedStackSize([MarshalAs(UnmanagedType.LPStr)] string name);
-
-        [DllImport("GTSLib.asi")]
-        private static extern void GTSLib_SetVehicleGravity(int vehicle, float gravity);
-
-        [DllImport("GTSLib.asi")]
-        private static extern void
-            GTSLib_SetAirDragMultiplierForPlayersVehicle(float multiplier); // ReSharper disable InconsistentNaming
-        private enum EDecorType
-        {
-            DECOR_TYPE_FLOAT = 1,
-            DECOR_TYPE_BOOL = 2,
-            DECOR_TYPE_INT,
-            DECOR_TYPE_UNK,
-            DECOR_TYPE_TIME
-        }
+        //private enum EDecorType
+        //{
+        //    DECOR_TYPE_FLOAT = 1,
+        //    DECOR_TYPE_BOOL = 2,
+        //    DECOR_TYPE_INT,
+        //    DECOR_TYPE_UNK,
+        //    DECOR_TYPE_TIME
+        //}
 
         static GtsLib()
         {
@@ -79,8 +51,8 @@ namespace GTS.Library
         /// </summary>
         public static void InitCredits()
         {
-            if (!GTSLib_IsLibraryInitialized()) return;
-            if (!GTSLib_InitCredits()) return;
+            if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
+            if (!NativeMethods.GTSLib_InitCredits()) return;
             Function.Call(Hash.CLEAR_PRINTS);
             Function.Call(Hash.CLEAR_BRIEF);
             Function.Call(Hash.CLEAR_ALL_HELP_MESSAGES);
@@ -97,13 +69,13 @@ namespace GTS.Library
         /// </summary>
         public static void EndCredits()
         {
-            if (!GTSLib_IsLibraryInitialized()) return;
+            if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
             Function.Call(Hash.SET_CREDITS_ACTIVE, false);
             Function.Call(Hash._0xB51B9AB9EF81868C, true);
             Function.Call(Hash.SET_GAME_PAUSES_FOR_STREAMING, true);
             Function.Call(Hash.DISPLAY_RADAR, true);
             Function.Call(Hash.DISPLAY_HUD, true);
-            GTSLib_EndCredits();
+            NativeMethods.GTSLib_EndCredits();
         }
 
         /// <summary>
@@ -112,10 +84,10 @@ namespace GTS.Library
         /// <param name="gravity"></param>
         public static void SetGravityLevel(float gravity)
         {
-            if (!GTSLib_IsLibraryInitialized())
+            if (!NativeMethods.GTSLib_IsLibraryInitialized())
                 return;
 
-            GTSLib_SetWorldGravity(gravity);
+            NativeMethods.GTSLib_SetWorldGravity(gravity);
         }
 
         /// <summary>
@@ -124,8 +96,8 @@ namespace GTS.Library
         /// <param name="toggle"></param>
         public static void SetScriptCanBePaused(bool toggle)
         {
-            if (!GTSLib_IsLibraryInitialized()) return;
-            GTSLib_SetScriptCanBePaused(Function.Call<string>(Hash.GET_THIS_SCRIPT_NAME), toggle);
+            if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
+            NativeMethods.GTSLib_SetScriptCanBePaused(Function.Call<string>(Hash.GET_THIS_SCRIPT_NAME), toggle);
         }
 
         /// <summary>
@@ -135,11 +107,11 @@ namespace GTS.Library
         /// <param name="gravity"></param>
         public static void SetVehicleGravity(Vehicle vehicle, float gravity)
         {
-            if (!GTSLib_IsLibraryInitialized())
+            if (!NativeMethods.GTSLib_IsLibraryInitialized())
                 return;
             if (vehicle == null)
                 return;
-            GTSLib_SetVehicleGravity(vehicle.Handle, gravity);
+            NativeMethods.GTSLib_SetVehicleGravity(vehicle.Handle, gravity);
         }
 
         /// <summary>
@@ -148,7 +120,7 @@ namespace GTS.Library
         /// <param name="vehicle"></param>
         public static void ResetVehicleGravity(Vehicle vehicle)
         {
-            if (!GTSLib_IsLibraryInitialized())
+            if (!NativeMethods.GTSLib_IsLibraryInitialized())
                 return;
             const float defGravity = 9.8000002f;
             if (vehicle == null)
@@ -163,13 +135,13 @@ namespace GTS.Library
         /// <returns></returns>
         public static uint GetScriptStackSize(string script)
         {
-            if (!GTSLib_IsLibraryInitialized() || string.IsNullOrEmpty(script))
+            if (!NativeMethods.GTSLib_IsLibraryInitialized() || string.IsNullOrEmpty(script))
                 return 0;
 
             if (ScriptStackSizes.ContainsKey(script))
                 return ScriptStackSizes[script];
 
-            var stackSize = GTSLib_GetScriptAllocatedStackSize(script);
+            var stackSize = NativeMethods.GTSLib_GetScriptAllocatedStackSize(script);
             ScriptStackSizes.Add(script, stackSize);
             return stackSize;
         }
@@ -180,7 +152,7 @@ namespace GTS.Library
         /// <returns></returns>
         public static bool IsRockstarEditorActive()
         {
-            return GTSLib_IsLibraryInitialized() && GTSLib_IsRockstarEditorActive() == 1;
+            return NativeMethods.GTSLib_IsLibraryInitialized() && NativeMethods.GTSLib_IsRockstarEditorActive() == 1;
         }
 
         public static void DisableAtmosphereScript()
@@ -197,8 +169,8 @@ namespace GTS.Library
 
         public static void SetAirDragMultForVehicle(this Player player, float value)
         {
-            if (!GTSLib_IsLibraryInitialized()) return;
-            GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
+            if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
+            NativeMethods.GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
         }
     }
 }

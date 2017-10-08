@@ -82,7 +82,7 @@ namespace GTS.Scenes
         private Prop _weldingProp;
         private LoopedPtfx _weldPtfx;
         private float _yawSpeed;
-        private GtsCameraRig _cameraRig/* = new GtsCameraRig(new Vector3(0, -50, 15), 50f)*/;
+        //private GtsCameraRig _cameraRig/* = new GtsCameraRig(new Vector3(0, -50, 15), 50f)*/;
 
         public Scene(SceneInfo sceneData)
         {
@@ -727,7 +727,7 @@ namespace GTS.Scenes
 
         private void ExitSceneFromSurface()
         {
-            Exited?.Invoke(this, Info.NextScene);
+            Exited?.Invoke(this, new SceneExitEventArgs(this, Info.NextScene));
         }
 
         private bool CanDoOrbitLanding()
@@ -1260,7 +1260,7 @@ namespace GTS.Scenes
                 Function.Call(Hash.NETWORK_RESURRECT_LOCAL_PLAYER, spawn.X, spawn.Y, spawn.Z, 0, false, false);
                 Function.Call(Hash._RESET_LOCALPLAYER_STATE);
                 Function.Call(Hash.STOP_AUDIO_SCENE, "DEATH_SCENE");
-                Exited?.Invoke(this, FileName);
+                Exited?.Invoke(this, new SceneExitEventArgs(this, FileName));
                 Script.Wait(500);
                 Game.FadeScreenIn(1000);
                 Game.TimeScale = 1.0f;
@@ -1303,7 +1303,7 @@ namespace GTS.Scenes
                     dir.Normalize();
                 _lastInfo = new PreviousSceneInfo(dir, orbital.Name, FileName,
                     orbital.Model.GetDimensions().Length() / 2);
-                Exited?.Invoke(this, orbital.NextScene);
+                Exited?.Invoke(this, new SceneExitEventArgs(this, orbital.NextScene));
                 _stopUpdate = true;
                 break;
             }
@@ -1317,7 +1317,7 @@ namespace GTS.Scenes
                         new Vector3(link.TriggerDistance, link.TriggerDistance, link.TriggerDistance),
                         Color.FromArgb(150, 255, 255, 0));
                 if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
-                Exited?.Invoke(this, link.NextScene);
+                Exited?.Invoke(this, new SceneExitEventArgs(this, link.NextScene));
                 _stopUpdate = true;
                 break;
             }
@@ -1951,7 +1951,7 @@ namespace GTS.Scenes
 
             if (distanceToWormHole <= orbitalData.TriggerSizeMultiplier)
             {
-                Exited?.Invoke(this, orbitalData.NextScene);
+                Exited?.Invoke(this, new SceneExitEventArgs(this, orbitalData.NextScene));
             }
             else
             {
@@ -1987,7 +1987,7 @@ namespace GTS.Scenes
                         else PlayerPed.Velocity = targetVelocity;
                         Script.Yield();
                     }
-                    Exited?.Invoke(this, orbitalData.NextScene);
+                    Exited?.Invoke(this, new SceneExitEventArgs(this, orbitalData.NextScene));
                 }
             }
         }

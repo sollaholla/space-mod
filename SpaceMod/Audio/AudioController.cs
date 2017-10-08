@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Security;
 using GTS.Utility;
 using NAudio.Wave;
 

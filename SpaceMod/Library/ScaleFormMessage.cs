@@ -7,7 +7,7 @@ namespace GTS.Library
     /// <summary>
     ///     Original source: Guad Maz
     /// </summary>
-    public class ScaleFormMessage
+    public sealed class ScaleFormMessage : IDisposable
     {
         private Scaleform _sc;
         private int _start;
@@ -23,12 +23,13 @@ namespace GTS.Library
                    DateTime.Now.Subtract(start).TotalMilliseconds < timeout) Script.Yield();
         }
 
-        internal void Dispose()
+        public void Dispose()
         {
             Function.Call(Hash.SET_SCALEFORM_MOVIE_AS_NO_LONGER_NEEDED, new OutputArgument(_sc.Handle));
+            _sc.Dispose();
             _sc = null;
         }
-
+        
         public void SHOW_MISSION_PASSED_MESSAGE(string msg, int time = 5000)
         {
             Load();

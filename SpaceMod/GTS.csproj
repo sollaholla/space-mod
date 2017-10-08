@@ -73,6 +73,7 @@
     <Compile Include="Library\HudColor.cs" />
     <Compile Include="Library\LoopedPtfx.cs" />
     <Compile Include="Library\Mathf.cs" />
+    <Compile Include="Library\Security\NativeMethods.cs" />
     <Compile Include="Library\RagdollType.cs" />
     <Compile Include="Library\ScaleFormMessage.cs" />
     <Compile Include="Library\ScaleFormMessages.cs" />
