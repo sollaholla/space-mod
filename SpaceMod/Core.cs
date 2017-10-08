@@ -94,6 +94,15 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
+            if(e.KeyCode == Keys.L)
+            {
+                World.GetActiveBlips().ToList().ForEach(x =>
+                {
+                    if (x.Color == BlipColor.Red)
+                        x.Remove();
+                });
+            }
+
             if (_menuPool?.IsAnyMenuOpen() ?? false)
                 return;
 
