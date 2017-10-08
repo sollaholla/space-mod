@@ -34,9 +34,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SpaceMod\bin\Debug\GTS.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet2, Version=2.10.1.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet2">
+      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -48,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alien.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
