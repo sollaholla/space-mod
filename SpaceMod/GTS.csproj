@@ -65,6 +65,7 @@
     <Compile Include="DataClasses\WarpModelInfo.cs" />
     <Compile Include="Events\HeliTransport.cs" />
     <Compile Include="Library\CombatAttributes.cs" />
+    <Compile Include="Library\GtsCameraRig.cs" />
     <Compile Include="Library\Effects.cs" />
     <Compile Include="Library\FollowCam.cs" />
     <Compile Include="Library\FollowCamViewMode.cs" />

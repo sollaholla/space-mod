@@ -82,6 +82,7 @@ namespace GTS.Scenes
         private Prop _weldingProp;
         private LoopedPtfx _weldPtfx;
         private float _yawSpeed;
+        private GtsCameraRig _cameraRig/* = new GtsCameraRig(new Vector3(0, -50, 15), 50f)*/;
 
         public Scene(SceneInfo sceneData)
         {
@@ -327,6 +328,7 @@ namespace GTS.Scenes
             CreateScenarios();
             Game.MissionFlag = true;
             _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
+            //_cameraRig.StartRendering(true, true, 500);
             Debug.Log("Scene initialized.");
         }
 
@@ -353,6 +355,7 @@ namespace GTS.Scenes
             KeepInSafeZone();
             UpdateLockedWarpSystem();
             TryToExitScene();
+            //_cameraRig.Update(Game.Player.Character, 1, 0);
         }
 
         internal void Delete(bool aborted = false)
@@ -367,6 +370,7 @@ namespace GTS.Scenes
                 ResetGameData();
                 _spaceWalkRope?.Delete();
                 _didDeleteScene = true;
+                //_cameraRig.StopRendering(false, 0);
             }
             catch (Exception e)
             {
@@ -1122,7 +1126,6 @@ namespace GTS.Scenes
                         PlayerPed.Heading = t.EndHeading;
                         GameplayCamera.RelativeHeading = 0;
 
-                        Script.Wait(1250);
                         Game.FadeScreenIn(750);
                     }
                 }
@@ -1140,7 +1143,6 @@ namespace GTS.Scenes
                 PlayerPed.Heading = t.StartHeading;
                 GameplayCamera.RelativeHeading = 0;
 
-                Script.Wait(1250);
                 Game.FadeScreenIn(750);
             }
         }
