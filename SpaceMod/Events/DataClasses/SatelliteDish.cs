@@ -2,7 +2,7 @@
 using GTA;
 using GTA.Math;
 
-namespace GTS.Missions.Types
+namespace GTS.Events.DataClasses
 {
     internal class SatelliteDish
     {

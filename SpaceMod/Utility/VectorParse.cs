@@ -1,6 +1,6 @@
 ﻿using GTA.Math;
 
-namespace GTS.Extensions
+namespace GTS.Utility
 {
     public static class VectorParse
     {

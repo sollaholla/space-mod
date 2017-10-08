@@ -5,16 +5,9 @@ using System.IO;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using GTSCommon;
 
-namespace GTS.Extensions
+namespace GTS.Utility
 {
-    public enum DebugMessageType
-    {
-        Error,
-        Debug
-    }
-
     public static class Debug
     {
         public static void DrawLine(Vector3 start, Vector3 end, Color color)

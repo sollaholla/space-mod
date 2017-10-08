@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using GTA;
 
-namespace GTS.Shuttle
+namespace GTS.Utility
 {
     public class LoadScaleformDrawer : Script
     {
@@ -57,24 +57,6 @@ namespace GTS.Shuttle
         public void RemoveLoadScaleform(LoadScaleform scaleform)
         {
             _loadScaleforms.Remove(scaleform);
-        }
-    }
-
-    public class LoadScaleform
-    {
-        public LoadScaleform(bool draw, string text, Scaleform scaleform)
-        {
-            Draw = draw;
-            Text = text;
-            Scaleform = scaleform;
-        }
-
-        public bool Draw { get; set; }
-        public Scaleform Scaleform { get; set; }
-
-        public string Text
-        {
-            set => Scaleform?.CallFunction("SET_DATA_SLOT", 0, "b_50", value);
         }
     }
 }

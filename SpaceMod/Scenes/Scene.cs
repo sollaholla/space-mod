@@ -8,35 +8,16 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTS.DataClasses;
-using GTS.Extensions;
 using GTS.Library;
 using GTS.OrbitalSystems;
 using GTS.Scenes.Interiors;
+using GTS.Utility;
 using GTSCommon;
 using NativeUI;
 using Font = GTA.Font;
 
 namespace GTS.Scenes
 {
-    /// <summary>
-    ///     A player task type for zero G.
-    /// </summary>
-    public enum ZeroGTask
-    {
-        SpaceWalk,
-        Mine,
-        Repair
-    }
-
-    /// <summary>
-    ///     Called when a <see cref="Scene" /> is exited.
-    /// </summary>
-    /// <param name="scene"></param>
-    /// <param name="newSceneFile"></param>
-    /// <param name="exitRotation"></param>
-    /// <param name="exitOffset"></param>
-    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile);
-
     /// <summary>
     ///     A Scene controls in-game logic for player movement, and referential game variables pertaining to
     ///     physics. It also adds props to the game based on it's <see cref="SceneInfo" /> data.
@@ -2012,21 +1993,5 @@ namespace GTS.Scenes
             foreach (var infoSceneLink in Info.SceneLinks)
                 infoSceneLink.Position += offset;
         }
-    }
-
-    public class PreviousSceneInfo
-    {
-        public PreviousSceneInfo(Vector3 dirToPlayer, string orbitalName, string scene, float modelDimensions)
-        {
-            DirToPlayer = dirToPlayer;
-            OrbitalName = orbitalName;
-            Scene = scene;
-            ModelDimensions = modelDimensions;
-        }
-
-        public Vector3 DirToPlayer { get; set; }
-        public string OrbitalName { get; set; }
-        public string Scene { get; set; }
-        public float ModelDimensions { get; set; }
     }
 }

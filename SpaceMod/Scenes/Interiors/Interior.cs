@@ -4,13 +4,13 @@ using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using GTS.Extensions;
 using GTS.Library;
+using GTS.Utility;
 using GTSCommon;
 
 namespace GTS.Scenes.Interiors
 {
-    public sealed class Interior //TODO: Rename to a better name.
+    public sealed class Interior
     {
         private bool _hidden;
         private Map _map;

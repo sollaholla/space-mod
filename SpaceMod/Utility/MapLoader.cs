@@ -5,7 +5,7 @@ using System.Linq;
 using GTS.Scenes.Interiors;
 using GTSCommon;
 
-namespace GTS
+namespace GTS.Utility
 {
     public class MapLoader
     {

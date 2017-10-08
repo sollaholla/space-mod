@@ -1,7 +1,7 @@
 ﻿using GTA;
 using GTA.Math;
 
-namespace GTS
+namespace GTS.Utility
 {
     /// <summary>
     ///     Holds data information about the mod.

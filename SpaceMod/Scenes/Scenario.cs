@@ -5,13 +5,6 @@ using GTA;
 namespace GTS.Scenes
 {
     /// <summary>
-    ///     Called when the <paramref name="scenario" /> is completed.
-    /// </summary>
-    /// <param name="scenario"></param>
-    /// <param name="success"></param>
-    internal delegate void OnScenarioCompleted(Scenario scenario, bool success);
-
-    /// <summary>
     ///     A class that represents an event, or series of events.
     /// </summary>
     public abstract class Scenario
@@ -22,7 +15,7 @@ namespace GTS.Scenes
         public ScriptSettings Settings =>
             _settings ?? (_settings =
                 ScriptSettings.Load(Path.ChangeExtension(
-                    Path.Combine(GTS.Settings.ScenariosFolder, GetType().Name), "ini")));
+                    Path.Combine(Utility.Settings.ScenariosFolder, GetType().Name), "ini")));
 
         public Ped PlayerPed => Core.PlayerPed;
         public Scene CurrentScene { get; internal set; }

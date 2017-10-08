@@ -5,7 +5,7 @@ using GTA.Native;
 using GTS.Library;
 using GTS.Scenes;
 
-namespace GTS
+namespace GTS.Events
 {
     public class HeliTransport
     {

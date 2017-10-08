@@ -1,6 +1,6 @@
 ﻿using GTA.Math;
 
-namespace GTS
+namespace GTS.Utility
 {
     /// <summary>
     ///     Holds setting variables used in certain parts of the mod that need to be

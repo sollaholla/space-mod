@@ -1,22 +1,17 @@
 ﻿using System.IO;
+using GTS.Utility;
 using NAudio.Wave;
 
 namespace GTS.Audio
 {
-    public enum AudioType
-    {
-        Launch01,
-        Detach01
-    }
-
     public static class AudioController
     {
         private static WaveFileReader _wave;
         private static DirectSoundOut _output;
 
-        public static void PlayAudio(AudioType type, float volume)
+        public static void PlayAudio(string name, float volume)
         {
-            var path = Settings.AudioFolder + "\\" + type + ".wav";
+            var path = Settings.AudioFolder + "\\" + name + ".wav";
             if (!File.Exists(path)) return;
 
             _wave = new WaveFileReader(path);

@@ -5,11 +5,11 @@ using System.Linq;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTS.Events.DataClasses;
 using GTS.Library;
-using GTS.Missions.Types;
 using GTS.Scenes;
 
-namespace GTS.Missions
+namespace GTS.Events
 {
     /// <summary>
     ///     Credits: AHK1221

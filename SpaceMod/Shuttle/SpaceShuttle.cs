@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using GTS.Particles;
+using GTS.Library;
+using GTS.Utility;
 
 namespace GTS.Shuttle
 {

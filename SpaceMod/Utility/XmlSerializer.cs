@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace GTS.Extensions
+namespace GTS.Utility
 {
     public static class XmlSerializer
     {
