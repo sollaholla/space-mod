@@ -1251,7 +1251,7 @@ namespace GTS.Scenes
             {
                 Game.TimeScale = 0.3f;
                 Function.Call(Hash.START_AUDIO_SCENE, "DEATH_SCENE");
-                ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry("BM_LABEL_2"), 1000);
+                ScaleFormMessages.Message.SHOW_MISSION_PASSED_MESSAGE(Game.GetGXTEntry(GtsLabels.SPACE_DEATH), 1000);
                 Game.PlaySound("ScreenFlash", "WastedSounds");
                 Script.Wait(1500);
                 Game.FadeScreenOut(1000);
