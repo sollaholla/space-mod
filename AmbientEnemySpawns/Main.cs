@@ -13,12 +13,10 @@ namespace AmbientEnemySpawns
 {
     public class Main : Scenario
     {
-        private List<Ped> _alienPeds;
+        private List<Alien> _alienPeds;
         private List<Vehicle> _alienVehicles;
 
         private bool _onSurface;
-
-        private bool _isCombatInProgress;
 
         private bool _isInFightWithAliens = false;
 
@@ -27,7 +25,7 @@ namespace AmbientEnemySpawns
 
         public Main()
         {
-            _alienPeds = new List<Ped>();
+            _alienPeds = new List<Alien>();
             _alienVehicles = new List<Vehicle>();
         }
 
@@ -35,51 +33,69 @@ namespace AmbientEnemySpawns
         {
             UI.ShowSubtitle(_isInFightWithAliens.ToString());
 
+            _alienPeds.ForEach(alien =>
+            {
+                if (Game.IsLoading)
+                    alien.FreezePosition = true;
+                else
+                    alien.FreezePosition = false;
+            });
+
             HandleShooting();
             UpdateTimer();
         }
 
         private void HandleShooting()
         {
-            if (!_isCombatInProgress)
+            //if (!_isCombatInProgress)
+            //{
+            //    var lastShotCoord = PlayerPed.GetLastWeaponImpactCoords();
+            //    var found = _alienPeds.Any(x => x.Ped.IsInCombatAgainst(PlayerPed));
+            //    foreach (var hostile in _alienPeds)
+            //    {
+            //        var hPos = hostile.Position;
+            //        var dist = Function.Call<float>(Hash.VDIST2, hPos.X, hPos.Y, hPos.Z,
+            //            lastShotCoord.X,
+            //            lastShotCoord.Y,
+            //            lastShotCoord.Z);
+            //        const float maxDist = 125 * 125;
+            //        if (dist > maxDist) continue;
+            //        found = true;
+            //    }
+            //    if (!found) return;
+            //    foreach (var hostile in _alienPeds)
+            //        if (!hostile.Ped.IsInCombat)
+            //            if (hostile.Ped.IsInVehicle())
+            //                hostile.Ped.Task.FightAgainst(PlayerPed);
+            //            else hostile.Ped.Task.ShootAt(PlayerPed);
+
+            //    _isCombatInProgress = true;
+            //}
+            //else
+            //{
+            //    foreach (var hostile in _alienPeds)
+            //    {
+            //        if (!Blip.Exists(hostile.CurrentBlip)) continue;
+            //        if (!hostile.IsDead) continue;
+            //        hostile.CurrentBlip.Remove();
+            //    }
+
+            //    if (_alienPeds.All(x => x.IsDead))
+            //    {
+
+            //        _isCombatInProgress = false;
+            //    }
+            //}
+
+            _alienPeds.ForEach(alien => {
+                alien.Update();
+                if (Blip.Exists(alien.CurrentBlip) && alien.IsDead)
+                    alien.CurrentBlip.Remove();
+            });
+
+            if(_alienPeds.TrueForAll(x => x.IsDead))
             {
-                var lastShotCoord = PlayerPed.GetLastWeaponImpactCoords();
-                var found = _alienPeds.Any(x => x.IsInCombatAgainst(PlayerPed));
-                foreach (var hostile in _alienPeds)
-                {
-                    var hPos = hostile.Position;
-                    var dist = Function.Call<float>(Hash.VDIST2, hPos.X, hPos.Y, hPos.Z,
-                        lastShotCoord.X,
-                        lastShotCoord.Y,
-                        lastShotCoord.Z);
-                    const float maxDist = 125 * 125;
-                    if (dist > maxDist) continue;
-                    found = true;
-                }
-                if (!found) return;
-                foreach (var hostile in _alienPeds)
-                    if (!hostile.IsInCombat)
-                        if (hostile.IsInVehicle())
-                            hostile.Task.FightAgainst(PlayerPed);
-                        else hostile.Task.ShootAt(PlayerPed);
-
-                _isCombatInProgress = true;
-            }
-            else
-            {
-                foreach (var hostile in _alienPeds)
-                {
-                    if (!Blip.Exists(hostile.CurrentBlip)) continue;
-                    if (!hostile.IsDead) continue;
-                    hostile.CurrentBlip.Remove();
-                }
-
-                if (_alienPeds.All(x => x.IsDead))
-                {
-                    _isInFightWithAliens = false;
-
-                    _isCombatInProgress = false;
-                }
+                _isInFightWithAliens = false;
             }
         }
         
@@ -108,14 +124,14 @@ namespace AmbientEnemySpawns
             }
         }
 
-        private Ped SpawnAlienPed(Vector3 spawnPos, float ground, Random rand)
+        private Alien SpawnAlienPed(Vector3 spawnPos, float ground, Random rand)
         {
             var ped = GtsLibNet.CreateAlien(null, spawnPos, rand.Next(20, 180));
-            ped.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
-            ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
-            ped.AddBlip();
-            ped.IsOnlyDamagedByPlayer = true;
-            ped.IsVisible = false;
+            var alien = new Alien(ped.Handle, 25*25);
+
+            alien.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
+            alien.AddBlip();
+            alien.IsVisible = false;
 
             PtfxNonLooped ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
             ptfx.Request();
@@ -124,11 +140,11 @@ namespace AmbientEnemySpawns
                 Script.Yield();
             }
 
-            ptfx.Play(ped.Position, ped.Rotation, 3.5f);
+            ptfx.Play(ped.Position, ped.Rotation, 1f);
 
-            ped.IsVisible = true;
+            alien.IsVisible = true;
 
-            return ped;
+            return alien;
         }
 
         private void SpawnEnemiesOnSurface()
