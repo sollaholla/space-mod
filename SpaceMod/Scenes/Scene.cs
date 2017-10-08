@@ -320,16 +320,16 @@ namespace GTS.Scenes
             Function.Call(Hash.SET_WEATHER_TYPE_NOW_PERSIST, Info.WeatherName);
             Function.Call(Hash.SET_ENTITY_ALWAYS_PRERENDER, Skybox?.Handle ?? 0, true);
             GetSpaceVehicles();
+            CreateSpace();
             ConfigureVehicleForScene();
             ResetPlayerPosition();
-            CreateSpace();
             CreateInteriors();
             CreateTeleports();
             CreateScenarios();
             Game.MissionFlag = true;
             _didSpaceWalkTut = Core.Instance.Settings.GetValue("tutorial_info", "did_float_info", _didSpaceWalkTut);
             //_cameraRig.StartRendering(true, true, 500);
-            Debug.Log("Scene initialized.");
+            Debug.Log(FileName + " initialized.");
         }
 
         internal void Update()
@@ -684,7 +684,9 @@ namespace GTS.Scenes
         private void ResetPlayerPosition()
         {
             var position = Info.GalaxyCenter;
+
             if (Info.SurfaceScene)
+            {
                 if (!Entity.Exists(PlayerPed.CurrentVehicle) || !CanDoOrbitLanding() || _isSpaceVehicleInOrbit)
                 {
                     var newPosition = GtsLibNet.GetGroundHeightRay(position, PlayerPed);
@@ -699,10 +701,9 @@ namespace GTS.Scenes
                     if (newPosition != Vector3.Zero)
                         position = newPosition;
                 }
-                else
-                {
-                    return;
-                }
+                else return;
+            }
+
             PlayerPosition = position;
         }
 
@@ -739,40 +740,67 @@ namespace GTS.Scenes
             if (!GtsSettings.UseScenarios) return;
             try
             {
-                CreateScenariosForSceneInfo(Info);
+                var path = GtsSettings.ScenariosFolder;
+                var files = Directory.GetFiles(path, "*.dll");
+                foreach (var file in files)
+                {
+                    var assembly = Assembly.LoadFrom(file);
+                    Debug.Log("Loading assembly " + file);
+                    var types = assembly.GetTypes();
+                    foreach (var type in types)
+                    {
+                        if (type.BaseType != typeof(Scenario)) continue;
+                        var s = (Scenario)Activator.CreateInstance(type);
+                        s.SendMessage("Awake");
+                        if (s.TargetScenes == null) continue;
+                        if (s.TargetScenes.Any(x => string.Equals(x, FileName, StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            Debug.Log("Starting scenario: " + type.Name);
+                            s.CurrentScene = this;
+                            Scenarios.Add(s);
+                        }
+                    }
+                }
+
+                foreach (var scenario in Scenarios)
+                {
+                    scenario.SendMessage("Start");
+                    scenario.Completed += OnScenarioComplete;
+                }
             }
             catch (Exception ex)
             {
                 Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
+                throw new Exception("An error occured.");
             }
         }
 
-        private void CreateScenariosForSceneInfo(SceneInfo scene)
-        {
-            foreach (var scenarioInfo in scene.Scenarios)
-            {
-                var assembly = Assembly.LoadFrom(Path.Combine(GtsSettings.ScenariosFolder, scenarioInfo.Dll));
-                var types = assembly.GetTypes();
-                foreach (var type in types)
-                {
-                    if (type == null || type.BaseType != typeof(Scenario)) continue;
-                    if (type.Name != scenarioInfo.TypeName)
-                        continue;
-                    var instance = (Scenario) Activator.CreateInstance(type);
-                    instance.CurrentScene = this;
-                    instance.SendMessage("Awake");
-                    if (instance.IsScenarioComplete()) continue;
-                    Debug.Log("Created Scenario: " + type.Name);
-                    Scenarios.Add(instance);
-                }
-            }
+        //private void CreateScenariosForSceneInfo(SceneInfo scene)
+        //{
+        //    foreach (var scenarioInfo in scene.Scenarios)
+        //    {
+        //        var assembly = Assembly.LoadFrom(Path.Combine(GtsSettings.ScenariosFolder, scenarioInfo.Dll));
+        //        var types = assembly.GetTypes();
+        //        foreach (var type in types)
+        //        {
+        //            if (type == null || type.BaseType != typeof(Scenario)) continue;
+        //            if (type.Name != scenarioInfo.TypeName)
+        //                continue;
+        //            var instance = (Scenario) Activator.CreateInstance(type);
+        //            instance.CurrentScene = this;
+        //            instance.SendMessage("Awake");
+        //            if (instance.IsScenarioComplete()) continue;
+        //            Debug.Log("Created Scenario: " + type.Name);
+        //            Scenarios.Add(instance);
+        //        }
+        //    }
 
-            foreach (var scenario in Scenarios)
-            {
-                scenario.SendMessage("Start");
-                scenario.Completed += OnScenarioComplete;
-            }
-        }
+        //    foreach (var scenario in Scenarios)
+        //    {
+        //        scenario.SendMessage("Start");
+        //        scenario.Completed += OnScenarioComplete;
+        //    }
+        //}
 
         private void UpdateBillboards(Vector3 viewFinderPosition)
         {

@@ -35,15 +35,16 @@ namespace GTS.Library
 
         public virtual int Play(Vector3 position, Vector3 rotation, float scale)
         {
-            if (Handle != -1)
-                Remove();
-
             Function.Call(Hash._SET_PTFX_ASSET_NEXT_CALL, Asset);
             var handle = Function.Call<int>(Hash.START_PARTICLE_FX_NON_LOOPED_AT_COORD, FxName, position.X, position.Y,
                 position.Z,
                 rotation.X, rotation.Y, rotation.Z, scale, false, false, false);
-            Function.Call(Hash.SET_PARTICLE_FX_NON_LOOPED_COLOUR, Color.R, Color.G, Color.B);
-            Function.Call(Hash.SET_PARTICLE_FX_NON_LOOPED_ALPHA, Color.A);
+            Function.Call(Hash.SET_PARTICLE_FX_LOOPED_EVOLUTION, handle, "LOD", 1);
+            if (Color != Color.Empty)
+            {
+                Function.Call(Hash.SET_PARTICLE_FX_NON_LOOPED_COLOUR, Color.R, Color.G, Color.B);
+                Function.Call(Hash.SET_PARTICLE_FX_NON_LOOPED_ALPHA, Color.A);
+            }
             Handle = handle;
             return handle;
         }

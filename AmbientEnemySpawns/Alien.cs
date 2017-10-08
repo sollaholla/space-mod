@@ -23,6 +23,8 @@ namespace AmbientEnemySpawns
 
         public Ped Enemy { get; set; }
 
+        public float DistToEnemy { get; private set; }
+
         public void Update()
         {
             if (!Exists() || !Exists(_parent)) return;
@@ -39,9 +41,9 @@ namespace AmbientEnemySpawns
                 return;
             }
 
-            var distanceToEnemy = Position.DistanceToSquared(Enemy.Position);
+            DistToEnemy = Position.DistanceToSquared(Enemy.Position);
 
-            if (distanceToEnemy > _combatRange)
+            if (DistToEnemy > _combatRange)
             {
                 _isAttackingEnemy = false;
                 if (!_isGoingToEnemy)

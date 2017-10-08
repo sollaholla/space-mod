@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTS.Library;
 using GTS.Scenes;
+using GTS.Utility;
 
 namespace AmbientEnemySpawns
 {
     public class Main : Scenario
     {
-        private List<Alien> _alienPeds;
-        private List<Vehicle> _alienVehicles;
+        private readonly List<Alien> _alienPeds;
+        private readonly List<Vehicle> _alienVehicles;
 
         private bool _onSurface;
 
-        private bool _isInFightWithAliens = false;
+        private bool _isInFightWithAliens;
+        private bool _successfullyKilledAliens;
 
         private DateTime _timeout;
-        private bool startedTimeout;
+        private bool _startedTimeout;
+        private readonly Random _randomTimer = new Random();
 
         public Main()
         {
@@ -29,74 +30,103 @@ namespace AmbientEnemySpawns
             _alienVehicles = new List<Vehicle>();
         }
 
+        public override string[] TargetScenes => new[] { "MercurySurface.space" };
+
         public void Update()
         {
-            UI.ShowSubtitle(_isInFightWithAliens.ToString());
-
-            _alienPeds.ForEach(alien =>
+            try
             {
-                if (Game.IsLoading)
-                    alien.FreezePosition = true;
-                else
-                    alien.FreezePosition = false;
-            });
-
-            HandleShooting();
-            UpdateTimer();
+                HandleShooting();
+                UpdateTimer();
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message + Environment.NewLine + e.StackTrace);
+                throw;
+            }
         }
 
         private void HandleShooting()
         {
-            _alienPeds.ForEach(alien => {
+            if (!_isInFightWithAliens)
+                return;
+
+            _alienPeds.ForEach(alien =>
+            {
                 alien.Update();
-                if (Blip.Exists(alien.CurrentBlip) && alien.IsDead)
-                    alien.CurrentBlip.Remove();
+
+                if (alien.IsDead)
+                {
+                    if (Blip.Exists(alien.CurrentBlip))
+                    {
+                        alien.CurrentBlip.Remove();
+                    }
+
+                    if (alien.IsPersistent)
+                    {
+                        alien.MarkAsNoLongerNeeded();
+                    }
+                }
+
+                const float maxDist = 250 * 250;
+
+                if (alien.DistToEnemy > maxDist)
+                    alien.Delete();
             });
 
-            if(_alienPeds.TrueForAll(x => x.IsDead))
+            if (!_alienPeds.TrueForAll(x => x.IsDead))
+                return;
+
+            _isInFightWithAliens = false;
+
+            if (_alienPeds.All(x => ((Ped)x).GetKiller() == PlayerPed))
             {
-                _isInFightWithAliens = false;
+                _successfullyKilledAliens = true;
             }
         }
-        
+
         private void UpdateTimer()
         {
             _onSurface = CurrentScene.Surfaces.Count > 0;
-            if (!_isInFightWithAliens)
+
+            if (_isInFightWithAliens) return;
+
+            if (!_startedTimeout)
             {
-                if (!startedTimeout)
-                {
-                    _timeout = DateTime.UtcNow + new TimeSpan(0, 0, 20); //gonna change later.
-                    startedTimeout = true;
-                }
+                _timeout = DateTime.Now + new TimeSpan(0, 0, _successfullyKilledAliens ?
+                               _randomTimer.Next(300, 600) :
+                               _randomTimer.Next(60, 120));
 
-                UI.ShowSubtitle(_timeout.ToLongTimeString());
-
-                if (DateTime.UtcNow < _timeout) return;
-
-                if (_onSurface)
-                    SpawnEnemiesOnSurface();
-                else
-                    SpawnEnemiesInSpace();
-
-                _isInFightWithAliens = true;
-                startedTimeout = false;
+                _startedTimeout = true;
             }
+
+            if (DateTime.Now < _timeout) return;
+
+            if (_onSurface)
+                SpawnEnemiesOnSurface();
+            else
+                SpawnEnemiesInSpace();
+
+            _isInFightWithAliens = true;
+            _startedTimeout = false;
         }
 
-        private Alien SpawnAlienPed(Vector3 spawnPos, float ground, Random rand)
+        private static Alien SpawnAlienPed(Vector3 spawnPos, Random rand)
         {
             var ped = GtsLibNet.CreateAlien(null, spawnPos, rand.Next(20, 180));
             ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
             ped.Accuracy = rand.Next(1, 5);
+            ped.Money = 0;
 
-            var alien = new Alien(ped.Handle, 25);
-            alien.Enemy = Game.Player.Character;
-            alien.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
+            var alien = new Alien(ped.Handle, 25)
+            {
+                Enemy = Game.Player.Character,
+                Position = spawnPos
+            };
             alien.AddBlip();
             alien.IsVisible = false;
 
-            PtfxNonLooped ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
+            var ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
             ptfx.Request();
             while (!ptfx.IsLoaded)
             {
@@ -104,6 +134,7 @@ namespace AmbientEnemySpawns
             }
 
             ptfx.Play(ped.Position, ped.Rotation, 2f);
+            ptfx.Remove();
 
             alien.IsVisible = true;
 
@@ -116,14 +147,13 @@ namespace AmbientEnemySpawns
             var random = new Random();
             var totalAliens = random.Next(8, 13);
 
-            for(int i = 0; i < totalAliens; i++)
+            for (int i = 0; i < totalAliens; i++)
             {
                 var randDist = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 20f, 100f);
                 var spawnPoint = spawnRegion.Around(randDist);
-                var ground = World.GetGroundHeight(spawnPoint + Vector3.WorldUp);
-                if (ground == 0) continue;
-
-                _alienPeds.Add(SpawnAlienPed(spawnPoint, ground, random));
+                var ground = GtsLibNet.GetGroundHeightRay(spawnPoint);
+                if (ground == Vector3.Zero) continue;
+                _alienPeds.Add(SpawnAlienPed(ground, random));
                 Script.Yield();
             }
         }
@@ -131,6 +161,11 @@ namespace AmbientEnemySpawns
         private void SpawnEnemiesInSpace()
         {
 
+        }
+
+        public void OnDisable(bool failed)
+        {
+            OnAborted();
         }
 
         public void OnAborted()

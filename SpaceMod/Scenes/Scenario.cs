@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using GTA;
+using GTS.Utility;
 
 namespace GTS.Scenes
 {
@@ -15,11 +17,12 @@ namespace GTS.Scenes
         public ScriptSettings Settings =>
             _settings ?? (_settings =
                 ScriptSettings.Load(Path.ChangeExtension(
-                    Path.Combine(Utility.GtsSettings.ScenariosFolder, GetType().Name), "ini")));
+                    Path.Combine(GtsSettings.ScenariosFolder, GetType().Name), "ini")));
 
         public Ped PlayerPed => Core.PlayerPed;
         public Scene CurrentScene { get; internal set; }
         public virtual bool BlockOrbitLanding { get; set; }
+        public virtual string[] TargetScenes { get; set; }
         internal event OnScenarioCompleted Completed;
 
         internal bool IsScenarioComplete()
@@ -64,7 +67,9 @@ namespace GTS.Scenes
         public void SendMessage(string name, params object[] args)
         {
             var m = GetType().GetMethod(name);
-            m?.Invoke(m.IsStatic ? null : this, args);
+            if (m == null) return;
+            if (!m.IsPublic) return;
+            m.Invoke(m.IsStatic ? null : this, args);
         }
     }
 }

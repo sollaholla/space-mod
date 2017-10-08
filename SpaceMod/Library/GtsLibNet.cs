@@ -149,7 +149,7 @@ namespace GTS.Library
         {
             var origin = new Vector3(position.X, position.Y, position.Z + 1000);
             var direction = Vector3.WorldDown;
-            var ray = World.Raycast(origin, direction, 10000, IntersectOptions.Everything, ignorEntity);
+            var ray = World.Raycast(origin, direction, 5000, IntersectOptions.Everything, ignorEntity);
             return ray.HitCoords;
         }
 

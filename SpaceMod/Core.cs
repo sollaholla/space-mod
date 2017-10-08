@@ -89,6 +89,7 @@ namespace GTS
             catch (Exception ex)
             {
                 Debug.Log(ex.Message + Environment.NewLine + ex.StackTrace, DebugMessageType.Error);
+                throw new Exception("Core script threw an exception...");
             }
         }
 
