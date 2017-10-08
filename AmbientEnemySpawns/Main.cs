@@ -14,15 +14,15 @@ namespace AmbientEnemySpawns
     {
         private readonly List<Alien> _alienPeds;
         private readonly List<Vehicle> _alienVehicles;
-
-        private bool _onSurface;
+        private readonly Random _randomTimer = new Random();
 
         private bool _isInFightWithAliens;
+
+        private bool _onSurface;
+        private bool _startedTimeout;
         private bool _successfullyKilledAliens;
 
         private DateTime _timeout;
-        private bool _startedTimeout;
-        private readonly Random _randomTimer = new Random();
 
         public Main()
         {
@@ -30,7 +30,7 @@ namespace AmbientEnemySpawns
             _alienVehicles = new List<Vehicle>();
         }
 
-        public override string[] TargetScenes => new[] { "MercurySurface.space" };
+        public override string[] TargetScenes => new[] {"MercurySurface.space"};
 
         public void Update()
         {
@@ -58,14 +58,10 @@ namespace AmbientEnemySpawns
                 if (alien.IsDead)
                 {
                     if (Blip.Exists(alien.CurrentBlip))
-                    {
                         alien.CurrentBlip.Remove();
-                    }
 
                     if (alien.IsPersistent)
-                    {
                         alien.MarkAsNoLongerNeeded();
-                    }
                 }
 
                 const float maxDist = 250 * 250;
@@ -79,10 +75,8 @@ namespace AmbientEnemySpawns
 
             _isInFightWithAliens = false;
 
-            if (_alienPeds.All(x => ((Ped)x).GetKiller() == PlayerPed))
-            {
+            if (_alienPeds.All(x => ((Ped) x).GetKiller() == PlayerPed))
                 _successfullyKilledAliens = true;
-            }
         }
 
         private void UpdateTimer()
@@ -93,9 +87,8 @@ namespace AmbientEnemySpawns
 
             if (!_startedTimeout)
             {
-                _timeout = DateTime.Now + new TimeSpan(0, 0, _successfullyKilledAliens ?
-                               _randomTimer.Next(300, 600) :
-                               _randomTimer.Next(60, 120));
+                _timeout = DateTime.Now + new TimeSpan(0, 0,
+                               _successfullyKilledAliens ? _randomTimer.Next(300, 600) : _randomTimer.Next(60, 120));
 
                 _startedTimeout = true;
             }
@@ -114,7 +107,7 @@ namespace AmbientEnemySpawns
         private static Alien SpawnAlienPed(Vector3 spawnPos, Random rand)
         {
             var ped = GtsLibNet.CreateAlien(null, spawnPos, rand.Next(20, 180));
-            ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
+            ped.Weapons.Give((WeaponHash) Game.GenerateHash("weapon_pulserifle"), 15, true, true);
             ped.Accuracy = rand.Next(1, 5);
             ped.Money = 0;
 
@@ -129,9 +122,7 @@ namespace AmbientEnemySpawns
             var ptfx = new PtfxNonLooped("scr_alien_teleport", "scr_rcbarry1");
             ptfx.Request();
             while (!ptfx.IsLoaded)
-            {
                 Script.Yield();
-            }
 
             ptfx.Play(ped.Position, ped.Rotation, 2f);
             ptfx.Remove();
@@ -147,7 +138,7 @@ namespace AmbientEnemySpawns
             var random = new Random();
             var totalAliens = random.Next(8, 13);
 
-            for (int i = 0; i < totalAliens; i++)
+            for (var i = 0; i < totalAliens; i++)
             {
                 var randDist = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 20f, 100f);
                 var spawnPoint = spawnRegion.Around(randDist);
@@ -160,7 +151,6 @@ namespace AmbientEnemySpawns
 
         private void SpawnEnemiesInSpace()
         {
-
         }
 
         public void OnDisable(bool failed)

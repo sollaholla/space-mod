@@ -1,19 +1,17 @@
 ﻿using System;
 using GTA;
-using GTA.Math;
-using GTA.Native;
 
 namespace AmbientEnemySpawns
 {
     public class Alien : Entity
     {
-        private readonly Ped _parent;
         private readonly float _combatRange;
+        private readonly Ped _parent;
+        private DateTime _goToTimeout;
 
         private bool _initializedAi;
-        private bool _isGoingToEnemy;
-        private DateTime _goToTimeout;
         private bool _isAttackingEnemy;
+        private bool _isGoingToEnemy;
 
         public Alien(int handle, float combatRange) : base(handle)
         {
@@ -37,9 +35,7 @@ namespace AmbientEnemySpawns
             }
 
             if (!Exists(Enemy))
-            {
                 return;
-            }
 
             DistToEnemy = Position.DistanceToSquared(Enemy.Position);
 
@@ -57,25 +53,19 @@ namespace AmbientEnemySpawns
                     _isGoingToEnemy = false;
                 }
 
-                if(_isGoingToEnemy)
-                {
-                    Vector3 _lastImpactCoords = Enemy.GetLastWeaponImpactCoords();
-                    if(Position.DistanceToSquared(_lastImpactCoords) < 5*5)
-                    {
-                        _parent.Task.ShootAt(Enemy);
-                        _parent.Task.RunTo(Enemy.Position, true, -1);
-                    }
-                }
+                if (!_isGoingToEnemy) return;
+                var lastImpactCoords = Enemy.GetLastWeaponImpactCoords();
+                if (!(Position.DistanceToSquared(lastImpactCoords) < 5 * 5)) return;
+                _parent.Task.ShootAt(Enemy);
+                _parent.Task.RunTo(Enemy.Position, true, -1);
             }
             else
             {
                 _isGoingToEnemy = false;
-                if (!_isAttackingEnemy)
-                {
-                    _parent.Task.ClearAll();
-                    _parent.Task.ShootAt(Enemy);
-                    _isAttackingEnemy = true;
-                }
+                if (_isAttackingEnemy) return;
+                _parent.Task.ClearAll();
+                _parent.Task.ShootAt(Enemy);
+                _isAttackingEnemy = true;
             }
         }
 
