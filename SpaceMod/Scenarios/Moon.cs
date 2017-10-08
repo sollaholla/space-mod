@@ -9,7 +9,7 @@ using GTS.Scenes;
 
 namespace DefaultMissions
 {
-    // ReSharper disable CompareOfFloatsByEqualityOperator
+    //ReSharper disable CompareOfFloatsByEqualityOperator
     public class Moon : Scenario
     {
         private readonly List<Ped> _hostiles;
