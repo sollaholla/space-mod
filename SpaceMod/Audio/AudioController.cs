@@ -11,13 +11,12 @@ namespace GTS.Audio
 
     public static class AudioController
     {
-        private const string Path = Database.PathToAudio + "\\";
         private static WaveFileReader _wave;
         private static DirectSoundOut _output;
 
         public static void PlayAudio(AudioType type, float volume)
         {
-            var path = Path + type + ".wav";
+            var path = Settings.AudioFolder + "\\" + type + ".wav";
             if (!File.Exists(path)) return;
 
             _wave = new WaveFileReader(path);

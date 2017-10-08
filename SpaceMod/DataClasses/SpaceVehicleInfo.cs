@@ -2,7 +2,7 @@
 using System.Xml.Serialization;
 using GTA;
 
-namespace GTS.Vehicles
+namespace GTS.DataClasses
 {
     public class SpaceVehicleInfo
     {
@@ -17,14 +17,24 @@ namespace GTS.Vehicles
         public float RotationMultiplier { get; set; }
         public bool NewtonianPhysics { get; set; } = true;
         public float Drag { get; set; } = 0.001f;
-        public bool CanWarp { get; set; }
-        public string WarpModel1 { get; set; }
-        public string WarpModel2 { get; set; }
         public float WarpSpeed { get; set; }
+        public bool CanWarp { get; set; }
+
+        [XmlArrayItem("Item")]
+        public List<WarpModelInfo> WarpModels { get; set; } = new List<WarpModelInfo>();
 
         [XmlArrayItem("Item")]
         public List<VehicleDoor> OpenDoorsSpaceWalk { get; set; } = new List<VehicleDoor>();
 
         public float RopeLength { get; set; } = 25f;
+    }
+
+    public class WarpModelInfo
+    {
+        public float RotationSpeed { get; set; }
+
+        public float MoveSpeed { get; set; }
+
+        public string Model { get; set; }
     }
 }

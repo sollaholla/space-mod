@@ -5,10 +5,10 @@ namespace GTS.OrbitalSystems
 {
     public class AttachedOrbital : Entity
     {
-        public AttachedOrbital(IHandleable prop, Vector3 attachOffset, Vector3 attachRotation, 
+        public AttachedOrbital(IHandleable prop, Vector3 attachOffset, Vector3 attachRotation,
             bool freezeX, bool freezeY, bool freezeZ,
             bool shiftX, bool shiftY, bool shiftZ,
-            float shiftAmount) 
+            float shiftAmount)
             : base(prop.Handle)
         {
             AttachOffset = attachOffset;

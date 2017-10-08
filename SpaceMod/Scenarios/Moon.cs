@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GTA;
 using GTA.Math;
@@ -27,7 +28,7 @@ namespace DefaultMissions
         public void Start()
         {
             var spawnRegion = new Vector3(-9946.63f, -10148.71f, 1000.36f);
-            var random = new System.Random();
+            var random = new Random();
             for (var i = 0; i < 15; i++)
             {
                 var randDist = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 20f, 100f);
@@ -36,7 +37,7 @@ namespace DefaultMissions
                 if (ground == 0) continue;
                 var ped = GtsLibNet.CreateAlien(null, spawnPoint, random.Next(135, 220));
                 ped.Position = new Vector3(ped.Position.X, ped.Position.Y, ground);
-                ped.Weapons.Give((WeaponHash)Game.GenerateHash("weapon_pulserifle"), 15, true, true);
+                ped.Weapons.Give((WeaponHash) Game.GenerateHash("weapon_pulserifle"), 15, true, true);
                 ped.AddBlip();
                 ped.IsOnlyDamagedByPlayer = true;
                 _hostiles.Add(ped);
@@ -54,16 +55,17 @@ namespace DefaultMissions
                 var vehicle = World.CreateVehicle(ufoModel, spawnPoint);
                 vehicle.PlaceOnGround();
                 vehicle.IsOnlyDamagedByPlayer = true;
-                var pedModel = (Model)GtsLibNet.GetAlienModel();
+                var pedModel = (Model) GtsLibNet.GetAlienModel();
                 pedModel.Request();
                 while (!pedModel.IsLoaded)
                     Script.Yield();
                 var ped = vehicle.CreatePedOnSeat(VehicleSeat.Driver, pedModel);
                 var b = ped.AddBlip();
-                b.Sprite = (BlipSprite)422;
+                b.Sprite = (BlipSprite) 422;
                 b.Name = "UFO";
                 ped.IsOnlyDamagedByPlayer = true;
-                Function.Call(Hash.SET_CURRENT_PED_VEHICLE_WEAPON, ped, Game.GenerateHash("VEHICLE_WEAPON_PLAYER_LAZER"));
+                Function.Call(Hash.SET_CURRENT_PED_VEHICLE_WEAPON, ped,
+                    Game.GenerateHash("VEHICLE_WEAPON_PLAYER_LAZER"));
                 GtsLibNet.GivePedAlienAttributes(ped);
                 pedModel.MarkAsNoLongerNeeded();
                 _hostiles.Add(ped);
@@ -82,7 +84,7 @@ namespace DefaultMissions
                 foreach (var hostile in _hostiles)
                 {
                     var hPos = hostile.Position;
-                    var dist = Function.Call<float>(Hash.VDIST2, hPos.X, hPos.Y, hPos.Z, 
+                    var dist = Function.Call<float>(Hash.VDIST2, hPos.X, hPos.Y, hPos.Z,
                         lastShotCoord.X,
                         lastShotCoord.Y,
                         lastShotCoord.Z);
@@ -93,11 +95,9 @@ namespace DefaultMissions
                 if (!found) return;
                 foreach (var hostile in _hostiles)
                     if (!hostile.IsInCombat)
-                    {
                         if (hostile.IsInVehicle())
                             hostile.Task.FightAgainst(PlayerPed);
-                        else hostile.Task.ShootAt(PlayerPed); 
-                    }
+                        else hostile.Task.ShootAt(PlayerPed);
 
                 _combatInitialized = true;
             }

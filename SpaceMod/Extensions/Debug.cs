@@ -17,8 +17,6 @@ namespace GTS.Extensions
 
     public static class Debug
     {
-        private const string Path = ".\\scripts\\GTS.log";
-
         public static void DrawLine(Vector3 start, Vector3 end, Color color)
         {
             Function.Call(Hash.DRAW_LINE, start.X, start.Y, start.Z, end.X, end.Y, end.Z, color.R, color.G, color.B,
@@ -38,19 +36,19 @@ namespace GTS.Extensions
 
         public static void ClearLog()
         {
-            if (File.Exists(Path))
-                File.WriteAllText(Path, string.Empty);
+            if (File.Exists(Settings.LogPath))
+                File.WriteAllText(Settings.LogPath, string.Empty);
         }
 
         public static void Log(object message, DebugMessageType type = DebugMessageType.Debug)
         {
-            var originalText = File.Exists(Path) ? File.ReadAllText(Path) : string.Empty;
+            var originalText = File.Exists(Settings.LogPath) ? File.ReadAllText(Settings.LogPath) : string.Empty;
 
             var t = new StackTrace().GetFrame(1).GetMethod().ReflectedType;
             var nmspc = t.Namespace + "." + t.Name;
 
 
-            File.WriteAllText(Path,
+            File.WriteAllText(Settings.LogPath,
                 $"{(originalText != string.Empty ? originalText + Environment.NewLine : string.Empty)}" +
                 $"[{(type == DebugMessageType.Debug ? "DEBUG" : "ERROR")}] " +
                 $"[{DateTime.Now:MM-dd-yyyy}] [{DateTime.Now:hh:mm:ss}] {nmspc} => {message}");
@@ -62,9 +60,8 @@ namespace GTS.Extensions
         public static void LogEntityData(Entity entity)
         {
             Log($"Logging entity data:{Environment.NewLine}" +
-                $"\tRelative Position: {entity.Position - (Core.CurrentScene != null ? Core.CurrentScene.Info.GalaxyCenter : (XVector3) Vector3.Zero)}{Environment.NewLine}" +
-                $"\tWorld Position: {entity.Position}{Environment.NewLine}" +
-                $"\tSimulated Position: {(Core.CurrentScene != null ? Core.CurrentScene.SimulatedPosition : Vector3.Zero)}{Environment.NewLine}" +
+                $"\tGame Position: {entity.Position}{Environment.NewLine}" +
+                $"\tSpace Position: {(Core.CurrentScene != null ? Core.CurrentScene.SimulatedPosition : Vector3.Zero)}{Environment.NewLine}" +
                 $"\tHeading: {entity.Heading}{Environment.NewLine}" +
                 $"\tRotation: {entity.Rotation}{Environment.NewLine}" +
                 $"\tQuaternion: {entity.Quaternion}{Environment.NewLine}" +

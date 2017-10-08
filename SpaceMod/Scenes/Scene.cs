@@ -7,11 +7,11 @@ using System.Reflection;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTS.DataClasses;
 using GTS.Extensions;
 using GTS.Library;
 using GTS.OrbitalSystems;
 using GTS.Scenes.Interiors;
-using GTS.Vehicles;
 using GTSCommon;
 using NativeUI;
 using Font = GTA.Font;
@@ -35,7 +35,7 @@ namespace GTS.Scenes
     /// <param name="newSceneFile"></param>
     /// <param name="exitRotation"></param>
     /// <param name="exitOffset"></param>
-    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile, Vector3 exitOffset, Vector3 exitRotation);
+    public delegate void OnSceneExitEvent(Scene scene, string newSceneFile);
 
     /// <summary>
     ///     A Scene controls in-game logic for player movement, and referential game variables pertaining to
@@ -46,7 +46,7 @@ namespace GTS.Scenes
         /// <summary>
         ///     The blip color of the mini map marker for planets.
         /// </summary>
-        public const BlipColor MarkerBlipColor = (BlipColor)58;
+        public const BlipColor MarkerBlipColor = (BlipColor) 58;
 
         /// <summary>
         ///     The texture dictionary used for the reticle.
@@ -58,13 +58,14 @@ namespace GTS.Scenes
         /// </summary>
         public const string ReticleTexture = "hud_lock";
 
-        /// <summary>
-        ///     Unfortunately the max distance you can be from a dynamic object before it dissapears. (in gta)
-        /// </summary>
-        public const float MaxStreamingDist = 15990f;
+        public const float MinWarpDetectDist = 10000;
 
-        private Vector3 _playerSimulatedOffset;
-
+        // 1 = scene name
+        // 2 = orbital name
+        // 3 = player dirToPlayer from orbital
+        private static PreviousSceneInfo _lastInfo;
+        private readonly List<WarpEffect> _warpEffects = new List<WarpEffect>();
+        private Orbital _currentWarpOrbital;
         private bool _didDeleteScene;
         private bool _didJump;
         private bool _didRaiseGears;
@@ -72,35 +73,30 @@ namespace GTS.Scenes
         private bool _didSetSpaceAudio;
         private bool _didSetTimecycle;
         private bool _didSpaceWalkTut;
+        private bool _didWarpRotation;
+        private bool _didWarpSfx;
         private bool _enteringVehicle;
         private bool _isSpaceVehicleInOrbit;
-        private bool _stopUpdate;
-
-        private float _warpModelOffset;
-        private Camera _warpCamera;
-        private Vector3 _rotationBeforeWarp;
-        private Prop _warpStars;
-        private Prop _warpShell;
-        private bool _warpFlag;
-        private readonly BarTimerBar _warpDriveBar = new BarTimerBar("Warp Energy");
-        private readonly TimerBarPool _warpDriveBarPool = new TimerBarPool();
-        private float _warpEnergy = 1f;
-        private bool _warpDry;
-
         private Vector3 _lastMinePos;
         private Prop _minableObject;
         private DateTime _mineTimeout;
         private float _pitchSpeed;
+        private Vector3 _playerSimulatedOffset;
         private float _rollSpeed;
         private SpaceVehicleInfo _spaceVehicles;
         private Vehicle _spaceWalkObj;
         private Rope _spaceWalkRope;
         private bool _startedMining;
+        private bool _stopUpdate;
         private Vector3 _vehicleLeavePos;
         private Vector3 _vehicleRepairNormal;
         private Vector3 _vehicleRepairPos;
         private DateTime _vehicleRepairTimeout;
         private float _verticalSpeed;
+        private Camera _warpCamera;
+        private bool _warpFlag;
+        private MenuPool _warpMenuPool;
+        private UIMenu _warpSelectMenu;
         private Prop _weldingProp;
         private LoopedPtfx _weldPtfx;
         private float _yawSpeed;
@@ -116,8 +112,6 @@ namespace GTS.Scenes
             Interiors = new List<Interior>();
             Blips = new List<Blip>();
             _spaceVehicles = new SpaceVehicleInfo();
-            _warpDriveBarPool.Add(_warpDriveBar);
-            _warpDriveBar.Percentage = 1f;
         }
 
         public SceneInfo Info { get; }
@@ -144,8 +138,10 @@ namespace GTS.Scenes
 
         public List<Prop> MiningProps { get; }
 
-        public SpaceVehicle VehicleData {
-            get {
+        public SpaceVehicle VehicleData
+        {
+            get
+            {
                 return _spaceVehicles?.VehicleData?.Find(
                     x => Game.GenerateHash(x.Model) == (PlayerVehicle?.Model.Hash ?? 0));
             }
@@ -157,13 +153,18 @@ namespace GTS.Scenes
 
         public bool DebugWarp { get; set; }
 
-        public Vector3 SimulatedPosition => PlayerPosition - Info.GalaxyCenter + _playerSimulatedOffset;
+        public Vector3 SimulatedPosition
+        {
+            get => PlayerPosition - Info. GalaxyCenter + _playerSimulatedOffset;
+            set => _playerSimulatedOffset = value;
+        }
 
         private Vehicle PlayerVehicle { get; set; }
 
         private static Ped PlayerPed => Core.PlayerPed;
 
-        private static Vector3 PlayerPosition {
+        private static Vector3 PlayerPosition
+        {
             get => Core.PlayerPosition;
             set => Core.PlayerPosition = value;
         }
@@ -225,13 +226,12 @@ namespace GTS.Scenes
             prop.FreezePosition = true;
             prop.LodDistance = data.LodDistance;
 
-            var orbital = new Orbital(prop, data.Name, data.RotationSpeed, data.WormHole, data.TriggerDistance,
-                data.NextScene, data.NextScenePosition, data.NextSceneRotation);
+            var orbital = new Orbital(prop.Handle, data.Name, data.RotationSpeed, data.WormHole, data.TriggerSizeMultiplier, data.NextScene);
 
             if (!string.IsNullOrEmpty(data.Name))
             {
                 var blip = orbital.AddBlip();
-                blip.Sprite = (BlipSprite)288;
+                blip.Sprite = (BlipSprite) 288;
                 blip.Color = MarkerBlipColor;
                 blip.Name = orbital.Name;
             }
@@ -312,12 +312,22 @@ namespace GTS.Scenes
             return Interiors.FirstOrDefault(x => x.Name == name);
         }
 
+        public static PreviousSceneInfo GetLastSceneInfo()
+        {
+            return _lastInfo;
+        }
+
+        public static void ResetLastSceneInfo()
+        {
+            _lastInfo = null;
+        }
+
         internal void Start()
         {
             if (_didDeleteScene) return;
             ConfigureRendering();
             GameplayCamera.RelativeHeading = 0;
-            GtsLibNet.RemoveAllIplsRegardless(true);
+            GtsLibNet.ToggleAllIplsUnchecked(true);
             GtsLibNet.SetGravityLevel(Info.UseGravity ? Info.GravityLevel : 0f);
             Function.Call(Hash.STOP_AUDIO_SCENES);
             Function.Call(Hash.START_AUDIO_SCENE, "CREATOR_SCENES_AMBIENCE");
@@ -358,7 +368,7 @@ namespace GTS.Scenes
             Scenarios?.ForEach(scenario => scenario.Tick());
             if (Entity.Exists(Skybox)) Skybox.Position = viewFinderPosition;
             KeepInSafeZone();
-            DoWarp();
+            UpdateLockedWarpSystem();
             TryToExitScene();
         }
 
@@ -366,110 +376,253 @@ namespace GTS.Scenes
         {
             try
             {
-                _spaceWalkRope?.Delete();
-                ResetWarp();
+                ResetWarpSystems();
                 Skybox.Delete();
                 RemovePreviousVehicles();
                 ResetPlayerVehicle();
                 ClearLists(aborted);
                 ResetGameData();
+                _spaceWalkRope?.Delete();
                 _didDeleteScene = true;
             }
             catch (Exception e)
             {
-                Debug.Log("Failed to abort: " + e.Message + Environment.NewLine + e.StackTrace);
+                Debug.Log("Failed to abort: " + e.Message + Environment.NewLine + e.StackTrace, DebugMessageType.Error);
             }
         }
 
-        private void DoWarp()
+        private void ClearLists(bool aborted)
+        {
+            foreach (var b in Blips)
+                b?.Remove();
+            foreach (var interior in Interiors)
+                interior?.Remove();
+            foreach (var s in Surfaces)
+                s?.Delete();
+            foreach (var billboard in Billboards)
+                billboard?.Delete();
+            foreach (var orbital in Orbitals)
+                orbital?.Delete();
+            foreach (var lOrbital in AttachedOrbitals)
+                lOrbital?.Delete();
+
+            foreach (var scenario in Scenarios)
+            {
+                if (aborted)
+                {
+                    scenario?.SendMessage("OnAborted");
+                    continue;
+                }
+                scenario?.SendMessage("OnDisable", false);
+            }
+
+            Debug.Log("Deleted objects and cleared lists.");
+        }
+
+        private static void ResetGameData()
+        {
+            GameplayCamera.ShakeAmplitude = 0;
+            Function.Call(Hash._0x5E5E99285AE812DB);
+            Function.Call(Hash.SET_WIND_SPEED, 1.0f);
+            Function.Call(Hash.STOP_AUDIO_SCENES);
+            Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
+            Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, ReticleTextureDict);
+            Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, false);
+            Function.Call(Hash.PAUSE_CLOCK, false);
+            Function.Call(Hash._CLEAR_CLOUD_HAT);
+            GtsLibNet.ToggleAllIpls(false);
+            Game.MissionFlag = false;
+            GtsLib.SetGravityLevel(9.8000002f);
+        }
+
+        private static void LowerPedAndVehicleDensity()
+        {
+            Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
+            Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
+            Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
+            Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
+            Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
+            Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, true);
+        }
+
+        private void UpdateLockedWarpSystem()
         {
             if (Info.SurfaceScene) return;
+            if (PlayerVehicle == null) return;
             if (!(VehicleData?.CanWarp ?? false)) return;
+            CreateWarpMenu();
 
-            if (!Game.IsControlPressed(2, Control.ParachuteSmoke) || _warpEnergy <= 0f || _warpDry)
+            // Allow the player to select an orbital from the menu.
+            if (_currentWarpOrbital == null)
             {
-                if (_warpEnergy <= 0)
-                    _warpDry = true;
-
-                _warpFlag = false;
-                if (_warpEnergy < 1)
+                _warpMenuPool.ProcessMenus();
+                if (_warpFlag)
                 {
-                    if (_warpEnergy > 0.3f)
-                        _warpDry = false;
-                    _warpEnergy += Game.LastFrameTime * 0.025f;
+                    ResetWarpMenuItems();
+                    ResetWarpSystems();
+                    _warpFlag = false;
+                }
+                if (Game.IsControlJustPressed(2, Control.ParachuteSmoke))
+                    _warpSelectMenu.Visible = !_warpSelectMenu.Visible;
+                return;
+            }
+
+            if (!_warpFlag)
+            {
+                PlayerVehicle.FreezePosition = true;
+                // We started the warp so the warp flag should be true..
+                _warpFlag = true;
+            }
+            GameplayCamera.RelativeHeading = 0f;
+            GameplayCamera.RelativePitch = 0f;
+
+            var controls = (Control[]) Enum.GetValues(typeof(Control));
+            foreach (var control in controls)
+                if (control.ToString().Contains("Replay"))
+                    Game.EnableControlThisFrame(2, control);
+                else Game.DisableControlThisFrame(2, control);
+
+            var directionToTarget = _currentWarpOrbital.Position - PlayerVehicle.Position;
+            if (directionToTarget.Length() > 1)
+                directionToTarget.Normalize();
+
+            // Once we get the lerped rotation finished, we're going to calculate the 
+            // rotation again, and lock the player's rotation to it completely.
+            var right = Vector3.Cross(directionToTarget, Vector3.WorldUp);
+
+            // The up rotation needs to be the direction to target with a 90 deg tilt on the x axis.
+            var newUpQ = Quaternion.FromToRotation(Vector3.WorldUp,
+                GtsLibNet.AngleAxis(90, right) * directionToTarget);
+
+            // We want the player to face the direction to the target.
+            var facingQ = Quaternion.Euler(0, 0,
+                Vector3.SignedAngle(Vector3.RelativeFront, directionToTarget, Vector3.WorldUp));
+
+            // Here's where we'll start the warp logic.
+            if (!_didWarpRotation)
+            {
+                var angleToTarget = Vector3.Angle(PlayerVehicle.ForwardVector, directionToTarget);
+                const float nearAngle = 10f;
+                if (angleToTarget > nearAngle)
+                {
+                    // Get the lerped rotation to target.
+                    var lerpedRotation = Quaternion.Lerp(PlayerVehicle.Quaternion, newUpQ * facingQ,
+                        Game.LastFrameTime * VehicleData?.RotationMultiplier ?? 1.5f);
+                    // Rotate the player.
+                    PlayerVehicle.Quaternion = lerpedRotation;
                 }
                 else
                 {
-                    _warpEnergy = 1;
-                    _warpDry = false;
+                    // Rotate the player.
+                    PlayerVehicle.Quaternion = newUpQ * facingQ;
+                    _didWarpRotation = true;
                 }
-                if (Entity.Exists(_warpStars))
-                    _warpStars.Delete();
-                if (Entity.Exists(_warpShell))
-                    _warpShell.Delete();
-                if (Camera.Exists(_warpCamera))
-                {
-                    _warpCamera.Destroy();
-                    World.RenderingCamera = null;
-                    Game.Player.CanControlCharacter = true;
-                    Effects.Start(ScreenEffect.ExplosionJosh3);
-                    World.AddExplosion(PlayerPosition, ExplosionType.Valkyrie, 0f, 5.0f, true, true);
-                }
-                _warpModelOffset = 0;
-                if (PlayerPed.IsInVehicle())
-                    _rotationBeforeWarp = PlayerPed.CurrentVehicle.Rotation;
                 return;
             }
-            if (!PlayerPed.IsInVehicle()) return;
-            _warpFlag = true;
 
+            // Now that the rotation is complete, we should start the warp drive.
             Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME);
-            if (!Entity.Exists(_warpStars))
-            {
-                var model1 = new Model(VehicleData?.WarpModel1 ?? "warp_tube_01");
-                //var model2 = new Model(VehicleData?.WarpModel2 ?? "warp_tube_02");
-                model1.Request();
-                //model2.Request();
-                while (!model1.IsLoaded/* || !model2.IsLoaded*/)
-                    Script.Yield();
-                _warpStars = World.CreateProp(model1, PlayerPosition, PlayerPed.Rotation, false, false);
-                //_warpShell = World.CreateProp(model2, PlayerPosition, PlayerPed.Rotation, false, false);
-                model1.MarkAsNoLongerNeeded();
-                //model2.MarkAsNoLongerNeeded();
-            }
             if (!Camera.Exists(_warpCamera))
             {
-                GTA.Audio.PlaySoundFrontend("ScreenFlash", "MissionFailedSounds");
-                Effects.Start(ScreenEffect.CamPushInNeutral);
-                while (!Effects.IsActive(ScreenEffect.CamPushInNeutral))
-                    Script.Yield();
-                _warpCamera = World.CreateCamera(PlayerPosition - PlayerPed.ForwardVector * 50, PlayerPed.CurrentVehicle.Rotation, 120);
-                World.RenderingCamera = _warpCamera;
+                _warpCamera = World.CreateCamera(GameplayCamera.Position, GameplayCamera.Rotation,
+                    GameplayCamera.FieldOfView);
+                _warpCamera.AttachTo(PlayerVehicle, PlayerVehicle.GetOffsetFromWorldCoords(_warpCamera.Position));
                 _warpCamera.Shake(CameraShake.SkyDiving, 1f);
-                _warpCamera.AttachTo(PlayerPed.CurrentVehicle, new Vector3(0, -50, 10));
-                Game.Player.CanControlCharacter = false;
+                _warpCamera.MotionBlurStrength = 0f;
+                World.RenderingCamera = _warpCamera;
             }
-            World.RenderingCamera = FollowCam.ViewMode == FollowCamViewMode.FirstPerson ? null : _warpCamera;
-            PlayerPosition += PlayerPed.CurrentVehicle.ForwardVector * ((float) VehicleData?.WarpSpeed) * Game.LastFrameTime;
-            PlayerPed.CurrentVehicle.Rotation = _rotationBeforeWarp;
-            _warpStars.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset;
-            //_warpShell.Position = PlayerPed.CurrentVehicle.Position + PlayerPed.UpVector * 5 - PlayerPed.CurrentVehicle.ForwardVector * _warpModelOffset * 5;
-            //var quaternion = Quaternion.FromToRotation(_warpShell.RightVector, _warpShell.UpVector) * _warpShell.Quaternion;
-            //_warpShell.Quaternion = Quaternion.Lerp(_warpShell.Quaternion, quaternion, Game.LastFrameTime * 5);
-            _warpModelOffset += Game.LastFrameTime * 500f;
-            _warpEnergy -= Game.LastFrameTime * 0.07f;
-            if (!(_warpModelOffset > 250)) return;
-            _warpModelOffset = 0;
+
+            if (!_didWarpSfx)
+            {
+                GTA.Audio.PlaySoundFrontend("ScreenFlash", "MissionFailedSounds");
+                Effects.Start(ScreenEffect.MinigameTransitionOut);
+                _didWarpSfx = true;
+
+                foreach (var vehicleDataWarpModel in VehicleData?.WarpModels ?? new List<WarpModelInfo>(0))
+                {
+                    var model = new Model(vehicleDataWarpModel.Model);
+                    model.Request();
+                    while (!model.IsLoaded)
+                        Script.Yield();
+                    var prop = World.CreateProp(model, PlayerVehicle.Position, PlayerVehicle.Rotation, false, false);
+                    var propExt = World.CreateProp(model, prop.Position, prop.Rotation, false, false);
+                    propExt.AttachTo(prop, 0, new Vector3(0, model.GetDimensions().Length(), 0), Vector3.Zero);
+                    _warpEffects.Add(new WarpEffect(prop.Handle, 0, 0, vehicleDataWarpModel.MoveSpeed,
+                            vehicleDataWarpModel.RotationSpeed)
+                        {Extension = propExt});
+                }
+            }
+
+            foreach (var warpEffect in _warpEffects)
+            {
+                warpEffect.AttachTo(PlayerVehicle, 0, new Vector3(0, -warpEffect.MovementOffset, 0),
+                    new Vector3(0, warpEffect.RotationOffset, 0));
+                warpEffect.MovementOffset += Game.LastFrameTime * warpEffect.MovementSpeed;
+                warpEffect.RotationOffset += Game.LastFrameTime * warpEffect.RotationSpeed;
+                if (warpEffect.MovementOffset > warpEffect.Model.GetDimensions().Length())
+                    warpEffect.MovementOffset = 0f;
+            }
+
+            _warpCamera.FieldOfView = 180;
+
+            PlayerPosition += directionToTarget * Game.LastFrameTime * (VehicleData?.WarpSpeed ?? 10000f);
+            var dist = PlayerPosition.DistanceTo(_currentWarpOrbital.Position);
+            if (dist >= _currentWarpOrbital.Model.GetDimensions().Length() * _currentWarpOrbital.TriggerSizeMult) return;
+            GameplayCamera.Shake(CameraShake.SmallExplosion, 1f);
+            World.AddExplosion(GameplayCamera.Position, ExplosionType.Grenade, 0f, 0f, true, true);
+            ResetWarpSystems();
         }
 
-        private void ResetWarp()
+        private void CreateWarpMenu()
         {
-            PlayerPed.Velocity = Vector3.Zero;
-            _warpShell?.Delete();
-            _warpStars?.Delete();
+            if (_warpSelectMenu != null) return;
+            _warpMenuPool = new MenuPool();
+            _warpSelectMenu = new UIMenu("Warp Select", "Select A Location");
+            _warpMenuPool.Add(_warpSelectMenu);
+            ResetWarpMenuItems();
+        }
+
+        private void ResetWarpMenuItems()
+        {
+            if (_warpSelectMenu == null)
+                return;
+
+            // Clear the current menu items..
+            _warpSelectMenu.Clear();
+
+            // Collect the amount of orbitals greater than the detect distance.
+            var orbitalList = Orbitals.Where(x => PlayerPosition.DistanceTo(x.Position) >= MinWarpDetectDist).ToList();
+
+            // Loop through each of the orbitals.
+            // Create a menu item for each of them...
+            foreach (var orbital in orbitalList)
+            {
+                if (string.IsNullOrEmpty(orbital.Name)) continue;
+                var menuItem = new UIMenuItem(orbital.Name, "Select to warp to " + orbital.Name);
+                var orbital1 = orbital;
+                menuItem.Activated += (sender, item) => _currentWarpOrbital = orbital1;
+                _warpSelectMenu.AddItem(menuItem);
+            }
+
+            // Refresh the menu index.
+            _warpMenuPool.RefreshIndex();
+        }
+
+        private void ResetWarpSystems()
+        {
+            foreach (var warpEffects in _warpEffects)
+                warpEffects?.Delete();
+            _warpCamera?.Destroy();
+            _didWarpRotation = false;
+            _didWarpSfx = false;
+            _currentWarpOrbital = null;
+            Game.Player.CanControlCharacter = true;
             _warpCamera?.Destroy();
             World.RenderingCamera = null;
-            Game.Player.CanControlCharacter = true;
+            if (Entity.Exists(PlayerVehicle))
+                PlayerVehicle.FreezePosition = false;
+            Effects.Stop();
+            PlayerPed.Task.ClearAll();
         }
 
         public void SetPropCanBeMined(Prop prop)
@@ -493,10 +646,8 @@ namespace GTS.Scenes
 
         public void DrawMarkerAt(Vector3 position, string name, Color? col = null)
         {
-            if (string.IsNullOrEmpty(name))
-                return;
-            if (_warpFlag)
-                return;
+            if (string.IsNullOrEmpty(name)) return;
+            if (_warpFlag) return;
 
             const float scale = 64f;
             const float width = 1f / 1920 / (1f / scale);
@@ -513,7 +664,7 @@ namespace GTS.Scenes
             Function.Call(Hash.DRAW_SPRITE, ReticleTextureDict, ReticleTexture, 0, 0, width, height, 45f, col.Value.R,
                 col.Value.G, col.Value.B, col.Value.A);
 
-            Function.Call(Hash.SET_TEXT_FONT, (int)Font.ChaletComprimeCologne);
+            Function.Call(Hash.SET_TEXT_FONT, (int) Font.ChaletComprimeCologne);
             Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
             Function.Call(Hash.SET_TEXT_COLOUR, col.Value.R, col.Value.G, col.Value.B, col.Value.A);
             Function.Call(Hash.SET_TEXT_DROPSHADOW, 1, 1, 1, 1, 1);
@@ -534,51 +685,9 @@ namespace GTS.Scenes
                     v.Delete();
         }
 
-        private void ClearLists(bool aborted)
-        {
-            foreach (var scenario in Scenarios)
-            {
-                if (aborted)
-                {
-                    scenario?.SendMessage("OnAborted");
-                    continue;
-                }
-                scenario?.SendMessage("OnDisable", false);
-            }
-
-            foreach (var b in Blips)
-                b?.Remove();
-            foreach (var interior in Interiors)
-                interior?.Remove();
-            foreach (var s in Surfaces)
-                s?.Delete();
-            foreach (var billboard in Billboards)
-                billboard?.Delete();
-            foreach (var orbital in Orbitals)
-                orbital?.Delete();
-            foreach (var lOrbital in AttachedOrbitals)
-                lOrbital?.Delete();
-        }
-
-        private static void ResetGameData()
-        {
-            GameplayCamera.ShakeAmplitude = 0;
-            Function.Call(Hash._0x5E5E99285AE812DB);
-            Function.Call(Hash.SET_WIND_SPEED, 1.0f);
-            Function.Call(Hash.STOP_AUDIO_SCENES);
-            Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-            Function.Call(Hash.SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED, ReticleTextureDict);
-            Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, false);
-            Function.Call(Hash.PAUSE_CLOCK, false);
-            Function.Call(Hash._CLEAR_CLOUD_HAT);
-            GtsLibNet.RemoveAllIpls(false);
-            Game.MissionFlag = false;
-            GtsLib.SetGravityLevel(9.8000002f);
-        }
-
         private void GetSpaceVehicles()
         {
-            const string path = ".\\scripts\\Space\\SpaceVehicles.xml";
+            var path = Settings.SpaceVehiclesPath;
             if (!File.Exists(path))
                 return;
             _spaceVehicles = XmlSerializer.Deserialize<SpaceVehicleInfo>(path);
@@ -629,7 +738,7 @@ namespace GTS.Scenes
 
         private void ExitSceneFromSurface()
         {
-            Exited?.Invoke(this, Info.NextScene, Info.NextScenePosition, Info.NextSceneRotation);
+            Exited?.Invoke(this, Info.NextScene);
         }
 
         private bool CanDoOrbitLanding()
@@ -654,14 +763,14 @@ namespace GTS.Scenes
         {
             foreach (var scenarioInfo in scene.Scenarios)
             {
-                var assembly = Assembly.LoadFrom(Path.Combine(Database.PathToScenarios, scenarioInfo.Dll));
+                var assembly = Assembly.LoadFrom(Path.Combine(Settings.ScenariosFolder, scenarioInfo.Dll));
                 var types = assembly.GetTypes();
                 foreach (var type in types)
                 {
                     if (type == null || type.BaseType != typeof(Scenario)) continue;
                     if (type.Name != scenarioInfo.TypeName)
                         continue;
-                    var instance = (Scenario)Activator.CreateInstance(type);
+                    var instance = (Scenario) Activator.CreateInstance(type);
                     instance.CurrentScene = this;
                     instance.SendMessage("Awake");
                     if (instance.IsScenarioComplete()) continue;
@@ -718,7 +827,7 @@ namespace GTS.Scenes
         {
             if (string.IsNullOrEmpty(sceneLink.Name)) return;
             var blip = World.CreateBlip(Info.GalaxyCenter + sceneLink.Position);
-            blip.Sprite = (BlipSprite)178;
+            blip.Sprite = (BlipSprite) 178;
             blip.Color = MarkerBlipColor;
             blip.Name = sceneLink.Name;
             Blips.Add(blip);
@@ -818,10 +927,8 @@ namespace GTS.Scenes
             UI.HideHudComponentThisFrame(HudComponent.AreaName);
             Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME);
 
-            if (Settings.ShowCustomGui && (VehicleData?.CanWarp ?? false))
+            if (Settings.ShowCustomGui && (VehicleData?.CanWarp ?? false) && !Info.SurfaceScene)
             {
-                _warpDriveBarPool.Draw();
-
                 //if (!Function.Call<bool>(Hash.IS_HUD_HIDDEN) || _warpFlag || GtsLibNet.IsHelpMessageBeingDisplayed() && !Info.SurfaceScene)
                 //{
                 //    var items = new List<string>();
@@ -834,8 +941,6 @@ namespace GTS.Scenes
                 //    resText.Shadow = true;
                 //}
             }
-
-            _warpDriveBar.Percentage = _warpEnergy;
 
             if (Camera.Exists(World.RenderingCamera) || FollowCam.ViewMode == FollowCamViewMode.FirstPerson)
             {
@@ -943,17 +1048,14 @@ namespace GTS.Scenes
                     Script.Yield();
             }
 
-            foreach (var o in Orbitals)
+            foreach (var orbital in Orbitals)
             {
-                if (Math.Abs(o.RotationSpeed) > 0.00001f)
-                    o.Quaternion = Quaternion.Lerp(o.Quaternion,
-                        Quaternion.FromToRotation(o.ForwardVector, o.RightVector) * o.Quaternion,
-                        Game.LastFrameTime * o.RotationSpeed);
-
-                if (!Settings.ShowCustomGui)
-                    continue;
-
-                DrawMarkerAt(o.Position, o.Name);
+                if (Math.Abs(orbital.RotationSpeed) > 0.00001f)
+                    orbital.Quaternion = Quaternion.Lerp(orbital.Quaternion,
+                        Quaternion.FromToRotation(orbital.ForwardVector, orbital.RightVector) * orbital.Quaternion,
+                        Game.LastFrameTime * orbital.RotationSpeed);
+                if (!Settings.ShowCustomGui) continue;
+                DrawMarkerAt(orbital.Position, orbital.Name);
             }
 
             foreach (var a in AttachedOrbitals)
@@ -1144,7 +1246,7 @@ namespace GTS.Scenes
                 Function.Call(Hash.NETWORK_RESURRECT_LOCAL_PLAYER, spawn.X, spawn.Y, spawn.Z, 0, false, false);
                 Function.Call(Hash._RESET_LOCALPLAYER_STATE);
                 Function.Call(Hash.STOP_AUDIO_SCENE, "DEATH_SCENE");
-                Exited?.Invoke(this, FileName, Vector3.Zero, Vector3.Zero);
+                Exited?.Invoke(this, FileName);
                 Script.Wait(500);
                 Game.FadeScreenIn(1000);
                 Game.TimeScale = 1.0f;
@@ -1168,16 +1270,6 @@ namespace GTS.Scenes
             Function.Call(Hash.IGNORE_NEXT_RESTART, true);
         }
 
-        private static void LowerPedAndVehicleDensity()
-        {
-            Function.Call(Hash.SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
-            Function.Call(Hash.SET_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
-            Function.Call(Hash.SET_SCENARIO_PED_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
-            Function.Call(Hash.SET_RANDOM_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
-            Function.Call(Hash.SET_PARKED_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME, 0.0f);
-            Function.Call(Hash.DISABLE_VEHICLE_DISTANTLIGHTS, true);
-        }
-
         private void TryToExitScene()
         {
             foreach (var orbital in Orbitals)
@@ -1185,12 +1277,18 @@ namespace GTS.Scenes
                 if (string.IsNullOrEmpty(orbital?.NextScene)) continue;
                 var position = orbital.Position;
                 var distance = Vector3.DistanceSquared(PlayerPosition, position);
+                var trigDist = orbital.Model.GetDimensions().Length() / 3.5f;
+                trigDist = trigDist * orbital.TriggerSizeMult;
                 if (Settings.DebugTriggers)
                     World.DrawMarker(MarkerType.DebugSphere, position, Vector3.Zero, Vector3.Zero,
-                        new Vector3(orbital.TriggerDistance, orbital.TriggerDistance, orbital.TriggerDistance),
+                        new Vector3(trigDist, trigDist, trigDist),
                         Color.FromArgb(150, 255, 0, 0));
-                if (!(distance <= orbital.TriggerDistance * orbital.TriggerDistance)) continue;
-                Exited?.Invoke(this, orbital.NextScene, orbital.NextScenePosition, orbital.NextSceneRotation);
+                if (!(distance <= trigDist * trigDist)) continue;
+                var dir = PlayerPosition - orbital.Position;
+                if (dir.Length() > 1)
+                    dir.Normalize();
+                _lastInfo = new PreviousSceneInfo(dir, orbital.Name, FileName, orbital.Model.GetDimensions().Length() / 2);
+                Exited?.Invoke(this, orbital.NextScene);
                 _stopUpdate = true;
                 break;
             }
@@ -1204,7 +1302,7 @@ namespace GTS.Scenes
                         new Vector3(link.TriggerDistance, link.TriggerDistance, link.TriggerDistance),
                         Color.FromArgb(150, 255, 255, 0));
                 if (!(distance <= link.TriggerDistance * link.TriggerDistance)) continue;
-                Exited?.Invoke(this, link.NextScene, link.NextScenePosition, link.NextSceneRotation);
+                Exited?.Invoke(this, link.NextScene);
                 _stopUpdate = true;
                 break;
             }
@@ -1249,7 +1347,7 @@ namespace GTS.Scenes
                 speed = v.Speed;
 
             EntityFlightControl(PlayerVehicle, speed, Settings.MouseControlFlySensitivity,
-                !PlayerVehicle.IsOnAllWheels, v?.RotationMultiplier ?? 1, true);
+                !PlayerVehicle.IsOnAllWheels, v?.RotationMultiplier ?? 1, VehicleData?.NewtonianPhysics ?? false);
 
             SetVehicleDrag();
         }
@@ -1283,143 +1381,141 @@ namespace GTS.Scenes
                         break;
                     // this let's us mine asteroids.
                     case ZeroGTask.Mine:
+                    {
+                        if (_minableObject == null || !Entity.Exists(_spaceWalkObj) || _lastMinePos == Vector3.Zero)
                         {
-                            if (_minableObject == null || !Entity.Exists(_spaceWalkObj) || _lastMinePos == Vector3.Zero)
-                            {
-                                if (Entity.Exists(_spaceWalkObj))
-                                    _spaceWalkObj.Detach();
+                            if (Entity.Exists(_spaceWalkObj))
+                                _spaceWalkObj.Detach();
 
-                                PlayerTask = ZeroGTask.SpaceWalk;
+                            PlayerTask = ZeroGTask.SpaceWalk;
+                            return;
+                        }
+
+                        // attach the player to the mineable object.
+                        if (!_startedMining)
+                        {
+                            var dir = _lastMinePos - _spaceWalkObj.Position;
+                            dir.Normalize();
+                            _spaceWalkObj.Quaternion = Quaternion.FromToRotation(_spaceWalkObj.ForwardVector, dir) *
+                                                       _spaceWalkObj.Quaternion;
+                            _mineTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+                            _spaceWalkObj.Position = _lastMinePos - dir;
+                            _startedMining = true;
+                        }
+                        else
+                        {
+                            if (!PlayerPed.IsPlayingAnim("amb@world_human_welding@male@base", "base"))
+                            {
+                                PlayerPed.Task.PlayAnimation("amb@world_human_welding@male@base", "base", 4.0f,
+                                    -4.0f, -1, (AnimationFlags) 49, 0.0f);
+                                SpaceWalk_CreateWeldingProp(PlayerPed);
                                 return;
                             }
 
-                            // attach the player to the mineable object.
-                            if (!_startedMining)
+                            if (DateTime.UtcNow > _mineTimeout)
                             {
-                                var dir = _lastMinePos - _spaceWalkObj.Position;
-                                dir.Normalize();
-                                _spaceWalkObj.Quaternion = Quaternion.FromToRotation(_spaceWalkObj.ForwardVector, dir) *
-                                                           _spaceWalkObj.Quaternion;
-                                _mineTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
-                                _spaceWalkObj.Position = _lastMinePos - dir;
-                                _startedMining = true;
-                            }
-                            else
-                            {
-                                if (!PlayerPed.IsPlayingAnim("amb@world_human_welding@male@base", "base"))
-                                {
-                                    PlayerPed.Task.PlayAnimation("amb@world_human_welding@male@base", "base", 4.0f,
-                                        -4.0f, -1, (AnimationFlags)49, 0.0f);
-                                    SpaceWalk_CreateWeldingProp(PlayerPed);
-                                    return;
-                                }
-
-                                if (DateTime.UtcNow > _mineTimeout)
-                                {
-                                    PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
-                                    SpaceWalk_RemoveWeldingProp();
-                                    _spaceWalkObj.Detach();
-                                    _spaceWalkObj.HasCollision = false;
-                                    _spaceWalkObj.IsVisible = false;
-                                    _spaceWalkObj.HasGravity = false;
-                                    PlayerPed.IsVisible = true;
-                                    Function.Call(Hash.SET_VEHICLE_GRAVITY, _spaceWalkObj, false);
-                                    GtsLibNet.NotifyWithGxt("GTS_LABEL_26");
-                                    _lastMinePos = Vector3.Zero;
-                                    _minableObject = null;
-                                    _startedMining = false;
-                                    PlayerTask = ZeroGTask.SpaceWalk;
-                                }
+                                PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
+                                SpaceWalk_RemoveWeldingProp();
+                                _spaceWalkObj.Detach();
+                                _spaceWalkObj.HasCollision = false;
+                                _spaceWalkObj.IsVisible = false;
+                                _spaceWalkObj.HasGravity = false;
+                                PlayerPed.IsVisible = true;
+                                Function.Call(Hash.SET_VEHICLE_GRAVITY, _spaceWalkObj, false);
+                                GtsLibNet.NotifyWithGxt("GTS_LABEL_26");
+                                _lastMinePos = Vector3.Zero;
+                                _minableObject = null;
+                                _startedMining = false;
+                                PlayerTask = ZeroGTask.SpaceWalk;
                             }
                         }
+                    }
                         break;
                     // this lets us repair stuff.
                     case ZeroGTask.Repair:
+                    {
+                        // the vehicle repair failed somehow and we need to fallback to the first switch case.
+                        if (_vehicleRepairPos == Vector3.Zero || _vehicleRepairNormal == Vector3.Zero ||
+                            _spaceWalkObj == null ||
+                            !_spaceWalkObj.Exists())
                         {
-                            // the vehicle repair failed somehow and we need to fallback to the first switch case.
-                            if (_vehicleRepairPos == Vector3.Zero || _vehicleRepairNormal == Vector3.Zero ||
-                                _spaceWalkObj == null ||
-                                !_spaceWalkObj.Exists())
+                            PlayerTask = ZeroGTask.SpaceWalk;
+                            return;
+                        }
+
+                        // If we decide to move in another direction, let's cancel.
+                        if (Game.IsControlJustPressed(2, Control.VehicleAccelerate) ||
+                            Game.IsControlJustPressed(2, Control.MoveLeft) ||
+                            Game.IsControlJustPressed(2, Control.MoveRight) ||
+                            Game.IsControlJustPressed(2, Control.VehicleBrake))
+                        {
+                            PlayerTask = ZeroGTask.SpaceWalk;
+                            return;
+                        }
+
+                        // get some params for this sequence.
+                        var distance = PlayerPosition.DistanceTo(_vehicleRepairPos);
+                        GetDimensions(PlayerPed, out Vector3 _, out Vector3 _, out Vector3 _, out Vector3 _,
+                            out float radius);
+
+                        // make sure we're within distance of the vehicle.
+                        if (distance > radius)
+                        {
+                            // make sure to rotate the fly helper towards the repair point.
+                            var dir = _vehicleRepairPos + _vehicleRepairNormal * 0.5f - _spaceWalkObj.Position;
+                            dir.Normalize();
+                            var lookRotation = Quaternion.FromToRotation(_spaceWalkObj.ForwardVector, dir) *
+                                               _spaceWalkObj.Quaternion;
+                            _spaceWalkObj.Quaternion = Quaternion.Lerp(_spaceWalkObj.Quaternion, lookRotation,
+                                Game.LastFrameTime * 5);
+
+                            // now move the fly helper towards the direction of the repair point.
+                            _spaceWalkObj.Velocity = dir * 1.5f;
+
+                            // make sure that we update the timer so that if the time runs out, we will fallback to the floating case.
+                            _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
+                        }
+                        else
+                        {
+                            // since we're in tange of the vehicle we want to start the repair sequence.
+                            // we're going to stop the movement of the player, and play the repairing animation.
+                            var lookRotation =
+                                Quaternion.FromToRotation(_spaceWalkObj.ForwardVector, -_vehicleRepairNormal) *
+                                _spaceWalkObj.Quaternion;
+                            _spaceWalkObj.Quaternion = Quaternion.Lerp(_spaceWalkObj.Quaternion, lookRotation,
+                                Game.LastFrameTime * 15);
+                            _spaceWalkObj.Velocity = Vector3.Zero;
+
+                            // we're returning in this if, so that if we're for some reason not yet playing the animation, we
+                            // want to wait for it to start.
+                            if (!PlayerPed.IsPlayingAnim("amb@world_human_welding@male@base", "base"))
                             {
-                                PlayerTask = ZeroGTask.SpaceWalk;
+                                PlayerPed.Task.PlayAnimation("amb@world_human_welding@male@base", "base", 4.0f,
+                                    -4.0f, -1, (AnimationFlags) 49, 0.0f);
+                                SpaceWalk_CreateWeldingProp(PlayerPed);
                                 return;
                             }
 
-                            // If we decide to move in another direction, let's cancel.
-                            if (Game.IsControlJustPressed(2, Control.VehicleAccelerate) ||
-                                Game.IsControlJustPressed(2, Control.MoveLeft) ||
-                                Game.IsControlJustPressed(2, Control.MoveRight) ||
-                                Game.IsControlJustPressed(2, Control.VehicleBrake))
+                            // if we've reached the end of the timer, then we're done repairing.
+                            if (DateTime.UtcNow > _vehicleRepairTimeout)
                             {
+                                // repair the vehicle.
+                                PlayerVehicle.Repair();
+                                PlayerVehicle.LockStatus = VehicleLockStatus.None;
+                                if (VehicleData != null)
+                                    foreach (var vehicleDoor in VehicleData.OpenDoorsSpaceWalk)
+                                        PlayerVehicle.OpenDoor(vehicleDoor, false, true);
+
+                                // let the player know what he/she's done.
+                                //SpaceModLib.NotifyWithGXT("Vehicle ~b~repaired~s~.", true);
+                                SpaceWalk_RemoveWeldingProp();
+                                // clear the repairing animation.
+                                PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
+                                // reset the player to the floating sate.
                                 PlayerTask = ZeroGTask.SpaceWalk;
-                                return;
-                            }
-
-                            // get some params for this sequence.
-                            var distance = PlayerPosition.DistanceTo(_vehicleRepairPos);
-                            GetDimensions(PlayerPed, out Vector3 _, out Vector3 _, out Vector3 _, out Vector3 _,
-                                out float radius);
-
-                            // make sure we're within distance of the vehicle.
-                            if (distance > radius)
-                            {
-                                // make sure to rotate the fly helper towards the repair point.
-                                var dir = _vehicleRepairPos + _vehicleRepairNormal * 0.5f - _spaceWalkObj.Position;
-                                dir.Normalize();
-                                var lookRotation = Quaternion.FromToRotation(_spaceWalkObj.ForwardVector, dir) *
-                                                   _spaceWalkObj.Quaternion;
-                                _spaceWalkObj.Quaternion = Quaternion.Lerp(_spaceWalkObj.Quaternion, lookRotation,
-                                    Game.LastFrameTime * 5);
-
-                                // now move the fly helper towards the direction of the repair point.
-                                _spaceWalkObj.Velocity = dir * 1.5f;
-
-                                // make sure that we update the timer so that if the time runs out, we will fallback to the floating case.
-                                _vehicleRepairTimeout = DateTime.UtcNow + new TimeSpan(0, 0, 0, 5);
-                            }
-                            else
-                            {
-                                // since we're in tange of the vehicle we want to start the repair sequence.
-                                // we're going to stop the movement of the player, and play the repairing animation.
-                                var lookRotation =
-                                    Quaternion.FromToRotation(_spaceWalkObj.ForwardVector, -_vehicleRepairNormal) *
-                                    _spaceWalkObj.Quaternion;
-                                _spaceWalkObj.Quaternion = Quaternion.Lerp(_spaceWalkObj.Quaternion, lookRotation,
-                                    Game.LastFrameTime * 15);
-                                _spaceWalkObj.Velocity = Vector3.Zero;
-
-                                // we're returning in this if, so that if we're for some reason not yet playing the animation, we
-                                // want to wait for it to start.
-                                if (!PlayerPed.IsPlayingAnim("amb@world_human_welding@male@base", "base"))
-                                {
-                                    PlayerPed.Task.PlayAnimation("amb@world_human_welding@male@base", "base", 4.0f,
-                                        -4.0f, -1, (AnimationFlags)49, 0.0f);
-                                    SpaceWalk_CreateWeldingProp(PlayerPed);
-                                    return;
-                                }
-
-                                // if we've reached the end of the timer, then we're done repairing.
-                                if (DateTime.UtcNow > _vehicleRepairTimeout)
-                                {
-                                    // repair the vehicle.
-                                    PlayerVehicle.Repair();
-                                    PlayerVehicle.LockStatus = VehicleLockStatus.None;
-                                    if (VehicleData != null)
-                                    {
-                                        foreach (var vehicleDoor in VehicleData.OpenDoorsSpaceWalk)
-                                            PlayerVehicle.OpenDoor(vehicleDoor, false, true);
-                                    }
-
-                                    // let the player know what he/she's done.
-                                    //SpaceModLib.NotifyWithGXT("Vehicle ~b~repaired~s~.", true);
-                                    SpaceWalk_RemoveWeldingProp();
-                                    // clear the repairing animation.
-                                    PlayerPed.Task.ClearAnimation("amb@world_human_welding@male@base", "base");
-                                    // reset the player to the floating sate.
-                                    PlayerTask = ZeroGTask.SpaceWalk;
-                                }
                             }
                         }
+                    }
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(PlayerTask),
@@ -1564,7 +1660,7 @@ namespace GTS.Scenes
             if (entHit.GetType() != typeof(Vehicle))
                 return;
 
-            var entVeh = (Vehicle)entHit;
+            var entVeh = (Vehicle) entHit;
             if (entVeh != vehicle) return;
 
             GtsLibNet.DisplayHelpTextWithGxt("SW_REPAIR");
@@ -1686,7 +1782,7 @@ namespace GTS.Scenes
                 {
                     PlayerPed.Task.ClearAllImmediately();
                     PlayerPed.Task.PlayAnimation(swimmingAnimDict, swimmingAnimName, 8.0f, -8.0f, -1,
-                        (AnimationFlags)15,
+                        (AnimationFlags) 15,
                         0.0f);
                     while (!PlayerPed.IsPlayingAnim(swimmingAnimDict, swimmingAnimName))
                         Script.Yield();
@@ -1725,11 +1821,11 @@ namespace GTS.Scenes
 
             if (debug)
             {
-                World.DrawMarker((MarkerType)28, bottom, Vector3.RelativeFront, Vector3.Zero,
+                World.DrawMarker((MarkerType) 28, bottom, Vector3.RelativeFront, Vector3.Zero,
                     new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Blue));
-                World.DrawMarker((MarkerType)28, middle, Vector3.RelativeFront, Vector3.Zero,
+                World.DrawMarker((MarkerType) 28, middle, Vector3.RelativeFront, Vector3.Zero,
                     new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Purple));
-                World.DrawMarker((MarkerType)28, top, Vector3.RelativeFront, Vector3.Zero,
+                World.DrawMarker((MarkerType) 28, top, Vector3.RelativeFront, Vector3.Zero,
                     new Vector3(radius, radius, radius), Color.FromArgb(120, Color.Orange));
             }
 
@@ -1835,12 +1931,12 @@ namespace GTS.Scenes
         private void EnterWormHole(Vector3 wormHolePosition, OrbitalInfo orbitalData)
         {
             var distanceToWormHole = PlayerPosition.DistanceTo(wormHolePosition);
-            var escapeDistance = orbitalData.TriggerDistance * 20f;
-            var gravitationalPullDistance = orbitalData.TriggerDistance * 15f;
+            var escapeDistance = orbitalData.TriggerSizeMultiplier * 20f;
+            var gravitationalPullDistance = orbitalData.TriggerSizeMultiplier * 15f;
 
-            if (distanceToWormHole <= orbitalData.TriggerDistance)
+            if (distanceToWormHole <= orbitalData.TriggerSizeMultiplier)
             {
-                Exited?.Invoke(this, orbitalData.NextScene, Vector3.Zero, orbitalData.NextSceneRotation);
+                Exited?.Invoke(this, orbitalData.NextScene);
             }
             else
             {
@@ -1876,13 +1972,12 @@ namespace GTS.Scenes
                         else PlayerPed.Velocity = targetVelocity;
                         Script.Yield();
                     }
-                    Exited?.Invoke(this, orbitalData.NextScene, orbitalData.NextScenePosition,
-                        orbitalData.NextSceneRotation);
+                    Exited?.Invoke(this, orbitalData.NextScene);
                 }
             }
         }
 
-        public void KeepInSafeZone()
+        private void KeepInSafeZone()
         {
             if (Info.SurfaceScene) return;
             var dist = PlayerPosition.DistanceTo(Info.GalaxyCenter);
@@ -1892,24 +1987,46 @@ namespace GTS.Scenes
             var speed = PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Velocity : PlayerPed.Velocity;
             var camHeading = GameplayCamera.RelativeHeading;
             var camPitch = GameplayCamera.RelativeHeading;
+            MoveWorld(offset);
             PlayerPosition = Info.GalaxyCenter;
             GameplayCamera.RelativePitch = camPitch;
             GameplayCamera.RelativeHeading = camHeading;
+            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Velocity = speed;
+            else PlayerPed.Velocity = speed;
+        }
+
+        private void MoveWorld(Vector3 offset)
+        {
             foreach (var orbital in Orbitals)
                 orbital.Position = orbital.Position + offset;
+            foreach (var attachedOrbital in AttachedOrbitals)
+                attachedOrbital.Position += offset;
             foreach (var billboardable in Billboards)
             {
-                billboardable.Position = billboardable.Position + offset;
-                billboardable.StartPosition = billboardable.StartPosition + offset;
+                billboardable.Position += offset;
+                billboardable.StartPosition += offset;
             }
             foreach (var registeredVehicle in RegisteredVehicles)
                 if (Entity.Exists(registeredVehicle) && !PlayerPed.IsInVehicle(registeredVehicle))
                     registeredVehicle.Position += offset;
             foreach (var infoSceneLink in Info.SceneLinks)
                 infoSceneLink.Position += offset;
-            if (PlayerPed.IsInVehicle())
-                PlayerPed.CurrentVehicle.Velocity = speed;
-            else PlayerPed.Velocity = speed;
         }
+    }
+
+    public class PreviousSceneInfo
+    {
+        public PreviousSceneInfo(Vector3 dirToPlayer, string orbitalName, string scene, float modelDimensions)
+        {
+            DirToPlayer = dirToPlayer;
+            OrbitalName = orbitalName;
+            Scene = scene;
+            ModelDimensions = modelDimensions;
+        }
+
+        public Vector3 DirToPlayer { get; set; }
+        public string OrbitalName { get; set; }
+        public string Scene { get; set; }
+        public float ModelDimensions { get; set; }
     }
 }

@@ -411,11 +411,10 @@ namespace GTSCommon
     }
 
     [Serializable]
-    public class OrbitalInfo : NextSceneInfo, IDrawable, ITrigger
+    public class OrbitalInfo : IDrawable
     {
         public OrbitalInfo()
         {
-            TriggerDistance = 1500;
         }
 
         [Description("This is the name that will be displayed on screen by the custom UI.")]
@@ -429,11 +428,16 @@ namespace GTSCommon
         [Description("True if you wish for this object to act like a wormhole, and suck the player in.")]
         [RefreshProperties(RefreshProperties.All)]
         public bool WormHole { get; set; }
-        
+
         [Category("Other")]
         [Description("The starting rotation of the object.")]
         [RefreshProperties(RefreshProperties.All)]
         public XVector3 Rotation { get; set; }
+
+        [Category("Other")]
+        [Description("The filename of the next scene that will load.")]
+        [RefreshProperties(RefreshProperties.All)]
+        public string NextScene { get; set; }
 
         [Category("Required")]
         [Description("The name of the ydr/ydd model. Example: 'earth_large'")]
@@ -448,9 +452,11 @@ namespace GTSCommon
         public int LodDistance { get; set; } = -1;
 
         [Category("Next Scene Info")]
-        [Description("This is the distance that will trigger the next scene to load.")]
+        [Description("The trigger to the next scene will default to the size of the model bounds. Use this" +
+                     "to manipulate that distance. (Setting this to 2 will make the planet trigger 2 times the size" +
+                     "of the planet)")]
         [RefreshProperties(RefreshProperties.All)]
-        public float TriggerDistance { get; set; }
+        public float TriggerSizeMultiplier { get; set; } = 1.15f;
 
         public override string ToString()
         {
@@ -472,7 +478,8 @@ namespace GTSCommon
         public float TileSize { get; set; } = 1024;
 
         [Category("Settings")]
-        [Description("The dimensions of the terrain e.g. 1x1 makes 7 tiles ([0,0][1,0][0,1][1,1][-1,0][0,-1][-1,-1]) etc.")]
+        [Description(
+            "The dimensions of the terrain e.g. 1x1 makes 7 tiles ([0,0][1,0][0,1][1,1][-1,0][0,-1][-1,-1]) etc.")]
         public int Dimensions { get; set; } = 4;
 
         [Category("Required")]

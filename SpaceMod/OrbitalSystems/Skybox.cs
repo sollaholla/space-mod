@@ -24,7 +24,7 @@ namespace GTS.OrbitalSystems
 
         //public float SkyboxRotationSpeed { get; }
 
-        //public List<Orbital> Orbitals { get; }
+        //public List<OrbitalName> Orbitals { get; }
 
         public void Update()
         {
