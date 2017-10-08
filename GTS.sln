@@ -1,17 +1,30 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS", "SpaceMod\GTS.csproj", "{9E7B4474-337E-4221-ABF3-4947E9C011AD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{821106BB-F827-4D10-B7C5-A135B45F33BE} = {821106BB-F827-4D10-B7C5-A135B45F33BE}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultMissions", "SpaceMod\Scenarios\DefaultMissions.csproj", "{5F9C71F3-CADB-4085-AC4E-97C770124771}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9E7B4474-337E-4221-ABF3-4947E9C011AD} = {9E7B4474-337E-4221-ABF3-4947E9C011AD}
+		{821106BB-F827-4D10-B7C5-A135B45F33BE} = {821106BB-F827-4D10-B7C5-A135B45F33BE}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTSCommon", "GTSCommon\GTSCommon.csproj", "{821106BB-F827-4D10-B7C5-A135B45F33BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS Scene Creator", "GTS Scene Creator\GTS Scene Creator.csproj", "{56C8E888-D12F-45FB-AC42-3EB7CBD4D1FF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{821106BB-F827-4D10-B7C5-A135B45F33BE} = {821106BB-F827-4D10-B7C5-A135B45F33BE}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmbientEnemySpawns", "AmbientEnemySpawns\AmbientEnemySpawns.csproj", "{E5DB3D16-299C-4EE2-BCE8-AB574E93834E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9E7B4474-337E-4221-ABF3-4947E9C011AD} = {9E7B4474-337E-4221-ABF3-4947E9C011AD}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
