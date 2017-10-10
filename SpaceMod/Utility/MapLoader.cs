@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using GTS.Scenes.Interiors;
 using GTSCommon;
+using GTSCommon.DataModels;
 
 namespace GTS.Utility
 {

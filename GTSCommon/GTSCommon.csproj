@@ -44,22 +44,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AttachedOrbitalInfo.cs" />
-    <Compile Include="Billboard.cs" />
-    <Compile Include="IDrawable.cs" />
-    <Compile Include="InteriorInfo.cs" />
-    <Compile Include="InteriorType.cs" />
-    <Compile Include="ITrigger.cs" />
-    <Compile Include="Link.cs" />
-    <Compile Include="NextSceneInfo.cs" />
-    <Compile Include="OrbitalInfo.cs" />
+    <Compile Include="DataModels\AttachedOrbitalInfo.cs" />
+    <Compile Include="DataModels\Billboard.cs" />
+    <Compile Include="DataModels\IDrawable.cs" />
+    <Compile Include="DataModels\InteriorInfo.cs" />
+    <Compile Include="DataModels\InteriorType.cs" />
+    <Compile Include="DataModels\ITrigger.cs" />
+    <Compile Include="DataModels\Link.cs" />
+    <Compile Include="DataModels\NextSceneInfo.cs" />
+    <Compile Include="DataModels\OrbitalInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SceneInfo.cs" />
-    <Compile Include="SurfaceInfo.cs" />
-    <Compile Include="TeleportPoint.cs" />
-    <Compile Include="TimecycleArea.cs" />
-    <Compile Include="Vector3Converter.cs" />
-    <Compile Include="XVector3.cs" />
+    <Compile Include="DataModels\SurfaceInfo.cs" />
+    <Compile Include="DataModels\TeleportPoint.cs" />
+    <Compile Include="DataModels\TimecycleArea.cs" />
+    <Compile Include="DataModels\Vector3Converter.cs" />
+    <Compile Include="DataModels\XVector3.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
+using GTSCommon.DataModels;
 
 namespace GTSCommon
 {

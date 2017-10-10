@@ -3,7 +3,7 @@ using System.Linq;
 using GTA;
 using GTA.Native;
 
-namespace BaseBuilder
+namespace BaseBuilding
 {
     /// <summary>
     /// Credits to GuadMaz

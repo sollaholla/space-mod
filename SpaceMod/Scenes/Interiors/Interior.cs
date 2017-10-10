@@ -7,6 +7,7 @@ using GTA.Native;
 using GTS.Library;
 using GTS.Utility;
 using GTSCommon;
+using GTSCommon.DataModels;
 
 namespace GTS.Scenes.Interiors
 {

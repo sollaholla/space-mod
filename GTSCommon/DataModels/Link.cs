@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel;
 
-namespace GTSCommon
+namespace GTSCommon.DataModels
 {
     [Serializable]
     public class Link : NextSceneInfo, ITrigger

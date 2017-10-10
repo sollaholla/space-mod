@@ -13,6 +13,7 @@ using GTS.OrbitalSystems;
 using GTS.Scenes.Interiors;
 using GTS.Utility;
 using GTSCommon;
+using GTSCommon.DataModels;
 using NativeUI;
 using Font = GTA.Font;
 

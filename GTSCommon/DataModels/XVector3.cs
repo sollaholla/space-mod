@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using GTA.Math;
 
-namespace GTSCommon
+namespace GTSCommon.DataModels
 {
     [TypeConverter(typeof(Vector3Converter))]
     public struct XVector3

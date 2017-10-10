@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 
-namespace GTSCommon
+namespace GTSCommon.DataModels
 {
     public class Vector3Converter : ExpandableObjectConverter
     {

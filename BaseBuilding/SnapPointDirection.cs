@@ -1,4 +1,4 @@
-﻿namespace BaseBuilder
+﻿namespace BaseBuilding
 {
     public enum SnapPointDirection
     {
