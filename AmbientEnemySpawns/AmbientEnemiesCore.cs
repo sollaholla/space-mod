@@ -30,12 +30,13 @@ namespace AmbientEnemySpawns
             _alienVehicles = new List<Vehicle>();
         }
 
-        public override string[] TargetScenes => new[] {"MercurySurface.space"};
+        public override bool TargetAllScenes => true;
 
         public void Update()
         {
             try
             {
+                if (!CurrentScene.Info.SurfaceScene) return;
                 HandleShooting();
                 UpdateTimer();
             }

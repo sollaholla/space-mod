@@ -13,7 +13,6 @@ namespace BaseBuilding
         public void Update()
         {
             if (!CurrentScene.Info.SurfaceScene) return;
-            UI.ShowSubtitle("Updating...");
         }
     }
 }
