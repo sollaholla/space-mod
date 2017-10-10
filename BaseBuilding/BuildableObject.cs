@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using GTA;
@@ -107,7 +108,10 @@ namespace BaseBuilder
             }
         }
 
-        public static BuildableObject PlaceBuildable(string modelName, IReadOnlyCollection<BuildableObject> others)
+        public static BuildableObject PlaceBuildable(
+            string modelName, 
+            IReadOnlyCollection<BuildableObject> others,
+            params string[] ignoreModels)
         {
             var b = CreateBuildable(modelName);
             b.Alpha = 100;
@@ -121,7 +125,7 @@ namespace BaseBuilder
                 new InstructionalButton(Control.Cover, "Rotate"),
                 new InstructionalButton(Control.Sprint, "Rotation Speed"),
                 new InstructionalButton(Control.Aim, "Cancel"),
-                new InstructionalButton(Control.Attack, "Place"),
+                new InstructionalButton(Control.LookBehind, "Place"),
             };
 
             while (true)
@@ -141,11 +145,15 @@ namespace BaseBuilder
 
                 var closest = World.GetClosest(cameraPoint, others.ToArray());
 
+                if (Exists(closest) && ignoreModels != null &&
+                    ignoreModels.Any(x => Game.GenerateHash(x) == closest.Model.Hash))
+                    closest = null;
+
                 if (!Exists(closest) || closest.Position.DistanceTo(cameraPoint) > closest.Model.GetDimensions().Length())
                 {
                     b.PositionNoOffset = cameraPoint;
 
-                    if (Game.IsDisabledControlPressed(2, Control.Attack))
+                    if (Game.IsDisabledControlPressed(2, Control.LookBehind))
                         break;
 
                     var speed = 25f;
@@ -191,7 +199,7 @@ namespace BaseBuilder
 
                     b.Position = closestSnapPoint + offsetToPos;
 
-                    if (Game.IsDisabledControlPressed(2, Control.Attack))
+                    if (Game.IsDisabledControlPressed(2, Control.LookBehind))
                         break;
                 }
 
