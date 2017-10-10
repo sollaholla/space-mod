@@ -25,7 +25,6 @@ namespace GTSCommon
             Surfaces = new List<SurfaceInfo>();
             SceneLinks = new List<Link>();
             Interiors = new List<InteriorInfo>();
-            Scenarios = new List<ScenarioInfo>();
             Teleports = new List<TeleportPoint>();
             Billboards = new List<Billboard>();
             TimecycleAreas = new List<TimecycleArea>();
@@ -50,10 +49,6 @@ namespace GTSCommon
         [Category("Collections")]
         [RefreshProperties(RefreshProperties.All)]
         public List<InteriorInfo> Interiors { get; set; }
-
-        [Category("Collections")]
-        [RefreshProperties(RefreshProperties.All)]
-        public List<ScenarioInfo> Scenarios { get; set; }
 
         [Category("Collections")]
         [RefreshProperties(RefreshProperties.All)]
