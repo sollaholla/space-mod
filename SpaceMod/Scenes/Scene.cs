@@ -753,12 +753,12 @@ namespace GTS.Scenes
                         var s = (Scenario)Activator.CreateInstance(type);
                         s.SendMessage("Awake");
                         if (s.TargetScenes == null) continue;
-                        if (s.TargetScenes.Any(x => string.Equals(x, FileName, StringComparison.CurrentCultureIgnoreCase)))
-                        {
-                            Debug.Log("Starting scenario: " + type.Name);
-                            s.CurrentScene = this;
-                            Scenarios.Add(s);
-                        }
+                        if (!s.TargetScenes.Any(
+                            x => string.Equals(x, FileName, StringComparison.CurrentCultureIgnoreCase))) continue;
+                        if (s.IsScenarioComplete()) continue;
+                        Debug.Log("Starting scenario: " + type.Name);
+                        s.CurrentScene = this;
+                        Scenarios.Add(s);
                     }
                 }
 

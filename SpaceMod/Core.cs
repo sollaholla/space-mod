@@ -33,6 +33,7 @@ namespace GTS
         private Keys _optionsMenuKey = Keys.NumPad9;
         private bool _resetWantedLevel = true;
         private ShuttleManager _shuttleManager;
+        private SandersBriefing _sandersBriefing;
 
         public Core()
         {
@@ -56,11 +57,9 @@ namespace GTS
 
         public static Scene CurrentScene { get; private set; }
 
-        public static Vector3 PlayerPosition
-        {
+        public static Vector3 PlayerPosition {
             get => PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle.Position : PlayerPed.Position;
-            set
-            {
+            set {
                 if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Position = value;
                 else PlayerPed.Position = value;
             }
@@ -85,6 +84,7 @@ namespace GTS
                 ProcessMenus();
                 CheckSceneStatus();
                 DisableWantedStars();
+                _sandersBriefing?.Update();
             }
             catch (Exception ex)
             {
@@ -95,7 +95,7 @@ namespace GTS
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.L)
+            if (e.KeyCode == Keys.L)
             {
                 World.GetActiveBlips().ToList().ForEach(x =>
                 {
@@ -121,6 +121,7 @@ namespace GTS
             _tcChanger?.Stop();
             _mapLoader?.RemoveMaps();
             _didAbort = true;
+            _sandersBriefing.OnAborted();
         }
 
         private static void Reset()
@@ -331,20 +332,20 @@ namespace GTS
 
             var vehicleSettingsMenu = _menuPool.AddSubMenu(settingsMenu, "Vehicles");
             var vehicleSpeedList = new UIMenuListItem("Vehicle Speed",
-                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic) (i * 5)).ToList(),
+                dynamicList = Enumerable.Range(1, 20).Select(i => (dynamic)(i * 5)).ToList(),
                 (flyIndex = dynamicList.IndexOf(GtsSettings.VehicleFlySpeed)) == -1 ? 0 : flyIndex);
             vehicleSpeedList.OnListChanged += (sender, index) =>
             {
-                GtsSettings.VehicleFlySpeed = (int) sender.IndexToItem(index);
+                GtsSettings.VehicleFlySpeed = (int)sender.IndexToItem(index);
             };
 
-            var flySensitivity = (int) GtsSettings.MouseControlFlySensitivity;
+            var flySensitivity = (int)GtsSettings.MouseControlFlySensitivity;
             var vehicleSensitivityList = new UIMenuListItem("Mouse Control Sensitivity",
                 Enumerable.Range(0, flySensitivity > 15 ? flySensitivity + 5 : 15)
-                    .Select(i => (dynamic) i).ToList(), flySensitivity);
+                    .Select(i => (dynamic)i).ToList(), flySensitivity);
             vehicleSensitivityList.OnListChanged += (sender, index) =>
             {
-                GtsSettings.MouseControlFlySensitivity = (float) sender.IndexToItem(index);
+                GtsSettings.MouseControlFlySensitivity = (float)sender.IndexToItem(index);
             };
 
             vehicleSettingsMenu.AddItem(vehicleSpeedList);
@@ -404,7 +405,7 @@ namespace GTS
             debugButton.SetLeftBadge(UIMenuItem.BadgeStyle.Alert);
             debugButton.Activated += (sender, item) =>
             {
-                Debug.LogEntityData(PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle : (Entity) PlayerPed);
+                Debug.LogEntityData(PlayerPed.IsInVehicle() ? PlayerPed.CurrentVehicle : (Entity)PlayerPed);
             };
 
             _mainMenu.AddItem(debugButton);
@@ -446,6 +447,17 @@ namespace GTS
                     HeliTransport = new HeliTransport();
                     HeliTransport.Load();
                 }
+
+                _sandersBriefing = new SandersBriefing();
+                if (!_sandersBriefing.IsScenarioComplete())
+                {
+                    _sandersBriefing.Start();
+                    _sandersBriefing.Completed += (scenario, success) =>
+                    {
+                        _sandersBriefing.EndScenario(true);
+                    };
+                }
+                else _sandersBriefing = null;
 
                 LoadScaleformDrawer.Instance.RemoveLoadScaleform(loadScaleform);
                 _initializedGts = true;
@@ -525,7 +537,7 @@ namespace GTS
             ClearAllEntities(PlayerPosition);
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
             else PlayerPed.Rotation = Vector3.Zero;
-            CurrentScene = new Scene(scene) {FileName = fileName};
+            CurrentScene = new Scene(scene) { FileName = fileName };
             CurrentScene.Start();
             CurrentScene.Exited += CurrentSceneOnExited;
         }
