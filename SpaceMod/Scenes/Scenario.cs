@@ -23,6 +23,7 @@ namespace GTS.Scenes
         public Scene CurrentScene { get; internal set; }
         public virtual bool BlockOrbitLanding { get; set; }
         public virtual string[] TargetScenes { get; set; }
+        public virtual bool TargetAllScenes { get; set; }
         internal event OnScenarioCompleted Completed;
 
         internal bool IsScenarioComplete()

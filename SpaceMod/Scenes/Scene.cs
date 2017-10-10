@@ -41,9 +41,6 @@ namespace GTS.Scenes
 
         public const float MinWarpDetectDist = 10000;
 
-        // 1 = scene name
-        // 2 = orbital name
-        // 3 = player dirToPlayer from orbital
         private static PreviousSceneInfo _lastInfo;
 
         private readonly List<WarpEffect> _warpEffects = new List<WarpEffect>();
@@ -752,9 +749,8 @@ namespace GTS.Scenes
                         if (type.BaseType != typeof(Scenario)) continue;
                         var s = (Scenario)Activator.CreateInstance(type);
                         s.SendMessage("Awake");
-                        if (s.TargetScenes == null) continue;
-                        if (!s.TargetScenes.Any(
-                            x => string.Equals(x, FileName, StringComparison.CurrentCultureIgnoreCase))) continue;
+                        if (!s.TargetAllScenes && (s.TargetScenes == null || !s.TargetScenes.Any(
+                            x => string.Equals(x, FileName, StringComparison.CurrentCultureIgnoreCase)))) continue;
                         if (s.IsScenarioComplete()) continue;
                         Debug.Log("Starting scenario: " + type.Name);
                         s.CurrentScene = this;

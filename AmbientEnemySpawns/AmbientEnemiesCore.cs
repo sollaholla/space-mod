@@ -10,7 +10,7 @@ using GTS.Utility;
 
 namespace AmbientEnemySpawns
 {
-    public class Main : Scenario
+    public class AmbientEnemiesCore : Scenario
     {
         private readonly List<Alien> _alienPeds;
         private readonly List<Vehicle> _alienVehicles;
@@ -24,7 +24,7 @@ namespace AmbientEnemySpawns
 
         private DateTime _timeout;
 
-        public Main()
+        public AmbientEnemiesCore()
         {
             _alienPeds = new List<Alien>();
             _alienVehicles = new List<Vehicle>();
