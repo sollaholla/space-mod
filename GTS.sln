@@ -26,6 +26,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmbientEnemySpawns", "Ambie
 		{9E7B4474-337E-4221-ABF3-4947E9C011AD} = {9E7B4474-337E-4221-ABF3-4947E9C011AD}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaseBuilding", "BaseBuilding\BaseBuilding.csproj", "{6D2E5876-29D2-459C-ACC9-1E9E92443F8E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9E7B4474-337E-4221-ABF3-4947E9C011AD} = {9E7B4474-337E-4221-ABF3-4947E9C011AD}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +57,10 @@ Global
 		{E5DB3D16-299C-4EE2-BCE8-AB574E93834E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5DB3D16-299C-4EE2-BCE8-AB574E93834E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5DB3D16-299C-4EE2-BCE8-AB574E93834E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D2E5876-29D2-459C-ACC9-1E9E92443F8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D2E5876-29D2-459C-ACC9-1E9E92443F8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D2E5876-29D2-459C-ACC9-1E9E92443F8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D2E5876-29D2-459C-ACC9-1E9E92443F8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
