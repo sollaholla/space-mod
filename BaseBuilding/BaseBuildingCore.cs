@@ -38,7 +38,7 @@ namespace BaseBuilding
             var resourceDefinitions = ReadResourceDefinitions();
             if (resourceDefinitions == null) return;
 
-            foreach (ResourceDefinition r in resourceDefinitions.Definitions)
+            foreach (var r in resourceDefinitions.Definitions)
             {
                 _resourceDefinitions.Add(r);
             }
@@ -51,7 +51,7 @@ namespace BaseBuilding
 
             foreach (var r in playerResourceList.Resources)
             {
-                var playerResource = PlayerResource.GetPlayerResource(r);
+                var playerResource = PlayerResource.GetPlayerResource(_resourceDefinitions, r);
                 _playersResources.Add(playerResource);
             }
         }
@@ -119,10 +119,6 @@ namespace BaseBuilding
 
         private void SpawnRocks()
         {
-            if (!Settings.GetValue(Path.GetFileNameWithoutExtension(CurrentScene.FileName), "use_rocks", false))
-                return;
-
-
         }
 
         private void UpdateMenu()

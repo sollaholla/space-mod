@@ -38,5 +38,8 @@ namespace GTS.Library.Security
         [DllImport("GTSLib.asi")]
         public static extern void
             GTSLib_SetAirDragMultiplierForPlayersVehicle(float multiplier);
+
+        [DllImport("GTSLib.asi")]
+        public static extern void GTSLib_DisableLoadingScreenHandler(bool toggle);
     }
 }

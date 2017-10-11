@@ -172,5 +172,11 @@ namespace GTS.Library
             if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
             NativeMethods.GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
         }
+
+        public static void DisableLoadingScreenHandler(bool toggle)
+        {
+            if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
+            NativeMethods.GTSLib_DisableLoadingScreenHandler(toggle);
+        }
     }
 }

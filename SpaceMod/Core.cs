@@ -137,6 +137,7 @@ namespace GTS
             World.RenderingCamera = null;
             GtsLibNet.SetGravityLevel(9.81f);
             GtsLib.EndCredits();
+            GtsLib.DisableLoadingScreenHandler(false);
             Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
             Effects.Stop();
             CurrentScene?.Delete(true);
@@ -427,7 +428,9 @@ namespace GTS
             {
                 _menuPool.CloseAllMenus();
 
+                GtsLib.DisableLoadingScreenHandler(true);
                 Function.Call(Hash._0x0888C3502DBBEEF5);
+                GtsLib.DisableLoadingScreenHandler(false);
 
                 var loadScaleform = LoadScaleformDrawer.Instance.Create("Loading GTS...");
                 loadScaleform.Draw = true;
