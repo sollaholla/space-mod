@@ -12,8 +12,11 @@ namespace BaseBuilding
     public class BaseBuildingCore : Scenario
     {
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
+        private readonly List<PlayerResource> _playersResources = new List<PlayerResource>();
         private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
         private readonly MenuPool _menuPool = new MenuPool();
+
+        public static readonly TimerBarPool TimerPool = new TimerBarPool();
 
         public BaseBuildingCore()
         {
@@ -24,7 +27,20 @@ namespace BaseBuilding
 
         public void Start()
         {
+            PopulateResourceBars();
             CreateObjectsMenu();
+        }
+
+        private void PopulateResourceBars()
+        {
+            var playerResourceList = ReadPlayersResources();
+            if (playerResourceList == null) return;
+
+            foreach (var r in playerResourceList.Resources)
+            {
+                var playerResource = PlayerResource.GetPlayerResource(r);
+                _playersResources.Add(playerResource);
+            }
         }
 
         private void CreateObjectsMenu()
@@ -35,6 +51,7 @@ namespace BaseBuilding
             foreach (var o in l.ObjectDefs)
             {
                 var menuItem = new UIMenuItem(o.FriendlyName, $"Click to place '{o.FriendlyName}'");
+
                 menuItem.Activated += (sender, item) =>
                 {
                     Game.DisableControlThisFrame(2, Control.Attack);
@@ -58,9 +75,21 @@ namespace BaseBuilding
             return obj;
         }
 
+        private static PlayerResourceList ReadPlayersResources()
+        {
+            var localPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            if (string.IsNullOrEmpty(localPath))
+                return null;
+
+            var path = localPath + "\\BaseBuilding\\" + "PlayerResources.xml";
+            var obj = XmlSerializer.Deserialize<PlayerResourceList>(path);
+            return obj;
+        }
+
         public void Update()
         {
             UpdateMenu();
+            UpdateTimerBars();
             SpawnRocks();
         }
 
@@ -76,10 +105,15 @@ namespace BaseBuilding
         {
             _menuPool.ProcessMenus();
 
-            if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.SpecialAbilitySecondary))
+            if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.VehicleHorn))
             {
                 _inventoryMenu.Visible = !_inventoryMenu.Visible;
             }
+        }
+
+        private void UpdateTimerBars()
+        {
+            TimerPool.Draw();
         }
 
         public void OnAborted()

@@ -39,11 +39,10 @@
       <HintPath>..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
+      <HintPath>..\..\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
-    <Reference Include="SpaceUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SpaceUI.dll</HintPath>
+    <Reference Include="SpaceUI">
+      <HintPath>..\..\Games\Grand Theft Auto V\scripts\GrandTheftSpace\SpaceUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -60,6 +59,7 @@
     <Compile Include="BaseBuildingCore.cs" />
     <Compile Include="BuildableObjectsList.cs" />
     <Compile Include="InstructionalButton.cs" />
+    <Compile Include="PlayerResourceList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SnapPointDirection.cs" />
     <Compile Include="SpatialPlacement.cs" />
