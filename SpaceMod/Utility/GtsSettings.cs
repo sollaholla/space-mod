@@ -30,7 +30,7 @@ namespace GTS.Utility
 
         public static bool AlwaysUseSound = true;
 
-        public static float EnterOrbitHeight = 10000f;
+        public static float EnterOrbitHeight = 8000f;
 
         public static Vector3 DefaultOrbitOffset = new Vector3(-1710.931f, 3930.234f, 69.25195f);
 
@@ -48,7 +48,7 @@ namespace GTS.Utility
 
         public static float ShuttleThrustInterpolation = 0.5f;
 
-        public static float ShuttleGimbalFront = 0.18f;
+        public static float ShuttleGimbalFront = 0.164f;
 
         public static string SpaceVehiclesPath = ".\\scripts\\GrandTheftSpace\\Space\\SpaceVehicles.xml";
 

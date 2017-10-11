@@ -9,13 +9,13 @@ using NativeUI;
 
 namespace BaseBuilding
 {
-    public class BaseBuildCore : Scenario
+    public class BaseBuildingCore : Scenario
     {
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
         private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
         private readonly MenuPool _menuPool = new MenuPool();
 
-        public BaseBuildCore()
+        public BaseBuildingCore()
         {
             _menuPool.Add(_inventoryMenu);
         }
@@ -23,6 +23,11 @@ namespace BaseBuilding
         public override bool TargetAllScenes => true;
 
         public void Start()
+        {
+            CreateObjectsMenu();
+        }
+
+        private void CreateObjectsMenu()
         {
             var l = ReadObjectList();
             var subMenu = _menuPool.AddSubMenu(_inventoryMenu, "Base Building");
@@ -55,11 +60,43 @@ namespace BaseBuilding
 
         public void Update()
         {
+            UpdateMenu();
+            SpawnRocks();
+        }
+
+        private void SpawnRocks()
+        {
+            if (!Settings.GetValue(Path.GetFileNameWithoutExtension(CurrentScene.FileName), "use_rocks", false))
+                return;
+
+
+        }
+
+        private void UpdateMenu()
+        {
             _menuPool.ProcessMenus();
 
             if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.SpecialAbilitySecondary))
             {
                 _inventoryMenu.Visible = !_inventoryMenu.Visible;
+            }
+        }
+
+        public void OnAborted()
+        {
+            CleanUp();
+        }
+
+        public void OnDisable(bool success)
+        {
+            CleanUp();
+        }
+
+        private void CleanUp()
+        {
+            foreach (var buildableObject in _buildables)
+            {
+                buildableObject?.Delete();
             }
         }
     }

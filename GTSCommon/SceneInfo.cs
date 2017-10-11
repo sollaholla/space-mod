@@ -129,6 +129,10 @@ namespace GTSCommon
         [RefreshProperties(RefreshProperties.All)]
         public override string NextScene { get; set; }
 
+        [Description("Tells the script whether or not to ignore any surfaces and treat this scene like a surface scene.")]
+        [Category("Surface.Overrides")]
+        public bool OverrideSurfaceFlag { get; set; }
+
         [Category("Surface.Positioning")]
         [Description("The rotation of our player when the next scene loads.")]
         [RefreshProperties(RefreshProperties.All)]
@@ -196,6 +200,6 @@ namespace GTSCommon
 
         [XmlIgnore]
         [Category("Core.Internal")]
-        public bool SurfaceScene => Surfaces.Any();
+        public bool SurfaceScene => Surfaces.Any() || OverrideSurfaceFlag;
     }
 }

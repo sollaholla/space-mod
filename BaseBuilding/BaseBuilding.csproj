@@ -57,7 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildableObject.cs" />
-    <Compile Include="BaseBuildCore.cs" />
+    <Compile Include="BaseBuildingCore.cs" />
     <Compile Include="BuildableObjectsList.cs" />
     <Compile Include="InstructionalButton.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

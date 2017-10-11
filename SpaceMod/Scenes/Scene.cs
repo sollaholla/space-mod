@@ -1371,7 +1371,7 @@ namespace GTS.Scenes
             {
                 StopSpaceWalking();
                 Game.DisableControlThisFrame(2, Control.VehicleExit);
-                if (!Game.IsDisabledControlJustPressed(2, Control.VehicleExit)) return;
+                if (!Game.IsDisabledControlJustPressed(2, Control.VehicleExit) || Game.IsScreenFadingIn) return;
                 Game.FadeScreenOut(100);
                 Script.Wait(100);
                 PlayerVehicle.FreezePosition = true;
@@ -1543,7 +1543,7 @@ namespace GTS.Scenes
 
         private void SpaceWalk()
         {
-            if (GtsSettings.UseSpaceWalk)
+            if (GtsSettings.UseSpaceWalk && !_warpFlag)
             {
                 // make sure that we're floating first!
                 if (!_enteringVehicle)
