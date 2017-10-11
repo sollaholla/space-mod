@@ -77,7 +77,7 @@ namespace BaseBuilding
             _menuPool.RefreshIndex();
         }
 
-        private ResourceDefinitionList ReadResourceDefinitions()
+        private static ResourceDefinitionList ReadResourceDefinitions()
         {
             var localPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             if (string.IsNullOrEmpty(localPath))
@@ -117,10 +117,6 @@ namespace BaseBuilding
             SpawnRocks();
         }
 
-        private void SpawnRocks()
-        {
-        }
-
         private void UpdateMenu()
         {
             _menuPool.ProcessMenus();
@@ -131,7 +127,11 @@ namespace BaseBuilding
             }
         }
 
-        private void UpdateTimerBars()
+        private static void SpawnRocks()
+        {
+        }
+
+        private static void UpdateTimerBars()
         {
             TimerPool.Draw();
         }
