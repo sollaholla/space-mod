@@ -32,7 +32,7 @@ namespace BaseBuilding
 
         public void Init()
         {
-            TextBar = new TextTimerBar(Name, AmountOfResources.ToString());
+            TextBar = new TextTimerBar(AmountOfResources + "x", Name);
             BaseBuildingCore.TimerPool.Add(TextBar);
         }
 
