@@ -21,13 +21,33 @@ namespace BaseBuilding
 
     public class Resource
     {
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
 
-        public float AmountOfResources { get; set; } 
+        public virtual float AmountOfResources { get; set; } 
     }
 
     public class PlayerResource : Resource
     {
+        public override string Name
+        {
+            get { return base.Name; }
+            set
+            {
+                base.Name = value;
+                TextBar.Text = value;
+            }
+        }
+
+        public override float AmountOfResources
+        {
+            get { return base.AmountOfResources; }
+            set
+            {
+                base.AmountOfResources = value;
+                TextBar.Label = value + "x";
+            }
+        }
+
         public TextTimerBar TextBar { get; set; }
 
         public void Init()
