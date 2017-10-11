@@ -19,36 +19,51 @@ namespace BaseBuilding
         public List<Resource> Resources { get; set; }
     }
 
+    public class ResourceDefinitionList
+    {
+        public ResourceDefinitionList()
+        {
+            Definitions = new List<ResourceDefinition>();
+        }
+
+        [XmlArrayItem("Item")]
+        public List<ResourceDefinition> Definitions;
+    }
+
+    public class ResourceDefinition
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+    }
+
     public class Resource
     {
-        public virtual string Name { get; set; }
+        public int Id { get; set; }
 
-        public virtual float AmountOfResources { get; set; } 
+        public virtual int Amount { get; set; }
+
+        public static string GetName()
+        {
+            
+        }
     }
 
     public class PlayerResource : Resource
     {
-        public override string Name
+        public override int Amount
         {
-            get { return base.Name; }
+            get { return base.Amount; }
             set
             {
-                base.Name = value;
-                TextBar.Text = value;
-            }
-        }
-
-        public override float AmountOfResources
-        {
-            get { return base.AmountOfResources; }
-            set
-            {
-                base.AmountOfResources = value;
+                base.Amount = value;
                 TextBar.Label = value + "x";
             }
         }
 
         public TextTimerBar TextBar { get; set; }
+
+        private int _amount;
 
         public void Init()
         {
@@ -59,8 +74,8 @@ namespace BaseBuilding
         public static PlayerResource GetPlayerResource(Resource r)
         {
             var pResource = new PlayerResource();
-            pResource.Name = r.Name;
-            pResource.AmountOfResources = r.AmountOfResources;
+            pResource.Id = r.Id;
+            pResource.Amount = r.Amount;
             pResource.Init();
             return pResource;
         }

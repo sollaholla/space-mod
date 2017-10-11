@@ -13,6 +13,7 @@ namespace BaseBuilding
     {
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
         private readonly List<PlayerResource> _playersResources = new List<PlayerResource>();
+        private readonly List<ResourceDefinition> _resourceDefinitions = new List<ResourceDefinition>();
         private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
         private readonly MenuPool _menuPool = new MenuPool();
 
@@ -27,8 +28,20 @@ namespace BaseBuilding
 
         public void Start()
         {
+            PopulateResourceDefinitions();
             PopulateResourceBars();
             CreateObjectsMenu();
+        }
+
+        private void PopulateResourceDefinitions()
+        {
+            var resourceDefinitions = ReadResourceDefinitions();
+            if (resourceDefinitions == null) return;
+
+            foreach (ResourceDefinition r in resourceDefinitions.Definitions)
+            {
+                _resourceDefinitions.Add(r);
+            }
         }
 
         private void PopulateResourceBars()
@@ -62,6 +75,17 @@ namespace BaseBuilding
                 subMenu.AddItem(menuItem);
             }
             _menuPool.RefreshIndex();
+        }
+
+        private ResourceDefinitionList ReadResourceDefinitions()
+        {
+            var localPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            if (string.IsNullOrEmpty(localPath))
+                return null;
+
+            var path = localPath + "\\BaseBuilding\\" + "Resource.xml";
+            var obj = XmlSerializer.Deserialize<ResourceDefinitionList>(path);
+            return obj;
         }
 
         private static BuildableObjectsList ReadObjectList()
