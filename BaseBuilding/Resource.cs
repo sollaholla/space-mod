@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace BaseBuilding
 {
@@ -13,23 +14,17 @@ namespace BaseBuilding
             return defs?.Find(x => x.Id == resource.Id)?.Name ?? "No name found...";
         }
 
-        public static bool DoesHaveEnoughResources(Resource r, int amount, List<PlayerResource> playersResources)
+        public static bool DoesHaveEnoughResources(Resource r, List<PlayerResource> playersResources, bool amountCheck = true)
         {
-            foreach (PlayerResource pR in playersResources)
-            {
-                if (pR.Id == r.Id && pR.Amount >= amount)
-                    return true;
-            }
-
-            return false;
+            return playersResources.Any(x => x.Id == r.Id && (x.Amount >= r.Amount || !amountCheck));
         }
 
         public static List<Resource> GetResourcesRequired(ObjectInfo o, List<PlayerResource> playersResources)
         {
-            if (o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, x.Amount)))
+            if (o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, playersResources)))
                 return null;
 
-            var resourcesRequired = new List<Resource>();
+            var resoursesRequired = new List<Resource>();
 
             foreach (var pR in playersResources)
             {
@@ -37,12 +32,12 @@ namespace BaseBuilding
                 {
                     if (pR.Id == r.Id && r.Amount > pR.Amount)
                     {
-                        resourcesRequired.Add(new Resource() { Id = r.Id, Amount = r.Amount - pR.Amount });
+                        resoursesRequired.Add(new Resource() { Id = r.Id, Amount = r.Amount - pR.Amount });
                     }
                 }
             }
 
-            return resourcesRequired;
+            return resoursesRequired;
         }
     }
 }
