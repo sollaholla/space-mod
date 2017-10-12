@@ -59,6 +59,7 @@
     <Compile Include="BaseBuildingCore.cs" />
     <Compile Include="BuildableObjectsList.cs" />
     <Compile Include="InstructionalButton.cs" />
+    <Compile Include="ObjectInfo.cs" />
     <Compile Include="PlayerResource.cs" />
     <Compile Include="PlayerResourceList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

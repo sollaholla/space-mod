@@ -74,9 +74,9 @@ namespace BaseBuilding
 
                 menuItem.Activated += (sender, item) =>
                 {
-                    if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveEnoughResources(x, x.Amount, _playersResources))))
+                    if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveResource(x, x.Amount, _playersResources))))
                     {
-                        var resourcesRequired = Resource.GetResourcesRequired(o, _playersResources);
+                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playersResources);
                         if (resourcesRequired == null) return;
 
                         var message = "You need: " + Environment.NewLine;
