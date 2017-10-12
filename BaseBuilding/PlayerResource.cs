@@ -25,14 +25,14 @@ namespace BaseBuilding
         }
 
         // TODO: Not sure if we need this yet.
-        public static PlayerResource GetPlayerResource(Resource r)
+        public static PlayerResource GetPlayerResource(Resource r, List<ResourceDefinition> defs)
         {
             var pResource = new PlayerResource
             {
                 Id = r.Id,
                 Amount = r.Amount
             };
-            pResource.Init(BaseBuildingCore.ResourceDefinitions);
+            pResource.Init(defs);
             return pResource;
         }
     }

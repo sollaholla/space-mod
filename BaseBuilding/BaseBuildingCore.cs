@@ -12,12 +12,12 @@ namespace BaseBuilding
     public class BaseBuildingCore : Scenario
     {
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
+        private readonly List<PlayerResource> _playerResources = new List<PlayerResource>();
+        private readonly List<ResourceDefinition> _resourceDefinitions = new List<ResourceDefinition>();
         private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
         private readonly MenuPool _menuPool = new MenuPool();
 
         public static readonly TimerBarPool TimerPool = new TimerBarPool();
-        public static readonly List<PlayerResource> PlayerResources = new List<PlayerResource>();
-        public static readonly List<ResourceDefinition> ResourceDefinitions = new List<ResourceDefinition>();
 
         public BaseBuildingCore()
         {
@@ -47,7 +47,7 @@ namespace BaseBuilding
 
             foreach (var r in resourceDefinitions.Definitions)
             {
-                ResourceDefinitions.Add(r);
+                _resourceDefinitions.Add(r);
             }
         }
 
@@ -58,8 +58,8 @@ namespace BaseBuilding
 
             foreach (var r in playerResourceList.Resources)
             {
-                var playerResource = PlayerResource.GetPlayerResource(r);
-                PlayerResources.Add(playerResource);
+                var playerResource = PlayerResource.GetPlayerResource(r, _resourceDefinitions);
+                _playerResources.Add(playerResource);
             }
         }
 
@@ -74,15 +74,15 @@ namespace BaseBuilding
 
                 menuItem.Activated += (sender, item) =>
                 {
-                    if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveEnoughResources(x))))
+                    if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveResource(x, _playerResources))))
                     {
-                        var resourcesRequired = Resource.GetResourcesRequired(o);
+                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playerResources);
                         if (resourcesRequired == null) return;
 
                         var message = "You need: " + Environment.NewLine;
                         resourcesRequired.ForEach(x =>
                         {
-                            message += "~r~" + x.Amount + " ~w~" + Resource.GetName(x, ResourceDefinitions) + Environment.NewLine;
+                            message += "~r~" + x.Amount + " ~w~" + Resource.GetName(x, _resourceDefinitions) + Environment.NewLine;
                         });
 
                         UI.Notify(message);
