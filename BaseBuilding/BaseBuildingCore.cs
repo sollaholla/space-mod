@@ -40,39 +40,6 @@ namespace BaseBuilding
             }
         }
 
-        //TODO: Move to its own ResourceManager class.
-        private bool DoesHaveEnoughResources(Resource r, int amount)
-        {
-            foreach (PlayerResource pR in _playersResources)
-            {
-                if (pR.Id == r.Id && pR.Amount >= amount)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private List<Resource> GetResourcesRequired(ObjectInfo o)
-        {
-            if (o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, x.Amount)))
-                return null;
-
-            var resourcesRequired = new List<Resource>();
-
-            foreach (var pR in _playersResources)
-            {
-                foreach (Resource r in o.ResourcesRequired)
-                {
-                    if(pR.Id == r.Id && r.Amount > pR.Amount)
-                    {
-                        resourcesRequired.Add(new Resource() {Id = r.Id, Amount = r.Amount - pR.Amount});
-                    }
-                }
-            }
-
-            return resourcesRequired;
-        }
-
         private void PopulateResourceDefinitions()
         {
             var resourceDefinitions = ReadResourceDefinitions();
@@ -107,9 +74,9 @@ namespace BaseBuilding
 
                 menuItem.Activated += (sender, item) =>
                 {
-                    if (!(o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, x.Amount))))
+                    if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveEnoughResources(x, x.Amount, _playersResources))))
                     {
-                        var resourcesRequired = GetResourcesRequired(o);
+                        var resourcesRequired = Resource.GetResourcesRequired(o, _playersResources);
                         if (resourcesRequired == null) return;
 
                         var message = "You need: " + Environment.NewLine;
