@@ -11,7 +11,8 @@ namespace BaseBuilding
             set
             {
                 base.Amount = value;
-                TextBar.Label = value + "x";
+                if(TextBar != null)
+                    TextBar.Label = value + "x";
             }
         }
 

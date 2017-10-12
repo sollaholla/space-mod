@@ -28,9 +28,49 @@ namespace BaseBuilding
 
         public void Start()
         {
-            PopulateResourceDefinitions();
-            PopulateResourceBars();
-            CreateObjectsMenu();
+            try
+            {
+                PopulateResourceDefinitions();
+                PopulateResourceBars();
+                CreateObjectsMenu();
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message + "\n" + e.StackTrace, DebugMessageType.Error);
+            }
+        }
+
+        //TODO: Move to its own ResourceManager class.
+        private bool DoesHaveEnoughResources(Resource r, int amount)
+        {
+            foreach (PlayerResource pR in _playersResources)
+            {
+                if (pR.Id == r.Id && pR.Amount >= amount)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private List<Resource> GetResourcesRequired(ObjectInfo o)
+        {
+            if (o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, x.Amount)))
+                return null;
+
+            var resourcesRequired = new List<Resource>();
+
+            foreach (var pR in _playersResources)
+            {
+                foreach (Resource r in o.ResourcesRequired)
+                {
+                    if(pR.Id == r.Id && r.Amount > pR.Amount)
+                    {
+                        resourcesRequired.Add(new Resource() {Id = r.Id, Amount = r.Amount - pR.Amount});
+                    }
+                }
+            }
+
+            return resourcesRequired;
         }
 
         private void PopulateResourceDefinitions()
@@ -67,6 +107,21 @@ namespace BaseBuilding
 
                 menuItem.Activated += (sender, item) =>
                 {
+                    if (!(o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, x.Amount))))
+                    {
+                        var resourcesRequired = GetResourcesRequired(o);
+                        if (resourcesRequired == null) return;
+
+                        var message = "You need: " + Environment.NewLine;
+                        resourcesRequired.ForEach(x =>
+                        {
+                            message += "~r~" + x.Amount + " ~w~" + Resource.GetName(x, _resourceDefinitions) + Environment.NewLine;
+                        });
+
+                        UI.Notify(message);
+                        return;
+                    } 
+
                     Game.DisableControlThisFrame(2, Control.Attack);
                     var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
                     if (b == null) return;
@@ -112,9 +167,16 @@ namespace BaseBuilding
 
         public void Update()
         {
-            UpdateMenu();
-            UpdateTimerBars();
-            SpawnRocks();
+            try
+            {
+                UpdateMenu();
+                UpdateTimerBars();
+                SpawnRocks();
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message + "\n" + e.StackTrace, DebugMessageType.Error);
+            }
         }
 
         private void UpdateMenu()
