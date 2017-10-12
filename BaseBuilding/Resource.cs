@@ -14,19 +14,19 @@ namespace BaseBuilding
             return defs?.Find(x => x.Id == resource.Id)?.Name ?? "No name found...";
         }
 
-        public static bool DoesHaveEnoughResources(Resource r, List<PlayerResource> playersResources, bool amountCheck = true)
+        public static bool DoesHaveEnoughResources(Resource r, bool amountCheck = true)
         {
-            return playersResources.Any(x => x.Id == r.Id && (x.Amount >= r.Amount || !amountCheck));
+            return BaseBuildingCore.PlayerResources.Any(x => x.Id == r.Id && (x.Amount >= r.Amount || !amountCheck));
         }
 
-        public static List<Resource> GetResourcesRequired(ObjectInfo o, List<PlayerResource> playersResources)
+        public static List<Resource> GetResourcesRequired(ObjectInfo o)
         {
-            if (o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x, playersResources)))
+            if (o.ResourcesRequired.TrueForAll(x => DoesHaveEnoughResources(x)))
                 return null;
 
             var resoursesRequired = new List<Resource>();
 
-            foreach (var pR in playersResources)
+            foreach (var pR in BaseBuildingCore.PlayerResources)
             {
                 foreach (Resource r in o.ResourcesRequired)
                 {
