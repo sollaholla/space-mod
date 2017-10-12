@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using GTA;
+using GTA.Math;
+using GTA.Native;
+using GTS.Library;
 using GTS.Scenes;
 using GTS.Utility;
 using NativeUI;
@@ -14,10 +18,13 @@ namespace BaseBuilding
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
         private readonly List<PlayerResource> _playerResources = new List<PlayerResource>();
         private readonly List<ResourceDefinition> _resourceDefinitions = new List<ResourceDefinition>();
+        private readonly List<MinableRock> _rocks = new List<MinableRock>();
+        private readonly TimerBarPool _timerPool = new TimerBarPool();
         private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
         private readonly MenuPool _menuPool = new MenuPool();
+        private readonly Random _rand = new Random();
 
-        public static readonly TimerBarPool TimerPool = new TimerBarPool();
+        private bool _spawnedRocks;
 
         public BaseBuildingCore()
         {
@@ -58,7 +65,7 @@ namespace BaseBuilding
 
             foreach (var r in playerResourceList.Resources)
             {
-                var playerResource = PlayerResource.GetPlayerResource(r, _resourceDefinitions);
+                var playerResource = PlayerResource.GetPlayerResource(r, _resourceDefinitions, _timerPool);
                 _playerResources.Add(playerResource);
             }
         }
@@ -139,6 +146,7 @@ namespace BaseBuilding
                 UpdateMenu();
                 UpdateTimerBars();
                 SpawnRocks();
+                UpdateRocks();
             }
             catch (Exception e)
             {
@@ -156,13 +164,87 @@ namespace BaseBuilding
             }
         }
 
-        private static void SpawnRocks()
+        private void SpawnRocks()
         {
+            if (_spawnedRocks)
+                return;
+            
+            foreach (var res in _resourceDefinitions)
+            {
+                if (res.RockInfo.TargetScenes.All(x => x != CurrentScene.FileName))
+                    continue;
+
+                foreach (var rockInfoRockModel in res.RockInfo.RockModels)
+                {
+                    for (var j = 0; j < rockInfoRockModel.MaxPatches; j++)
+                    {
+                        const float minDist = 50f;
+                        const float dist = 5f;
+                        var patchArea = PlayerPed.Position.Around((Perlin.GetNoise() + minDist) * dist);
+
+                        for (var i = 0; i < rockInfoRockModel.MaxRocksPerPatch; i++)
+                        {
+                            var chance = Perlin.GetNoise() * 100f;
+                            if (chance > rockInfoRockModel.SpawnChance)
+                                continue;
+
+                            const float minPatchDist = 10f;
+                            var patchSpawn = patchArea.Around((Perlin.GetNoise() + minPatchDist) * 1.5f);
+                            var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
+                            if (ground == Vector3.Zero) continue;
+
+                            var model = new Model(rockInfoRockModel.RockModel);
+                            model.Request();
+                            while (!model.IsLoaded)
+                                Script.Yield();
+                            var prop = World.CreateProp(model, ground - Vector3.WorldUp * rockInfoRockModel.ZOffset, false, false);
+                            prop.Heading = Perlin.GetNoise() * 360f;
+                            prop.FreezePosition = true;
+                            prop.MaxHealth = rockInfoRockModel.MaxHealth;
+                            prop.Health = prop.MaxHealth;
+                            model.MarkAsNoLongerNeeded();
+                            var rock = new MinableRock(prop.Handle, res, rockInfoRockModel);
+                            rock.AddBlip();
+                            rock.PickedUpResource += MinableRockOnPickedUpResource;
+                            _rocks.Add(rock);
+                            Script.Yield();
+                        }
+                    }
+                }
+            }
+
+            _spawnedRocks = true;
         }
 
-        private static void UpdateTimerBars()
+        private void UpdateRocks()
         {
-            TimerPool.Draw();
+            var impCoords = PlayerPed.GetLastWeaponImpactCoords();
+            foreach (var minableRock in _rocks)
+            {
+                minableRock?.Update(impCoords);
+                minableRock?.UpdatePickups();
+            }
+        }
+
+        private void MinableRockOnPickedUpResource(object sender, PickupEventArgs pickupEventArgs)
+        {
+            if (pickupEventArgs == null) return;
+            var def = pickupEventArgs.ResourceDefinition;
+            var am = pickupEventArgs.Amount;
+            GivePlayerResource(def, am);
+        }
+
+        private void GivePlayerResource(ResourceDefinition def, int am)
+        {
+            var res = new Resource { Amount = am, Id = def.Id };
+            var find = _playerResources.Find(x => x.Id == res.Id);
+            if (find != null) find.Amount += res.Amount;
+            else _playerResources.Add(PlayerResource.GetPlayerResource(res, _resourceDefinitions, _timerPool));
+        }
+
+        private void UpdateTimerBars()
+        {
+            _timerPool.Draw();
         }
 
         public void OnAborted()
@@ -180,6 +262,11 @@ namespace BaseBuilding
             foreach (var buildableObject in _buildables)
             {
                 buildableObject?.Delete();
+            }
+
+            foreach (var minableRock in _rocks)
+            {
+                minableRock?.Delete();
             }
         }
     }
