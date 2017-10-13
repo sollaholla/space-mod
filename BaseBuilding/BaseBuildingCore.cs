@@ -83,18 +83,31 @@ namespace BaseBuilding
                 {
                     if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveResource(x, _playerResources))))
                     {
-                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playerResources);
-                        if (resourcesRequired == null) return;
+                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playerResources) ?? o.ResourcesRequired;
 
                         var message = "You need: " + Environment.NewLine;
                         resourcesRequired.ForEach(x =>
                         {
-                            message += "~r~" + x.Amount + " ~w~" + Resource.GetName(x, _resourceDefinitions) + Environment.NewLine;
+                            message += "~r~" + x.Amount + " ~w~" + Resource.GetName(x, _resourceDefinitions);
                         });
 
                         UI.Notify(message);
                         return;
-                    } 
+                    }
+
+                    _playerResources.ForEach(pR =>
+                    {
+                        o.ResourcesRequired.ForEach(r =>
+                        {
+                            if (pR.Id == r.Id) pR.Amount -= r.Amount;
+                            if (pR.Amount <= 0)
+                            {
+                                _playerResources.Remove(pR);
+                                pR.Dispose(_timerPool);
+                                pR = null;
+                            }
+                        });
+                    });
 
                     Game.DisableControlThisFrame(2, Control.Attack);
                     var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
@@ -156,6 +169,7 @@ namespace BaseBuilding
 
         private void UpdateMenu()
         {
+            _menuPool.DisableInstructionalButtons = true;
             _menuPool.ProcessMenus();
 
             if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.VehicleHorn))
@@ -244,7 +258,8 @@ namespace BaseBuilding
 
         private void UpdateTimerBars()
         {
-            _timerPool.Draw();
+            if(_menuPool.IsAnyMenuOpen())
+                _timerPool.Draw();
         }
 
         public void OnAborted()

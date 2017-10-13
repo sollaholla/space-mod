@@ -43,12 +43,16 @@ namespace BaseBuilding
         {
             // If the player already has these resources we return null; otherwise, we 
             // return a list of resources the player needs.
+
+            // If the player has no resources, we return all the resources required.
+            if (playersResources.Count == 0) return buildableObjectInfo.ResourcesRequired;
+
             return buildableObjectInfo.ResourcesRequired.TrueForAll(x => DoesHaveResource(x, playersResources))
                 ? null
                 : (from pR in playersResources
                     from r in buildableObjectInfo.ResourcesRequired
                     where pR.Id == r.Id && r.Amount > pR.Amount
-                    select new Resource() {Id = r.Id, Amount = r.Amount - pR.Amount}).ToList();
+                    select new Resource {Id = r.Id, Amount = r.Amount - pR.Amount}).ToList();
         }
     }
 }
