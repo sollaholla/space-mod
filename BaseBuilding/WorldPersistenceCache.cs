@@ -8,6 +8,7 @@ namespace BaseBuilding
         public WorldPersistenceCache()
         {
             RockPersistence = new List<RockPersistenceInfo>();
+            RockSpawnAreas = new List<Vector3>();
         }
 
         public List<RockPersistenceInfo> RockPersistence { get; set; }
@@ -18,9 +19,9 @@ namespace BaseBuilding
     {
         public string Scene { get; set; }
 
-        public ResourceDefinition Resource { get; set; }
+        public int ResourceId { get; set; }
 
-        public RockModelInfo RockModel { get; set; }
+        public int RockModelId { get; set; }
 
         public Vector3 Position { get; set; }
 

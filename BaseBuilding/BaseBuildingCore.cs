@@ -22,8 +22,8 @@ namespace BaseBuilding
         private readonly List<ResourceDefinition> _resourceDefinitions = new List<ResourceDefinition>();
         private readonly List<MinableRock> _rocks = new List<MinableRock>();
         private readonly TimerBarPool _timerPool = new TimerBarPool();
-        private int _persistenceId;
 
+        private int _runtimePersistenceId;
         private DateTime _rockSpawnTimer;
         private bool _spawnedRocks;
         private WorldPersistenceCache _wordPersistenceCache = new WorldPersistenceCache();
@@ -39,10 +39,10 @@ namespace BaseBuilding
         {
             try
             {
-                InstantiatePersistentObjects();
                 PopulateResourceDefinitions();
                 PopulateResourceBars();
                 CreateObjectsMenu();
+                InstantiatePersistentObjects();
                 _rockSpawnTimer = DateTime.Now;
             }
             catch (Exception e)
@@ -60,10 +60,20 @@ namespace BaseBuilding
         private void CreatePersistentRocks()
         {
             foreach (var rockPersistenceInfo in _wordPersistenceCache.RockPersistence)
-                if (CurrentScene.FileName == rockPersistenceInfo.Scene)
-                    CreateRock(rockPersistenceInfo.Resource, rockPersistenceInfo.RockModel,
-                        rockPersistenceInfo.Position,
+            {
+                if (CurrentScene.FileName != rockPersistenceInfo.Scene) continue;
+
+                // We're not using direct definitions for resources to save on file size 
+                // and so that the properties are also transfered to the rock if they are changed
+                // in the resource file.
+                var res = _resourceDefinitions.Find(x => x.Id == rockPersistenceInfo.ResourceId);
+                var r = res?.RockInfo.RockModels.Find(x => x.Id == rockPersistenceInfo.RockModelId);
+                if (r != null)
+                {
+                    CreateRock(res, r, rockPersistenceInfo.Position,
                         rockPersistenceInfo.Rotation.Z, false, rockPersistenceInfo.PersistenceId);
+                }
+            }
         }
 
         private void PopulateResourceDefinitions()
@@ -253,8 +263,11 @@ namespace BaseBuilding
                             var patchSpawn = patchArea.Around(Perlin.GetNoise() * maxPatchDist + minPatchDist);
                             var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
                             if (ground != Vector3.Zero)
+                            {
                                 CreateRock(res, rockInfoRockModel, ground, Perlin.GetNoise() * 360f, true,
-                                    _persistenceId++);
+                                    _runtimePersistenceId);
+                                _runtimePersistenceId++;
+                            }
                         }
 
                         _wordPersistenceCache.RockSpawnAreas.Add(patchArea);
@@ -294,8 +307,8 @@ namespace BaseBuilding
                 {
                     Position = prop.Position,
                     Rotation = prop.Rotation,
-                    Resource = resourceDef,
-                    RockModel = rockModel,
+                    ResourceId = resourceDef.Id,
+                    RockModelId = rockModel.Id,
                     Scene = CurrentScene.FileName,
                     PersistenceId = rock.PersistenceId
                 });
@@ -304,21 +317,30 @@ namespace BaseBuilding
         private void UpdateRocks()
         {
             var impCoords = PlayerPed.GetLastWeaponImpactCoords();
+            var needsSave = false;
+
             foreach (var minableRock in _rocks)
             {
                 minableRock?.Update(impCoords);
                 minableRock?.UpdatePickups();
 
-                // Remove the rock if it's destroyed and contained in the persistence cache.
-                RockPersistenceInfo f;
-                if (Entity.Exists(minableRock) ||
-                    (f = _wordPersistenceCache.RockPersistence.Find(
-                        x => minableRock != null && x.PersistenceId == minableRock.PersistenceId)) ==
-                    null) continue;
+                if (!Entity.Exists(minableRock))
+                {
+                    // Remove the rock if it's destroyed and contained in the persistence cache.
+                    var f = _wordPersistenceCache.RockPersistence.Find(x => x.PersistenceId == minableRock.PersistenceId);
+                    if (f != null)
+                    {
+                        // We found the rock by it's persistence ID so let's remove it.
+                        _wordPersistenceCache.RockPersistence.Remove(f);
 
-                // We found the rock by it's persistence ID so let's remove it.
-                _wordPersistenceCache.RockPersistence.Remove(f);
+                        // We need to save this to the cache.
+                        needsSave = true;
+                    }
+                }
+            }
 
+            if (needsSave)
+            {
                 // Autosave the cache.
                 SaveWorldCache(_wordPersistenceCache);
             }

@@ -12,6 +12,8 @@ namespace BaseBuilding
 
         public float SpawnChance { get; set; }
 
+        public int Id { get; set; }
+
         public int MaxRocksPerPatch { get; set; }
 
         public int MaxPatches { get; set; }
