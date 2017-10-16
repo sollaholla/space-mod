@@ -35,5 +35,12 @@ namespace BaseBuilding
             pResource.Init(defs, _timerPool);
             return pResource;
         }
+
+        public void Dispose(TimerBarPool pool)
+        {
+            pool.Remove(TextBar);
+
+            TextBar = null;
+        }
     }
 }
