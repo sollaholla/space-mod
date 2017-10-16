@@ -18,20 +18,23 @@ namespace BaseBuilding
         private bool _didPlayParticles;
         private float _fadeAmount;
 
-        public MinableRock(int handle, ResourceDefinition res, RockModelInfo modelInfo) : base(handle)
+        public MinableRock(int handle, ResourceDefinition res, RockModelInfo modelInfo,
+            int persistenceId) : base(handle)
         {
             ResourceData = res;
             ModelInfo = modelInfo;
             _fadeAmount = Alpha;
+            PersistenceId = persistenceId;
         }
 
         public ResourceDefinition ResourceData { get; set; }
 
         public RockModelInfo ModelInfo { get; set; }
 
+        public int PersistenceId { get; set; }
+
         public void Update(Vector3 damageCoords)
         {
-
             if (IsDead && !_didPlayParticles)
             {
                 var particles = new PtfxNonLooped(ModelInfo.ParticleName, ModelInfo.ParticleDict);
@@ -57,6 +60,7 @@ namespace BaseBuilding
             if (!Exists() || damageCoords == Vector3.Zero || (!ModelInfo.ChunkModels?.Any() ?? true) ||
             !HasBeenDamagedBy(Game.Player.Character))
                 return;
+
             Function.Call(Hash.CLEAR_ENTITY_LAST_DAMAGE_ENTITY, this);
 
             var normal = (damageCoords - Position).Normalized;
@@ -66,14 +70,17 @@ namespace BaseBuilding
             m.Request();
             while (!m.IsLoaded)
                 Script.Yield();
+
             var p = World.CreateProp(m, damageCoords, Vector3.Zero, true, false);
             p.IsInvincible = true;
             p.IsVisible = true;
             p.ApplyForce(normal * speed);
+
             var chunkParticles = new PtfxNonLooped(randModel.ParticleName, randModel.ParticleDict);
             chunkParticles.Request();
             while (!chunkParticles.IsLoaded)
                 Script.Yield();
+
             chunkParticles.Play(p.Position, Vector3.Zero, randModel.ParticleScale);
             chunkParticles.Remove();
             m.MarkAsNoLongerNeeded();
@@ -87,10 +94,12 @@ namespace BaseBuilding
             {
                 if (!piece.Exists())
                     continue;
+
                 var dist = Vector3.DistanceSquared(charPos, piece.Position);
                 var bounds = piece.Model.GetDimensions().Length() * 2f;
-                World.DrawLightWithRange(piece.Position, Color.DarkRed, bounds, 1f);
+                World.DrawLightWithRange(piece.Position, ColorTranslator.FromHtml(ResourceData.ResourceColor), bounds, 1f);
                 if (dist > bounds * bounds) continue;
+
                 piece.Delete();
                 OnPickedUpResource(new PickupEventArgs(1, ResourceData));
             }

@@ -67,6 +67,7 @@
     <Compile Include="PickupEventArgs.cs" />
     <Compile Include="PlayerResource.cs" />
     <Compile Include="PlayerResourceList.cs" />
+    <Compile Include="WorldPersistenceCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="ResourceDefinition.cs" />

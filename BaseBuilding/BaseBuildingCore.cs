@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using GTA;
 using GTA.Math;
 using GTA.Native;
@@ -15,15 +16,17 @@ namespace BaseBuilding
 {
     public class BaseBuildingCore : Scenario
     {
+        private const string BaseBuildingFolder = "\\BaseBuilding\\";
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
         private readonly List<PlayerResource> _playerResources = new List<PlayerResource>();
         private readonly List<ResourceDefinition> _resourceDefinitions = new List<ResourceDefinition>();
         private readonly List<MinableRock> _rocks = new List<MinableRock>();
         private readonly TimerBarPool _timerPool = new TimerBarPool();
         private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
+        private WorldPersistenceCache _wordPersistenceCache = new WorldPersistenceCache();
         private readonly MenuPool _menuPool = new MenuPool();
-        private readonly Random _rand = new Random();
 
+        private int _persistenceId;
         private bool _spawnedRocks;
 
         public BaseBuildingCore()
@@ -37,6 +40,7 @@ namespace BaseBuilding
         {
             try
             {
+                InstantiatePersistentObjects();
                 PopulateResourceDefinitions();
                 PopulateResourceBars();
                 CreateObjectsMenu();
@@ -44,6 +48,24 @@ namespace BaseBuilding
             catch (Exception e)
             {
                 Debug.Log(e.Message + "\n" + e.StackTrace, DebugMessageType.Error);
+            }
+        }
+
+        private void InstantiatePersistentObjects()
+        {
+            _wordPersistenceCache = ReadWorldCache() ?? new WorldPersistenceCache();
+            CreatePersistentRocks();
+        }
+
+        private void CreatePersistentRocks()
+        {
+            foreach (var rockPersistenceInfo in _wordPersistenceCache.RockPersistence)
+            {
+                if (CurrentScene.FileName == rockPersistenceInfo.Scene)
+                {
+                    CreateRock(rockPersistenceInfo.Resource, rockPersistenceInfo.RockModel, rockPersistenceInfo.Position,
+                        rockPersistenceInfo.Rotation.Z, false, rockPersistenceInfo.PersistenceId);
+                }
             }
         }
 
@@ -112,7 +134,7 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + "\\BaseBuilding\\" + "Resource.xml";
+            var path = localPath + BaseBuildingFolder + "Resource.xml";
             var obj = XmlSerializer.Deserialize<ResourceDefinitionList>(path);
             return obj;
         }
@@ -123,7 +145,7 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + "\\BaseBuilding\\" + "ObjectList.xml";
+            var path = localPath + BaseBuildingFolder + "ObjectList.xml";
             var obj = XmlSerializer.Deserialize<BuildableObjectsList>(path);
             return obj;
         }
@@ -134,9 +156,33 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + "\\BaseBuilding\\" + "PlayerResources.xml";
+            var path = localPath + BaseBuildingFolder + "PlayerResources.xml";
             var obj = XmlSerializer.Deserialize<PlayerResourceList>(path);
             return obj;
+        }
+
+        private static WorldPersistenceCache ReadWorldCache()
+        {
+            var localPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            if (string.IsNullOrEmpty(localPath))
+                return null;
+
+            var path = localPath + BaseBuildingFolder + "Autosave.savedata";
+            var obj = XmlSerializer.Deserialize<WorldPersistenceCache>(path);
+            return obj;
+        }
+
+        private static void SaveWorldCache(WorldPersistenceCache cache)
+        {
+            if (cache == null)
+                return;
+
+            var localPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            if (string.IsNullOrEmpty(localPath))
+                return;
+
+            var path = localPath + BaseBuildingFolder + "Autosave.savedata";
+            XmlSerializer.Serialize(path, cache);
         }
 
         public void Update()
@@ -178,42 +224,73 @@ namespace BaseBuilding
                 {
                     for (var j = 0; j < rockInfoRockModel.MaxPatches; j++)
                     {
-                        const float minDist = 50f;
-                        const float dist = 5f;
-                        var patchArea = PlayerPed.Position.Around((Perlin.GetNoise() + minDist) * dist);
+                        const float minDist = 25f;
+                        const float maxDist = 50f;
+                        const float maxDistSqr = maxDist * maxDist;
+
+                        var patchArea = PlayerPed.Position.Around(Perlin.GetNoise() * maxDist + minDist);
+                        if (_wordPersistenceCache.RockSpawnAreas.Any(x => x.DistanceToSquared(patchArea) < maxDistSqr * 2))
+                            continue;
 
                         for (var i = 0; i < rockInfoRockModel.MaxRocksPerPatch; i++)
                         {
                             var chance = Perlin.GetNoise() * 100f;
-                            if (chance > rockInfoRockModel.SpawnChance)
-                                continue;
+                            if (chance > rockInfoRockModel.SpawnChance) continue;
 
                             const float minPatchDist = 10f;
-                            var patchSpawn = patchArea.Around((Perlin.GetNoise() + minPatchDist) * 1.5f);
-                            var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
-                            if (ground == Vector3.Zero) continue;
+                            const float maxPatchDist = 50f;
 
-                            var model = new Model(rockInfoRockModel.RockModel);
-                            model.Request();
-                            while (!model.IsLoaded)
-                                Script.Yield();
-                            var prop = World.CreateProp(model, ground - Vector3.WorldUp * rockInfoRockModel.ZOffset, false, false);
-                            prop.Heading = Perlin.GetNoise() * 360f;
-                            prop.FreezePosition = true;
-                            prop.MaxHealth = rockInfoRockModel.MaxHealth;
-                            prop.Health = prop.MaxHealth;
-                            model.MarkAsNoLongerNeeded();
-                            var rock = new MinableRock(prop.Handle, res, rockInfoRockModel);
-                            rock.AddBlip();
-                            rock.PickedUpResource += MinableRockOnPickedUpResource;
-                            _rocks.Add(rock);
-                            Script.Yield();
+                            var patchSpawn = patchArea.Around(Perlin.GetNoise() * maxPatchDist + minPatchDist);
+                            var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
+                            if (ground != Vector3.Zero) {
+                                CreateRock(res, rockInfoRockModel, ground, Perlin.GetNoise() * 360f, true, _persistenceId++);
+                            }
                         }
+
+                        _wordPersistenceCache.RockSpawnAreas.Add(patchArea);
                     }
                 }
             }
 
+            SaveWorldCache(_wordPersistenceCache);
+
             _spawnedRocks = true;
+        }
+
+        private void CreateRock(ResourceDefinition resourceDef, RockModelInfo rockModel, Vector3 position,
+            float heading, bool persistent, int persistenceId)
+        {
+            var model = new Model(rockModel.RockModel);
+            model.Request();
+            while (!model.IsLoaded)
+                Script.Yield();
+
+            var prop = World.CreateProp(model,
+                position - Vector3.WorldUp * rockModel.ZOffset,
+                false, false);
+            prop.Heading = heading;
+            prop.FreezePosition = true;
+            prop.MaxHealth = rockModel.MaxHealth;
+            prop.Health = prop.MaxHealth;
+            model.MarkAsNoLongerNeeded();
+
+            var rock = new MinableRock(prop.Handle, resourceDef, rockModel, persistenceId);
+            rock.AddBlip();
+            rock.PickedUpResource += MinableRockOnPickedUpResource;
+            _rocks.Add(rock);
+
+            if (persistent)
+            {
+                _wordPersistenceCache.RockPersistence.Add(new RockPersistenceInfo
+                {
+                    Position = prop.Position,
+                    Rotation = prop.Rotation,
+                    Resource = resourceDef,
+                    RockModel = rockModel,
+                    Scene = CurrentScene.FileName,
+                    PersistenceId = rock.PersistenceId
+                });
+            }
         }
 
         private void UpdateRocks()
@@ -223,6 +300,19 @@ namespace BaseBuilding
             {
                 minableRock?.Update(impCoords);
                 minableRock?.UpdatePickups();
+
+                // Remove the rock if it's destroyed and contained in the persistence cache.
+                RockPersistenceInfo f;
+                if (Entity.Exists(minableRock) || 
+                    (f = _wordPersistenceCache.RockPersistence.Find(
+                            x => minableRock != null && x.PersistenceId == minableRock.PersistenceId)) ==
+                    null) continue;
+
+                // We found the rock by it's persistence ID so let's remove it.
+                _wordPersistenceCache.RockPersistence.Remove(f);
+
+                // Autosave the cache.
+                SaveWorldCache(_wordPersistenceCache);
             }
         }
 

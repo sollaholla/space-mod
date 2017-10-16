@@ -11,6 +11,8 @@
 
         public string Name { get; set; }
 
+        public string ResourceColor { get; set; }
+
         public RockInfo RockInfo { get; set; }
     }
 }
