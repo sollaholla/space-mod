@@ -6,25 +6,23 @@ using GTA.Native;
 namespace BaseBuilding
 {
     /// <summary>
-    /// Credits to GuadMaz
+    ///     Credits to GuadMaz
     /// </summary>
     public class InstructionalButton
     {
         private static Scaleform _sc;
-
-        public string Text { get; set; }
+        private readonly Control _buttonControl;
 
         private readonly string _buttonString;
-        private readonly GTA.Control _buttonControl;
         private readonly bool _usingControls;
 
         /// <summary>
-        /// Add a dynamic button to the instructional buttons array.
-        /// Changes whether the controller is being used and changes depending on keybinds.
+        ///     Add a dynamic button to the instructional buttons array.
+        ///     Changes whether the controller is being used and changes depending on keybinds.
         /// </summary>
         /// <param name="control">GTA.Control that gets converted into a button.</param>
         /// <param name="text">Help text that goes with the button.</param>
-        public InstructionalButton(GTA.Control control, string text)
+        public InstructionalButton(Control control, string text)
         {
             Text = text;
             _buttonControl = control;
@@ -33,7 +31,7 @@ namespace BaseBuilding
 
 
         /// <summary>
-        /// Adds a keyboard button to the instructional buttons array.
+        ///     Adds a keyboard button to the instructional buttons array.
         /// </summary>
         /// <param name="keystring">Custom keyboard button, like "I", or "O", or "F5".</param>
         /// <param name="text">Help text that goes with the button.</param>
@@ -44,10 +42,14 @@ namespace BaseBuilding
             _usingControls = false;
         }
 
+        public string Text { get; set; }
+
 
         public string GetButtonId()
         {
-            return _usingControls ? Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)_buttonControl, 0) : "t_" + _buttonString;
+            return _usingControls
+                ? Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int) _buttonControl, 0)
+                : "t_" + _buttonString;
         }
 
         public void DisableControl(int index)
@@ -58,9 +60,7 @@ namespace BaseBuilding
         public static void Draw(IReadOnlyCollection<InstructionalButton> buttons)
         {
             if (_sc == null)
-            {
                 _sc = new Scaleform("instructional_buttons");
-            }
 
             _sc.CallFunction("CLEAR_ALL");
             _sc.CallFunction("TOGGLE_MOUSE_BUTTONS", 0);
@@ -70,7 +70,7 @@ namespace BaseBuilding
             {
                 var b = buttons.ElementAt(i);
                 _sc.CallFunction("SET_DATA_SLOT", i,
-                    Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int)b._buttonControl, 0),
+                    Function.Call<string>(Hash._0x0499D7B09FC9B407, 2, (int) b._buttonControl, 0),
                     b.Text);
             }
 

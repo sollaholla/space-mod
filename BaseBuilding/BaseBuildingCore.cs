@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
 using GTA;
 using GTA.Math;
-using GTA.Native;
 using GTS.Library;
 using GTS.Scenes;
 using GTS.Utility;
@@ -18,17 +16,17 @@ namespace BaseBuilding
     {
         private const string BaseBuildingFolder = "\\BaseBuilding\\";
         private readonly List<BuildableObject> _buildables = new List<BuildableObject>();
+        private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
+        private readonly MenuPool _menuPool = new MenuPool();
         private readonly List<PlayerResource> _playerResources = new List<PlayerResource>();
         private readonly List<ResourceDefinition> _resourceDefinitions = new List<ResourceDefinition>();
         private readonly List<MinableRock> _rocks = new List<MinableRock>();
         private readonly TimerBarPool _timerPool = new TimerBarPool();
-        private readonly UIMenu _inventoryMenu = new UIMenu("Inventory", "Select an Option");
-        private WorldPersistenceCache _wordPersistenceCache = new WorldPersistenceCache();
-        private readonly MenuPool _menuPool = new MenuPool();
+        private int _persistenceId;
 
         private DateTime _rockSpawnTimer;
-        private int _persistenceId;
         private bool _spawnedRocks;
+        private WorldPersistenceCache _wordPersistenceCache = new WorldPersistenceCache();
 
         public BaseBuildingCore()
         {
@@ -62,13 +60,10 @@ namespace BaseBuilding
         private void CreatePersistentRocks()
         {
             foreach (var rockPersistenceInfo in _wordPersistenceCache.RockPersistence)
-            {
                 if (CurrentScene.FileName == rockPersistenceInfo.Scene)
-                {
-                    CreateRock(rockPersistenceInfo.Resource, rockPersistenceInfo.RockModel, rockPersistenceInfo.Position,
+                    CreateRock(rockPersistenceInfo.Resource, rockPersistenceInfo.RockModel,
+                        rockPersistenceInfo.Position,
                         rockPersistenceInfo.Rotation.Z, false, rockPersistenceInfo.PersistenceId);
-                }
-            }
         }
 
         private void PopulateResourceDefinitions()
@@ -77,9 +72,7 @@ namespace BaseBuilding
             if (resourceDefinitions == null) return;
 
             foreach (var r in resourceDefinitions.Definitions)
-            {
                 _resourceDefinitions.Add(r);
-            }
         }
 
         private void PopulateResourceBars()
@@ -105,9 +98,10 @@ namespace BaseBuilding
 
                 menuItem.Activated += (sender, item) =>
                 {
-                    if (!(o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveResource(x, _playerResources))))
+                    if (!o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveResource(x, _playerResources)))
                     {
-                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playerResources) ?? o.ResourcesRequired;
+                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playerResources) ??
+                                                o.ResourcesRequired;
 
                         var message = "You need: " + Environment.NewLine;
                         resourcesRequired.ForEach(x =>
@@ -124,12 +118,10 @@ namespace BaseBuilding
                         o.ResourcesRequired.ForEach(r =>
                         {
                             if (pR.Id == r.Id) pR.Amount -= r.Amount;
-                            if (pR.Amount <= 0)
-                            {
-                                _playerResources.Remove(pR);
-                                pR.Dispose(_timerPool);
-                                pR = null;
-                            }
+                            if (pR.Amount > 0) return;
+                            _playerResources.Remove(pR);
+                            pR.Dispose(_timerPool);
+                            pR = null;
                         });
                     });
 
@@ -221,9 +213,7 @@ namespace BaseBuilding
             _menuPool.ProcessMenus();
 
             if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.VehicleHorn))
-            {
                 _inventoryMenu.Visible = !_inventoryMenu.Visible;
-            }
         }
 
         private void SpawnRocks()
@@ -241,7 +231,6 @@ namespace BaseBuilding
                     continue;
 
                 foreach (var rockInfoRockModel in res.RockInfo.RockModels)
-                {
                     for (var j = 0; j < rockInfoRockModel.MaxPatches; j++)
                     {
                         const float minDist = 50f;
@@ -249,7 +238,8 @@ namespace BaseBuilding
                         const float maxDistSqr = maxDist * maxDist;
 
                         var patchArea = PlayerPed.Position.Around(Perlin.GetNoise() * maxDist + minDist);
-                        if (_wordPersistenceCache.RockSpawnAreas.Any(x => x.DistanceToSquared(patchArea) < maxDistSqr * 2))
+                        if (_wordPersistenceCache.RockSpawnAreas.Any(
+                            x => x.DistanceToSquared(patchArea) < maxDistSqr * 2))
                             continue;
 
                         for (var i = 0; i < rockInfoRockModel.MaxRocksPerPatch; i++)
@@ -262,14 +252,13 @@ namespace BaseBuilding
 
                             var patchSpawn = patchArea.Around(Perlin.GetNoise() * maxPatchDist + minPatchDist);
                             var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
-                            if (ground != Vector3.Zero) {
-                                CreateRock(res, rockInfoRockModel, ground, Perlin.GetNoise() * 360f, true, _persistenceId++);
-                            }
+                            if (ground != Vector3.Zero)
+                                CreateRock(res, rockInfoRockModel, ground, Perlin.GetNoise() * 360f, true,
+                                    _persistenceId++);
                         }
 
                         _wordPersistenceCache.RockSpawnAreas.Add(patchArea);
                     }
-                }
             }
 
             SaveWorldCache(_wordPersistenceCache);
@@ -301,7 +290,6 @@ namespace BaseBuilding
             _rocks.Add(rock);
 
             if (persistent)
-            {
                 _wordPersistenceCache.RockPersistence.Add(new RockPersistenceInfo
                 {
                     Position = prop.Position,
@@ -311,7 +299,6 @@ namespace BaseBuilding
                     Scene = CurrentScene.FileName,
                     PersistenceId = rock.PersistenceId
                 });
-            }
         }
 
         private void UpdateRocks()
@@ -324,9 +311,9 @@ namespace BaseBuilding
 
                 // Remove the rock if it's destroyed and contained in the persistence cache.
                 RockPersistenceInfo f;
-                if (Entity.Exists(minableRock) || 
+                if (Entity.Exists(minableRock) ||
                     (f = _wordPersistenceCache.RockPersistence.Find(
-                            x => minableRock != null && x.PersistenceId == minableRock.PersistenceId)) ==
+                        x => minableRock != null && x.PersistenceId == minableRock.PersistenceId)) ==
                     null) continue;
 
                 // We found the rock by it's persistence ID so let's remove it.
@@ -347,7 +334,7 @@ namespace BaseBuilding
 
         private void GivePlayerResource(ResourceDefinition def, int am)
         {
-            var res = new Resource { Amount = am, Id = def.Id };
+            var res = new Resource {Amount = am, Id = def.Id};
             var find = _playerResources.Find(x => x.Id == res.Id);
             if (find != null) find.Amount += res.Amount;
             else _playerResources.Add(PlayerResource.GetPlayerResource(res, _resourceDefinitions, _timerPool));
@@ -355,7 +342,7 @@ namespace BaseBuilding
 
         private void UpdateTimerBars()
         {
-            if(_menuPool.IsAnyMenuOpen())
+            if (_menuPool.IsAnyMenuOpen())
                 _timerPool.Draw();
         }
 
@@ -372,14 +359,10 @@ namespace BaseBuilding
         private void CleanUp()
         {
             foreach (var buildableObject in _buildables)
-            {
                 buildableObject?.Delete();
-            }
 
             foreach (var minableRock in _rocks)
-            {
                 minableRock?.Delete();
-            }
         }
     }
 }

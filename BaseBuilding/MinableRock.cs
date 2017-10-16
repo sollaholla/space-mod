@@ -11,10 +11,9 @@ namespace BaseBuilding
 {
     public class MinableRock : Entity
     {
-        public event OnPickupResourceEvent PickedUpResource;
+        private static readonly Random Random = new Random();
 
         private readonly List<Prop> _chunks = new List<Prop>();
-        private static readonly Random Random = new Random();
         private bool _didPlayParticles;
         private float _fadeAmount;
 
@@ -32,6 +31,7 @@ namespace BaseBuilding
         public RockModelInfo ModelInfo { get; set; }
 
         public int PersistenceId { get; set; }
+        public event OnPickupResourceEvent PickedUpResource;
 
         public void Update(Vector3 damageCoords)
         {
@@ -58,7 +58,7 @@ namespace BaseBuilding
             }
 
             if (!Exists() || damageCoords == Vector3.Zero || (!ModelInfo.ChunkModels?.Any() ?? true) ||
-            !HasBeenDamagedBy(Game.Player.Character))
+                !HasBeenDamagedBy(Game.Player.Character))
                 return;
 
             Function.Call(Hash.CLEAR_ENTITY_LAST_DAMAGE_ENTITY, this);
@@ -97,7 +97,8 @@ namespace BaseBuilding
 
                 var dist = Vector3.DistanceSquared(charPos, piece.Position);
                 var bounds = piece.Model.GetDimensions().Length() * 2f;
-                World.DrawLightWithRange(piece.Position, ColorTranslator.FromHtml(ResourceData.ResourceColor), bounds, 1f);
+                World.DrawLightWithRange(piece.Position, ColorTranslator.FromHtml(ResourceData.ResourceColor), bounds,
+                    1f);
                 if (dist > bounds * bounds) continue;
 
                 piece.Delete();

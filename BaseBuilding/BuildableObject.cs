@@ -10,14 +10,16 @@ namespace BaseBuilding
 {
     public class BuildableObject : Entity
     {
+        private Vector3 _snapBack;
+        private Vector3 _snapBottom;
+        private Vector3 _snapFront;
         private Vector3 _snapLeft;
         private Vector3 _snapRight;
-        private Vector3 _snapFront;
         private Vector3 _snapTop;
-        private Vector3 _snapBottom;
-        private Vector3 _snapBack;
 
-        public BuildableObject(int handle) : base(handle) { }
+        public BuildableObject(int handle) : base(handle)
+        {
+        }
 
         public Vector3 RotationOffset { get; set; }
 
@@ -63,7 +65,6 @@ namespace BaseBuilding
                 Position + Quaternion * _snapBack,
                 Position + Quaternion * _snapTop,
                 Position + Quaternion * _snapBottom
-
             }.Select(x => new SpatialPlacement(Vector3.Zero, x)).ToArray();
 
             var closest = World.GetClosest(coord, cast)?.Position ?? Vector3.Zero;
@@ -108,7 +109,7 @@ namespace BaseBuilding
         }
 
         public static BuildableObject PlaceBuildable(
-            string modelName, 
+            string modelName,
             IReadOnlyCollection<BuildableObject> others,
             params string[] ignoreModels)
         {
@@ -124,7 +125,7 @@ namespace BaseBuilding
                 new InstructionalButton(Control.Cover, "Rotate"),
                 new InstructionalButton(Control.Sprint, "Rotation Speed"),
                 new InstructionalButton(Control.Aim, "Cancel"),
-                new InstructionalButton(Control.LookBehind, "Place"),
+                new InstructionalButton(Control.LookBehind, "Place")
             };
 
             while (true)
@@ -148,7 +149,8 @@ namespace BaseBuilding
                     ignoreModels.Any(x => Game.GenerateHash(x) == closest.Model.Hash))
                     closest = null;
 
-                if (!Exists(closest) || closest.Position.DistanceTo(cameraPoint) > closest.Model.GetDimensions().Length())
+                if (!Exists(closest) || closest.Position.DistanceTo(cameraPoint) >
+                    closest.Model.GetDimensions().Length())
                 {
                     b.PositionNoOffset = cameraPoint;
 
@@ -158,18 +160,12 @@ namespace BaseBuilding
                     var speed = 25f;
 
                     if (Game.IsDisabledControlPressed(0, Control.Sprint))
-                    {
                         speed = 75f;
-                    }
 
                     if (Game.IsDisabledControlPressed(0, Control.Cover))
-                    {
                         b.Rotation += new Vector3(0, 0, 1) * Game.LastFrameTime * speed;
-                    }
                     else if (Game.IsDisabledControlPressed(2, Control.Context))
-                    {
                         b.Rotation -= new Vector3(0, 0, 1) * Game.LastFrameTime * speed;
-                    }
                 }
                 else if (Exists(closest))
                 {
@@ -182,13 +178,9 @@ namespace BaseBuilding
                     var opposingSnapPoint = GetOppositeSnapPoint(dir);
 
                     if (Game.IsDisabledControlJustPressed(0, Control.Cover))
-                    {
                         b.RotationOffset += new Vector3(0, 0, 90);
-                    }
                     else if (Game.IsDisabledControlJustPressed(2, Control.Context))
-                    {
                         b.RotationOffset -= new Vector3(0, 0, 90);
-                    }
 
                     b.Rotation = closest.Rotation + b.RotationOffset;
 

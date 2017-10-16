@@ -5,12 +5,11 @@ namespace BaseBuilding
 {
     public class ResourceDefinitionList
     {
+        [XmlArrayItem("Item")] public List<ResourceDefinition> Definitions;
+
         public ResourceDefinitionList()
         {
             Definitions = new List<ResourceDefinition>();
         }
-
-        [XmlArrayItem("Item")]
-        public List<ResourceDefinition> Definitions;
     }
 }

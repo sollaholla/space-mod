@@ -22,13 +22,13 @@ namespace BaseBuilding
 
         public float ZOffset { get; set; }
 
+        [XmlArrayItem("Item")]
+        public List<ChunkInfo> ChunkModels { get; set; }
+
         public string ParticleDict { get; set; }
 
         public string ParticleName { get; set; }
 
         public float ParticleScale { get; set; }
-
-        [XmlArrayItem("Item")]
-        public List<ChunkInfo> ChunkModels { get; set; }
     }
 }

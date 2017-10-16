@@ -11,7 +11,7 @@ namespace BaseBuilding
 
         public static float GetNoise()
         {
-            var z = (float)Math.Floor((float)Random.NextDouble() * M);
+            var z = (float) Math.Floor((float) Random.NextDouble() * M);
             z = (A * z + C) % M;
             return z / M;
         }

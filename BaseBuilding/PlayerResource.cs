@@ -11,7 +11,7 @@ namespace BaseBuilding
             set
             {
                 base.Amount = value;
-                if(TextBar != null)
+                if (TextBar != null)
                     TextBar.Label = value + "x";
             }
         }
@@ -25,7 +25,8 @@ namespace BaseBuilding
         }
 
         // TODO: Not sure if we need this yet.
-        public static PlayerResource GetPlayerResource(Resource r, List<ResourceDefinition> defs, TimerBarPool _timerPool)
+        public static PlayerResource GetPlayerResource(Resource r, List<ResourceDefinition> defs,
+            TimerBarPool _timerPool)
         {
             var pResource = new PlayerResource
             {

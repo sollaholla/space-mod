@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
 using GTA.Math;
 
 namespace BaseBuilding
