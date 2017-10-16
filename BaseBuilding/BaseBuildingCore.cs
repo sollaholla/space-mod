@@ -26,6 +26,7 @@ namespace BaseBuilding
         private WorldPersistenceCache _wordPersistenceCache = new WorldPersistenceCache();
         private readonly MenuPool _menuPool = new MenuPool();
 
+        private DateTime _rockSpawnTimer;
         private int _persistenceId;
         private bool _spawnedRocks;
 
@@ -44,6 +45,7 @@ namespace BaseBuilding
                 PopulateResourceDefinitions();
                 PopulateResourceBars();
                 CreateObjectsMenu();
+                _rockSpawnTimer = DateTime.Now;
             }
             catch (Exception e)
             {
@@ -213,8 +215,12 @@ namespace BaseBuilding
         private void SpawnRocks()
         {
             if (_spawnedRocks)
+            {
+                if (DateTime.Now > _rockSpawnTimer)
+                    _spawnedRocks = false;
                 return;
-            
+            }
+
             foreach (var res in _resourceDefinitions)
             {
                 if (res.RockInfo.TargetScenes.All(x => x != CurrentScene.FileName))
@@ -224,8 +230,8 @@ namespace BaseBuilding
                 {
                     for (var j = 0; j < rockInfoRockModel.MaxPatches; j++)
                     {
-                        const float minDist = 25f;
-                        const float maxDist = 50f;
+                        const float minDist = 50f;
+                        const float maxDist = 100f;
                         const float maxDistSqr = maxDist * maxDist;
 
                         var patchArea = PlayerPed.Position.Around(Perlin.GetNoise() * maxDist + minDist);
@@ -237,8 +243,8 @@ namespace BaseBuilding
                             var chance = Perlin.GetNoise() * 100f;
                             if (chance > rockInfoRockModel.SpawnChance) continue;
 
-                            const float minPatchDist = 10f;
-                            const float maxPatchDist = 50f;
+                            const float minPatchDist = 25f;
+                            const float maxPatchDist = 75f;
 
                             var patchSpawn = patchArea.Around(Perlin.GetNoise() * maxPatchDist + minPatchDist);
                             var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
@@ -254,6 +260,7 @@ namespace BaseBuilding
 
             SaveWorldCache(_wordPersistenceCache);
 
+            _rockSpawnTimer = DateTime.Now + new TimeSpan(0, 0, 0, 60);
             _spawnedRocks = true;
         }
 
