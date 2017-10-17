@@ -78,9 +78,6 @@
     <Compile Include="SpatialPlacement.cs" />
     <Compile Include="Perlin.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>COPY "$(TargetPath)" "D:\Games\Grand Theft Auto V\scripts\GrandTheftSpace\Space\Scenarios\"
