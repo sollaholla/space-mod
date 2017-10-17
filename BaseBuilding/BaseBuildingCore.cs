@@ -96,7 +96,8 @@ namespace BaseBuilding
         private void PopulateResourceBars()
         {
             var playerResourceList = ReadPlayersResources();
-            if (playerResourceList == null) return;
+            if (playerResourceList == null)
+                return;
 
             foreach (var r in playerResourceList.Resources)
             {
@@ -107,10 +108,10 @@ namespace BaseBuilding
 
         private void CreateObjectsMenu()
         {
-            var l = ReadObjectList();
+            var objectsList = ReadObjectList();
             var subMenu = _menuPool.AddSubMenu(_inventoryMenu, "Base Building");
-            if (l == null) return;
-            foreach (var o in l.ObjectDefs)
+            if (objectsList == null) return;
+            foreach (var o in objectsList.ObjectDefs)
             {
                 var menuItem = new UIMenuItem(o.FriendlyName, $"Click to place '{o.FriendlyName}'");
 
@@ -118,8 +119,15 @@ namespace BaseBuilding
                 {
                     if (!o.ResourcesRequired.TrueForAll(x => Resource.DoesHaveResource(x, _playerResources)))
                     {
-                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _playerResources) ??
-                                                o.ResourcesRequired;
+                        var resourcesRequired = Resource.GetRemainingResourcesRequired(o, _resourceDefinitions.Select(x => {
+                                                // Converts the resource definitions to player resources,
+                                                // if the player has the resource then it will return the player
+                                                // resource. We do this so that if there's no player resource
+                                                // defined for the specified resource it will still know the resource
+                                                // exists and display the right amount needed.
+                                                var f = _playerResources.Find(y => y.Id == x.Id && y.Amount > 0);
+                                                return f ?? new PlayerResource {Amount = 0, Id = x.Id, TextBar = null};
+                                                }).ToList()) ?? o.ResourcesRequired;
 
                         var message = "You need: " + Environment.NewLine;
                         resourcesRequired.ForEach(x =>
@@ -131,21 +139,33 @@ namespace BaseBuilding
                         return;
                     }
 
+                    Game.DisableControlThisFrame(2, Control.Attack);
+                    Game.DisableControlThisFrame(2, Control.Attack2);
+                    Game.DisableControlThisFrame(2, Control.MeleeAttack1);
+                    Game.DisableControlThisFrame(2, Control.MeleeAttack2);
+                    Game.DisableControlThisFrame(2, Control.MeleeAttackLight);
+                    Game.DisableControlThisFrame(2, Control.MeleeAttackAlternate);
+                    Game.DisableControlThisFrame(2, Control.MeleeAttackHeavy);
+                    var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
+                    if (b == null) return;
+
+                    // We do this AFTER we place the buildable so we don't lose resources if we 
+                    // decide to cancel the build.
                     _playerResources.ForEach(pR =>
                     {
                         o.ResourcesRequired.ForEach(r =>
                         {
                             if (pR.Id == r.Id) pR.Amount -= r.Amount;
-                            if (pR.Amount > 0) return;
-                            _playerResources.Remove(pR);
-                            pR.Dispose(_timerPool);
-                            pR = null;
+                            if (pR.Amount <= 0)
+                            {
+                                _playerResources.Remove(pR);
+                                pR.Dispose(_timerPool);
+                                pR = null;
+                            }
+                            SavePlayerResources(_playerResources);
                         });
                     });
 
-                    Game.DisableControlThisFrame(2, Control.Attack);
-                    var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
-                    if (b == null) return;
                     _buildables.Add(b);
                 };
                 subMenu.AddItem(menuItem);
@@ -181,7 +201,7 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + BaseBuildingFolder + "PlayerResources.xml";
+            var path = localPath + BaseBuildingFolder + "PlayerResources.savedata";
             var obj = XmlSerializer.Deserialize<PlayerResourceList>(path);
             return obj;
         }
@@ -192,7 +212,7 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + BaseBuildingFolder + "Autosave.savedata";
+            var path = localPath + BaseBuildingFolder + "WorldSave.savedata";
             var obj = XmlSerializer.Deserialize<WorldPersistenceCache>(path);
             return obj;
         }
@@ -206,8 +226,23 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return;
 
-            var path = localPath + BaseBuildingFolder + "Autosave.savedata";
+            var path = localPath + BaseBuildingFolder + "WorldSave.savedata";
             XmlSerializer.Serialize(path, cache);
+        }
+
+        private static void SavePlayerResources(List<PlayerResource> r)
+        {
+            if (r == null)
+                return;
+            var localPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            if (string.IsNullOrEmpty(localPath))
+                return;
+
+            var data = new PlayerResourceList {
+                Resources = r.Select(x => new Resource { Amount = x.Amount, Id = x.Id }).ToList()
+            };
+            var path = localPath + BaseBuildingFolder + "PlayerResources.savedata";
+            XmlSerializer.Serialize(path, data);
         }
 
         public void Update()
@@ -230,7 +265,7 @@ namespace BaseBuilding
             _menuPool.DisableInstructionalButtons = true;
             _menuPool.ProcessMenus();
 
-            if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.VehicleHorn))
+            if (!_menuPool.IsAnyMenuOpen() && Game.IsControlJustPressed(2, Control.ParachuteSmoke))
                 _inventoryMenu.Visible = !_inventoryMenu.Visible;
         }
 
@@ -371,6 +406,7 @@ namespace BaseBuilding
             var find = _playerResources.Find(x => x.Id == res.Id);
             if (find != null) find.Amount += res.Amount;
             else _playerResources.Add(PlayerResource.GetPlayerResource(res, _resourceDefinitions, _timerPool));
+            SavePlayerResources(_playerResources);
         }
 
         private void UpdateTimerBars()

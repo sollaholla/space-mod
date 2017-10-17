@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="GTS">
-      <HintPath>..\SpaceMod\bin\Debug\GTS.dll</HintPath>
+      <HintPath>..\GTS\bin\Debug\GTS.dll</HintPath>
     </Reference>
     <Reference Include="GTSCommon, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
