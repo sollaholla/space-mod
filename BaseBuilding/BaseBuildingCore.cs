@@ -70,8 +70,9 @@ namespace BaseBuilding
                 var r = res?.RockInfo.RockModels.Find(x => x.Id == rockPersistenceInfo.RockModelId);
                 if (r != null)
                 {
-                    CreateRock(res, r, rockPersistenceInfo.Position,
+                    var rock = CreateRock(res, r, rockPersistenceInfo.Position,
                         rockPersistenceInfo.Rotation.Z, false, rockPersistenceInfo.PersistenceId);
+                    rock.PositionNoOffset = rockPersistenceInfo.Position;
                 }
             }
         }
@@ -280,7 +281,7 @@ namespace BaseBuilding
             _spawnedRocks = true;
         }
 
-        private void CreateRock(ResourceDefinition resourceDef, RockModelInfo rockModel, Vector3 position,
+        private MinableRock CreateRock(ResourceDefinition resourceDef, RockModelInfo rockModel, Vector3 position,
             float heading, bool persistent, int persistenceId)
         {
             var model = new Model(rockModel.RockModel);
@@ -312,6 +313,8 @@ namespace BaseBuilding
                     Scene = CurrentScene.FileName,
                     PersistenceId = rock.PersistenceId
                 });
+
+            return rock;
         }
 
         private void UpdateRocks()
