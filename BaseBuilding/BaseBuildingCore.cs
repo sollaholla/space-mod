@@ -59,8 +59,11 @@ namespace BaseBuilding
 
         private void CreatePersistentRocks()
         {
+            // Check the world cache's rocks entries.
             foreach (var rockPersistenceInfo in _wordPersistenceCache.RockPersistence)
             {
+                // If the rock wasn't spawned in this scene, then there's nothing to do
+                // here.
                 if (CurrentScene.FileName != rockPersistenceInfo.Scene) continue;
 
                 // We're not using direct definitions for resources to save on file size 
@@ -68,10 +71,14 @@ namespace BaseBuilding
                 // in the resource file.
                 var res = _resourceDefinitions.Find(x => x.Id == rockPersistenceInfo.ResourceId);
                 var r = res?.RockInfo.RockModels.Find(x => x.Id == rockPersistenceInfo.RockModelId);
+
+                // Now if the rock model we found exists, then lets spawn it.
                 if (r != null)
                 {
                     var rock = CreateRock(res, r, rockPersistenceInfo.Position,
                         rockPersistenceInfo.Rotation.Z, false, rockPersistenceInfo.PersistenceId);
+
+                    // Correct the position, because for some reason it's offset.
                     rock.PositionNoOffset = rockPersistenceInfo.Position;
                 }
             }
@@ -303,6 +310,7 @@ namespace BaseBuilding
             rock.PickedUpResource += MinableRockOnPickedUpResource;
             _rocks.Add(rock);
 
+            // Add the rock to the world cache.
             if (persistent)
                 _wordPersistenceCache.RockPersistence.Add(new RockPersistenceInfo
                 {

@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
-using GTA.Math;
+﻿using GTA.Math;
+using System.Collections.Generic;
 
 namespace BaseBuilding
 {
+    /// <summary>
+    /// Holds runtime information about spawns.
+    /// </summary>
     public class WorldPersistenceCache
     {
         public WorldPersistenceCache()
@@ -11,7 +14,17 @@ namespace BaseBuilding
             RockSpawnAreas = new List<Vector3>();
         }
 
+        /// <summary>
+        /// Persistence info for the rocks that have spawned
+        /// at runtime.
+        /// </summary>
         public List<RockPersistenceInfo> RockPersistence { get; set; }
+
+        /// <summary>
+        /// A set of areas in which rocks have spawned. If
+        /// this is detected by the base building spawner then
+        /// it won't spawn rocks in the area.
+        /// </summary>
         public List<Vector3> RockSpawnAreas { get; set; }
     }
 
