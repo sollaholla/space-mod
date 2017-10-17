@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS", "SpaceMod\GTS.csproj", "{9E7B4474-337E-4221-ABF3-4947E9C011AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTS", "GTS\GTS.csproj", "{9E7B4474-337E-4221-ABF3-4947E9C011AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{821106BB-F827-4D10-B7C5-A135B45F33BE} = {821106BB-F827-4D10-B7C5-A135B45F33BE}
 	EndProjectSection
