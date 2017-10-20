@@ -39,10 +39,10 @@
       <HintPath>..\GTSCommon\bin\Debug\GTSCommon.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
+      <HintPath>..\..\..\Lib\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="SpaceUI">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\SpaceUI.dll</HintPath>
+      <HintPath>..\..\..\Lib\SpaceUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

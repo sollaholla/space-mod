@@ -36,7 +36,7 @@
       <HintPath>..\GTS\bin\Debug\GTS.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\Rockstar Games\GTA V\Scripting\Libraries\ScriptHookVDotNet2.dll</HintPath>
+      <HintPath>..\..\..\Lib\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

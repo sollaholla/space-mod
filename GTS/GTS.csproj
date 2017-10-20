@@ -42,11 +42,11 @@
     </Reference>
     <Reference Include="ScriptHookVDotNet2, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
+      <HintPath>..\..\..\Lib\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="SpaceUI, Version=1.7.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Games\Grand Theft Auto V\scripts\SpaceUI.dll</HintPath>
+      <HintPath>..\..\..\Lib\SpaceUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
