@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
+using BaseBuilding.Resources;
 
-namespace BaseBuilding
+namespace BaseBuilding.Serialization
 {
     public class PlayerResourceList
     {

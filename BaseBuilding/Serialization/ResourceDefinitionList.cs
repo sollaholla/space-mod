@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace BaseBuilding
+namespace BaseBuilding.Serialization
 {
     public class ResourceDefinitionList
     {

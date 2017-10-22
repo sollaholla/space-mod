@@ -1,4 +1,4 @@
-﻿namespace BaseBuilding
+﻿namespace BaseBuilding.Serialization
 {
     public class ResourceDefinition
     {

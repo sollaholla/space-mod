@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BaseBuilding
+namespace BaseBuilding.Helpers
 {
     public static class Perlin
     {

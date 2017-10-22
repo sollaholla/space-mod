@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using BaseBuilding.Events;
+using BaseBuilding.Serialization;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTS.Library;
 
-namespace BaseBuilding
+namespace BaseBuilding.ObjectTypes
 {
     public class MinableRock : Entity
     {

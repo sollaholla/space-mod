@@ -1,7 +1,7 @@
-﻿using GTA.Math;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using GTA.Math;
 
-namespace BaseBuilding
+namespace BaseBuilding.Serialization
 {
     /// <summary>
     /// Holds runtime information about spawns.

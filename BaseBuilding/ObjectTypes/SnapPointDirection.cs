@@ -1,4 +1,4 @@
-﻿namespace BaseBuilding
+﻿namespace BaseBuilding.ObjectTypes
 {
     public enum SnapPointDirection
     {

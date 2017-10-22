@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BaseBuilding.Serialization;
 
-namespace BaseBuilding
+namespace BaseBuilding.Resources
 {
     public class Resource
     {

@@ -1,6 +1,7 @@
 ﻿using System;
+using BaseBuilding.Serialization;
 
-namespace BaseBuilding
+namespace BaseBuilding.Events
 {
     public class PickupEventArgs : EventArgs
     {

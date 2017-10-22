@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BaseBuilding.Events;
+using BaseBuilding.Helpers;
+using BaseBuilding.ObjectTypes;
+using BaseBuilding.Resources;
+using BaseBuilding.Serialization;
 using GTA;
 using GTA.Math;
 using GTS.Library;
@@ -370,19 +375,15 @@ namespace BaseBuilding
                 minableRock?.Update(impCoords);
                 minableRock?.UpdatePickups();
 
-                if (!Entity.Exists(minableRock))
-                {
-                    // Remove the rock if it's destroyed and contained in the persistence cache.
-                    var f = _wordPersistenceCache.RockPersistence.Find(x => x.PersistenceId == minableRock.PersistenceId);
-                    if (f != null)
-                    {
-                        // We found the rock by it's persistence ID so let's remove it.
-                        _wordPersistenceCache.RockPersistence.Remove(f);
+                if (Entity.Exists(minableRock)) continue;
+                // Remove the rock if it's destroyed and contained in the persistence cache.
+                var f = _wordPersistenceCache.RockPersistence.Find(x => minableRock != null && x.PersistenceId == minableRock.PersistenceId);
+                if (f == null) continue;
+                // We found the rock by it's persistence ID so let's remove it.
+                _wordPersistenceCache.RockPersistence.Remove(f);
 
-                        // We need to save this to the cache.
-                        needsSave = true;
-                    }
-                }
+                // We need to save this to the cache.
+                needsSave = true;
             }
 
             if (needsSave)

@@ -1,4 +1,4 @@
-﻿namespace BaseBuilding
+﻿namespace BaseBuilding.Interfaces
 {
     public interface IParticleInfo
     {

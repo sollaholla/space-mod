@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
+using BaseBuilding.Interfaces;
 
-namespace BaseBuilding
+namespace BaseBuilding.Serialization
 {
     public class RockModelInfo : IParticleInfo
     {

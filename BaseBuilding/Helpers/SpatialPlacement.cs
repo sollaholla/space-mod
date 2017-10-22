@@ -1,7 +1,7 @@
 ﻿using GTA;
 using GTA.Math;
 
-namespace BaseBuilding
+namespace BaseBuilding.Helpers
 {
     public class SpatialPlacement : ISpatial
     {

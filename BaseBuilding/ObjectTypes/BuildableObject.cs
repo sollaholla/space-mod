@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using BaseBuilding.Helpers;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 
-namespace BaseBuilding
+namespace BaseBuilding.ObjectTypes
 {
     public class BuildableObject : Entity
     {

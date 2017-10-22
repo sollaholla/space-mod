@@ -1,4 +1,6 @@
-﻿namespace BaseBuilding
+﻿using BaseBuilding.Interfaces;
+
+namespace BaseBuilding.Serialization
 {
     public class ChunkInfo : IParticleInfo
     {
