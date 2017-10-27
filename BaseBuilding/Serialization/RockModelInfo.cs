@@ -19,7 +19,7 @@ namespace BaseBuilding.Serialization
 
         public int MaxPatches { get; set; }
 
-        public int MaxHealth { get; set; }
+        public int MaxHits { get; set; }
 
         public string RockModel { get; set; }
 

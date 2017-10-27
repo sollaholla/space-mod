@@ -252,6 +252,7 @@ namespace BaseBuilding
 
         public void Update()
         {
+            if (!CurrentScene.Info.SurfaceScene) return;
             try
             {
                 UpdateMenu();
@@ -291,8 +292,8 @@ namespace BaseBuilding
                 foreach (var rockInfoRockModel in res.RockInfo.RockModels)
                     for (var j = 0; j < rockInfoRockModel.MaxPatches; j++)
                     {
-                        const float minDist = 50f;
-                        const float maxDist = 100f;
+                        const float minDist = 75f;
+                        const float maxDist = 200f;
                         const float maxDistSqr = maxDist * maxDist;
 
                         var patchArea = PlayerPed.Position.Around(Perlin.GetNoise() * maxDist + minDist);
@@ -305,8 +306,8 @@ namespace BaseBuilding
                             var chance = Perlin.GetNoise() * 100f;
                             if (chance > rockInfoRockModel.SpawnChance) continue;
 
-                            const float minPatchDist = 25f;
-                            const float maxPatchDist = 75f;
+                            const float minPatchDist = 75f;
+                            const float maxPatchDist = 150f;
 
                             var patchSpawn = patchArea.Around(Perlin.GetNoise() * maxPatchDist + minPatchDist);
                             var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
@@ -341,7 +342,7 @@ namespace BaseBuilding
                 false, false);
             prop.Heading = heading;
             prop.FreezePosition = true;
-            prop.MaxHealth = rockModel.MaxHealth;
+            prop.MaxHealth = int.MaxValue;
             prop.Health = prop.MaxHealth;
             model.MarkAsNoLongerNeeded();
 

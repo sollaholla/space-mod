@@ -18,6 +18,7 @@ namespace BaseBuilding.ObjectTypes
         private readonly List<Prop> _chunks = new List<Prop>();
         private bool _didPlayParticles;
         private float _fadeAmount;
+        private int _hits;
 
         public MinableRock(int handle, ResourceDefinition res, RockModelInfo modelInfo,
             int persistenceId) : base(handle)
@@ -37,7 +38,7 @@ namespace BaseBuilding.ObjectTypes
 
         public void Update(Vector3 damageCoords)
         {
-            if (IsDead && !_didPlayParticles)
+            if (_hits > ModelInfo.MaxHits && !_didPlayParticles)
             {
                 var particles = new PtfxNonLooped(ModelInfo.ParticleName, ModelInfo.ParticleDict);
                 particles.Request();
@@ -62,6 +63,8 @@ namespace BaseBuilding.ObjectTypes
             if (!Exists() || damageCoords == Vector3.Zero || (!ModelInfo.ChunkModels?.Any() ?? true) ||
                 !HasBeenDamagedBy(Game.Player.Character))
                 return;
+            
+            _hits++;
 
             Function.Call(Hash.CLEAR_ENTITY_LAST_DAMAGE_ENTITY, this);
 
