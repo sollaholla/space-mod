@@ -11,12 +11,14 @@ namespace BaseBuilding.ObjectTypes
 {
     public class BuildableObject : Entity
     {
-        private Vector3 _snapBack;
-        private Vector3 _snapBottom;
-        private Vector3 _snapFront;
-        private Vector3 _snapLeft;
-        private Vector3 _snapRight;
-        private Vector3 _snapTop;
+        private Vector3 _fbl;
+        private Vector3 _fbr;
+        private Vector3 _bbl;
+        private Vector3 _bbr;
+        private Vector3 _ftl;
+        private Vector3 _ftr;
+        private Vector3 _btl;
+        private Vector3 _btr;
 
         public BuildableObject(int handle) : base(handle)
         {
@@ -32,27 +34,37 @@ namespace BaseBuilding.ObjectTypes
         private void GenerateSnapPoints()
         {
             Model.GetDimensions(out Vector3 min, out Vector3 max);
-            _snapLeft = new Vector3(min.X, min.Y + max.Y, min.Z);
-            _snapRight = new Vector3(max.X, min.Y + max.Y, min.Z);
-            _snapFront = new Vector3(min.X + max.X, max.Y, min.Z);
-            _snapBack = new Vector3(min.X + max.X, min.Y, min.Z);
-            _snapTop = new Vector3(min.X + max.X, min.Y + max.Y, max.Z);
-            _snapBottom = new Vector3(min.X + max.X, min.Y + max.Y, min.Z);
+
+            // bottom
+            _fbl = new Vector3(min.X, max.Y, min.Z);
+            _fbr = new Vector3(max.X, max.Y, min.Z);
+            _bbl = new Vector3(min.X, min.Y, min.Z);
+            _bbr = new Vector3(max.X, min.Y, min.Z);
+
+            // top
+            _ftl = new Vector3(min.X, max.Y, max.Z);
+            _ftr = new Vector3(max.X, max.Y, max.Z);
+            _btl = new Vector3(min.X, min.Y, max.Z);
+            _btr = new Vector3(max.X, min.Y, max.Z);
         }
 
         public void DrawSnapPoints()
         {
-            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _snapLeft, Vector3.Zero, Vector3.Zero,
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _ftl, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
-            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _snapRight, Vector3.Zero, Vector3.Zero,
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _ftr, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
-            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _snapFront, Vector3.Zero, Vector3.Zero,
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _btl, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
-            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _snapBack, Vector3.Zero, Vector3.Zero,
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _btr, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
-            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _snapTop, Vector3.Zero, Vector3.Zero,
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _fbl, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
-            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _snapBottom, Vector3.Zero, Vector3.Zero,
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _fbr, Vector3.Zero, Vector3.Zero,
+                new Vector3(.1f, .1f, .1f), Color.Red);
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _bbl, Vector3.Zero, Vector3.Zero,
+                new Vector3(.1f, .1f, .1f), Color.Red);
+            World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _bbr, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
         }
 
@@ -60,30 +72,52 @@ namespace BaseBuilding.ObjectTypes
         {
             var cast = new List<Vector3>
             {
-                Position + Quaternion * _snapLeft,
-                Position + Quaternion * _snapRight,
-                Position + Quaternion * _snapFront,
-                Position + Quaternion * _snapBack,
-                Position + Quaternion * _snapTop,
-                Position + Quaternion * _snapBottom
+                Position + Quaternion * _fbl,
+                Position + Quaternion * _fbr,
+                Position + Quaternion * _bbl,
+                Position + Quaternion * _bbr,
+                Position + Quaternion * _ftl,
+                Position + Quaternion * _ftr,
+                Position + Quaternion * _btl,
+                Position + Quaternion * _btr
             }.Select(x => new SpatialPlacement(Vector3.Zero, x)).ToArray();
 
             var closest = World.GetClosest(coord, cast)?.Position ?? Vector3.Zero;
 
-            dir = SnapPointDirection.Front;
+            dir = SnapPointDirection.FrontTopLeft;
 
             if (closest == cast[0].Position)
-                dir = SnapPointDirection.Left;
+            {
+                dir = SnapPointDirection.FrontBottomLeft;
+            }
             else if (closest == cast[1].Position)
-                dir = SnapPointDirection.Right;
+            {
+                dir = SnapPointDirection.FrontBottomRight;
+            }
             else if (closest == cast[2].Position)
-                dir = SnapPointDirection.Front;
+            {
+                dir = SnapPointDirection.BackBottomLeft;
+            }
             else if (closest == cast[3].Position)
-                dir = SnapPointDirection.Back;
+            {
+                dir = SnapPointDirection.BackBottomRight;
+            }
             else if (closest == cast[4].Position)
-                dir = SnapPointDirection.Up;
+            {
+                dir = SnapPointDirection.FrontTopLeft;
+            }
             else if (closest == cast[5].Position)
-                dir = SnapPointDirection.Down;
+            {
+                dir = SnapPointDirection.FrontTopRight;
+            }
+            else if (closest == cast[6].Position)
+            {
+                dir = SnapPointDirection.BackTopLeft;
+            }
+            else if (closest == cast[7].Position)
+            {
+                dir = SnapPointDirection.BackTopRight;
+            }
 
             return closest;
         }
@@ -92,20 +126,24 @@ namespace BaseBuilding.ObjectTypes
         {
             switch (snap)
             {
-                case SnapPointDirection.Front:
-                    return Position + Quaternion * _snapFront;
-                case SnapPointDirection.Back:
-                    return Position + Quaternion * _snapBack;
-                case SnapPointDirection.Left:
-                    return Position + Quaternion * _snapLeft;
-                case SnapPointDirection.Right:
-                    return Position + Quaternion * _snapRight;
-                case SnapPointDirection.Up:
-                    return Position + Quaternion * _snapTop;
-                case SnapPointDirection.Down:
-                    return Position + Quaternion * _snapBottom;
+                case SnapPointDirection.FrontTopLeft:
+                    return Position + Quaternion * _ftl;
+                case SnapPointDirection.FrontBottomLeft:
+                    return Position + Quaternion * _fbl;
+                case SnapPointDirection.FrontBottomRight:
+                    return Position + Quaternion * _fbr;
+                case SnapPointDirection.BackBottomLeft:
+                    return Position + Quaternion * _bbl;
+                case SnapPointDirection.BackBottomRight:
+                    return Position + Quaternion * _bbr;
+                case SnapPointDirection.FrontTopRight:
+                    return Position + Quaternion * _ftr;
+                case SnapPointDirection.BackTopLeft:
+                    return Position + Quaternion * _btl;
+                case SnapPointDirection.BackTopRight:
+                    return Position + Quaternion * _btr;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(snap), snap, null);
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -215,27 +253,33 @@ namespace BaseBuilding.ObjectTypes
 
         public static SnapPointDirection GetOppositeSnapPoint(SnapPointDirection dir)
         {
-            var opposingSnapPoint = SnapPointDirection.Front;
+            var opposingSnapPoint = SnapPointDirection.FrontTopLeft;
 
             switch (dir)
             {
-                case SnapPointDirection.Front:
-                    opposingSnapPoint = SnapPointDirection.Back;
+                case SnapPointDirection.FrontBottomLeft:
+                    opposingSnapPoint = SnapPointDirection.FrontBottomRight;
                     break;
-                case SnapPointDirection.Back:
-                    opposingSnapPoint = SnapPointDirection.Front;
+                case SnapPointDirection.FrontBottomRight:
+                    opposingSnapPoint = SnapPointDirection.FrontBottomLeft;
                     break;
-                case SnapPointDirection.Left:
-                    opposingSnapPoint = SnapPointDirection.Right;
+                case SnapPointDirection.BackBottomLeft:
+                    opposingSnapPoint = SnapPointDirection.BackBottomRight;
                     break;
-                case SnapPointDirection.Right:
-                    opposingSnapPoint = SnapPointDirection.Left;
+                case SnapPointDirection.BackBottomRight:
+                    opposingSnapPoint = SnapPointDirection.BackBottomLeft;
                     break;
-                case SnapPointDirection.Up:
-                    opposingSnapPoint = SnapPointDirection.Down;
+                case SnapPointDirection.FrontTopLeft:
+                    opposingSnapPoint = SnapPointDirection.FrontTopRight;
                     break;
-                case SnapPointDirection.Down:
-                    opposingSnapPoint = SnapPointDirection.Up;
+                case SnapPointDirection.FrontTopRight:
+                    opposingSnapPoint = SnapPointDirection.FrontTopLeft;
+                    break;
+                case SnapPointDirection.BackTopLeft:
+                    opposingSnapPoint = SnapPointDirection.BackTopRight;
+                    break;
+                case SnapPointDirection.BackTopRight:
+                    opposingSnapPoint = SnapPointDirection.BackTopLeft;
                     break;
             }
 

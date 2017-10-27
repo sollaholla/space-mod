@@ -2,11 +2,13 @@
 {
     public enum SnapPointDirection
     {
-        Front,
-        Back,
-        Left,
-        Right,
-        Up,
-        Down
+        FrontBottomLeft,
+        FrontBottomRight,
+        BackBottomLeft,
+        BackBottomRight,
+        FrontTopLeft,
+        FrontTopRight,
+        BackTopLeft,
+        BackTopRight
     }
 }
