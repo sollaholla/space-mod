@@ -183,7 +183,7 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + BaseBuildingFolder + "Resource.xml";
+            var path = localPath + BaseBuildingFolder + "ResourceList.xml";
             var obj = XmlSerializer.Deserialize<ResourceDefinitionList>(path);
             return obj;
         }
@@ -194,7 +194,7 @@ namespace BaseBuilding
             if (string.IsNullOrEmpty(localPath))
                 return null;
 
-            var path = localPath + BaseBuildingFolder + "ObjectList.xml";
+            var path = localPath + BaseBuildingFolder + "BuildableObjectsList.xml";
             var obj = XmlSerializer.Deserialize<BuildableObjectsList>(path);
             return obj;
         }
