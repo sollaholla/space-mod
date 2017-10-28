@@ -199,7 +199,7 @@ namespace BaseBuilding.ObjectTypes
                     return null;
                 }
 
-                var ray = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 50f,
+                var ray = World.RaycastCapsule(GameplayCamera.Position, GameplayCamera.Direction, 50f, maxDistanceFromSnap,
                     IntersectOptions.Everything, Game.Player.Character);
                 var cameraPoint = ray.HitCoords;
                 var closest = World.GetClosest(cameraPoint, others.ToArray());
