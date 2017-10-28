@@ -9,6 +9,12 @@ using GTA.Native;
 
 namespace BaseBuilding.ObjectTypes
 {
+    public enum SnapType
+    {
+        Normal,
+        Flipped
+    }
+
     public class BuildableObject : Entity
     {
         private Vector3 _fbl;
@@ -25,6 +31,10 @@ namespace BaseBuilding.ObjectTypes
         }
 
         public Vector3 RotationOffset { get; set; }
+
+        public SnapType SnapType { get; set; }
+
+        public bool Flip { get; set; }
 
         public void Init()
         {
@@ -66,6 +76,17 @@ namespace BaseBuilding.ObjectTypes
                 new Vector3(.1f, .1f, .1f), Color.Red);
             World.DrawMarker(MarkerType.DebugSphere, Position + Quaternion * _bbr, Vector3.Zero, Vector3.Zero,
                 new Vector3(.1f, .1f, .1f), Color.Red);
+
+            var p = Position;
+            var e = Position + Quaternion * Vector3.RelativeFront;
+            var c = Color.GreenYellow;
+            Function.Call(Hash.DRAW_LINE, p.X, p.Y, p.Z, e.X, e.Y, e.Z, c.R, c.G, c.B, c.A);
+            e = Position + Quaternion * Vector3.RelativeRight;
+            c = Color.Red;
+            Function.Call(Hash.DRAW_LINE, p.X, p.Y, p.Z, e.X, e.Y, e.Z, c.R, c.G, c.B, c.A);
+            e = Position + Quaternion * Vector3.WorldUp;
+            c = Color.Blue;
+            Function.Call(Hash.DRAW_LINE, p.X, p.Y, p.Z, e.X, e.Y, e.Z, c.R, c.G, c.B, c.A);
         }
 
         public Vector3 GetClosestSnapPoint(Vector3 coord, out SnapPointDirection dir)
@@ -155,23 +176,24 @@ namespace BaseBuilding.ObjectTypes
             var b = CreateBuildable(modelName);
             b.Alpha = 100;
             b.HasCollision = false;
-
             Game.Player.Character.Weapons.Select(WeaponHash.Unarmed, true);
-
-            var buttons = new List<InstructionalButton>
-            {
-                new InstructionalButton(Control.Context, string.Empty),
-                new InstructionalButton(Control.Cover, "Rotate"),
-                new InstructionalButton(Control.Sprint, "Rotation Speed"),
-                new InstructionalButton(Control.Aim, "Cancel"),
-                new InstructionalButton(Control.LookBehind, "Place")
-            };
+            Entity lastClosest = null;
+            const float maxDistanceFromSnap = 1f;
 
             while (true)
             {
+                var buttons = new List<InstructionalButton> {
+                    new InstructionalButton(Control.Context, string.Empty),
+                    new InstructionalButton(Control.Cover, "Rotate"),
+                    new InstructionalButton(Control.Sprint, "Rotation Speed"),
+                    new InstructionalButton(Control.PhoneCancel, "Cancel"),
+                    new InstructionalButton(Control.LookBehind, "Place"),
+                    new InstructionalButton(Control.PhoneCameraGrid, "Snap Type (" + b.SnapType + ")"),
+                    new InstructionalButton(Control.ParachuteSmoke, "Flip Direction")};
+
                 DrawButtons(buttons);
 
-                if (Game.IsDisabledControlPressed(2, Control.Aim))
+                if (Game.IsDisabledControlPressed(0, Control.PhoneCancel))
                 {
                     b.Delete();
                     return null;
@@ -179,62 +201,65 @@ namespace BaseBuilding.ObjectTypes
 
                 var ray = World.Raycast(GameplayCamera.Position, GameplayCamera.Direction, 50f,
                     IntersectOptions.Everything, Game.Player.Character);
-
                 var cameraPoint = ray.HitCoords;
-
                 var closest = World.GetClosest(cameraPoint, others.ToArray());
+                var closestPoint = Vector3.Zero;
+                var closestDir = SnapPointDirection.BackBottomLeft;
 
-                if (Exists(closest) && ignoreModels != null &&
-                    ignoreModels.Any(x => Game.GenerateHash(x) == closest.Model.Hash))
-                    closest = null;
-
-                if (!Exists(closest) || closest.Position.DistanceTo(cameraPoint) >
-                    closest.Model.GetDimensions().Length())
+                if (Exists(closest) && Vector3.Distance(closest.GetClosestSnapPoint(cameraPoint, out closestDir), cameraPoint) < maxDistanceFromSnap)
                 {
-                    b.PositionNoOffset = cameraPoint;
-
-                    if (Game.IsDisabledControlPressed(2, Control.LookBehind))
-                        break;
-
-                    var speed = 25f;
-
-                    if (Game.IsDisabledControlPressed(0, Control.Sprint))
-                        speed = 75f;
-
-                    if (Game.IsDisabledControlPressed(0, Control.Cover))
-                        b.Rotation += new Vector3(0, 0, 1) * Game.LastFrameTime * speed;
-                    else if (Game.IsDisabledControlPressed(2, Control.Context))
-                        b.Rotation -= new Vector3(0, 0, 1) * Game.LastFrameTime * speed;
-                }
-                else if (Exists(closest))
-                {
+                    lastClosest = closest;
                     closest.DrawSnapPoints();
-
                     b.DrawSnapPoints();
 
                     var closestSnapPoint = closest.GetClosestSnapPoint(cameraPoint, out SnapPointDirection dir);
-
-                    var opposingSnapPoint = GetOppositeSnapPoint(dir);
+                    var opposingSnapPoint = GetOppositeSnapPoint(dir, b.SnapType, b.Flip);
 
                     if (Game.IsDisabledControlJustPressed(0, Control.Cover))
                         b.RotationOffset += new Vector3(0, 0, 90);
                     else if (Game.IsDisabledControlJustPressed(2, Control.Context))
                         b.RotationOffset -= new Vector3(0, 0, 90);
+                    if (Game.IsDisabledControlJustPressed(0, Control.PhoneCameraGrid))
+                        b.SnapType = b.SnapType == SnapType.Flipped ? SnapType.Normal : SnapType.Flipped;
+                    if (Game.IsDisabledControlJustPressed(0, Control.ParachuteSmoke))
+                        b.Flip = !b.Flip;
 
                     b.Rotation = closest.Rotation + b.RotationOffset;
-
                     var osPos = b.GetSnapPointPosition(opposingSnapPoint);
-
                     var offsetToPos = b.Position - osPos;
-
                     b.Position = closestSnapPoint + offsetToPos;
 
                     if (Game.IsDisabledControlPressed(2, Control.LookBehind))
                         break;
                 }
+                else
+                {
+                    World.DrawMarker(MarkerType.DebugSphere, cameraPoint, Vector3.Zero, Vector3.Zero,
+                        new Vector3(maxDistanceFromSnap, maxDistanceFromSnap, maxDistanceFromSnap),
+                        Color.FromArgb(150, Color.Blue));
 
+                    if (Exists(lastClosest))
+                        lastClosest.ResetAlpha();
+
+                    lastClosest = null;
+                    b.PositionNoOffset = cameraPoint;
+                    if (Game.IsDisabledControlPressed(2, Control.LookBehind))
+                        break;
+                    var speed = 25f;
+                    if (Game.IsDisabledControlPressed(0, Control.Sprint))
+                        speed = 75f;
+                    if (Game.IsDisabledControlPressed(0, Control.Cover))
+                        b.Rotation += new Vector3(0, 0, 1) * Game.LastFrameTime * speed;
+                    else if (Game.IsDisabledControlPressed(2, Control.Context))
+                        b.Rotation -= new Vector3(0, 0, 1) * Game.LastFrameTime * speed;
+                }
+                if (Exists(lastClosest))
+                    lastClosest.Alpha = 100;
                 Script.Yield();
             }
+
+            if (Exists(lastClosest))
+                lastClosest.ResetAlpha();
 
             if (!Exists(b)) return null;
 
@@ -251,35 +276,50 @@ namespace BaseBuilding.ObjectTypes
                 instructionalButton.DisableControl(0);
         }
 
-        public static SnapPointDirection GetOppositeSnapPoint(SnapPointDirection dir)
+        public static SnapPointDirection GetOppositeSnapPoint(SnapPointDirection dir, SnapType type, bool flip)
         {
             var opposingSnapPoint = SnapPointDirection.FrontTopLeft;
-
             switch (dir)
             {
                 case SnapPointDirection.FrontBottomLeft:
-                    opposingSnapPoint = SnapPointDirection.FrontBottomRight;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.FrontBottomLeft : SnapPointDirection.FrontBottomRight;
+                    else opposingSnapPoint = flip ? SnapPointDirection.BackBottomLeft : SnapPointDirection.BackBottomRight;
                     break;
                 case SnapPointDirection.FrontBottomRight:
-                    opposingSnapPoint = SnapPointDirection.FrontBottomLeft;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.FrontBottomRight : SnapPointDirection.FrontBottomLeft;
+                    else opposingSnapPoint = flip ? SnapPointDirection.BackBottomRight : SnapPointDirection.BackBottomLeft;
                     break;
                 case SnapPointDirection.BackBottomLeft:
-                    opposingSnapPoint = SnapPointDirection.BackBottomRight;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.BackBottomLeft : SnapPointDirection.BackBottomRight;
+                    else opposingSnapPoint = flip ? SnapPointDirection.FrontBottomLeft : SnapPointDirection.FrontBottomRight;
                     break;
                 case SnapPointDirection.BackBottomRight:
-                    opposingSnapPoint = SnapPointDirection.BackBottomLeft;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.BackBottomRight : SnapPointDirection.BackBottomLeft;
+                    else opposingSnapPoint = flip ? SnapPointDirection.FrontBottomRight : SnapPointDirection.FrontBottomLeft;
                     break;
                 case SnapPointDirection.FrontTopLeft:
-                    opposingSnapPoint = SnapPointDirection.FrontTopRight;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.FrontTopLeft : SnapPointDirection.FrontTopRight;
+                    else opposingSnapPoint = flip ? SnapPointDirection.BackTopLeft : SnapPointDirection.BackTopRight;
                     break;
                 case SnapPointDirection.FrontTopRight:
-                    opposingSnapPoint = SnapPointDirection.FrontTopLeft;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.FrontTopRight : SnapPointDirection.FrontTopLeft;
+                    else opposingSnapPoint = flip ? SnapPointDirection.BackTopRight : SnapPointDirection.BackTopLeft;
                     break;
                 case SnapPointDirection.BackTopLeft:
-                    opposingSnapPoint = SnapPointDirection.BackTopRight;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.BackTopLeft : SnapPointDirection.BackTopRight;
+                    else opposingSnapPoint = flip ? SnapPointDirection.FrontTopLeft : SnapPointDirection.FrontTopRight;
                     break;
                 case SnapPointDirection.BackTopRight:
-                    opposingSnapPoint = SnapPointDirection.BackTopLeft;
+                    if (type == SnapType.Normal)
+                        opposingSnapPoint = flip ? SnapPointDirection.BackTopRight : SnapPointDirection.BackTopLeft;
+                    else opposingSnapPoint = flip ? SnapPointDirection.FrontTopRight : SnapPointDirection.FrontTopLeft;
                     break;
             }
 

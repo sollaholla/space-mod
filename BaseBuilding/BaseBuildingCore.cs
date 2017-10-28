@@ -144,6 +144,7 @@ namespace BaseBuilding
                         return;
                     }
 
+                    var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
                     Game.DisableControlThisFrame(2, Control.Attack);
                     Game.DisableControlThisFrame(2, Control.Attack2);
                     Game.DisableControlThisFrame(2, Control.MeleeAttack1);
@@ -151,9 +152,7 @@ namespace BaseBuilding
                     Game.DisableControlThisFrame(2, Control.MeleeAttackLight);
                     Game.DisableControlThisFrame(2, Control.MeleeAttackAlternate);
                     Game.DisableControlThisFrame(2, Control.MeleeAttackHeavy);
-                    var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
                     if (b == null) return;
-
                     // We do this AFTER we place the buildable so we don't lose resources if we 
                     // decide to cancel the build.
                     _playerResources.ForEach(pR =>
