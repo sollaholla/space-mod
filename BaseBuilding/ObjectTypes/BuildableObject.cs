@@ -168,7 +168,7 @@ namespace BaseBuilding.ObjectTypes
             }
         }
 
-        public static BuildableObject PlaceBuildable(string modelName, IReadOnlyCollection<BuildableObject> others, params string[] ignoreModels)
+        public static BuildableObject PlaceBuildable(string modelName, IReadOnlyCollection<BuildableObject> others)
         {
             var b = CreateBuildable(modelName);
             b.Alpha = 100;
