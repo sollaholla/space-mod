@@ -147,6 +147,7 @@ namespace BaseBuilding
                     var b = BuildableObject.PlaceBuildable(o.ModelName, _buildables);
                     Game.DisableControlThisFrame(2, Control.Attack);
                     Game.DisableControlThisFrame(2, Control.Attack2);
+                    Game.DisableControlThisFrame(2, Control.PhoneCancel);
                     Game.DisableControlThisFrame(2, Control.MeleeAttack1);
                     Game.DisableControlThisFrame(2, Control.MeleeAttack2);
                     Game.DisableControlThisFrame(2, Control.MeleeAttackLight);
@@ -166,7 +167,6 @@ namespace BaseBuilding
                                 pR.Dispose(_timerPool);
                                 pR = null;
                             }
-                            SavePlayerResources(_playerResources);
                         });
                     });
 
@@ -291,7 +291,7 @@ namespace BaseBuilding
                 foreach (var rockInfoRockModel in res.RockInfo.RockModels)
                     for (var j = 0; j < rockInfoRockModel.MaxPatches; j++)
                     {
-                        const float minDist = 75f;
+                        const float minDist = 150f;
                         const float maxDist = 200f;
                         const float maxDistSqr = maxDist * maxDist;
 
@@ -305,10 +305,13 @@ namespace BaseBuilding
                             var chance = Perlin.GetNoise() * 100f;
                             if (chance > rockInfoRockModel.SpawnChance) continue;
 
-                            const float minPatchDist = 75f;
-                            const float maxPatchDist = 150f;
+                            const float minPatchDist = 15f;
+                            const float maxPatchDist = 45f;
 
                             var patchSpawn = patchArea.Around(Perlin.GetNoise() * maxPatchDist + minPatchDist);
+                            if (_wordPersistenceCache.RockSpawnAreas.Any(
+                                x => x.DistanceToSquared(patchSpawn) < maxDistSqr * 2))
+                                continue;
                             var ground = GtsLibNet.GetGroundHeightRay(patchSpawn);
                             if (ground != Vector3.Zero)
                             {
@@ -323,7 +326,6 @@ namespace BaseBuilding
             }
 
             SaveWorldCache(_wordPersistenceCache);
-
             _rockSpawnTimer = DateTime.Now + new TimeSpan(0, 0, 0, 60);
             _spawnedRocks = true;
         }
@@ -407,7 +409,6 @@ namespace BaseBuilding
             var find = _playerResources.Find(x => x.Id == res.Id);
             if (find != null) find.Amount += res.Amount;
             else _playerResources.Add(PlayerResource.GetPlayerResource(res, _resourceDefinitions, _timerPool));
-            SavePlayerResources(_playerResources);
         }
 
         private void UpdateTimerBars()
@@ -433,6 +434,8 @@ namespace BaseBuilding
 
             foreach (var minableRock in _rocks)
                 minableRock?.Delete();
+
+            SavePlayerResources(_playerResources);
         }
     }
 }
