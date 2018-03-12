@@ -22,18 +22,19 @@ namespace GTS
     {
         private const string LsReturnScene = "Earth";
         private readonly TimecycleModChanger _tcChanger;
+
         private bool _didAbort;
         private bool _initializedGts;
         private bool _initializedScripts;
+        private bool _menuEnabled = true;
+        private bool _resetWantedLevel = true;
         private UIMenu _mainMenu;
         private MapLoader _mapLoader;
-        private bool _menuEnabled = true;
         private MenuPool _menuPool;
-        private int _missionStatus;
-        private Keys _optionsMenuKey = Keys.NumPad9;
-        private bool _resetWantedLevel = true;
         private ShuttleManager _shuttleManager;
         private SandersBriefing _sandersBriefing;
+        private int _missionStatus;
+        private Keys _optionsMenuKey = Keys.NumPad9;
 
         public Core()
         {
@@ -122,37 +123,6 @@ namespace GTS
             _mapLoader?.RemoveMaps();
             _didAbort = true;
             _sandersBriefing.OnAborted();
-        }
-
-        private static void Reset()
-        {
-            if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
-                Game.FadeScreenIn(0);
-            PlayerPed.Task.ClearAll();
-            PlayerPed.HasGravity = true;
-            PlayerPed.FreezePosition = false;
-            PlayerPed.CanRagdoll = true;
-            PlayerPed.IsInvincible = false;
-            Game.TimeScale = 1.0f;
-            World.RenderingCamera = null;
-            GtsLibNet.SetGravityLevel(9.81f);
-            GtsLib.EndCredits();
-            GtsLib.DisableLoadingScreenHandler(false);
-            Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
-            Effects.Stop();
-            CurrentScene?.Delete(true);
-            if (CurrentScene != null)
-            {
-                GiveSpawnControlToGame();
-                if (!PlayerPed.IsDead)
-                    PlayerPosition = Database.TrevorAirport;
-                ResetWeather();
-            }
-            else
-            {
-                GtsLibNet.ToggleAllIpls(false);
-            }
-            CurrentScene = null;
         }
 
         private void ProcessMenus()
@@ -287,16 +257,16 @@ namespace GTS
             #region Scenes
 
             var scenesMenu = _menuPool.AddSubMenu(_mainMenu, "Scenes");
-            var filePaths = Directory.GetFiles(GtsSettings.ScenesFolder).Where(file => file.EndsWith(".space"))
-                .ToArray();
+            var filePaths = Directory.GetFiles(GtsSettings.ScenesFolder, "*.space");
+
             foreach (var path in filePaths)
             {
                 var fileName = Path.GetFileName(path);
                 var menuItem = new UIMenuItem(fileName);
                 menuItem.Activated += (sender, item) =>
                 {
-                    var newScene = DeserializeSceneInfoFile(fileName);
-                    SetCurrentScene(newScene, fileName);
+                    var newScene = DeserializeSceneInfo(fileName);
+                    SetCurrentScene(newScene, fileName, Vector3.Zero, Vector3.Zero);
                     UI.Notify($"{Database.NotifyHeader}Loaded: {fileName}");
                     _menuPool.CloseAllMenus();
                 };
@@ -503,46 +473,27 @@ namespace GTS
             StopWantedLevelScripts();
         }
 
-        private static void ResetWeather()
-        {
-            // Basically happens when we abort.
-            Function.Call(Hash.CLEAR_WEATHER_TYPE_PERSIST);
-            Function.Call(Hash.CLEAR_OVERRIDE_WEATHER);
-            World.Weather = Weather.Clear;
-            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
-        }
-
-        private static SceneInfo DeserializeSceneInfoFile(string fileName)
-        {
-            if (fileName == LsReturnScene) return null;
-            var newScene = XmlSerializer.Deserialize<SceneInfo>(GtsSettings.ScenesFolder + "\\" + fileName);
-            if (newScene != null) return newScene;
-            UI.Notify(Database.NotifyHeader + "Scene file " + fileName + " couldn't be read, or doesn't exist.");
-            return null;
-        }
-
-        private void SetCurrentScene(SceneInfo sceneInfo, string fileName = "", Vector3 position = default(Vector3),
-            Vector3 rotation = default(Vector3))
-        {
-            PlayerPed.IsInvincible = true;
-            Game.FadeScreenOut(100);
-            Wait(100);
-            CreateScene(sceneInfo, fileName);
-            if (position != default(Vector3)) PlayerPosition = position;
-            if (rotation != default(Vector3) && PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = rotation;
-            Game.FadeScreenIn(100);
-            PlayerPed.IsInvincible = false;
-        }
-
-        private void CreateScene(SceneInfo scene, string fileName = "")
+        private void CreateScene(SceneInfo scene, string fileName)
         {
             CurrentScene?.Delete();
-            ClearAllEntities(PlayerPosition);
+            ClearAllEntities(PlayerPosition, 10000f);
             if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = Vector3.Zero;
             else PlayerPed.Rotation = Vector3.Zero;
             CurrentScene = new Scene(scene) { FileName = fileName };
             CurrentScene.Start();
             CurrentScene.Exited += CurrentSceneOnExited;
+        }
+
+        private void SetCurrentScene(SceneInfo sceneInfo, string fileName, Vector3 position, Vector3 rotation)
+        {
+            PlayerPed.IsInvincible = true;
+            Game.FadeScreenOut(100);
+            Wait(100);
+            CreateScene(sceneInfo, fileName);
+            if (position != Vector3.Zero) PlayerPosition = position;
+            if (rotation != Vector3.Zero && PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Rotation = rotation;
+            Game.FadeScreenIn(100);
+            PlayerPed.IsInvincible = false;
         }
 
         private void CurrentSceneOnExited(object sender, SceneExitEventArgs sceneExitEventArgs)
@@ -557,14 +508,17 @@ namespace GTS
                 return;
             }
 
-            var sceneInfo = DeserializeSceneInfoFile(nextScene);
+            var sceneInfo = DeserializeSceneInfo(nextScene);
             var lastSceneInfo = Scene.GetLastSceneInfo();
             var offset = Vector3.Zero;
             var heading = 0f;
+
             if (!sceneInfo.SurfaceScene)
+            {
                 if (lastSceneInfo != null)
                 {
                     var orbital = sceneInfo.Orbitals.Find(x => x.Name == lastSceneInfo.OrbitalName);
+
                     if (orbital != null && nextScene == lastSceneInfo.Scene)
                     {
                         var dir = lastSceneInfo.DirToPlayer * lastSceneInfo.ModelDimensions;
@@ -578,51 +532,15 @@ namespace GTS
                         if (PlayerPed.IsInVehicle())
                             heading = lastSceneInfo.DirToPlayer.ToHeading();
                     }
+
                     Scene.ResetLastSceneInfo();
                 }
+            }
 
-            SetCurrentScene(sceneInfo, nextScene);
+            SetCurrentScene(sceneInfo, nextScene, Vector3.Zero, Vector3.Zero);
             CurrentScene.SimulatedPosition = offset;
-            if (PlayerPed.IsInVehicle() && Math.Abs(heading) > 0.00001)
-                PlayerPed.CurrentVehicle.Heading = heading;
-        }
 
-        private static void EnterAtmosphere()
-        {
-            Game.FadeScreenOut(100);
-            Wait(100);
-            CurrentScene?.Delete();
-            CurrentScene = null;
-            ResetWeather();
-            if (PlayerPed.IsInVehicle())
-            {
-                var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
-                playerPedCurrentVehicle.HasGravity = true;
-                playerPedCurrentVehicle.Position = GtsSettings.EarthAtmosphereEnterPosition;
-                playerPedCurrentVehicle.Rotation = GtsSettings.EarthAtmosphereEnterRotation;
-                playerPedCurrentVehicle.Speed = GtsSettings.VehicleReentrySpeed;
-            }
-            else
-            {
-                PlayerPed.Position = GtsSettings.EarthAtmosphereEnterPosition;
-            }
-            Game.FadeScreenIn(100);
-        }
-
-        private static void ClearAllEntities(Vector3 position, float radius = 10000)
-        {
-            Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, radius, false, false, false, false);
-        }
-
-        private static void GiveSpawnControlToGame()
-        {
-            if (Game.Globals[4].GetInt() == 0) return;
-            Game.Globals[4].SetInt(0);
-            Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, false);
-            Function.Call(Hash.SET_FADE_IN_AFTER_DEATH_ARREST, true);
-            Function.Call(Hash.SET_FADE_OUT_AFTER_ARREST, true);
-            Function.Call(Hash.SET_FADE_OUT_AFTER_DEATH, true);
-            Function.Call(Hash.IGNORE_NEXT_RESTART, false);
+            if (PlayerPed.IsInVehicle()) PlayerPed.CurrentVehicle.Heading = heading;
         }
 
         private void StopScripts()
@@ -673,6 +591,93 @@ namespace GTS
             Game.Player.WantedLevel = 0;
             Game.MaxWantedLevel = 0;
             _resetWantedLevel = false;
+        }
+
+        private static void Reset()
+        {
+            if (!PlayerPed.IsDead && (Game.IsScreenFadedOut || Game.IsScreenFadingOut))
+                Game.FadeScreenIn(0);
+            PlayerPed.Task.ClearAll();
+            PlayerPed.HasGravity = true;
+            PlayerPed.FreezePosition = false;
+            PlayerPed.CanRagdoll = true;
+            PlayerPed.IsInvincible = false;
+            Game.TimeScale = 1.0f;
+            World.RenderingCamera = null;
+            GtsLibNet.SetGravityLevel(9.81f);
+            GtsLib.EndCredits();
+            GtsLib.DisableLoadingScreenHandler(false);
+            Function.Call(Hash.CLEAR_TIMECYCLE_MODIFIER);
+            Effects.Stop();
+            CurrentScene?.Delete(true);
+            if (CurrentScene != null)
+            {
+                GiveSpawnControlToGame();
+                if (!PlayerPed.IsDead)
+                    PlayerPosition = Database.TrevorAirport;
+                ResetWeather();
+            }
+            else
+            {
+                GtsLibNet.ToggleAllIpls(false);
+            }
+            CurrentScene = null;
+        }
+
+        private static void ResetWeather()
+        {
+            // Basically happens when we abort.
+            Function.Call(Hash.CLEAR_WEATHER_TYPE_PERSIST);
+            Function.Call(Hash.CLEAR_OVERRIDE_WEATHER);
+            World.Weather = Weather.Clear;
+            World.CurrentDayTime = new TimeSpan(World.CurrentDayTime.Days, 12, 0, 0);
+        }
+
+        private static SceneInfo DeserializeSceneInfo(string fileName)
+        {
+            if (fileName == LsReturnScene) return null;
+            var newScene = XmlSerializer.Deserialize<SceneInfo>(GtsSettings.ScenesFolder + "\\" + fileName);
+            if (newScene != null) return newScene;
+            UI.Notify(Database.NotifyHeader + "Scene file " + fileName + " couldn't be read, or doesn't exist.");
+            return null;
+        }
+
+        private static void EnterAtmosphere()
+        {
+            Game.FadeScreenOut(100);
+            Wait(100);
+            CurrentScene?.Delete();
+            CurrentScene = null;
+            ResetWeather();
+            if (PlayerPed.IsInVehicle())
+            {
+                var playerPedCurrentVehicle = PlayerPed.CurrentVehicle;
+                playerPedCurrentVehicle.HasGravity = true;
+                playerPedCurrentVehicle.Position = GtsSettings.EarthAtmosphereEnterPosition;
+                playerPedCurrentVehicle.Rotation = GtsSettings.EarthAtmosphereEnterRotation;
+                playerPedCurrentVehicle.Speed = GtsSettings.VehicleReentrySpeed;
+            }
+            else
+            {
+                PlayerPed.Position = GtsSettings.EarthAtmosphereEnterPosition;
+            }
+            Game.FadeScreenIn(100);
+        }
+
+        private static void ClearAllEntities(Vector3 position, float radius)
+        {
+            Function.Call(Hash.CLEAR_AREA, position.X, position.Y, position.Z, radius, false, false, false, false);
+        }
+
+        private static void GiveSpawnControlToGame()
+        {
+            if (Game.Globals[4].GetInt() == 0) return;
+            Game.Globals[4].SetInt(0);
+            Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, false);
+            Function.Call(Hash.SET_FADE_IN_AFTER_DEATH_ARREST, true);
+            Function.Call(Hash.SET_FADE_OUT_AFTER_ARREST, true);
+            Function.Call(Hash.SET_FADE_OUT_AFTER_DEATH, true);
+            Function.Call(Hash.IGNORE_NEXT_RESTART, false);
         }
 
         private static void DoWorkingElevator()

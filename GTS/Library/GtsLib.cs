@@ -2,6 +2,7 @@
 using GTA;
 using GTA.Native;
 using GTS.Library.Security;
+using GTS.Utility;
 
 namespace GTS.Library
 {
@@ -13,7 +14,7 @@ namespace GTS.Library
     {
         private static readonly Dictionary<string, uint> ScriptStackSizes = new Dictionary<string, uint>();
 
-        //private enum EDecorType
+        //private enum eDecorType
         //{
         //    DECOR_TYPE_FLOAT = 1,
         //    DECOR_TYPE_BOOL = 2,
@@ -112,6 +113,7 @@ namespace GTS.Library
             if (vehicle == null)
                 return;
             NativeMethods.GTSLib_SetVehicleGravity(vehicle.Handle, gravity);
+            Debug.Log("Set Vehicle Gravity: " + gravity);
         }
 
         /// <summary>
@@ -169,8 +171,9 @@ namespace GTS.Library
 
         public static void SetAirDragMultForVehicle(this Player player, float value)
         {
+            return;
             if (!NativeMethods.GTSLib_IsLibraryInitialized()) return;
-            NativeMethods.GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
+            //NativeMethods.GTSLib_SetAirDragMultiplierForPlayersVehicle(value);
         }
 
         public static void DisableLoadingScreenHandler(bool toggle)

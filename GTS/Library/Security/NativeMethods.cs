@@ -36,10 +36,6 @@ namespace GTS.Library.Security
         public static extern void GTSLib_SetVehicleGravity(int vehicle, float gravity);
 
         [DllImport("GTSLib.asi")]
-        public static extern void
-            GTSLib_SetAirDragMultiplierForPlayersVehicle(float multiplier);
-
-        [DllImport("GTSLib.asi")]
         public static extern void GTSLib_DisableLoadingScreenHandler(bool toggle);
     }
 }

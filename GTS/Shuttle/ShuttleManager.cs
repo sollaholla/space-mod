@@ -76,7 +76,7 @@ namespace GTS.Shuttle
         {
             var playerPed = PlayerPed;
             var modelName = AstronautModel;
-            switch ((PedHash) playerPed.Model.Hash)
+            switch ((PedHash)playerPed.Model.Hash)
             {
                 case PedHash.Michael:
                     modelName = "player_zero(spacesuit)";
