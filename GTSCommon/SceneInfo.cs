@@ -18,7 +18,7 @@ namespace GTSCommon
     {
         public SceneInfo()
         {
-            SkyboxModel = "spacedome";
+            SkyboxModel = "sskybox_spacedome";
             Time = 23;
             GravityLevel = 3;
             Orbitals = new List<OrbitalInfo>();

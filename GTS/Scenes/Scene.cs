@@ -80,7 +80,6 @@ namespace GTS.Scenes
         private Prop _weldingProp;
         private LoopedPtfx _weldPtfx;
         private float _yawSpeed;
-        //private GtsCameraRig _cameraRig/* = new GtsCameraRig(new Vector3(0, -50, 15), 50f)*/;
 
         public Scene(SceneInfo sceneData)
         {
@@ -278,7 +277,13 @@ namespace GTS.Scenes
 
         private static Model RequestModel(string modelName)
         {
+            Debug.Log("Attempting to request model '" + modelName + "'...");
             var model = new Model(modelName);
+            if (!model.IsValid)
+            {
+                Debug.Log("The model '" + modelName + "' does not exist or is not valid.", DebugMessageType.Error);
+                return null;
+            }
             model.Request();
             while (!model.IsLoaded)
                 Script.Yield();
@@ -349,7 +354,6 @@ namespace GTS.Scenes
             KeepInSafeZone();
             UpdateLockedWarpSystem();
             TryToExitScene();
-            //_cameraRig.Update(Game.Player.Character, 1, 0);
         }
 
         internal void Delete(bool aborted = false)
@@ -767,33 +771,6 @@ namespace GTS.Scenes
                 throw new Exception("An error occured.");
             }
         }
-
-        //private void CreateScenariosForSceneInfo(SceneInfo scene)
-        //{
-        //    foreach (var scenarioInfo in scene.Scenarios)
-        //    {
-        //        var assembly = Assembly.LoadFrom(Path.Combine(GtsSettings.ScenariosFolder, scenarioInfo.Dll));
-        //        var types = assembly.GetTypes();
-        //        foreach (var type in types)
-        //        {
-        //            if (type == null || type.BaseType != typeof(Scenario)) continue;
-        //            if (type.Name != scenarioInfo.TypeName)
-        //                continue;
-        //            var instance = (Scenario) Activator.CreateInstance(type);
-        //            instance.CurrentScene = this;
-        //            instance.SendMessage("Awake");
-        //            if (instance.IsScenarioComplete()) continue;
-        //            Debug.Log("Created Scenario: " + type.Name);
-        //            Scenarios.Add(instance);
-        //        }
-        //    }
-
-        //    foreach (var scenario in Scenarios)
-        //    {
-        //        scenario.SendMessage("Start");
-        //        scenario.Completed += OnScenarioComplete;
-        //    }
-        //}
 
         private void UpdateBillboards(Vector3 viewFinderPosition)
         {
@@ -1375,7 +1352,7 @@ namespace GTS.Scenes
         private void SpaceWalkTask()
         {
             if (Info.SurfaceScene) return;
-            if (PlayerPed.IsInVehicle())
+            if (PlayerPed.IsInVehicle() && !_warpFlag)
             {
                 StopSpaceWalking();
                 Game.DisableControlThisFrame(2, Control.VehicleExit);

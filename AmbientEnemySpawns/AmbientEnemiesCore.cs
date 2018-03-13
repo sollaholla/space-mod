@@ -108,7 +108,7 @@ namespace AmbientEnemySpawns
         private static Alien SpawnAlienPed(Vector3 spawnPos, Random rand)
         {
             var ped = GtsLibNet.CreateAlien(null, spawnPos, rand.Next(20, 180));
-            ped.Weapons.Give((WeaponHash) Game.GenerateHash("weapon_pulserifle"), 15, true, true);
+            ped.Weapons.Give(WeaponHash.Railgun, 15, true, true);
             ped.Accuracy = rand.Next(1, 5);
             ped.Money = 0;
 
@@ -136,16 +136,31 @@ namespace AmbientEnemySpawns
         private void SpawnEnemiesOnSurface()
         {
             var spawnRegion = PlayerPed.Position.Around(25f);
+
             var random = new Random();
+
             var totalAliens = random.Next(8, 13);
 
             for (var i = 0; i < totalAliens; i++)
             {
                 var randDist = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 20f, 100f);
+
                 var spawnPoint = spawnRegion.Around(randDist);
+
                 var ground = GtsLibNet.GetGroundHeightRay(spawnPoint);
-                if (ground == Vector3.Zero) continue;
+
+                if (ground == Vector3.Zero)
+                {
+                    continue;
+                }
+
+                if (Function.Call<bool>(Hash.IS_ANY_VEHICLE_NEAR_POINT, ground.X, ground.Y, ground.Z, 20))
+                {
+                    continue;
+                }
+
                 _alienPeds.Add(SpawnAlienPed(ground, random));
+
                 Script.Yield();
             }
         }
